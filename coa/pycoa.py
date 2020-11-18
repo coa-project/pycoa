@@ -1,18 +1,18 @@
 # -*- coding: utf-8 -*-
-"""Project : CoCoA - Copyright © CoCoa-team-17
+"""Project : PyCoA - Copyright ©pycoa.fr
 Date :    april-november 2020
 Authors : Olivier Dadoun, Julien Browaeys, Tristan Beau
 License: See joint LICENSE file
 About
 -----
-This is the CoCoA front end functions. It provides easy access and
-use of the whole CoCoA framework in a simplified way.
+This is the PyCoA front end functions. It provides easy access and
+use of the whole PyCoA framework in a simplified way.
 The use can change the database, the type of data, the output format
 with keywords (see help of functions below).
 Basic usage
 -----------
 ** plotting covid deaths (default value) vs. time **
-    import pycoa.pycoa as cc
+    import coa.coa as cc
     cc.plot(where='France')  # where keyword is mandatory
 ** getting recovered data for some countries **
 
@@ -34,11 +34,11 @@ import pandas as pd
 import geopandas as gpd
 import inspect
 
-from pycoa.tools import kwargs_test
-import pycoa.covid19 as coco
-import pycoa.geo as coge
-from pycoa.error import *
-import pycoa.display as cd
+from coa.tools import kwargs_test
+import coa.covid19 as coco
+import coa.geo as coge
+from coa.error import *
+import coa.display as cd
 
 from bokeh.io import show, output_notebook
 output_notebook(hide_banner=True)
@@ -75,7 +75,7 @@ _listwhat=['cumul','diff',  # first one is default but we must avoid uppercases
 
 def listwhom():
     """Return the list of currently avalailable databases for covid19
-     data in CoCoA.
+     data in PyCoA.
      The first one is the default one.
     """
     return _listwhom
@@ -103,7 +103,7 @@ def setwhom(base):
     """
     global _whom,_db
     if base not in listwhom():
-        raise CocoaDbError(base+' is not a supported database. '
+        raise CoaDbError(base+' is not a supported database. '
             'See pycoa.listbase() for the full list.')
     if _whom != base:
         _db = coco.DataBase(base)
@@ -123,7 +123,7 @@ def listwhich(dbname=None):
     if dbname == None:
         dbname=_whom
     if dbname not in listwhom():
-        raise CocoaDbError(dbname+' is not a supported database name. '
+        raise CoaDbError(dbname+' is not a supported database name. '
             'See pycoa.listwhom() for the full list.')
     return _db.get_available_keys_words()
 
@@ -167,7 +167,7 @@ def get(**kwargs):
     output=kwargs.get('output',None)
 
     if not where:
-        raise CocoaKeyError('No where keyword given')
+        raise CoaKeyError('No where keyword given')
 
     if not whom:
         whom=_whom
@@ -178,13 +178,13 @@ def get(**kwargs):
         what=listwhat()[0]
     #elif what not in listwhat():
     if not bool([s for s in listwhat() if s in what]):
-        raise CocoaKeyError('What option '+what+' not supported'
+        raise CoaKeyError('What option '+what+' not supported'
                             'See listwhat() for list.')
 
     if not which:
         which=listwhich()[0]
     elif which not in setwhom(whom):
-        raise CocoaKeyError('Which option '+which+' not supported. '
+        raise CoaKeyError('Which option '+which+' not supported. '
                             'See listwhich() for list.')
     pandy = _db.get_stats(which=which,location=where)
     if inspect.stack()[1].function == '<module>':
@@ -220,7 +220,7 @@ def plot(**kwargs):
     input_arg=kwargs.get('input',None)
     if input_arg != None:
         if not isinstance(input_arg,pd.DataFrame):
-            raise CocoaTypeError('Waiting input as valid pycoa pandas '
+            raise CoaTypeError('Waiting input as valid pycoa pandas '
                 'dataframe. See help.')
         t=input_arg
     else:
@@ -269,7 +269,7 @@ def hist(**kwargs):
     input_arg=kwargs.get('input',None)
     if input_arg != None:
         if not isinstance(input_arg,pd.DataFrame):
-            raise CocoaTypeError('Waiting input as valid pycoa pandas '
+            raise CoaTypeError('Waiting input as valid pycoa pandas '
                 'dataframe. See help.')
         t=input_arg
     else:
@@ -314,7 +314,7 @@ def map(**kwargs):
 
     if input_arg != None:
         if not isinstance(input_arg,pd.DataFrame):
-            raise CocoaTypeError('Waiting input as valid pycoa pandas '
+            raise CoaTypeError('Waiting input as valid pycoa pandas '
                 'dataframe. See help.')
         t=input_arg
     else:

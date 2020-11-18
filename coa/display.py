@@ -43,8 +43,8 @@ import bokeh.palettes
 import itertools
 import sys
 
-import pycoa.geo as coge
-from pycoa.tools import info,verb
+import coa.geo as coge
+from coa.tools import info,verb
 
 from pyproj import CRS
 #import plotly.express as px

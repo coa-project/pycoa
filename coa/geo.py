@@ -1,14 +1,15 @@
 # -*- coding: utf-8 -*-
-""" Project : CoCoA
+""" Project : PyCoA
 Date :    april-november 2020
 Authors : Olivier Dadoun, Julien Browaeys, Tristan Beau
-Copyright © CoCoa-team-17
+Copyright ©pycoa.fr
 License: See joint LICENSE file
 
-Module : pycoa.geo
+Module : coa.geo
+
 About :
 
-Geo classes within the pycoa framework.
+Geo classes within the PyCoA framework.
 
 GeoManager class provides translations between naming normalisations
 of countries. It's based on the pycountry module.
@@ -27,8 +28,8 @@ import pandas as pd
 import geopandas as gpd
 import requests
 
-from pycoa.tools import verb,kwargs_test
-from pycoa.error import *
+from coa.tools import verb,kwargs_test
+from coa.error import *
 
 # ---------------------------------------------------------------------
 # --- GeoManager class ------------------------------------------------
@@ -37,7 +38,7 @@ from pycoa.error import *
 class GeoManager():
     """GeoManager class definition. No inheritance from any other class.
 
-    It should raise only CocoaError and derived exceptions in case
+    It should raise only CoaError and derived exceptions in case
     of errors (see pycoa.error)
     """
 
@@ -88,10 +89,10 @@ class GeoManager():
         The standard should meet the get_list_standard() requirement
         """
         if not isinstance(standard,str):
-            raise CocoaTypeError('GeoManager error, the standard argument'
+            raise CoaTypeError('GeoManager error, the standard argument'
                 ' must be a string')
         if standard not in self.get_list_standard():
-            raise CocoaKeyError('GeoManager.set_standard error, "'+\
+            raise CoaKeyError('GeoManager.set_standard error, "'+\
                                     standard+' not managed. Please see '\
                                     'get_list_standard() function')
         self._standard=standard
@@ -119,27 +120,27 @@ class GeoManager():
 
         output=kwargs.get('output',self.get_list_output()[0])
         if output not in self.get_list_output():
-            raise CocoaKeyError('Incorrect output type. See get_list_output()'
+            raise CoaKeyError('Incorrect output type. See get_list_output()'
                 ' or help.')
 
         db=kwargs.get('db',self.get_list_db()[0])
         if db not in self.get_list_db():
-            raise CocoaDbError('Unknown database "'+db+'" for translation to '
+            raise CoaDbError('Unknown database "'+db+'" for translation to '
                 'standardized location names. See get_list_db() or help.')
 
         interpret_region=kwargs.get('interpret_region',False)
         if not isinstance(interpret_region,bool):
-            raise CocoaTypeError('The interpret_region argument is a boolean, '
+            raise CoaTypeError('The interpret_region argument is a boolean, '
                 'not a '+str(type(interpret_region)))
 
         if interpret_region==True and output!='list':
-            raise CocoaKeyError('The interpret_region True argument is incompatible '
+            raise CoaKeyError('The interpret_region True argument is incompatible '
                 'with non list output option.')
 
         if isinstance(w,str):
             w=[w]
         elif not isinstance(w,list):
-            raise CocoaTypeError('Waiting for str, list of str or pandas'
+            raise CoaTypeError('Waiting for str, list of str or pandas'
                 'as input of get_standard function member of GeoManager')
 
         w=[v.title() for v in w] # capitalize first letter of each name
@@ -157,7 +158,7 @@ class GeoManager():
             if type(c)==int:
                 c=str(c)
             elif type(c)!=str:
-                raise CocoaTypeError('Locations should be given as '
+                raise CoaTypeError('Locations should be given as '
                     'strings or integers only')
             if (c in self._gr.get_region_list()) and interpret_region == True:
                 w=self._gr.get_countries_from_region(c)+w
@@ -176,11 +177,11 @@ class GeoManager():
                                 ', using first one.\n')
                             n0=nf[0]
                         except LookupError:
-                            raise CocoaLookupError('No country match the key "'+c+'". Error.')
+                            raise CoaLookupError('No country match the key "'+c+'". Error.')
                         except Exception as e1:
-                            raise CocoaNotManagedError('Not managed error '+type(e1))
+                            raise CoaNotManagedError('Not managed error '+type(e1))
                     except Exception as e2:
-                        raise CocoaNotManagedError('Not managed error'+type(e1))
+                        raise CoaNotManagedError('Not managed error'+type(e1))
 
                     if self._standard=='iso2':
                         n1=n0.alpha_2
@@ -191,7 +192,7 @@ class GeoManager():
                     elif self._standard=='num':
                         n1=n0.numeric
                     else:
-                        raise CocoaKeyError('Current standard is '+self._standard+\
+                        raise CoaKeyError('Current standard is '+self._standard+\
                             ' which is not managed. Error.')
 
                 n.append(n1)
@@ -268,7 +269,7 @@ class GeoManager():
 class GeoInfo():
     """GeoInfo class definition. No inheritance from any other class.
 
-    It should raise only CocoaError and derived exceptions in case
+    It should raise only CoaError and derived exceptions in case
     of errors (see pycoa.error)
     """
 
@@ -312,7 +313,7 @@ class GeoInfo():
         if field==None:
             return self._list_field
         elif field not in self.get_list_field():
-            raise CocoaKeyError('The field "'+str(field)+'" is not '
+            raise CoaKeyError('The field "'+str(field)+'" is not '
                 'a supported field of GeoInfo(). Please see help or '
                 'the get_list_field() output.')
         return field+' : '+self._list_field[field]
@@ -341,34 +342,34 @@ class GeoInfo():
 
         p=kwargs.get('input',None) # the panda
         if not isinstance(p,pd.DataFrame):
-            raise CocoaTypeError('You should provide a valid input pandas'
+            raise CoaTypeError('You should provide a valid input pandas'
                 ' DataFrame as input. See help.')
         p=p.copy()
 
         overload=kwargs.get('overload',False)
         if not isinstance(overload,bool):
-            raise CocoaTypeError('The overload option should be a boolean.')
+            raise CoaTypeError('The overload option should be a boolean.')
 
         fl=kwargs.get('field',None) # field list
         if fl == None:
-            raise CocoaKeyError('No field given. See help.')
+            raise CoaKeyError('No field given. See help.')
         if not isinstance(fl,list):
             fl=[fl]
         if not all(f in self.get_list_field() for f in fl):
-            raise CocoaKeyError('All fields are not valid or supported '
+            raise CoaKeyError('All fields are not valid or supported '
                 'ones. Please see help of get_list_field()')
 
         if not overload and not all(f not in p.columns.tolist() for f in fl):
-            raise CocoaKeyError('Some fields already exist in you panda '
+            raise CoaKeyError('Some fields already exist in you panda '
                 'dataframe columns. You may set overload to True.')
 
         geofield=kwargs.get('geofield','location')
 
         if not isinstance(geofield,str):
-            raise CocoaTypeError('The geofield should be given as a '
+            raise CoaTypeError('The geofield should be given as a '
                 'string.')
         if geofield not in p.columns.tolist():
-            raise CocoaKeyError('The geofield "'+geofield+'" given is '
+            raise CoaKeyError('The geofield "'+geofield+'" given is '
                 'not a valid column name of the input pandas dataframe.')
 
         self._gm.set_standard('iso2')
@@ -400,7 +401,7 @@ class GeoInfo():
                     try:
                         htmlContent = requests.get(url_worldometers).content
                     except:
-                        raise CocoaConnectionError('Cannot connect to the database '
+                        raise CoaConnectionError('Cannot connect to the database '
                                 'worldometers.info. '
                                 'Please check your connection or availabilty of the db')
 
@@ -418,7 +419,7 @@ class GeoInfo():
 
                     # test that field order hasn't changed in the db
                     if not all (col.startswith(field_descr[i][1]) for i,col in enumerate(self._data_population.columns) ):
-                        raise CocoaDbError('The worldometers database changed its field names. '
+                        raise CoaDbError('The worldometers database changed its field names. '
                             'The GeoInfo should be updated. Please contact developers.')
 
                     # change field name
@@ -459,7 +460,7 @@ class GeoInfo():
                         self._data_geometry.columns=["id_tmp","geometry"]
                         # countains id as iso3 , country name , geometry
                     except:
-                        raise CocoaConnectionError('Cannot access to the '
+                        raise CoaConnectionError('Cannot access to the '
                             'geo json data for countries. '
                             'Check internet connection.')
 
@@ -477,7 +478,7 @@ class GeoRegion():
     """GeoRegion class definition. Does not inheritate from any other
     class.
 
-    It should raise only CocoaError and derived exceptions in case
+    It should raise only CoaError and derived exceptions in case
     of errors (see pycoa.error)
     """
 
@@ -506,7 +507,7 @@ class GeoRegion():
         try:
             p_m49=pd.read_html(self._source_dict["UN_M49"])[1]
         except:
-            raise CocoaConnectionError('Cannot connect to the UN_M49 '
+            raise CoaConnectionError('Cannot connect to the UN_M49 '
                     'wikipedia page. '
                     'Please check your connection or availability of the page.')
 
@@ -528,7 +529,7 @@ class GeoRegion():
         try:
             p_gs=pd.read_html(self._source_dict["GeoScheme"])[0]
         except:
-            raise CocoaConnectionError('Cannot connect to the UN GeoScheme '
+            raise CoaConnectionError('Cannot connect to the UN GeoScheme '
                     'wikipedia page. '
                     'Please check your connection or availability of the page.')
         p_gs.columns=['country','capital','iso2','iso3','num','m49']
@@ -560,12 +561,12 @@ class GeoRegion():
         """
 
         if type(region) != str:
-            raise CocoaKeyError("The given region is not a str type.")
+            raise CoaKeyError("The given region is not a str type.")
 
         region=region.title()  # if not properly capitalized
         
         if region not in self.get_region_list():
-            raise CocoaKeyError('The given region "'+str(region)+'" is unknown.')
+            raise CoaKeyError('The given region "'+str(region)+'" is unknown.')
 
         clist=[]
 

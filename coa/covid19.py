@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 
 """
-Project : CoCoA
+Project : PyCoA
 Date :    april-november 2020
 Authors : Olivier Dadoun, Julien Browaeys, Tristan Beau
-Copyright © CoCoa-team-17
+Copyright ©pycoa.fr
 License: See joint LICENSE file
 
-Module : pycoa.covid19
+Module : coa.covid19
 About :
 
 Main class definitions for covid19 dataset access. Currently, we are only using the JHU CSSE data.
@@ -21,9 +21,9 @@ import numpy as np
 from datetime import datetime as dt
 import pandas as pd
 import sys
-from pycoa.tools import info,verb,kwargs_test
-import pycoa.geo as coge
-from pycoa.error import *
+from coa.tools import info,verb,kwargs_test
+import coa.geo as coge
+from coa.error import *
 from scipy import stats as sps
 import random
 
@@ -46,7 +46,7 @@ class DataBase():
             self.geo = coge.GeoManager('name')
 
         if self.db not in self.database_name:
-            raise CocoaDbError('Unknown ' + self.db + '. Available database so far in CoCoa are : ' + str(self.database_name) ,file=sys.stderr)
+            raise CoaDbError('Unknown ' + self.db + '. Available database so far in PyCoa are : ' + str(self.database_name) ,file=sys.stderr)
         else:
             if self.db == 'jhu':
                 info('JHU aka Johns Hopkins database selected ...')
@@ -211,7 +211,7 @@ class DataBase():
 
     def pandas_index_location_date_to_jhu_format(self,mypandas,**kwargs):
         '''
-        Return a pandas in CoCoa Structure
+        Return a pandas in PyCoA Structure
         '''
         kwargs_test(kwargs,['columns_skipped','columns_keeped'],
             'Bad args used in the pandas_index_location_date_to_jhu_format() function.')
@@ -240,7 +240,7 @@ class DataBase():
         return pandas_dico
 
     def fill_pycoa_field(self):
-        ''' Fill CoCoA variables with database data '''
+        ''' Fill PyCoA variables with database data '''
         df = self.get_rawdata()
         #self.dicos_countries = defaultdict(list)
 
@@ -324,7 +324,7 @@ class DataBase():
         process_data = kwargs.get('type', None)
 
         if kwargs['which'] not in self.get_available_keys_words() :
-            raise CocoaKeyError(kwargs['which']+' is not a available for' + self.db + 'database name. '
+            raise CoaKeyError(kwargs['which']+' is not a available for' + self.db + 'database name. '
             'See get_available_keys_words() for the full list.')
 
         clist=list(set(clist)) # to suppress duplicate countries
@@ -359,7 +359,7 @@ class DataBase():
                 currentout[c, :] = np.cumsum(yy)
                 cumulout[c, :] = np.cumsum(np.cumsum(yy))
         elif option != None:
-            raise CocoaKeyError('The option '+option+' is not recognized in get_stat. Error.')
+            raise CoaKeyError('The option '+option+' is not recognized in get_stat. Error.')
 
         datos=[dt.strptime(d, '%m/%d/%y') for d in self.get_dates()]
         i = 0
@@ -400,7 +400,7 @@ class DataBase():
         #    temp[0] = temp[0].drop(columns=['location'])
 
         if temp==[]:
-            raise CocoaWhereError('No valid country available')
+            raise CoaWhereError('No valid country available')
 
         return pd.concat(temp)
 

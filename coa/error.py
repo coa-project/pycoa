@@ -1,24 +1,24 @@
 # -*- coding: utf-8 -*-
-""" Project : CoCoA
+""" Project : PyCoA
 Date :    april-november 2020
 Authors : Olivier Dadoun, Julien Browaeys, Tristan Beau
-Copyright © CoCoa-team-17
+Copyright ©pycoa.fr
 License: See joint LICENSE file
 
-Module : pycoa.error
+Module : coa.error
 About : 
 
 Main class definitions for error management within the pycoa framework.
-All Cocoa exceptions should derive from the main CocoaError class.
+All Coa exceptions should derive from the main CoaError class.
 """
 
-class CocoaError(Exception):
-    """Base class for exceptions in CoCoa."""
+class CoaError(Exception):
+    """Base class for exceptions in PyCoa."""
     def __init__(self, message):
         self.message = message
         Exception(message)
 
-class CocoaKeyError(CocoaError, KeyError):
+class CoaKeyError(CoaError, KeyError):
     """Exception raised for errors in used key option.
 
     Attributes:
@@ -27,9 +27,9 @@ class CocoaKeyError(CocoaError, KeyError):
     def __init__(self, message):
         self.message = message
         KeyError(message)
-        CocoaError(message)
+        CoaError(message)
         
-class CocoaWhereError(CocoaError, IndexError):
+class CoaWhereError(CoaError, IndexError):
     """Exception raised for location errors.
 
     Attributes:
@@ -38,9 +38,9 @@ class CocoaWhereError(CocoaError, IndexError):
     def __init__(self, message):
         self.message = message
         IndexError(message)
-        CocoaError(message)
+        CoaError(message)
         
-class CocoaTypeError(CocoaError, TypeError):
+class CoaTypeError(CoaError, TypeError):
     """Exception raised for type mismatch errors.
 
     Attributes:
@@ -49,9 +49,9 @@ class CocoaTypeError(CocoaError, TypeError):
     def __init__(self, message):
         self.message = message
         TypeError(message)
-        CocoaError(message)
+        CoaError(message)
         
-class CocoaLookupError(CocoaError, LookupError):
+class CoaLookupError(CoaError, LookupError):
     """Exception raised for type lookup errors.
 
     Attributes:
@@ -60,9 +60,9 @@ class CocoaLookupError(CocoaError, LookupError):
     def __init__(self, message):
         self.message = message
         LookupError(message)
-        CocoaError(message)
+        CoaError(message)
         
-class CocoaNotManagedError(CocoaError):
+class CoaNotManagedError(CoaError):
     """Exception raised when the error is unknown and not managed.
 
     Attributes:
@@ -70,10 +70,10 @@ class CocoaNotManagedError(CocoaError):
     """
     def __init__(self, message):
         self.message = message
-        CocoaError(message)
+        CoaError(message)
     
 
-class CocoaDbError(CocoaError):
+class CoaDbError(CoaError):
     """Exception raised for database errors.
 
     Attributes:
@@ -81,9 +81,9 @@ class CocoaDbError(CocoaError):
     """
     def __init__(self, message):
         self.message = message
-        CocoaError(message)
+        CoaError(message)
     
-class CocoaConnectionError(CocoaError,ConnectionError):
+class CoaConnectionError(CoaError,ConnectionError):
     """Exception raised for connection errors.
 
     Attributes:
@@ -92,5 +92,5 @@ class CocoaConnectionError(CocoaError,ConnectionError):
     def __init__(self, message):
         self.message = message
         ConnectionError(message)
-        CocoaError(message)
+        CoaError(message)
         

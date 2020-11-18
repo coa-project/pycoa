@@ -20,4 +20,4 @@ About : Gives the version information, also used in the setup.py and __init__.py
 
 __version__ = '1.0'
 __author__= 'Tristan Beau, Julien Browaeys, Olivier Dadoun'
-__email__= 'pycoa@framalistes.org'
+__email__= 'support@pycoa.fr'

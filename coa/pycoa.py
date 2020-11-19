@@ -155,7 +155,7 @@ def get(**kwargs):
 
     output --   output format returned ( list (default), dict or pandas)
     """
-    kwargs_test(kwargs,['where','what','which','whom','output'],
+    kwargs_test(kwargs,['where','what','which','whom','output','option'],
             'Bad args used in the pycoa.get() function.')
 
     global _db,_whom
@@ -163,19 +163,23 @@ def get(**kwargs):
     what=kwargs.get('what',None)
     which=kwargs.get('which',None)
     whom=kwargs.get('whom',None)
-
+    option = kwargs.get('option',None)
+    
     output=kwargs.get('output',None)
 
     if not where:
         raise CoaKeyError('No where keyword given')
-
+    if not what:
+        what=listwhat()[0]    
     if not whom:
         whom=_whom
     if whom != _whom:
         setwhom(whom)
-
-    if not what:
-        what=listwhat()[0]
+    if option:
+        if option != 'nonneg':       
+            raise CoaTypeError('Waiting option a valid option ... sor far nonneg')    
+        else:
+            option = 'nonneg'    
     #elif what not in listwhat():
     if not bool([s for s in listwhat() if s in what]):
         raise CoaKeyError('What option '+what+' not supported'
@@ -186,7 +190,7 @@ def get(**kwargs):
     elif which not in setwhom(whom):
         raise CoaKeyError('Which option '+which+' not supported. '
                             'See listwhich() for list.')
-    pandy = _db.get_stats(which=which,location=where)
+    pandy = _db.get_stats(which=which,location=where,option=option)
     if inspect.stack()[1].function == '<module>':
         pandy = _db.get_stats(which=which,location=where).rename(columns={'location': 'where'})
     return pandy
@@ -214,10 +218,11 @@ def plot(**kwargs):
                 whom keywords are ignored.
                 input should be given as valid pycoa pandas dataframe.
     """
-    kwargs_test(kwargs,['where','what','which','whom','input','width_height'],
+    kwargs_test(kwargs,['where','what','which','whom','input','width_height','option'],
             'Bad args used in the pycoa.plot() function.')
 
     input_arg=kwargs.get('input',None)
+    
     if input_arg != None:
         if not isinstance(input_arg,pd.DataFrame):
             raise CoaTypeError('Waiting input as valid pycoa pandas '
@@ -228,10 +233,11 @@ def plot(**kwargs):
 
     which=kwargs.get('which',listwhich()[0])
     what=kwargs.get('what',None)
-
+    option=kwargs.get('option',None)
     title=kwargs.get('title',None)
+    
     width_height=kwargs.get('width_height',None)
-
+    
     if what:
         which_init = which
         if what == 'daily' or  what == 'diff':
@@ -241,6 +247,7 @@ def plot(**kwargs):
         if  what == 'weekly':
             t['weekly'] = t['diff'].rolling(7).mean()
             which = 'weekly'
+                   
     fig = _cocoplot.pycoa_basic_plot(t,which,title,width_height)
     show(fig)
 

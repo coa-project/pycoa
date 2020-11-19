@@ -35,7 +35,7 @@ class DataBase():
    The pandas_datase structure is based, for historical reason, on the JHU structure:
    ['location', 'date', key-words , 'cumul', 'diff']
    '''
-    def __init__(self,db_name):
+   def __init__(self,db_name):
         '''
          Fill the pandas_datase
         '''
@@ -133,21 +133,21 @@ class DataBase():
             info('Last date data ', self.get_dates()[-1])
 
 
-    def get_db(self):
+   def get_db(self):
         '''
         Return the Covid19 database selected, so far:
         'jhu','spf','owid' or 'opencovid19'
         '''
         return self.db
 
-    def get_available_database(self):
+   def get_available_database(self):
         '''
         Return all the available Covid19 database :
         ['jhu', 'spf', 'owid', 'opencovid19']
         '''
         return self.database_name
 
-    def get_available_keys_words(self):
+   def get_available_keys_words(self):
         '''
         Return all the available keyswords for the database selected
         Key-words are for:
@@ -171,13 +171,13 @@ class DataBase():
         '''
         return self.available_keys_words
 
-    def get_database_url(self):
+   def get_database_url(self):
         '''
         Return all the url used to fill pandas_datase
         '''
         return self.database_url
 
-    def get_rawdata(self):
+   def get_rawdata(self):
         '''
         Return pandas_datase as a python dictionnaries:
         keys are keyswords and values are:
@@ -191,7 +191,7 @@ class DataBase():
         '''
         return self.pandas_datase
 
-    def parse_convert_jhu(self):
+   def parse_convert_jhu(self):
         ''' For center for Systems Science and Engineering (CSSE) at Johns Hopkins University
             COVID-19 Data Repository by the see homepage: https://github.com/CSSEGISandData/COVID-19 '''
         self.database_url = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/"+\
@@ -212,7 +212,7 @@ class DataBase():
         self.dates=[i.strftime('%m/%d/%y') for i in self.dates]
         return pandas_jhu
 
-    def csv_to_pandas_index_location_date(self,url,**kwargs):
+   def csv_to_pandas_index_location_date(self,url,**kwargs):
         '''
         Parse and convert CSV file to a pandas with location+date as an index
         '''
@@ -256,7 +256,7 @@ class DataBase():
 
         return pandas_db
 
-    def pandas_index_location_date_to_jhu_format(self,mypandas,**kwargs):
+   def pandas_index_location_date_to_jhu_format(self,mypandas,**kwargs):
         '''
         Return a pandas in PyCoA Structure
         '''
@@ -286,7 +286,7 @@ class DataBase():
             self.dates    = [i.strftime('%m/%d/%y') for i in self.dates]
         return pandas_dico
 
-    def fill_pycoa_field(self):
+   def fill_pycoa_field(self):
         ''' Fill PyCoA variables with database data '''
         df = self.get_rawdata()
         #self.dicos_countries = defaultdict(list)
@@ -313,7 +313,7 @@ class DataBase():
                 {self.dicos_countries[keys_words][loc].append(data) for loc,data in zip(d_loc,d_data)}
 
                 self.dict_current_days[keys_words] = {loc:list(np.sum(data, 0)) for loc,data in \
-                self.dicos_countries[keys_words].items()}
+               self.dicos_countries[keys_words].items()}
 
                 self.dict_cumul_days[keys_words] = {loc: np.nancumsum(data) for loc,data in \
                 self.dict_current_days[keys_words].items()}
@@ -321,7 +321,7 @@ class DataBase():
                 self.dict_diff_days[keys_words] = {loc: np.insert(np.diff(data),0,0) for loc,data in \
                 self.dict_current_days[keys_words].items()}
 
-    def flat_list(self, matrix):
+   def flat_list(self, matrix):
         ''' Flatten list function used in covid19 methods'''
         
         flatten_matrix = []
@@ -330,36 +330,36 @@ class DataBase():
                 flatten_matrix.append(val)
         return flatten_matrix
 
-    def get_current_days(self):
+   def get_current_days(self):
         '''Return a python dictionnary
         key = 'keywords
         values = [value_i @ date_i]
         '''
         return self.dict_current_days
 
-    def get_cumul_days(self):
+   def get_cumul_days(self):
         '''Return a python dictionnary cumulative
         key = 'keywords
         values = [cumululative value of current days return by get_current_days() from (date_0 to date_i)]
         '''
         return self.dict_cumul_days
 
-    def get_diff_days(self):
+   def get_diff_days(self):
         '''Return a python dictionnary differential
         key = 'keywords
         values = [difference value between i+1 and ith days current days return by get_current_days()]
         '''
         return self.dict_diff_days
 
-    def get_dates(self):
+   def get_dates(self):
         ''' Return all dates available in the current database'''
         return self.dates
 
-    def get_locations(self):
+   def get_locations(self):
         ''' Return available location countries / regions in the current database '''
         return np.array(tuple(self.get_diff_days()[self.available_keys_words[0]].keys()))
 
-    def get_stats(self, **kwargs):
+   def get_stats(self, **kwargs):
         '''
         Return the pandas pandas_datase
         'which' :   keywords
@@ -483,8 +483,8 @@ class DataBase():
 
         return pd.concat(temp)
 
-    ## https://www.kaggle.com/freealf/estimation-of-rt-from-cases
-    def smooth_cases(self,cases):
+   ## https://www.kaggle.com/freealf/estimation-of-rt-from-cases
+   def smooth_cases(self,cases):
         new_cases = cases
 
         smoothed = new_cases.rolling(7,
@@ -505,7 +505,7 @@ class DataBase():
         return smoothed
 
 
-    def get_posteriors(self,sr, window=7, min_periods=1):
+   def get_posteriors(self,sr, window=7, min_periods=1):
         # We create an array for every possible value of Rt
         R_T_MAX = 12
         r_t_range = np.linspace(0, R_T_MAX, R_T_MAX*100+1)

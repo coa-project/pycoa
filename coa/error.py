@@ -6,7 +6,9 @@ Copyright ©pycoa.fr
 License: See joint LICENSE file
 
 Module : coa.error
+
 About : 
+-------
 
 Main class definitions for error management within the pycoa framework.
 All Coa exceptions should derive from the main CoaError class.

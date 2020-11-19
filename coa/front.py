@@ -3,12 +3,17 @@
 Date :    april-november 2020
 Authors : Olivier Dadoun, Julien Browaeys, Tristan Beau
 License: See joint LICENSE file
-About
------
+
+Module : coa.front
+
+About :
+-------
+
 This is the PyCoA front end functions. It provides easy access and
 use of the whole PyCoA framework in a simplified way.
 The use can change the database, the type of data, the output format
 with keywords (see help of functions below).
+
 Basic usage
 -----------
 ** plotting covid deaths (default value) vs. time **
@@ -154,6 +159,13 @@ def get(**kwargs):
                 function). See listwhom() for supported list
 
     output --   output format returned ( list (default), dict or pandas)
+
+    option --   pre-computing option. 
+                Currently, only the nonneg option is available, meaning 
+                that negative daily balance is pushed back to previous 
+                days in order to have a cumulative function which is 
+                monotonous increasing.
+                is available. By default : no option.
     """
     kwargs_test(kwargs,['where','what','which','whom','output','option'],
             'Bad args used in the pycoa.get() function.')
@@ -177,9 +189,10 @@ def get(**kwargs):
         setwhom(whom)
     if option:
         if option != 'nonneg':       
-            raise CoaTypeError('Waiting option a valid option ... sor far nonneg')    
+            raise CoaKeyError('Waiting for option a valid option ... so far nonneg')    
         else:
             option = 'nonneg'    
+
     #elif what not in listwhat():
     if not bool([s for s in listwhat() if s in what]):
         raise CoaKeyError('What option '+what+' not supported'

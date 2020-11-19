@@ -7,8 +7,10 @@ Authors : Olivier Dadoun, Julien Browaeys, Tristan Beau
 Copyright ©pycoa.fr
 License: See joint LICENSE file
 
-Module : display
+Module : coa.display
+
 About :
+-------
 
 An interface module to easily plot pycoa data with bokeh
 
@@ -86,7 +88,7 @@ class CocoDisplay():
         Keyword arguments
         -----------------
         babepandas : pandas where the data is considered
-        input_names_data : variable from pandas data . If pandas is produced from pycoas get_stat method
+        input_names_data : variable from pandas data . If pandas is produced from pycoa get_stat method
         the 'diff' or 'cumul' are available
         A list of names_data can be given
         title: title for the figure , no title by default

@@ -3,6 +3,9 @@
 Date :    april-november 2020
 Authors : Olivier Dadoun, Julien Browaeys, Tristan Beau
 License: See joint LICENSE file
+
+Module : coa.tools
+
 About
 -----
 This is the PyCoA tools module to be considered as a swiss knife list of functions.

@@ -7,7 +7,8 @@ Authors : Olivier Dadoun, Julien Browaeys, Tristan Beau
 Copyright ©pycoa.fr
 License: See joint LICENSE file
 
-Module : _version
+Module : coa._version
+
 About : Gives the version information, also used in the setup.py and __init__.py files
 
 """

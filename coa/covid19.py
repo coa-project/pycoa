@@ -8,7 +8,9 @@ Copyright ©pycoa.fr
 License: See joint LICENSE file
 
 Module : coa.covid19
+
 About :
+-------
 
 Main class definitions for covid19 dataset access. Currently, we are only using the JHU CSSE data.
 The parser class gives a simplier access through an already filled dict of data

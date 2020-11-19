@@ -8,6 +8,7 @@ License: See joint LICENSE file
 Module : coa.geo
 
 About :
+-------
 
 Geo classes within the PyCoA framework.
 

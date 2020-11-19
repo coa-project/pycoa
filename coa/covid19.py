@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 
 """
-Project : PyCoA
+Project : CoCoA
 Date :    april-november 2020
 Authors : Olivier Dadoun, Julien Browaeys, Tristan Beau
-Copyright ©pycoa.fr
+Copyright © CoCoa-team-17
 License: See joint LICENSE file
 
-Module : coa.covid19
+Module : pycoa.covid19
 About :
 
 Main class definitions for covid19 dataset access. Currently, we are only using the JHU CSSE data.
@@ -21,17 +21,27 @@ import numpy as np
 from datetime import datetime as dt
 import pandas as pd
 import sys
-from coa.tools import info,verb,kwargs_test
-import coa.geo as coge
-from coa.error import *
+from pycoa.tools import info,verb,kwargs_test
+import pycoa.geo as coge
+from pycoa.error import *
 from scipy import stats as sps
 import random
 
 class DataBase():
-    ''' Parse the chosen database and a return a pandas '''
+    '''
+    DataBase class
+    Parse a Covid-19 database and filled the pandas python objet : pandas_datase
+    It takes a string argument, which can be: 'jhu','spf','owid' and 'opencovid19'
+    The pandas_datase structure is based, for historical reason, on the JHU structure:
+    ['location', 'date', key-words , 'cumul', 'diff']
+    '''
     def __init__(self,db_name):
+        '''
+         Fill the pandas_datase
+        '''
         verb("Init of covid19.DataBase()")
         self.database_name=['jhu','spf','owid','opencovid19']
+        self.csv_url_parsed = []
         self.pandas_datase = {}
         self.available_keys_words=[]
         self.dates = []
@@ -39,14 +49,13 @@ class DataBase():
         self.dict_current_days = {}
         self.dict_cumul_days = {}
         self.dict_diff_days = {}
-        self.location_more_info={}
         self.database_columns_not_computed={}
         self.db =  db_name
         if self.db != 'spf' and self.db != 'opencovid19':
             self.geo = coge.GeoManager('name')
 
         if self.db not in self.database_name:
-            raise CoaDbError('Unknown ' + self.db + '. Available database so far in PyCoa are : ' + str(self.database_name) ,file=sys.stderr)
+            raise CocoaDbError('Unknown ' + self.db + '. Available database so far in CoCoa are : ' + str(self.database_name) ,file=sys.stderr)
         else:
             if self.db == 'jhu':
                 info('JHU aka Johns Hopkins database selected ...')
@@ -64,22 +73,27 @@ class DataBase():
                 cast={'dep':'string'}
                 rename={'jour':'date','dep':'location'}
                 constraints={'sexe':0}
-                spf1=self.csv_to_pandas_index_location_date("https://www.data.gouv.fr/fr/datasets/r/63352e38-d353-4b54-bfd1-f1b3ee1cabd7",
+                url="https://www.data.gouv.fr/fr/datasets/r/63352e38-d353-4b54-bfd1-f1b3ee1cabd7"
+                spf1=self.csv_to_pandas_index_location_date(url,
                               rename_columns=rename,constraints=constraints,cast=cast)
+                self.csv_url_parsed.append(url)
                 # https://www.data.gouv.fr/fr/datasets/donnees-hospitalieres-relatives-a-lepidemie-de-covid-19/
                 # incid_hosp	string 	Nombre quotidien de personnes nouvellement hospitalisées
                 # incid_rea	integer	Nombre quotidien de nouvelles admissions en réanimation
                 # incid_dc	integer	Nombre quotidien de personnes nouvellement décédées
                 # incid_rad	integer	Nombre quotidien de nouveaux retours à domicile
-                spf2=self.csv_to_pandas_index_location_date("https://www.data.gouv.fr/fr/datasets/r/6fadff46-9efd-4c53-942a-54aca783c30c",
+                url="https://www.data.gouv.fr/fr/datasets/r/6fadff46-9efd-4c53-942a-54aca783c30c"
+                spf2=self.csv_to_pandas_index_location_date(url,
                               rename_columns=rename,cast=cast)
+                self.csv_url_parsed.append(url)
                 # https://www.data.gouv.fr/fr/datasets/donnees-relatives-aux-resultats-des-tests-virologiques-covid-19/
                 # T       Number of tests performed
                 # P       Number of positive tests
                 constraints={'cl_age90':0}
-                spf3=self.csv_to_pandas_index_location_date("https://www.data.gouv.fr/fr/datasets/r/406c6a23-e283-4300-9484-54e78c8ae675",
+                url="https://www.data.gouv.fr/fr/datasets/r/406c6a23-e283-4300-9484-54e78c8ae675"
+                spf3=self.csv_to_pandas_index_location_date(url,
                               rename_columns=rename,constraints=constraints,cast=cast)
-
+                self.csv_url_parsed.append(url)
                 #https://www.data.gouv.fr/fr/datasets/indicateurs-de-suivi-de-lepidemie-de-covid-19/#_
                 # tension hospitaliere
                 # Vert : taux d’occupation compris entre 0 et 40% ;
@@ -93,8 +107,10 @@ class DataBase():
                 rename={'extract_date':'date','departement':'location'}
                 columns_skipped=['region','libelle_reg','libelle_dep','tx_incid_couleur','R_couleur',\
                 'taux_occupation_sae_couleur','tx_pos_couleur','nb_orange','nb_rouge']
-                spf4=self.csv_to_pandas_index_location_date("https://www.data.gouv.fr/fr/datasets/r/4acad602-d8b1-4516-bc71-7d5574d5f33e",
+                url="https://www.data.gouv.fr/fr/datasets/r/4acad602-d8b1-4516-bc71-7d5574d5f33e"
+                spf4=self.csv_to_pandas_index_location_date(url,
                             rename_columns=rename, separator=',', encoding = "ISO-8859-1",cast=cast)
+                self.csv_url_parsed.append(url)
                 result = pd.concat([spf1, spf2,spf3,spf4], axis=1, sort=False)
                 self.pandas_datase = self.pandas_index_location_date_to_jhu_format(result,columns_skipped=columns_skipped)
             elif self.db == 'opencovid19':
@@ -102,17 +118,22 @@ class DataBase():
                 rename={'jour':'date','maille_nom':'location'}
                 constraints={'granularite':'pays'}
                 columns_skipped = ['maille_code','source_nom','source_url','source_archive','source_type']
-                opencovid19 = self.csv_to_pandas_index_location_date('https://raw.githubusercontent.com/opencovid19-fr/data/master/dist/chiffres-cles.csv',
+                url = 'https://raw.githubusercontent.com/opencovid19-fr/data/master/dist/chiffres-cles.csv'
+                opencovid19 = self.csv_to_pandas_index_location_date(url,
                            constraints=constraints,rename_columns=rename,separator=',')
+                self.csv_url_parsed.append(url)
                 self.pandas_datase = self.pandas_index_location_date_to_jhu_format(opencovid19,columns_skipped=columns_skipped)
+
             elif self.db == 'owid':
                 info('OWID aka \"Our World in Data\" database selected ...')
                 columns_keeped = ['total_cases', 'new_cases', 'total_deaths','new_deaths', 'total_cases_per_million',
                 'new_cases_per_million', 'total_deaths_per_million','new_deaths_per_million', 'total_tests', 'new_tests',
                 'total_tests_per_thousand', 'new_tests_per_thousand', 'new_tests_smoothed', 'new_tests_smoothed_per_thousand','stringency_index']
                 drop_field = {'location':['International','World']}
-                owid = self.csv_to_pandas_index_location_date("https://raw.githubusercontent.com/owid/covid-19-data/master/public/data/owid-covid-data.csv",
+                url="https://raw.githubusercontent.com/owid/covid-19-data/master/public/data/owid-covid-data.csv"
+                owid = self.csv_to_pandas_index_location_date(url,
                 separator=',',drop_field=drop_field)
+                self.csv_url_parsed.append(url)
                 self.pandas_datase = self.pandas_index_location_date_to_jhu_format(owid,columns_keeped=columns_keeped)
             self.fill_pycoa_field()
             info('Few information concernant the selected database : ', self.get_db())
@@ -125,27 +146,65 @@ class DataBase():
 
 
     def get_db(self):
-        ''' Return database name '''
+        '''
+        Return the Covid19 database selected, so far:
+        'jhu','spf','owid' or 'opencovid19'
+        '''
         return self.db
 
     def get_available_database(self):
-        ''' Return available COVID database '''
+        '''
+        Return all the available Covid19 database :
+        ['jhu', 'spf', 'owid', 'opencovid19']
+        '''
         return self.database_name
 
     def get_available_keys_words(self):
-        ''' Return available keys words for the database selected '''
+        '''
+        Return all the available keyswords for the database selected
+        Key-words are for:
+        - jhu : ['deaths','confirmed','recovered']
+            * the data are cumulative i.e for a date it represents the total cases
+            For more information please have a look to https://github.com/CSSEGISandData/COVID-19/tree/master/csse_covid_19_data
+        - 'owid' : ['total_cases', 'new_cases', 'total_deaths', 'new_deaths',
+                    'total_cases_per_million', 'new_cases_per_million', 'total_deaths_per_million',
+                     'new_deaths_per_million', 'total_tests', 'new_tests', 'total_tests_per_thousand',
+                     'new_tests_per_thousand', 'new_tests_smoothed', 'new_tests_smoothed_per_thousand',
+                      'stringency_index']
+        For more information please have a look to https://github.com/owid/covid-19-data/tree/master/public/data/
+        - 'spf' : ['hosp', 'rea', 'rad', 'dc', 'incid_hosp', 'incid_rea', 'incid_dc',
+                    'incid_rad', 'P', 'T', 'tx_incid', 'R', 'taux_occupation_sae', 'tx_pos']
+            No translation have been done for french keywords data
+        For more information please have a look to  https://www.data.gouv.fr/fr/organizations/sante-publique-france/
+        - 'opencovid19' :['cas_confirmes', 'cas_ehpad', 'cas_confirmes_ehpad', 'cas_possibles_ehpad', 'deces', 'deces_ehpad',
+        'reanimation', 'hospitalises','nouvelles_hospitalisations', 'nouvelles_reanimations', 'gueris', 'depistes']
+        No translation have been done for french keywords data
+        For more information please have a look to https://github.com/opencovid19-fr
+        '''
         return self.available_keys_words
 
     def get_database_url(self):
-        ''' Return the url associated with chosen database '''
-        return self.database_url
+        '''
+        Return all the url used to fill pandas_datase
+        '''
+        return self.csv_url_parsed
 
     def get_rawdata(self):
-        ''' Return raw data associated with chosen database '''
+        '''
+        Return pandas_datase as a python dictionnaries:
+        keys are keyswords and values are:
+                        | date-1    | date-2   | date-3     | ...   | date-i
+           location     |           |          |            |       |
+           location-1   |           |          |            |       |
+           location-2   |           |          |            |       |
+           location-3   |           |          |            |       |
+            ...
+           location-j   |           |          |            |       |
+        '''
         return self.pandas_datase
 
     def parse_convert_jhu(self):
-        ''' For center for Systems Science and Engineering (CSSE) at Johns Hopkins University
+        ''' Parse JHU database and return a pandas
             COVID-19 Data Repository by the see homepage: https://github.com/CSSEGISandData/COVID-19 '''
         self.database_url = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/"+\
         "csse_covid_19_data/csse_covid_19_time_series/"
@@ -162,12 +221,13 @@ class DataBase():
             pandas_jhu_db = pandas_jhu_db.set_index('location')
             self.dates    = pandas.to_datetime(pandas_jhu_db.columns,errors='coerce')
             pandas_jhu[ext] = pandas_jhu_db
+            self.csv_url_parsed.append(url)
         self.dates=[i.strftime('%m/%d/%y') for i in self.dates]
         return pandas_jhu
 
     def csv_to_pandas_index_location_date(self,url,**kwargs):
         '''
-        Parse and convert CSV file to a pandas with location+date as an index
+        Parse and convert CSV file to a pandas with location +d ate as an index
         '''
         self.database_url=url
 
@@ -211,7 +271,7 @@ class DataBase():
 
     def pandas_index_location_date_to_jhu_format(self,mypandas,**kwargs):
         '''
-        Return a pandas in PyCoA Structure
+        Return a pandas in CoCoa Structure
         '''
         kwargs_test(kwargs,['columns_skipped','columns_keeped'],
             'Bad args used in the pandas_index_location_date_to_jhu_format() function.')
@@ -240,7 +300,7 @@ class DataBase():
         return pandas_dico
 
     def fill_pycoa_field(self):
-        ''' Fill PyCoA variables with database data '''
+        ''' Fill CoCoA variables with database data '''
         df = self.get_rawdata()
         #self.dicos_countries = defaultdict(list)
 
@@ -274,14 +334,8 @@ class DataBase():
                 self.dict_diff_days[keys_words] = {loc: np.insert(np.diff(data),0,0) for loc,data in \
                 self.dict_current_days[keys_words].items()}
 
-
-    def set_more_db_info(self,country,val):
-        self.location_more_info[country]=val
-
-    def get_more_db_info(self,country):
-        return self.location_more_info[country]
-
     def flat_list(self, matrix):
+        ''' Flatten list function used in covid19 methods'''
         flatten_matrix = []
         for sublist in matrix:
             for val in sublist:
@@ -289,12 +343,24 @@ class DataBase():
         return flatten_matrix
 
     def get_current_days(self):
+        '''Return a python dictionnary
+        key = 'keywords
+        values = [value_i @ date_i]
+        '''
         return self.dict_current_days
 
     def get_cumul_days(self):
+        '''Return a python dictionnary cumulative
+        key = 'keywords
+        values = [cumululative value of current days return by get_current_days() from (date_0 to date_i)]
+        '''
         return self.dict_cumul_days
 
     def get_diff_days(self):
+        '''Return a python dictionnary differential
+        key = 'keywords
+        values = [difference value between i+1 and ith days current days return by get_current_days()]
+        '''
         return self.dict_diff_days
 
     def get_dates(self):
@@ -306,8 +372,33 @@ class DataBase():
         return np.array(tuple(self.get_diff_days()[self.available_keys_words[0]].keys()))
 
     def get_stats(self, **kwargs):
+        '''
+        Return the pandas pandas_datase
+        'which' :   keywords
+        'location': list of location used in the database selected
+        'output': 'pandas' by default, 'array' return a Python array
+        if output used:
+            'type': 'cumul' or 'diff' return cumulative of diffferential  of keywords value for all the  location
+            selected
+        'option': default none can be 'nonneg'.
+                In some cases negatives values can appeared due to a database updated, nonneg option
+                will smooth the curve during all the period considered
+        keys are keyswords from the selected database
+                location        | date      | keywords     |  cumul        | diff
+                -----------------------------------------------------------------------
+                location1       |    1      |  val1-1      |  cuml1-1      |  diff1-1
+                location1       |    2      |  val1-2      |  cumul1-2     |  diff1-2
+                location1       |    3      |  val1-3      |  cumul1-3     |  diff1-3
+                    ...
+                location1       | last-date |  val1-last   |  cumul1-last  |   diff1-last
+                    ...
+                location-i      |    1      |  vali-1      |  cumli-1      |  diffi-1
+                location-i      |    2      |  vali-1      |  cumli-2      |  diffi-2
+                location-i      |    3      |  vali-1      |  cumli-3      |  diffi-3
+                    ...
 
-        kwargs_test(kwargs,['location','output','type','which','option',],
+        '''
+        kwargs_test(kwargs,['location','output','type','which','option'],
             'Bad args used in the get_stats() function.')
 
         if not isinstance(kwargs['location'], list):
@@ -324,7 +415,7 @@ class DataBase():
         process_data = kwargs.get('type', None)
 
         if kwargs['which'] not in self.get_available_keys_words() :
-            raise CoaKeyError(kwargs['which']+' is not a available for' + self.db + 'database name. '
+            raise CocoaKeyError(kwargs['which']+' is not a available for' + self.db + 'database name. '
             'See get_available_keys_words() for the full list.')
 
         clist=list(set(clist)) # to suppress duplicate countries
@@ -359,13 +450,13 @@ class DataBase():
                 currentout[c, :] = np.cumsum(yy)
                 cumulout[c, :] = np.cumsum(np.cumsum(yy))
         elif option != None:
-            raise CoaKeyError('The option '+option+' is not recognized in get_stat. Error.')
+            raise CocoaKeyError('The option '+option+' is not recognized in get_stat. Error.')
 
         datos=[dt.strptime(d, '%m/%d/%y') for d in self.get_dates()]
         i = 0
         temp=[]
         for coun in clist:
-            if len(coun)==0: 
+            if len(coun)==0:
                 continue
 
             if len(currentout[i]):
@@ -400,12 +491,13 @@ class DataBase():
         #    temp[0] = temp[0].drop(columns=['location'])
 
         if temp==[]:
-            raise CoaWhereError('No valid country available')
+            raise CocoaWhereError('No valid country available')
 
         return pd.concat(temp)
 
     ## https://www.kaggle.com/freealf/estimation-of-rt-from-cases
     def smooth_cases(self,cases):
+        ''' Not yet used '''
         new_cases = cases
 
         smoothed = new_cases.rolling(7,
@@ -422,11 +514,11 @@ class DataBase():
             idx_start = smoothed.index.get_loc(last_zero) + 1
         smoothed = smoothed.iloc[idx_start:]
         original = new_cases.loc[smoothed.index]
-
         return smoothed
 
 
     def get_posteriors(self,sr, window=7, min_periods=1):
+        ''' Not yet used '''
         # We create an array for every possible value of Rt
         R_T_MAX = 12
         r_t_range = np.linspace(0, R_T_MAX, R_T_MAX*100+1)

@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-
 """
 Project : PyCoA
 Date :    april-november 2020

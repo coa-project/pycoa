@@ -109,6 +109,8 @@ class CocoDisplay():
         if not isinstance(input_names_data, list):
            input_names_data=[input_names_data]
 
+        if 'where' in babepandas.columns:
+            babepandas = babepandas.rename(columns={'where':'location'})
         if 'location' in babepandas.columns:
             tooltips='Location: @location <br> Date: @date{%F} <br>  $name: @$name'
             loc = babepandas['location'].unique()
@@ -224,6 +226,8 @@ class CocoDisplay():
         if type(input_names_data) is None.__class__:
             print("Need variable to plot", file=sys.stderr)
 
+        if 'where' in babepandas.columns:
+            babepandas = babepandas.rename(columns={'where':'location'})
         if 'location' in babepandas.columns:
             tooltips='Value at around @middle_bin : @val'
             loc = babepandas['location'].unique()
@@ -499,6 +503,8 @@ class CocoDisplay():
                Value at date (from database point of view) and for all the location defined in the pandas
                will be computed
         """
+        if 'where' in mypandas.columns:
+            mypandas = mypandas.rename(columns={'where':'location'})
 
         if width_height:
             plot_width  = width_height[0]

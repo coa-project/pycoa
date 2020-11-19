@@ -28,8 +28,17 @@ from scipy import stats as sps
 import random
 
 class DataBase():
-    ''' Parse the chosen database and a return a pandas '''
+   '''
+   DataBase class
+   Parse a Covid-19 database and filled the pandas python objet : pandas_datase
+   It takes a string argument, which can be: 'jhu','spf','owid' and 'opencovid19'
+   The pandas_datase structure is based, for historical reason, on the JHU structure:
+   ['location', 'date', key-words , 'cumul', 'diff']
+   '''
     def __init__(self,db_name):
+        '''
+         Fill the pandas_datase
+        '''
         verb("Init of covid19.DataBase()")
         self.database_name=['jhu','spf','owid','opencovid19']
         self.pandas_datase = {}
@@ -125,23 +134,61 @@ class DataBase():
 
 
     def get_db(self):
-        ''' Return database name '''
+        '''
+        Return the Covid19 database selected, so far:
+        'jhu','spf','owid' or 'opencovid19'
+        '''
         return self.db
 
     def get_available_database(self):
-        ''' Return available COVID database '''
+        '''
+        Return all the available Covid19 database :
+        ['jhu', 'spf', 'owid', 'opencovid19']
+        '''
         return self.database_name
 
     def get_available_keys_words(self):
-        ''' Return available keys words for the database selected '''
+        '''
+        Return all the available keyswords for the database selected
+        Key-words are for:
+        - jhu : ['deaths','confirmed','recovered']
+            * the data are cumulative i.e for a date it represents the total cases
+            For more information please have a look to https://github.com/CSSEGISandData/COVID-19/tree/master/csse_covid_19_data
+        - 'owid' : ['total_cases', 'new_cases', 'total_deaths', 'new_deaths',
+                    'total_cases_per_million', 'new_cases_per_million', 'total_deaths_per_million',
+                     'new_deaths_per_million', 'total_tests', 'new_tests', 'total_tests_per_thousand',
+                     'new_tests_per_thousand', 'new_tests_smoothed', 'new_tests_smoothed_per_thousand',
+                      'stringency_index']
+        For more information please have a look to https://github.com/owid/covid-19-data/tree/master/public/data/
+        - 'spf' : ['hosp', 'rea', 'rad', 'dc', 'incid_hosp', 'incid_rea', 'incid_dc',
+                    'incid_rad', 'P', 'T', 'tx_incid', 'R', 'taux_occupation_sae', 'tx_pos']
+            No translation have been done for french keywords data
+        For more information please have a look to  https://www.data.gouv.fr/fr/organizations/sante-publique-france/
+        - 'opencovid19' :['cas_confirmes', 'cas_ehpad', 'cas_confirmes_ehpad', 'cas_possibles_ehpad', 'deces', 'deces_ehpad',
+        'reanimation', 'hospitalises','nouvelles_hospitalisations', 'nouvelles_reanimations', 'gueris', 'depistes']
+        No translation have been done for french keywords data
+        For more information please have a look to https://github.com/opencovid19-fr
+        '''
         return self.available_keys_words
 
     def get_database_url(self):
-        ''' Return the url associated with chosen database '''
+        '''
+        Return all the url used to fill pandas_datase
+        '''
         return self.database_url
 
     def get_rawdata(self):
-        ''' Return raw data associated with chosen database '''
+        '''
+        Return pandas_datase as a python dictionnaries:
+        keys are keyswords and values are:
+                        | date-1    | date-2   | date-3     | ...   | date-i
+           location     |           |          |            |       |
+           location-1   |           |          |            |       |
+           location-2   |           |          |            |       |
+           location-3   |           |          |            |       |
+            ...
+           location-j   |           |          |            |       |
+        '''
         return self.pandas_datase
 
     def parse_convert_jhu(self):
@@ -274,14 +321,9 @@ class DataBase():
                 self.dict_diff_days[keys_words] = {loc: np.insert(np.diff(data),0,0) for loc,data in \
                 self.dict_current_days[keys_words].items()}
 
-
-    def set_more_db_info(self,country,val):
-        self.location_more_info[country]=val
-
-    def get_more_db_info(self,country):
-        return self.location_more_info[country]
-
     def flat_list(self, matrix):
+        ''' Flatten list function used in covid19 methods'''
+        
         flatten_matrix = []
         for sublist in matrix:
             for val in sublist:
@@ -289,12 +331,24 @@ class DataBase():
         return flatten_matrix
 
     def get_current_days(self):
+        '''Return a python dictionnary
+        key = 'keywords
+        values = [value_i @ date_i]
+        '''
         return self.dict_current_days
 
     def get_cumul_days(self):
+        '''Return a python dictionnary cumulative
+        key = 'keywords
+        values = [cumululative value of current days return by get_current_days() from (date_0 to date_i)]
+        '''
         return self.dict_cumul_days
 
     def get_diff_days(self):
+        '''Return a python dictionnary differential
+        key = 'keywords
+        values = [difference value between i+1 and ith days current days return by get_current_days()]
+        '''
         return self.dict_diff_days
 
     def get_dates(self):
@@ -306,7 +360,32 @@ class DataBase():
         return np.array(tuple(self.get_diff_days()[self.available_keys_words[0]].keys()))
 
     def get_stats(self, **kwargs):
+        '''
+        Return the pandas pandas_datase
+        'which' :   keywords
+        'location': list of location used in the database selected
+        'output': 'pandas' by default, 'array' return a Python array
+        if output used:
+            'type': 'cumul' or 'diff' return cumulative of diffferential  of keywords value for all the  location
+            selected
+        'option': default none can be 'nonneg'.
+                In some cases negatives values can appeared due to a database updated, nonneg option
+                will smooth the curve during all the period considered
+        keys are keyswords from the selected database
+                location        | date      | keywords     |  cumul        | diff
+                -----------------------------------------------------------------------
+                location1       |    1      |  val1-1      |  cuml1-1      |  diff1-1
+                location1       |    2      |  val1-2      |  cumul1-2     |  diff1-2
+                location1       |    3      |  val1-3      |  cumul1-3     |  diff1-3
+                    ...
+                location1       | last-date |  val1-last   |  cumul1-last  |   diff1-last
+                    ...
+                location-i      |    1      |  vali-1      |  cumli-1      |  diffi-1
+                location-i      |    2      |  vali-1      |  cumli-2      |  diffi-2
+                location-i      |    3      |  vali-1      |  cumli-3      |  diffi-3
+                    ...
 
+        '''
         kwargs_test(kwargs,['location','output','type','which','option',],
             'Bad args used in the get_stats() function.')
 

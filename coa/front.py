@@ -177,7 +177,7 @@ def get(**kwargs):
     whom=kwargs.get('whom',None)
     option = kwargs.get('option',None)
 
-    output=kwargs.get('output','pandas')
+    output=kwargs.get('output','array')
 
     if not where:
         raise CoaKeyError('No where keyword given')

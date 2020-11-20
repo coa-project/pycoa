@@ -257,10 +257,10 @@ def plot(**kwargs):
     which=kwargs.get('which',listwhich()[0])
     what=kwargs.get('what',None)
     option=kwargs.get('option',None)
-    title=kwargs.get('title',None)
 
     width_height=kwargs.get('width_height',None)
 
+    title = 'Data type: ' + which
     if what:
         which_init = which
         if what == 'daily' or  what == 'diff':
@@ -268,9 +268,11 @@ def plot(**kwargs):
         if what == 'cumul' and _whom == 'jhu':
             which = which_init
         if  what == 'weekly':
-            t['weekly'] = t['diff'].rolling(7).mean()
+            t['weekly'] = t['diff'].rolling(7).mean().values
             which = 'weekly'
+        title+=' (' + what + ')'
 
+    title=kwargs.get('title',title)
     fig = _cocoplot.pycoa_date_plot(t,which,title,width_height)
     show(fig)
 
@@ -307,11 +309,11 @@ def hist(**kwargs):
 
     which=kwargs.get('which',listwhich()[0])
     bins=kwargs.get('bins',None)
-    title=kwargs.get('title',None)
     width_height=kwargs.get('width_height',None)
     what=kwargs.get('what',None)
     date=kwargs.get('date','last')
 
+    title = 'Data type: ' + which
     if type(what) is not None.__class__:
         which_init = which
         if what == 'daily' or  what == 'diff':
@@ -319,10 +321,12 @@ def hist(**kwargs):
         if what == 'cumul' and _whom == 'jhu':
             which = which_init
         if  what == 'weekly':
-            t['weekly'] = t['diff'].rolling(7).mean()
+            t['weekly'] = t['diff'].rolling(7).mean().values()
             which = 'weekly'
         if what[:5] == 'date:':
             date = what[5:]
+        title += '(' + what + ')'
+    title=kwargs.get('title',title)
 
     fig=_cocoplot.pycoa_histo(t,which,bins,title,width_height,date)
 

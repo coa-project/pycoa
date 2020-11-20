@@ -268,7 +268,7 @@ def plot(**kwargs):
         if what == 'cumul' and _whom == 'jhu':
             which = which_init
         if  what == 'weekly':
-            t['weekly'] = t['diff'].rolling(7).mean().values
+            t['weekly'] = t.groupby('where')['diff'].rolling(7).mean().values
             which = 'weekly'
         title+=' (' + what + ')'
 
@@ -321,7 +321,7 @@ def hist(**kwargs):
         if what == 'cumul' and _whom == 'jhu':
             which = which_init
         if  what == 'weekly':
-            t['weekly'] = t['diff'].rolling(7).mean().values()
+            t['weekly'] = t.groupby('where')['diff'].rolling(7).mean().values
             which = 'weekly'
         if what[:5] == 'date:':
             date = what[5:]
@@ -363,7 +363,7 @@ def map(**kwargs):
         if what == 'cumul' and _whom == 'jhu':
             which = which_init
         if  what == 'weekly':
-            t['weekly'] = t['diff'].rolling(7).mean()
+            t['weekly'] = t.groupby('where')['diff'].rolling(7).mean().values
             which = 'weekly'
 
     return _cocoplot.return_map(t,which)

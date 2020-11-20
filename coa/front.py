@@ -211,9 +211,9 @@ def get(**kwargs):
     if output == 'list':
         pandy = _db.get_stats(which=which,location=where,option=option,output='array').tolist()
     if output == 'pandas':
-        pandy = _db.get_stats(which=which,location=where,output='pandas').rename(columns={'location': 'where'})
+        pandy = _db.get_stats(which=which,location=where,option=option,output='pandas').rename(columns={'location': 'where'})
     if output == 'dict':
-        pandy = _db.get_stats(which=which,location=where,output='pandas').rename(columns={'location': 'where'})
+        pandy = _db.get_stats(which=which,location=where,option=option,output='pandas').rename(columns={'location': 'where'})
         pandy = pd.pivot_table(pandy, index='date',columns='where',values=which).to_dict('series')
 
     return pandy

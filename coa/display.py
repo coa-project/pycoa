@@ -82,18 +82,17 @@ class CocoDisplay():
          tools=['save','box_zoom,box_select,crosshair,reset'])
 
     @staticmethod
-    def pycoa_basic_plot(babepandas, input_names_data = None,title = None, width_height = None):
-        """Create a Bokeh plot with a date axis from pandas input
+    def pycoa_date_plot(babepandas, input_names_data = None,title = None, width_height = None):
+        """Create a Bokeh date chart from pandas input (x axis is a date format)
 
         Keyword arguments
         -----------------
-        babepandas : pandas where the data is considered
-        input_names_data : variable from pandas data . If pandas is produced from pycoa get_stat method
-        the 'diff' or 'cumul' are available
-        A list of names_data can be given
-        title: title for the figure , no title by default
-        width_height : width and height of the figure,  default [400,300]
-
+        - babepandas : pandas where the data is considered
+        - input_names_data : variable from pandas data.
+          * variable or list of variables available in babepandas (i.e available in the babepandas columns name  )
+          * If pandas is produced from pycoa get_stat method 'diff' or 'cumul' variable are available
+        - title: title for the figure , no title by default
+        - width_height : width and height of the figure,  default [400,300]
 
         Note
         -----------------

@@ -261,7 +261,7 @@ def plot(**kwargs):
             t['weekly'] = t['diff'].rolling(7).mean()
             which = 'weekly'
                    
-    fig = _cocoplot.pycoa_basic_plot(t,which,title,width_height)
+    fig = _cocoplot.pycoa_date_plot(t,which,title,width_height)
     show(fig)
 
 # ----------------------------------------------------------------------

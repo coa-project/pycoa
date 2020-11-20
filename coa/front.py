@@ -160,10 +160,10 @@ def get(**kwargs):
 
     output --   output format returned ( list (default), dict or pandas)
 
-    option --   pre-computing option. 
-                Currently, only the nonneg option is available, meaning 
-                that negative daily balance is pushed back to previous 
-                days in order to have a cumulative function which is 
+    option --   pre-computing option.
+                Currently, only the nonneg option is available, meaning
+                that negative daily balance is pushed back to previous
+                days in order to have a cumulative function which is
                 monotonous increasing.
                 is available. By default : no option.
     """
@@ -176,22 +176,22 @@ def get(**kwargs):
     which=kwargs.get('which',None)
     whom=kwargs.get('whom',None)
     option = kwargs.get('option',None)
-    
-    output=kwargs.get('output',None)
+
+    output=kwargs.get('output','pandas')
 
     if not where:
         raise CoaKeyError('No where keyword given')
     if not what:
-        what=listwhat()[0]    
+        what=listwhat()[0]
     if not whom:
         whom=_whom
     if whom != _whom:
         setwhom(whom)
     if option:
-        if option != 'nonneg':       
-            raise CoaKeyError('Waiting for option a valid option ... so far nonneg')    
+        if option != 'nonneg':
+            raise CoaKeyError('Waiting for option a valid option ... so far nonneg')
         else:
-            option = 'nonneg'    
+            option = 'nonneg'
 
     #elif what not in listwhat():
     if not bool([s for s in listwhat() if s in what]):
@@ -203,9 +203,9 @@ def get(**kwargs):
     elif which not in setwhom(whom):
         raise CoaKeyError('Which option '+which+' not supported. '
                             'See listwhich() for list.')
-    pandy = _db.get_stats(which=which,location=where,option=option)
-    if inspect.stack()[1].function == '<module>':
-        pandy = _db.get_stats(which=which,location=where).rename(columns={'location': 'where'})
+    pandy = _db.get_stats(which=which,location=where,option=option,output=output)
+    if inspect.stack()[1].function == '<module>' and output=='pandas':
+        pandy = _db.get_stats(which=which,location=where,output=output).rename(columns={'location': 'where'})
     return pandy
 
 
@@ -235,7 +235,7 @@ def plot(**kwargs):
             'Bad args used in the pycoa.plot() function.')
 
     input_arg=kwargs.get('input',None)
-    
+
     if input_arg != None:
         if not isinstance(input_arg,pd.DataFrame):
             raise CoaTypeError('Waiting input as valid pycoa pandas '
@@ -248,9 +248,9 @@ def plot(**kwargs):
     what=kwargs.get('what',None)
     option=kwargs.get('option',None)
     title=kwargs.get('title',None)
-    
+
     width_height=kwargs.get('width_height',None)
-    
+
     if what:
         which_init = which
         if what == 'daily' or  what == 'diff':
@@ -260,7 +260,7 @@ def plot(**kwargs):
         if  what == 'weekly':
             t['weekly'] = t['diff'].rolling(7).mean()
             which = 'weekly'
-                   
+
     fig = _cocoplot.pycoa_date_plot(t,which,title,width_height)
     show(fig)
 

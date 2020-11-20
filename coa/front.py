@@ -158,7 +158,8 @@ def get(**kwargs):
                 function). See listwhom() for supported list
                 function). See listwhom() for supported list
 
-    output --   output format returned ( list (default), dict or pandas)
+    output --   output format returned ( list (default), array (numpy.array),
+                dict or pandas)
 
     option --   pre-computing option.
                 Currently, only the nonneg option is available, meaning
@@ -178,6 +179,8 @@ def get(**kwargs):
     option = kwargs.get('option',None)
 
     output=kwargs.get('output','list')
+    if output not in ['list','dict','array','pandas']:
+        raise CoaKeyError('Output option '+output+' not supported. See help().')
 
     if not where:
         raise CoaKeyError('No where keyword given')

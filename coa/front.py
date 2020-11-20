@@ -203,9 +203,16 @@ def get(**kwargs):
     elif which not in setwhom(whom):
         raise CoaKeyError('Which option '+which+' not supported. '
                             'See listwhich() for list.')
-    pandy = _db.get_stats(which=which,location=where,option=option,output=output)
-    if inspect.stack()[1].function == '<module>' and output=='pandas':
-        pandy = _db.get_stats(which=which,location=where,output=output).rename(columns={'location': 'where'})
+    if output== 'array':
+        pandy = _db.get_stats(which=which,location=where,option=option,output='array')
+    if output == 'list':
+        pandy = _db.get_stats(which=which,location=where,option=option,output='array').tolist()
+    if output == 'pandas':
+        pandy = _db.get_stats(which=which,location=where,output='pandas').rename(columns={'location': 'where'})
+    if output == 'dict':
+        pandy = _db.get_stats(which=which,location=where,output='pandas').rename(columns={'location': 'where'})
+        pandy = pd.pivot_table(pandy, index='date',columns='where',values=which).to_dict('series')
+
     return pandy
 
 

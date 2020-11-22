@@ -211,6 +211,8 @@ def get(**kwargs):
 
     if output == 'pandas':
         pandy = pandy
+        if inspect.stack()[1].function == '<module>':
+            pandy = pandy.rename(columns={'diff':'daily'})
     else:
         if what == 'daily' or what == 'diff':
             which = 'diff'
@@ -344,7 +346,7 @@ def map(**kwargs):
     what   --   which data are computed, either in cumulative mode
                 ('cumul', default value), 'daily' or 'diff' and
                 'weekly' (rolling daily over 1 week).
-                'date:date_value' return which value at the date date_value   
+                'date:date_value' return which value at the date date_value
     """
     kwargs_test(kwargs,['where','what','which','whom','input'],
             'Bad args used in the pycoa.map() function.')

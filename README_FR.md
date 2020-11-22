@@ -1,9 +1,8 @@
 <!-- [Pycoa Logo](fig/pycoa_logo.png) -->
-
-<img src="https://github.com/coa-project/coa-project.github.io/blob/main/fig/pycoa_plot_example.png" width="200px">
-<img src="https://github.com/coa-project/coa-project.github.io/blob/main/fig/pycoa_map_example.png" width="200px"> 
-<img src="https://github.com/coa-project/coa-project.github.io/blob/main/fig/pycoa_hist_example.png" width="200px">
-<img src="https://github.com/coa-project/coa-project.github.io/blob/main/fig/pycoa_get_example.png" width="200px">
+![alt text](https://github.com/coa-project/coa-project.github.io/blob/main/fig/pycoa_plot_example.png)
+![alt text](https://github.com/coa-project/coa-project.github.io/blob/main/fig/pycoa_map_example.png)
+![alt text](https://github.com/coa-project/coa-project.github.io/blob/main/fig/pycoa_hist_example.png)
+![alt text](https://github.com/coa-project/coa-project.github.io/blob/main/fig/pycoa_get_example.png)
 
 # PyCoA version 1.0
 

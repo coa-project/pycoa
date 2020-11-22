@@ -1,13 +1,13 @@
 <!-- [Pycoa Logo](fig/pycoa_logo.png) -->
 
-<img src="https://github.com/tjbtjbtjb/pycoa/blob/main/docs/fig/pycoa_plot_example.png" width="200px"> <img src="https://github.com/tjbtjbtjb/pycoa/blob/main/docs/fig/pycoa_map_example.png" width="200px"> <img src="https://github.com/tjbtjbtjb/pycoa/blob/main/docs/fig/pycoa_hist_example.png" width="200px"> <img src="https://github.com/tjbtjbtjb/pycoa/blob/main/docs/fig/pycoa_get_example.png" width="200px">
+<img src="https://github.com/coa-project/coa-project.github.io/tree/main/fig/pycoa_plot_example.png" width="200px"> <img src="https://github.com/coa-project/coa-project.github.io/tree/main/fig/pycoa_map_example.png" width="200px"> <img src="https://github.com/coa-project/coa-project.github.io/tree/main/fig/pycoa_hist_example.png" width="200px"> <img src="https://github.com/tjbtjbtjb/pycoa/blob/main/docs/fig/pycoa_get_example.png" width="200px">
 
 # PyCoA version 1.0
 
 _Avril/Novembre 2020_
 
-[<img src="https://github.com/tjbtjbtjb/pycoa/blob/main/docs/fig/FR.png" height="14px" alt="FR flag"> Version française ](https://github.com/tjbtjbtjb/pycoa/blob/main/README_FR.md) /
-[<img src="https://github.com/tjbtjbtjb/pycoa/blob/main/docs/fig/UK.png" height="14px" alt="UK flag"> English  version ](https://github.com/tjbtjbtjb/pycoa/blob/main/README.md)
+[<img src="https://github.com/coa-project/coa-project.github.io/tree/main/fig/FR.png" height="14px" alt="FR flag"> Version française ](https://github.com/coa-project/pycoa/blob/main/README_FR.md) /
+[<img src="https://github.com/tjbtjbtjb/pycoa/blob/main/docs/fig/UK.png" height="14px" alt="UK flag"> English  version ](https://github.com/coa-project/pycoa/blob/main/README.md)
 
 
 `PyCoA` (Python Covid Analysis) est un ensemble de code Python™ qui fournit :

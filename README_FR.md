@@ -1,12 +1,15 @@
 <!-- [Pycoa Logo](fig/pycoa_logo.png) -->
 
-<img src="https://github.com/coa-project/coa-project.github.io/tree/main/fig/pycoa_plot_example.png" width="200px"> <img src="https://github.com/coa-project/coa-project.github.io/tree/main/fig/pycoa_map_example.png" width="200px"> <img src="https://github.com/coa-project/coa-project.github.io/tree/main/fig/pycoa_hist_example.png" width="200px"> <img src="https://github.com/tjbtjbtjb/pycoa/blob/main/docs/fig/pycoa_get_example.png" width="200px">
+<img src="https://github.com/coa-project/coa-project.github.io/blob/main/fig/pycoa_plot_example.png" width="200px">
+<img src="https://github.com/coa-project/coa-project.github.io/blob/main/fig/pycoa_map_example.png" width="200px"> 
+<img src="https://github.com/coa-project/coa-project.github.io/blob/main/fig/pycoa_hist_example.png" width="200px">
+<img src="https://github.com/coa-project/coa-project.github.io/blob/main/fig/pycoa_get_example.png" width="200px">
 
 # PyCoA version 1.0
 
 _Avril/Novembre 2020_
 
-[<img src="https://github.com/coa-project/coa-project.github.io/tree/main/fig/FR.png" height="14px" alt="FR flag"> Version française ](https://github.com/coa-project/pycoa/blob/main/README_FR.md) /
+[<img src="https://github.com/coa-project/coa-project.github.io/blob/main/fig/FR.png" height="14px" alt="FR flag"> Version française ](https://github.com/coa-project/pycoa/blob/main/README_FR.md) /
 [<img src="https://github.com/tjbtjbtjb/pycoa/blob/main/docs/fig/UK.png" height="14px" alt="UK flag"> English  version ](https://github.com/coa-project/pycoa/blob/main/README.md)
 
 
@@ -29,13 +32,6 @@ PyCoA fonctionne :
 - sur des plateforme `Jupyter` en ligne, comme [`Google Colab`](https://colab.research.google.com/),
 - ou même avec un `docker`, comme [`mybinder`](https://mybinder.org/).
 
-Un code de démonstration est accesible comme : 
-- [notebook Jupyter](https://github.com/tjbtjbtjb/pycoa/tree/main/notebooks)
-- [fichier `.py`](https://github.com/tjbtjbtjb/pycoa/tree/main/py)
-
-**-> Là il faut changer les liens pour pointer vers un unique demo code**
-
-La documentation complète se trouve sur [le Wiki](https://github.com/tjbtjbtjb/pycoa/wiki/Home).
 
 ### Auteurs
 
@@ -43,13 +39,3 @@ La documentation complète se trouve sur [le Wiki](https://github.com/tjbtjbtjb/
 * Julien Browaeys - [Université de Paris](http://u-paris.fr) - [MSC laboratory](http://www.msc.univ-paris-diderot.fr/)
 * Olivier Dadoun - [CNRS](http://cnrs.fr) - [LPNHE laboratory](http://lpnhe.in2p3.fr/)
 
----
-**-> Après j'effacerais tout (ce qui est commenté) parce que je ne comprends pas... et je pense que cela sert peu**
-
-<!-- 
-<section id="downloads" class="clearfix">
-  <a href="https://github.com/tjbtjbtjb/pycoa/zipball/main" id="download-zip" class="button"><span>Download .zip</span></a>
-  <a href="https://github.com/tjbtjbtjb/pycoa/tarball/main" id="download-tar-gz" class="button"><span>Download .tar.gz</span></a>
-  <a href="https://github.com/tjbtjbtjb/pycoa/" id="view-on-github" class="button"><span>View on GitHub</span></a>
-</section>~~
--->

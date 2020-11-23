@@ -492,10 +492,12 @@ class CocoDisplay():
         '''
         Save map as png geckodriver and PIL packages are needed
         '''
+        size = width_height_default[0],width_height_default[1] 
         if pngfile:
             pngfile=pngfile
         img_data = map._to_png(5)
         img = Image.open(io.BytesIO(img_data))
+        img.thumbnail(size, Image.ANTIALIAS)
         img.save(pngfile)
         print(pngfile, ' is now save ...')
 

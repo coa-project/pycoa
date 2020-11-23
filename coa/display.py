@@ -60,6 +60,8 @@ from geopy.geocoders import Nominatim
 import altair as alt
 import numpy as np
 from shapely.ops import unary_union
+import io
+from PIL import Image
 
 width_height_default = [500,400]
 class CocoDisplay():
@@ -485,7 +487,18 @@ class CocoDisplay():
         del self.value
 
 
-    #@staticmethod
+    @staticmethod
+    def save_map2png(map=None,pngfile='map.png'):
+        '''
+        Save map as png geckodriver and PIL packages are needed
+        '''
+        if pngfile:
+            pngfile=pngfile
+        img_data = map._to_png(5)
+        img = Image.open(io.BytesIO(img_data))
+        img.save(pngfile)
+        print(pngfile, ' is now save ...')
+
     def return_map(self,mypandas,which_data = None,width_height = None, date = 'last'):
         """Create a Folium map from a pandas input
 

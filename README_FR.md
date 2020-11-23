@@ -1,4 +1,10 @@
 <!-- [Pycoa Logo](fig/pycoa_logo.png) -->
+| Left-aligned | Center-aligned | Right-aligned |
+| :---         |     :---:      |          ---: |
+| ![alt image](https://github.com/coa-project/coa-project.github.io/blob/main/fig/plot_exemple.png|width=200)  | 
+![alt image](https://github.com/coa-project/coa-project.github.io/blob/main/fig/map_exemple.png|width=200) |
+| git diff     | git diff       | git diff      |
+
 |toto|titi|
 | ------------- | ------------- |
 |![alt image](https://github.com/coa-project/coa-project.github.io/blob/main/fig/plot_exemple.png|width=200)

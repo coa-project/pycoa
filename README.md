@@ -1,10 +1,9 @@
 <!-- [Pycoa Logo](fig/pycoa_logo.png) -->
-
-<img src=fig/pycoa_plot_example.png" width="200px"> 
-<img src="fig/pycoa_map_example.png" width="200px"> 
-<img src="fig/pycoa_hist_example.png" width="200px"> 
-<img src="fig/pycoa_get_example.png" width="200px">
-
+| ------------- | ------------- |
+|![alt image](https://github.com/coa-project/coa-project.github.io/blob/main/fig/plot_exemple.png|width=200)|
+|![alt image](https://github.com/coa-project/coa-project.github.io/blob/main/fig/map_exemple.png|width=200)|
+|![alt image](https://github.com/coa-project/coa-project.github.io/blob/main/fig/histo_exemple.png|width=200)|
+|![alt image](https://github.com/coa-project/coa-project.github.io/blob/main/fig/pycoa_get_example.png|width=200)|
 # PyCoA release 1.0
 
 _April/November 2020_
@@ -35,8 +34,6 @@ PyCoA works:
 Demo code is available: 
 - as [notebooks](https://github.com/pycoa/pycoa-notebooks)
 - as [online colab notebooks](https://drive.google.com/drive/folders/1TAyzyVncQbRn8KWN5d9St_dpqH2UDhDE?usp=sharing)
-
-Full documentation is on [the Wiki](https://github.com/tjbtjbtjb/pycoa/wiki/Home).
 
 ### Authors
 

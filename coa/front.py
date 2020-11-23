@@ -38,7 +38,6 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import geopandas as gpd
 import inspect
-
 from coa.tools import kwargs_test
 import coa.covid19 as coco
 import coa.geo as coge
@@ -147,7 +146,6 @@ def listwhich(dbname=None):
 # ----------------------------------------------------------------------
 # --- get(**kwargs) ----------------------------------------------------
 # ----------------------------------------------------------------------
-
 def get(**kwargs):
     """Return covid19 data in specified format output (default, by list)
     for specified locations ('where' keyword).
@@ -162,7 +160,8 @@ def get(**kwargs):
                 'recovered' …). See listwhat() function for full
                 list according to the used database.
     what   --   which data are computed, either in cumulative mode
-                ( 'cumul', default value) or 'daily' or other. See
+                ('cumul', default value), 'daily' or 'diff' and
+                'weekly' (rolling daily over 1 week) . See
                 listwhich() for fullist of available
                 Full list of which keyword with the listwhich() function.
     whom   --   Database specification (overload the setbase()
@@ -207,9 +206,8 @@ def get(**kwargs):
         else:
             option = 'nonneg'
 
-    #elif what not in listwhat():
     if not bool([s for s in listwhat() if s in what]):
-        raise CoaKeyError('What option '+what+' not supported'
+        raise CoaKeyError('What option '+ what +' not supported'
                             'See listwhat() for list.')
 
     if not which:
@@ -217,19 +215,34 @@ def get(**kwargs):
     elif which not in setwhom(whom):
         raise CoaKeyError('Which option '+which+' not supported. '
                             'See listwhich() for list.')
-    if output== 'array':
-        pandy = _db.get_stats(which=which,location=where,option=option,output='array')
-    if output == 'list':
-        pandy = _db.get_stats(which=which,location=where,option=option,output='array').tolist()
+
+    pandy = _db.get_stats(which=which,location=where,option=option,output='pandas').rename(columns={'location': 'where'})
+    pandy['weekly'] = pandy.groupby('where')['diff'].rolling(7).mean().values
+
     if output == 'pandas':
-        pandy = _db.get_stats(which=which,location=where,option=option,output='pandas').rename(columns={'location': 'where'})
-    if output == 'dict':
-        pandy = _db.get_stats(which=which,location=where,option=option,output='pandas').rename(columns={'location': 'where'})
+        pandy = pandy
+        if inspect.stack()[1].function == '<module>':
+            pandy = pandy.rename(columns={'diff':'daily'})
+    else:
+        if what == 'daily' or what == 'diff':
+            which = 'diff'
+        if what == 'cumul' and _whom == 'jhu':
+            which = 'cumul'
+        if what == 'weekly':
+            which = 'weekly'
         pandy = pd.pivot_table(pandy, index='date',columns='where',values=which).to_dict('series')
-
+        if output == 'dict':
+            pandy = pandy
+        if output == 'list' or output == 'array':
+            my_list = []
+            for keys,values in pandy.items():
+                vc=[]
+                vc=[i for i in values]
+                my_list.append(vc)
+            pandy = my_list
+            if output == 'array':
+                pandy = np.array(pandy)
     return pandy
-
-
 
 # ----------------------------------------------------------------------
 # --- plot(**kwargs) ---------------------------------------------------
@@ -251,6 +264,8 @@ def plot(**kwargs):
                 When the 'input' keyword is set, where, what, which,
                 whom keywords are ignored.
                 input should be given as valid pycoa pandas dataframe.
+    width_height : is specified list of width and height, width_height=[400,500]
+                    for instance
     """
     kwargs_test(kwargs,['where','what','which','whom','input','width_height','option'],
             'Bad args used in the pycoa.plot() function.')
@@ -268,21 +283,13 @@ def plot(**kwargs):
     which=kwargs.get('which',listwhich()[0])
     what=kwargs.get('what',None)
     option=kwargs.get('option',None)
-
     width_height=kwargs.get('width_height',None)
-
     title = 'Data type: ' + which
-    if what:
-        which_init = which
-        if what == 'daily' or  what == 'diff':
-            which = 'diff'
-        if what == 'cumul' and _whom == 'jhu':
-            which = which_init
-        if  what == 'weekly':
-            t['weekly'] = t.groupby('where')['diff'].rolling(7).mean().values
-            which = 'weekly'
-        title+=' (' + what + ')'
-
+    if what :
+        title += '( '+ what + ' )'
+        if what == 'daily':
+            what = 'diff'
+        which = what
     title=kwargs.get('title',title)
     fig = _cocoplot.pycoa_date_plot(t,which,title,width_height)
     show(fig)
@@ -305,6 +312,10 @@ def hist(**kwargs):
                 function.
                 When the 'input' keyword is set, where, what, which,
                 whom keywords are ignored.
+    what   --   which data are computed, either in cumulative mode
+                ('cumul', default value), 'daily' or 'diff' and
+                'weekly' (rolling daily over 1 week).
+                'date:date_value' return which value at the date date_value
     """
     kwargs_test(kwargs,['where','what','which','whom','input','bins'],
             'Bad args used in the pycoa.hist() function.')
@@ -326,17 +337,9 @@ def hist(**kwargs):
 
     title = 'Data type: ' + which
     if type(what) is not None.__class__:
-        which_init = which
-        if what == 'daily' or  what == 'diff':
-            which = 'diff'
-        if what == 'cumul' and _whom == 'jhu':
-            which = which_init
-        if  what == 'weekly':
-            t['weekly'] = t.groupby('where')['diff'].rolling(7).mean().values
-            which = 'weekly'
         if what[:5] == 'date:':
             date = what[5:]
-        title += '(' + what + ')'
+        title += '( ' + what + ' )'
     title=kwargs.get('title',title)
 
     fig=_cocoplot.pycoa_histo(t,which,bins,title,width_height,date)
@@ -350,6 +353,10 @@ def hist(**kwargs):
 def map(**kwargs):
     """Create a map according to arguments and options.
     See help(hist).
+    what   --   which data are computed, either in cumulative mode
+                ('cumul', default value), 'daily' or 'diff' and
+                'weekly' (rolling daily over 1 week).
+                'date:date_value' return which value at the date date_value
     """
     kwargs_test(kwargs,['where','what','which','whom','input'],
             'Bad args used in the pycoa.map() function.')
@@ -366,15 +373,5 @@ def map(**kwargs):
         t=get(**kwargs,output='pandas')
 
     which=kwargs.get('which',listwhich()[0])
-    what=kwargs.get('what',None)
-    if what:
-        which_init = which
-        if what == 'daily' or  what == 'diff':
-            which = 'diff'
-        if what == 'cumul' and _whom == 'jhu':
-            which = which_init
-        if  what == 'weekly':
-            t['weekly'] = t.groupby('where')['diff'].rolling(7).mean().values
-            which = 'weekly'
 
     return _cocoplot.return_map(t,which)

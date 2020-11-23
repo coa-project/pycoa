@@ -43,7 +43,7 @@ import coa.covid19 as coco
 import coa.geo as coge
 from coa.error import *
 import coa.display as cd
-
+import numpy as np
 from bokeh.io import show, output_notebook
 output_notebook(hide_banner=True)
 
@@ -68,7 +68,7 @@ _cocoplot = cd.CocoDisplay(_db)
 _listwhat=['cumul','diff',  # first one is default but we must avoid uppercases
             'daily',
             'weekly',
-            'date']
+            'date:']
 
 _listoutput=['list','dict','array','pandas'] # first one is default for get
 
@@ -78,8 +78,8 @@ _listoutput=['list','dict','array','pandas'] # first one is default for get
 # --- listoutput() -----------------------------------------------------
 # ----------------------------------------------------------------------
 def listoutput():
-    """Return the list of currently available output types for the 
-    get() function. The first one is the default output given if 
+    """Return the list of currently available output types for the
+    get() function. The first one is the default output given if
     not specified.
     """
     return _listoutput
@@ -164,6 +164,8 @@ def get(**kwargs):
                 'weekly' (rolling daily over 1 week) . See
                 listwhich() for fullist of available
                 Full list of which keyword with the listwhich() function.
+                If a date is stipulated (in the form month/day/year) return date at this date:
+                For instance what='date:11/22/2020' for november 22, 2020
     whom   --   Database specification (overload the setbase()
                 function). See listwhom() for supported list
                 function). See listwhom() for supported list
@@ -218,7 +220,9 @@ def get(**kwargs):
 
     pandy = _db.get_stats(which=which,location=where,option=option,output='pandas').rename(columns={'location': 'where'})
     pandy['weekly'] = pandy.groupby('where')['diff'].rolling(7).mean().values
-
+    if what[:5] == 'date:':
+        date = what[5:]
+        pandy = pandy.loc[pandy.date==date]
     if output == 'pandas':
         pandy = pandy
         if inspect.stack()[1].function == '<module>':
@@ -294,6 +298,9 @@ def plot(**kwargs):
         if what == 'daily':
             what = 'diff'
         which = what
+        if what[:5] == 'date:':
+            date = what[5:]
+            raise CoaTypeError('date not available for plot function ...')
     title=kwargs.get('title',title)
     fig = _cocoplot.pycoa_date_plot(t,which,title,width_height)
     show(fig)

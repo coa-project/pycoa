@@ -49,7 +49,7 @@ import itertools
 import sys
 
 import coa.geo as coge
-from coa.tools import info,verb
+from coa.tools import info,verb,check_valid_date
 
 from pyproj import CRS
 #import plotly.express as px
@@ -84,16 +84,6 @@ class CocoDisplay():
     def standardfig(self,title=None, axis_type='linear',x_axis_type='datetime'):
          return figure(title=title,plot_width=400, plot_height=300,y_axis_type=axis_type,x_axis_type=x_axis_type,
          tools=['save','box_zoom,box_select,crosshair,reset'])
-
-    @staticmethod
-    def check_valid_date(date):
-        if date.count('/') != 2:
-            raise CoaTypeError("Not a valid date should be : month/day/year")
-        month,day,year = date.split('/')
-        try :
-            datetime.datetime(int(year),int(month),int(day))
-        except ValueError :
-            raise CoaTypeError("Input date not valid ... month/day/year")
 
     @staticmethod
     def pycoa_date_plot(babepandas, input_names_data = None,title = None, width_height = None):
@@ -268,7 +258,7 @@ class CocoDisplay():
                    when = when.strftime('%m/%d/%y')
                else:
                    when = date
-               CocoDisplay.check_valid_date(when)
+               check_valid_date(when)
                val_per_country = defaultdict(list)
                for w in loc:
                    val = babepandas.loc[(babepandas['location'] == w) & (babepandas['date'] == when)][input_names_data].values
@@ -559,7 +549,7 @@ class CocoDisplay():
             when = when.strftime('%m/%d/%y')
         else:
             when = date
-        CocoDisplay.check_valid_date(when)
+        check_valid_date(when)
         if type(which_data) is None.__class__:
             which_data = mypandas.columns[2]
             label = which_data

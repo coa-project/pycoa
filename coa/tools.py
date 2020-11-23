@@ -18,6 +18,7 @@ default value is 1 (print information to stdout). The 2 value grants a debug lev
 printing.
 """
 
+import datetime
 from coa.error import CoaKeyError
 
 _verbose_mode = 1 # default
@@ -51,3 +52,12 @@ def kwargs_test(given_args,expected_args,error_string):
         raise CoaKeyError(error_string+' Unrecognized args are '+str(bad_kwargs)+'.')
 
     return True
+
+def check_valid_date(date):
+    if date.count('/') != 2:
+        raise CoaTypeError("Not a valid date should be : month/day/year")
+    month,day,year = date.split('/')
+    try :
+        datetime.datetime(int(year),int(month),int(day))
+    except ValueError :
+        raise CoaTypeError("Input date not valid ... month/day/year")

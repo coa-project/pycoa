@@ -38,7 +38,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import geopandas as gpd
 import inspect
-from coa.tools import kwargs_test
+from coa.tools import kwargs_test,check_valid_date
 import coa.covid19 as coco
 import coa.geo as coge
 from coa.error import *
@@ -68,7 +68,8 @@ _cocoplot = cd.CocoDisplay(_db)
 _listwhat=['cumul','diff',  # first one is default but we must avoid uppercases
             'daily',
             'weekly',
-            'date:']
+            'date:',
+            'ddate:']
 
 _listoutput=['list','dict','array','pandas'] # first one is default for get
 
@@ -222,7 +223,7 @@ def get(**kwargs):
     pandy['weekly'] = pandy.groupby('where')['diff'].rolling(7).mean().values
     if what[:5] == 'date:':
         date = what[5:]
-        cd.CocoDisplay.check_valid_date(date)
+        check_valid_date(date)
         pandy = pandy.loc[pandy.date==date]
     if output == 'pandas':
         pandy = pandy

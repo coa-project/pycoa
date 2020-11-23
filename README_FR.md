@@ -1,4 +1,5 @@
 <!-- [Pycoa Logo](fig/pycoa_logo.png) -->
+|toto|titi|
 | ------------- | ------------- |
 |![alt image](https://github.com/coa-project/coa-project.github.io/blob/main/fig/plot_exemple.png|width=200)
 |![alt image](https://github.com/coa-project/coa-project.github.io/blob/main/fig/map_exemple.png|width=200)|

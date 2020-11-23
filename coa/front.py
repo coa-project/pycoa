@@ -398,5 +398,8 @@ def map(**kwargs):
     if type(what) is not None.__class__:
         if what[:5] == 'date:':
             date = what[5:]
+        if what[:6] == 'ddate:':
+            date = what[6:]
+            which = 'diff'
 
     return _cocoplot.return_map(t,which,date=date)

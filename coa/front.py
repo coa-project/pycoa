@@ -71,8 +71,19 @@ _listwhat=['cumul','diff',  # first one is default but we must avoid uppercases
             'weekly',
             'date']
 
+_listoutput=['list','dict','array','pandas'] # first one is default for get
+
 # --- Front end functions ----------------------------------------------
 
+# ----------------------------------------------------------------------
+# --- listoutput() -----------------------------------------------------
+# ----------------------------------------------------------------------
+def listoutput():
+    """Return the list of currently available output types for the 
+    get() function. The first one is the default output given if 
+    not specified.
+    """
+    return _listoutput
 
 # ----------------------------------------------------------------------
 # --- listwhom() -------------------------------------------------------
@@ -178,8 +189,8 @@ def get(**kwargs):
     whom=kwargs.get('whom',None)
     option = kwargs.get('option',None)
 
-    output=kwargs.get('output','list')
-    if output not in ['list','dict','array','pandas']:
+    output=kwargs.get('output',listoutput()[0])
+    if output not in listoutput():
         raise CoaKeyError('Output option '+output+' not supported. See help().')
 
     if not where:

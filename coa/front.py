@@ -210,7 +210,7 @@ def get(**kwargs):
 
     if not bool([s for s in listwhat() if s in what]):
         raise CoaKeyError('What option '+ what +' not supported'
-                            'See listwhat() for list.')
+                            'See listwhat() for full list.')
 
     if not which:
         which=listwhich()[0]
@@ -344,17 +344,16 @@ def hist(**kwargs):
     bins=kwargs.get('bins',None)
     width_height=kwargs.get('width_height',None)
     what=kwargs.get('what',None)
-    if what == 'cumul' and _whom == 'jhu':
-            what = which
-    date=kwargs.get('date','last')
-
     title = 'Data type: ' + which
     if type(what) is not None.__class__:
         if what[:5] == 'date:':
             date = what[5:]
         title += ' (' + what + ')'
-    title=kwargs.get('title',title)
 
+    if what == 'cumul' and _whom == 'jhu':
+            what = which
+    date=kwargs.get('date','last')
+    title=kwargs.get('title',title)
     fig=_cocoplot.pycoa_histo(t,which,bins,title,width_height,date)
 
     show(fig)

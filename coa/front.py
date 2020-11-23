@@ -213,11 +213,13 @@ def get(**kwargs):
         pandy = pandy
         if inspect.stack()[1].function == '<module>':
             pandy = pandy.rename(columns={'diff':'daily'})
+            pandy = pandy.drop(columns=['cumul'])
+            pandy = pandy.rename(columns={which:which+'/cumul'})
     else:
         if what == 'daily' or what == 'diff':
             which = 'diff'
         if what == 'cumul' and _whom == 'jhu':
-            which = 'cumul'
+            which = which
         if what == 'weekly':
             which = 'weekly'
         pandy = pd.pivot_table(pandy, index='date',columns='where',values=which).to_dict('series')
@@ -272,6 +274,8 @@ def plot(**kwargs):
 
     which=kwargs.get('which',listwhich()[0])
     what=kwargs.get('what',None)
+    if what == 'cumul' and _whom == 'jhu':
+        what = which
     option=kwargs.get('option',None)
     width_height=kwargs.get('width_height',None)
     title = 'Data type: ' + which
@@ -323,13 +327,15 @@ def hist(**kwargs):
     bins=kwargs.get('bins',None)
     width_height=kwargs.get('width_height',None)
     what=kwargs.get('what',None)
+    if what == 'cumul' and _whom == 'jhu':
+            what = which
     date=kwargs.get('date','last')
 
     title = 'Data type: ' + which
     if type(what) is not None.__class__:
         if what[:5] == 'date:':
             date = what[5:]
-        title += '( ' + what + ' )'
+        title += ' (' + what + ')'
     title=kwargs.get('title',title)
 
     fig=_cocoplot.pycoa_histo(t,which,bins,title,width_height,date)
@@ -363,5 +369,12 @@ def map(**kwargs):
         t=get(**kwargs,output='pandas')
 
     which=kwargs.get('which',listwhich()[0])
+    what=kwargs.get('what',None)
+    if what == 'cumul' and _whom == 'jhu':
+        what = which
+    date=kwargs.get('date','last')
+    if type(what) is not None.__class__:
+        if what[:5] == 'date:':
+            date = what[5:]
 
-    return _cocoplot.return_map(t,which)
+    return _cocoplot.return_map(t,which,date=date)

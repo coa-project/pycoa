@@ -222,6 +222,7 @@ def get(**kwargs):
     pandy['weekly'] = pandy.groupby('where')['diff'].rolling(7).mean().values
     if what[:5] == 'date:':
         date = what[5:]
+        cd.CocoDisplay.check_valid_date(date)
         pandy = pandy.loc[pandy.date==date]
     if output == 'pandas':
         pandy = pandy
@@ -345,14 +346,16 @@ def hist(**kwargs):
     width_height=kwargs.get('width_height',None)
     what=kwargs.get('what',None)
     title = 'Data type: ' + which
+    date=kwargs.get('date','last')
     if type(what) is not None.__class__:
         if what[:5] == 'date:':
             date = what[5:]
-        title += ' (' + what + ')'
+        else:
+            title += ' (' + what + ')'
 
     if what == 'cumul' and _whom == 'jhu':
             what = which
-    date=kwargs.get('date','last')
+
     title=kwargs.get('title',title)
     fig=_cocoplot.pycoa_histo(t,which,bins,title,width_height,date)
 
@@ -388,6 +391,8 @@ def map(**kwargs):
     what=kwargs.get('what',None)
     if what == 'cumul' and _whom == 'jhu':
         what = which
+    if what == 'daily':
+        which = 'diff'
     date=kwargs.get('date','last')
     if type(what) is not None.__class__:
         if what[:5] == 'date:':

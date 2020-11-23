@@ -21,12 +21,13 @@ import math
 import pandas as pd
 import geopandas as gpd
 
+import datetime
 from datetime import datetime as dt
 from collections import defaultdict
-
+from coa.error import *
 import bokeh
 from bokeh.io import show, output_notebook
-from bokeh.models import ColumnDataSource, ColorBar, HoverTool, Legend
+from bokeh.models import ColumnDataSource, TableColumn, DataTable,ColorBar, HoverTool, Legend
 from bokeh.plotting import figure, output_file, show
 from bokeh.palettes import brewer
 from bokeh.layouts import row, column, gridplot
@@ -41,6 +42,8 @@ from bokeh.models import DataRange1d
 from bokeh.models import LogScale
 from bokeh.models import PrintfTickFormatter
 from bokeh.models import PolyDrawTool
+from bokeh.io import export_png, export_svgs
+
 import bokeh.palettes
 import itertools
 import sys
@@ -78,10 +81,19 @@ class CocoDisplay():
         else:
             self.info = coge.GeoInfo(db.geo)
 
-
     def standardfig(self,title=None, axis_type='linear',x_axis_type='datetime'):
          return figure(title=title,plot_width=400, plot_height=300,y_axis_type=axis_type,x_axis_type=x_axis_type,
          tools=['save','box_zoom,box_select,crosshair,reset'])
+
+    @staticmethod
+    def check_valid_date(date):
+        if date.count('/') != 2:
+            raise CoaTypeError("Not a valid date should be : month/day/year")
+        month,day,year = date.split('/')
+        try :
+            datetime.datetime(int(year),int(month),int(day))
+        except ValueError :
+            raise CoaTypeError("Input date not valid ... month/day/year")
 
     @staticmethod
     def pycoa_date_plot(babepandas, input_names_data = None,title = None, width_height = None):
@@ -197,7 +209,7 @@ class CocoDisplay():
         return (min_r,max_r)
 
     @staticmethod
-    def pycoa_histo(babepandas, input_names_data = None, bins=None,title = None, width_height = None ,  date = 'last'):
+    def pycoa_histo(babepandas, input_names_data = None, bins=None,title = None, width_height = None, date ='last'):
         """Create a Bokeh histogram from a pandas input
 
         Keyword arguments
@@ -249,13 +261,14 @@ class CocoDisplay():
                        'middle_bin':np.floor(edges[:-1]+(edges[1:]-edges[:-1])/2)})
                 for j in range(len(loc)):
                     dict_histo[shorten_loc[j]] = dict_histo.pop(loc[j])
-
             else:
                tooltips = 'Contributors : @contributors'
                if date == "last" :
                    when = babepandas['date'].max()
+                   when = when.strftime('%m/%d/%y')
                else:
                    when = date
+               CocoDisplay.check_valid_date(when)
                val_per_country = defaultdict(list)
                for w in loc:
                    val = babepandas.loc[(babepandas['location'] == w) & (babepandas['date'] == when)][input_names_data].values
@@ -492,7 +505,7 @@ class CocoDisplay():
         '''
         Save map as png geckodriver and PIL packages are needed
         '''
-        size = width_height_default[0],width_height_default[1] 
+        size = width_height_default[0],width_height_default[1]
         if pngfile:
             pngfile=pngfile
         img_data = map._to_png(5)
@@ -500,6 +513,20 @@ class CocoDisplay():
         img.thumbnail(size, Image.ANTIALIAS)
         img.save(pngfile)
         print(pngfile, ' is now save ...')
+
+    @staticmethod
+    def save_pandas_as_png(df=None, pngfile='pandas.png'):
+        source = ColumnDataSource(df)
+        df_columns = [df.index.name]
+        df_columns.extend(df.columns.values)
+        columns_for_table=[]
+        for column in df_columns:
+            if column != None:
+                columns_for_table.append(TableColumn(field=column, title=column))
+                #width_height_default
+        data_table = DataTable(source=source, columns=columns_for_table,
+            height_policy="auto",width_policy="auto",index_position=None)
+        export_png(data_table, filename = pngfile)
 
     def return_map(self,mypandas,which_data = None,width_height = None, date = 'last'):
         """Create a Folium map from a pandas input
@@ -527,21 +554,24 @@ class CocoDisplay():
             plot_width  = width_height_default[0]
             plot_height = width_height_default[1]
         label , what ='',''
+        if date == "last" :
+            when = mypandas['date'].max()
+            when = when.strftime('%m/%d/%y')
+        else:
+            when = date
+        CocoDisplay.check_valid_date(when)
         if type(which_data) is None.__class__:
             which_data = mypandas.columns[2]
             label = which_data
         else:
             which_data = which_data
-            if which_data == 'diff':
+            if which_data == 'diff' :
                what = 'day to day diffence'
             else:
                what = 'cumulative sum'
-            label = mypandas.columns[2] + ' (' + what +  ')'
+            label = mypandas.columns[2] + ' (' + what +  ' @ ' + when + ')'
 
-        if date == "last" :
-           when = mypandas['date'].max()
-        else:
-           when = date
+
 
         jhu_stuff = mypandas.loc[(mypandas.date == when)]
 
@@ -611,7 +641,6 @@ class CocoDisplay():
                                              labels=False)
                       ).add_to(mapa)
 '''
-
 
 
 def resume_pandas(self,pd):

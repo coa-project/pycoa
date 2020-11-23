@@ -208,8 +208,8 @@ def get(**kwargs):
         else:
             option = 'nonneg'
 
-    if not bool([s for s in listwhat() if s in what]):
-        raise CoaKeyError('What option '+ what +' not supported'
+    if not bool([s for s in listwhat() if what.startswith(s)]):
+        raise CoaKeyError('What option '+ what +' not supported. '
                             'See listwhat() for full list.')
 
     if not which:

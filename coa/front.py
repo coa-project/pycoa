@@ -38,13 +38,12 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import geopandas as gpd
 import inspect
-from coa.tools import kwargs_test,check_valid_date
+from coa.tools import kwargs_test,check_valid_date,extract_dates
 import coa.covid19 as coco
 import coa.geo as coge
 from coa.error import *
 import coa.display as cd
 import numpy as np
-import datetime
 from bokeh.io import show, output_notebook
 output_notebook(hide_banner=True)
 
@@ -66,7 +65,7 @@ _cocoplot = cd.CocoDisplay(_db)
 #_info = coge.GeoInfo() # will be the info (pseudo) private variable
 #_reg = coge.GeoRegion()
 
-_listwhat=['cumul','diff',  # first one is default but we must avoid uppercases
+_listwhat=['cumul','diff',  # first one is default, nota:  we must avoid uppercases
             'daily',
             'weekly',
             'date:']
@@ -181,7 +180,7 @@ def get(**kwargs):
                 monotonous increasing.
                 is available. By default : no option.
     """
-    kwargs_test(kwargs,['where','what','which','whom','output','option'],
+    kwargs_test(kwargs,['where','what','which','whom','when','output','option'],
             'Bad args used in the pycoa.get() function.')
 
     global _db,_whom
@@ -190,11 +189,11 @@ def get(**kwargs):
     which=kwargs.get('which',None)
     whom=kwargs.get('whom',None)
     option = kwargs.get('option',None)
+    when=kwargs.get('when',None)
 
     output=kwargs.get('output',listoutput()[0])
     if output not in listoutput():
         raise CoaKeyError('Output option '+output+' not supported. See help().')
-
     if not where:
         raise CoaKeyError('No where keyword given')
     if not what:
@@ -203,14 +202,17 @@ def get(**kwargs):
         whom=_whom
     if whom != _whom:
         setwhom(whom)
+
+    when_beg,when_end=extract_dates(when)
+
     if option:
         if option != 'nonneg':
             raise CoaKeyError('Waiting for option a valid option ... so far nonneg')
         else:
             option = 'nonneg'
 
-    if not bool([s for s in listwhat() if s in what]):
-        raise CoaKeyError('What option '+ what +' not supported'
+    if not bool([s for s in listwhat() if what.startswith(s)]):
+        raise CoaKeyError('What option '+ what +' not supported. '
                             'See listwhat() for full list.')
 
     if not which:

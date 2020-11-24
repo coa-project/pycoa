@@ -36,7 +36,7 @@ setup(
         'folium',\
         'geopandas',\
         'geopy',\
-        #'inspect', \
+        #'inspect', \should be std
         #'io',\ std
         #'itertools',\  std
         #'json',\  std
@@ -44,7 +44,7 @@ setup(
         'matplotlib',\
         'numpy',\
         'pandas',\
-        'PIL',\
+        #'PIL',\ should be std
         'plotly',\
         'pycountry',\
         'pycountry_convert',\

@@ -19,7 +19,7 @@ printing.
 """
 
 import datetime
-from coa.error import CoaKeyError
+from coa.error import CoaKeyError,CoaTypeError
 
 _verbose_mode = 1 # default
 
@@ -54,7 +54,7 @@ def kwargs_test(given_args,expected_args,error_string):
     return True
 
 def check_valid_date(date):
-    if date.count('/') != 2:
+    if date.count('/') != 2 or len(date) != 10:
         raise CoaTypeError("Not a valid date should be : month/day/year")
     month,day,year = date.split('/')
     try :

@@ -44,6 +44,7 @@ import coa.geo as coge
 from coa.error import *
 import coa.display as cd
 import numpy as np
+import datetime
 from bokeh.io import show, output_notebook
 output_notebook(hide_banner=True)
 
@@ -68,8 +69,7 @@ _cocoplot = cd.CocoDisplay(_db)
 _listwhat=['cumul','diff',  # first one is default but we must avoid uppercases
             'daily',
             'weekly',
-            'date:',
-            'ddate:']
+            'date:']
 
 _listoutput=['list','dict','array','pandas'] # first one is default for get
 
@@ -209,8 +209,8 @@ def get(**kwargs):
         else:
             option = 'nonneg'
 
-    if not bool([s for s in listwhat() if what.startswith(s)]):
-        raise CoaKeyError('What option '+ what +' not supported. '
+    if not bool([s for s in listwhat() if s in what]):
+        raise CoaKeyError('What option '+ what +' not supported'
                             'See listwhat() for full list.')
 
     if not which:
@@ -221,10 +221,18 @@ def get(**kwargs):
 
     pandy = _db.get_stats(which=which,location=where,option=option,output='pandas').rename(columns={'location': 'where'})
     pandy['weekly'] = pandy.groupby('where')['diff'].rolling(7).mean().values
+    db_first_date = pandy.date.min()
+    db_last_date = pandy.date.max()
+
     if what[:5] == 'date:':
         date = what[5:]
         check_valid_date(date)
-        pandy = pandy.loc[pandy.date==date]
+        if  db_first_date  <= datetime.datetime.strptime(date, '%m/%d/%Y')  <= db_last_date:
+            pandy = pandy.loc[pandy.date==date]
+        else:
+            raise CoaKeyError('Your date is out of database range, please give a date in'
+                                'coherence with your db')
+
     if output == 'pandas':
         pandy = pandy
         if inspect.stack()[1].function == '<module>':
@@ -256,55 +264,72 @@ def get(**kwargs):
 # --- plot(**kwargs) ---------------------------------------------------
 # ----------------------------------------------------------------------
 
-def plot(**kwargs):
-    """Plot data according to arguments (same as the get function)
-    and options.
+def decoplot(func):
+    def generic_plot(**kwargs):
+        """
+        Decorator Plot data according to arguments (same as the get function)
+        and options.
 
-    Keyword arguments
-    -----------------
+        Keyword arguments
+        -----------------
 
-    where (mandatory), what, which, whom : (see help(get))
+        where (mandatory), what, which, whom : (see help(get))
 
-    input  --   input data to plot within the pycoa framework (e.g.
-                after some analysis or filtering). Default is None which
-                means that we use the basic raw data through the get
-                function.
-                When the 'input' keyword is set, where, what, which,
-                whom keywords are ignored.
-                input should be given as valid pycoa pandas dataframe.
-    width_height : is specified list of width and height, width_height=[400,500]
-                    for instance
-    """
-    kwargs_test(kwargs,['where','what','which','whom','input','width_height','option'],
-            'Bad args used in the pycoa.plot() function.')
+        input  --   input data to plot within the pycoa framework (e.g.
+                    after some analysis or filtering). Default is None which
+                    means that we use the basic raw data through the get
+                    function.
+                    When the 'input' keyword is set, where, what, which,
+                    whom keywords are ignored.
+                    input should be given as valid pycoa pandas dataframe.
+        - width_height : width and height of the picture .
+                    If specified should be a list of width and height.
+                    For instance width_height=[400,500]
+        - Two methods from this decorators can be used:
+            * plot : date chart  according to location
+            * scrollmenu_plot: two date charts which can be selected from scroll menu,
+                                according to the locations which were selected
+        """
+        kwargs_test(kwargs,['where','what','which','whom','input','width_height','option'],
+                'Bad args used in the pycoa.plot() function.')
 
-    input_arg=kwargs.get('input',None)
+        input_arg=kwargs.get('input',None)
 
-    if input_arg != None:
-        if not isinstance(input_arg,pd.DataFrame):
-            raise CoaTypeError('Waiting input as valid pycoa pandas '
-                'dataframe. See help.')
-        t=input_arg
-    else:
-        t=get(**kwargs,output='pandas')
+        if input_arg != None:
+            if not isinstance(input_arg,pd.DataFrame):
+                raise CoaTypeError('Waiting input as valid pycoa pandas '
+                    'dataframe. See help.')
+            t=input_arg
+        else:
+            t=get(**kwargs,output='pandas')
 
-    which=kwargs.get('which',listwhich()[0])
-    what=kwargs.get('what',None)
-    if what == 'cumul' and _whom == 'jhu':
-        what = which
-    option=kwargs.get('option',None)
-    width_height=kwargs.get('width_height',None)
-    title = 'Data type: ' + which
-    if what :
-        title += '( '+ what + ' )'
-        if what == 'daily':
-            what = 'diff'
-        which = what
-        if what[:5] == 'date:':
-            date = what[5:]
-            raise CoaTypeError('date not available for plot function ...')
-    title=kwargs.get('title',title)
+        which=kwargs.get('which',listwhich()[0])
+        what=kwargs.get('what',None)
+        if what == 'cumul' and _whom == 'jhu':
+            what = which
+        option=kwargs.get('option',None)
+        width_height=kwargs.get('width_height',None)
+        title = 'Data type: ' + which
+        if what :
+            title += '( '+ what + ' )'
+            if what == 'daily':
+                what = 'diff'
+            which = what
+            if what[:5] == 'date:':
+                date = what[5:]
+                raise CoaTypeError('date not available for plot function ...')
+        title=kwargs.get('title',title)
+        return func(t,which,title,width_height)
+    return generic_plot
+
+@decoplot
+def plot(t,which,title,width_height):
     fig = _cocoplot.pycoa_date_plot(t,which,title,width_height)
+    show(fig)
+
+@decoplot
+def scrollmenu_plot(t,which,title,width_height):
+    fig = _cocoplot.scrolling_menu(t,which,title,width_height)
     show(fig)
 
 # ----------------------------------------------------------------------
@@ -398,8 +423,5 @@ def map(**kwargs):
     if type(what) is not None.__class__:
         if what[:5] == 'date:':
             date = what[5:]
-        if what[:6] == 'ddate:':
-            date = what[6:]
-            which = 'diff'
 
     return _cocoplot.return_map(t,which,date=date)

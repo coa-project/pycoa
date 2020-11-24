@@ -261,7 +261,11 @@ class CocoDisplay():
                check_valid_date(when)
                val_per_country = defaultdict(list)
                for w in loc:
-                   val = babepandas.loc[(babepandas['location'] == w) & (babepandas['date'] == when)][input_names_data].values
+                   retrieved_at = babepandas.loc(babepandas['date'] == when)
+                   if retrieved_at.empty:
+                     raise CoaTypeError('Noting to retrieve at this date:', when)
+                   else:
+                       val = babepandas.loc[(babepandas['location'] == w) & (babepandas['date'] == when)][input_names_data].values
                    #val_per_country.append(val)
                    val_per_country[w]=val
                if type(when) != str:
@@ -332,94 +336,94 @@ class CocoDisplay():
         return tabs
 
 
-    def DefFigInteractive(self, **kwargs):
-        ''' Define interactive bokeh figure i.e with a window location selection'''
-        if not isinstance(kwargs['location'], list):
-            clist = [kwargs['location']]
-        else:
-            clist = kwargs['location']
+    @staticmethod
+    def scrolling_menu(babepandas, input_names_data = None,title = None, width_height = None):
+        """Create a Bokeh plot with a date axis from pandas input
 
-        if self.database != 'spf':
-            clist=self.geo.to_standard(clist,output='list',interpret_region=True)
-        clist_cp = clist.copy()
+        Keyword arguments
+        -----------------
+        babepandas : pandas where the data is considered
+        input_names_data : variable from pandas data . If pandas is produced from cocoas get_stat method
+        the 'diff' or 'cumul' are available
+        A list of names_data can be given
+        title: title for the figure , no title by default
+        width_height : width and height of the figure,  default [400,300]
 
-        panels = []
-        option = kwargs.get('option', None)
-        if option == 'nonneg':
-            babypandas = self.database.get_stats( which=kwargs['which'], type=kwargs['type'], location=clist_cp,
-                                             output='pandas', option='nonneg')
-        else:
-            babypandas = self.database.get_stats( which=kwargs['which'], type=kwargs['type'], location=clist_cp,
-                                         output='pandas')
+        Note
+        -----------------
+        HoverTool is available it returns location, date and value
+        """
+        tooltips='Date: @date{%F} <br>  $name: @$name'
+        hover_tool = HoverTool(tooltips=tooltips,formatters={'@date': 'datetime'})
 
-        self.pycoa_pandas = babypandas
+        if type(input_names_data) is None.__class__:
+            print("Need variable to plot", file=sys.stderr)
+        if 'where' in babepandas.columns:
+            babepandas = babepandas.rename(columns={'where':'location'})
+        if 'location' in babepandas.columns:
+            tooltips='Location: @location <br> Date: @date{%F} <br>  $name: @$name'
+            loc = list(babepandas['location'].unique())
+            loc = sorted(loc)
+            shorten_loc = [ i if len(i)<15 else i.replace('-',' ').split()[0]+'...'+i.replace('-',' ').split()[-1] for i in loc]
 
-        data = pd.pivot_table(babypandas, index='date',columns='location', values=kwargs['which']).reset_index()
-        filter_data1 = data[['date', clist[0]]].rename(
-            columns={clist[0]: kwargs['which']})
-        name1=clist[0]
-        filter_data1['location']=[name1]*len(data[['date',clist[0]]])
+
+        data  = pd.pivot_table(babepandas,index='date',columns='location',values=input_names_data)
+        [data.rename(columns={i:j},inplace=True) for i,j in zip(loc,shorten_loc)]
+        data=data.reset_index()
+        source = ColumnDataSource(data)
+
+        filter_data1 = data[['date', shorten_loc[0]]].rename(columns={shorten_loc[0]: 'cases'})
+        name1=shorten_loc[0]
         src1 = ColumnDataSource(filter_data1)
 
-        filter_data2 = data[['date', clist[1]]].rename(
-            columns={clist[1]: kwargs['which']})
-        name2=clist[1]
-        filter_data2['location']=[name2]*len(data[['date',clist[1]]])
+        filter_data2 = data[['date', shorten_loc[1]]].rename(columns={shorten_loc[1]: 'cases'})
+        name2=shorten_loc[1]
         src2 = ColumnDataSource(filter_data2)
 
-        self.hover_tool = HoverTool(tooltips=[
-                        ('location',"@location"),
-                        (kwargs['which'], '@'+kwargs['which']),
+        hover_tool = HoverTool(tooltips=[
+                        ("Cases", '@cases'),
                         ('date', '@date{%F}')],
-                        formatters={'@date': 'datetime'}
-            )
+                        formatters={'@date': 'datetime'},mode='vline')
+        panels = []
         for axis_type in ["linear", "log"]:
-            fig = figure(plot_width=600, plot_height=400, y_axis_type=axis_type, x_axis_type="datetime",
-                         tools=[self.hover_tool, 'box_zoom,box_select,crosshair,reset'])
+            if width_height:
+                plot_width  = width_height[0]
+                plot_height = width_height[1]
+            else :
+                plot_width  = width_height_default[0]
+                plot_height = width_height_default[1]
 
-            fig.xaxis.formatter = DatetimeTickFormatter(
-                days=["%d %B %Y"], months=["%d %B %Y"], years=["%d %B %Y"])
+            standardfig = figure(plot_width=plot_width, plot_height=plot_height,y_axis_type=axis_type,
+            x_axis_type='datetime',tools=[hover_tool,'save','box_zoom,box_select,crosshair,reset'],
+            toolbar_location="below")
+            standardfig.yaxis[0].formatter = PrintfTickFormatter(format="%4.2e")
+            if title:
+                standardfig.title.text = title
+            standardfig.add_tools(hover_tool)
+            colors = itertools.cycle(Paired12)
 
-            fig.circle('date',kwargs['which'], size=3, color='red', source=src1,name=name1)
-            fig.line(x='date', y=kwargs['which'], source=src1,
-                     line_color='red', line_width=4, line_alpha=.2)
+            standardfig.line(x='date', y='cases', source=src1, color='red',
+            line_width=2, legend_label=name1, hover_line_width=3)
+            standardfig.line(x='date', y='cases', source=src2, color='blue',
+            line_width=2, legend_label=name2, hover_line_width=3)
 
-            fig.circle('date',kwargs['which'], size=3, color='blue', source=src2,name=name2)
-            fig.line(x='date', y=kwargs['which'], source=src2,
-                     line_color='blue', line_width=4, line_alpha=.2)
-
-            if kwargs['which'] == 'confirmed' and self.database == 'spf':
-                kwargs['which'] = 'Rea.'
-            label = Label(x=70, y=350, x_units='screen', y_units='screen',
-                          text=kwargs['which'], render_mode='css',
-                          border_line_color='black', border_line_alpha=1.0,
-                          background_fill_color='white', background_fill_alpha=1.0)
-
-            fig.add_layout(label)
-
-            panel = Panel(child=fig, title=axis_type)
+            standardfig.legend.location = 'bottom_left'
+            panel = Panel(child=standardfig, title=axis_type)
             panels.append(panel)
-
         code="""
-      var c = cb_obj.value;
-      var y = s0.data[c];
-      for (var i = 0; i < y.length; i++) {
-        s1.data['location'][i]=c
-        }
-      s1.data[val] = y;
-      s1.change.emit();
-      ax=p1.yaxis[0]
-      """
-
-        source = ColumnDataSource(data)
-        callback1 = CustomJS(args=dict(s0=source, s1=src1,val=kwargs['which']), code=code)
-        callback2 = CustomJS(args=dict(s0=source, s1=src2,val=kwargs['which']), code=code)
-
-        select_countries1 = Select(title="RED CURVE:", value=clist[0], options=clist)
+            var c = cb_obj.value;
+            var y = s0.data[c];
+            s1.data['cases'] = y;
+            s1.change.emit();
+            ax=p1.yaxis[0]
+        """
+        callback1 = CustomJS(args=dict(s0=source, s1=src1), code=code)
+        callback2 = CustomJS(args=dict(s0=source, s1=src2), code=code)
+        select_countries1 = Select(title="red chart", value=shorten_loc[0], options=shorten_loc)
         select_countries1.js_on_change('value', callback1)
-
-        select_countries2 = Select(title="BLUE CURVE", value=clist[1], options=clist)
+        select_countries2 = Select(title="blue chart", value=shorten_loc[1], options=shorten_loc)
         select_countries2.js_on_change('value', callback2)
+
         tabs = Tabs(tabs=panels)
         layout = row(column(row(select_countries1, select_countries2), row(tabs)))
         return layout

@@ -1,4 +1,4 @@
-    # -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 """Project : PyCoA - Copyright ©pycoa.fr
 Date :    april-november 2020
 Authors : Olivier Dadoun, Julien Browaeys, Tristan Beau

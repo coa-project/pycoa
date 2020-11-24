@@ -36,12 +36,16 @@ setup(
         'folium',\
         'geopandas',\
         'geopy',\
+        'inspect', \
+        #'io',\ std
         #'itertools',\  std
         #'json',\  std
         #'math',\   std
         'matplotlib',\
         'numpy',\
         'pandas',\
+        'PIL',\
+        'plotly',\
         'pycountry',\
         'pycountry_convert',\
         'pyproj',\

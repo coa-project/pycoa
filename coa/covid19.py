@@ -322,7 +322,7 @@ class DataBase():
 
    def flat_list(self, matrix):
         ''' Flatten list function used in covid19 methods'''
-        
+
         flatten_matrix = []
         for sublist in matrix:
             for val in sublist:
@@ -443,7 +443,7 @@ class DataBase():
         i = 0
         temp=[]
         for coun in clist:
-            if len(coun)==0: 
+            if len(coun)==0:
                 continue
 
             if len(currentout[i]):

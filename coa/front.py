@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+    # -*- coding: utf-8 -*-
 """Project : PyCoA - Copyright ©pycoa.fr
 Date :    april-november 2020
 Authors : Olivier Dadoun, Julien Browaeys, Tristan Beau
@@ -222,7 +222,7 @@ def get(**kwargs):
 
     pandy = _db.get_stats(which=which,location=where,option=option,output='pandas').rename(columns={'location': 'where'})
 
-    pandy['weekly'] = pandy.groupby('where')['diff'].rolling(7).mean().values
+    pandy['weekly'] = pandy.groupby('where')['diff'].rolling(7).mean().reset_index(level=0, drop=True)
     db_first_date = pandy.date.min()
     db_last_date = pandy.date.max()
 
@@ -316,7 +316,7 @@ def decoplot(func):
             if what == 'daily':
                 what = 'diff'
             which = what
-            
+
         title=kwargs.get('title',title)
         return func(t,which,title,width_height)
     return generic_plot

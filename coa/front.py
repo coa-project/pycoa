@@ -379,7 +379,7 @@ def hist(**kwargs):
             what = which
 
     title=kwargs.get('title',title)
-    fig=_cocoplot.pycoa_histo(t,which,bins,title,width_height,'last')
+    fig=_cocoplot.pycoa_histo(t,which,bins,title,width_height,date='last')
 
     show(fig)
 

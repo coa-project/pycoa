@@ -255,15 +255,14 @@ class CocoDisplay():
                tooltips = 'Contributors : @contributors'
                if date == "last" :
                    when = babepandas['date'].max()
-                   when = when.strftime('%m/%d/%y')
                else:
                    when = date
-               
+
                val_per_country = defaultdict(list)
                for w in loc:
-                   retrieved_at = babepandas.loc(babepandas['date'] == when)
+                   retrieved_at = babepandas.loc[(babepandas['date'] == when)]
                    if retrieved_at.empty:
-                     raise CoaTypeError('Noting to retrieve at this date:', when)
+                       raise CoaTypeError('Noting to retrieve at this date:', when)
                    else:
                        val = babepandas.loc[(babepandas['location'] == w) & (babepandas['date'] == when)][input_names_data].values
                    #val_per_country.append(val)

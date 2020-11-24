@@ -62,8 +62,6 @@ _whom = _listwhom[0] # default base
 _db = coco.DataBase(_whom) # initialization with default
 _cocoplot = cd.CocoDisplay(_db)
 
-#_info = coge.GeoInfo() # will be the info (pseudo) private variable
-#_reg = coge.GeoRegion()
 
 _listwhat=['cumul','diff',  # first one is default, nota:  we must avoid uppercases
             'daily',
@@ -163,11 +161,14 @@ def get(**kwargs):
                 'weekly' (rolling daily over 1 week) . See
                 listwhich() for fullist of available
                 Full list of which keyword with the listwhich() function.
-                If a date is stipulated (in the form month/day/year) return date at this date:
-                For instance what='date:11/22/2020' for november 22, 2020
     whom   --   Database specification (overload the setbase()
                 function). See listwhom() for supported list
                 function). See listwhom() for supported list
+    when   --   dates are given under the format dd/mm/yyyy. In the when 
+                option, one can give one date which will be the end of
+                the data slice. Or one can give two dates separated with
+                ":", which will define the time cut for the output data
+                btw those two dates.
 
     output --   output format returned ( list (default), array (numpy.array),
                 dict or pandas)
@@ -274,14 +275,14 @@ def decoplot(func):
         Keyword arguments
         -----------------
 
-        where (mandatory), what, which, whom : (see help(get))
+        where (mandatory), what, which, whom, when : (see help(get))
 
         input  --   input data to plot within the pycoa framework (e.g.
                     after some analysis or filtering). Default is None which
                     means that we use the basic raw data through the get
                     function.
                     When the 'input' keyword is set, where, what, which,
-                    whom keywords are ignored.
+                    whom when keywords are ignored.
                     input should be given as valid pycoa pandas dataframe.
         - width_height : width and height of the picture .
                     If specified should be a list of width and height.
@@ -342,17 +343,13 @@ def hist(**kwargs):
     Keyword arguments
     -----------------
 
-    where (mandatory), what, which, whom : (see help(get))
+    where (mandatory), what, which, whom, when : (see help(get))
     input  --   input data to plot within the pycoa framework (e.g.
                 after some analysis or filtering). Default is None which
                 means that we use the basic raw data through the get
                 function.
                 When the 'input' keyword is set, where, what, which,
                 whom keywords are ignored.
-    what   --   which data are computed, either in cumulative mode
-                ('cumul', default value), 'daily' or 'diff' and
-                'weekly' (rolling daily over 1 week).
-                'date:date_value' return which value at the date date_value
     """
     kwargs_test(kwargs,['where','what','which','whom','when','input','bins'],
             'Bad args used in the pycoa.hist() function.')
@@ -393,7 +390,6 @@ def map(**kwargs):
     what   --   which data are computed, either in cumulative mode
                 ('cumul', default value), 'daily' or 'diff' and
                 'weekly' (rolling daily over 1 week).
-                'date:date_value' return which value at the date date_value
     """
     kwargs_test(kwargs,['where','what','which','whom','when','input'],
             'Bad args used in the pycoa.map() function.')
@@ -415,9 +411,5 @@ def map(**kwargs):
         what = which
     if what == 'daily':
         which = 'diff'
-
-    if type(what) is not None.__class__:
-        if what[:5] == 'date:':
-            date = what[5:]
 
     return _cocoplot.return_map(t,which,date='last')

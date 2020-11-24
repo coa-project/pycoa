@@ -20,10 +20,10 @@ Elle est pensée pour être accessibles à des non-spécialistes : des lycéen·
 
 ```python
 import pycoa.pycoa as pc
-pc.plot(where=['France', 'Italy', 'United kingdom'], which='deaths', what='cumul')
-pc.map(where=['world'])
-pc.hist(where='middle africa', which='confirmed')
-pc.get(where=['usa'], what='daily', which='recovered')
+cf.plot(where=['France', 'Italy', 'United kingdom'], which='deaths', what='cumul')
+cf.map(where=['world'],what='daily',when='01/04/2020')
+cf.hist(where='middle africa', which='confirmed',what='cumul')
+cf.get(where=['usa'], what='daily', which='recovered',output='pandas')
 ```
 
 PyCoA fonctionne :

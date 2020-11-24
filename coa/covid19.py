@@ -392,6 +392,8 @@ class DataBase():
             clist = ([kwargs['location']]).copy()
         else:
             clist = (kwargs['location']).copy()
+        if not all(isinstance(c, str) for c in clist):
+            raise CoaWhereError("Location via the where keyword should be given as strings. ")
 
 
         if self.db != 'spf' and self.db != 'opencovid19':

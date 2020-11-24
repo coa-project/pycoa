@@ -174,7 +174,16 @@ class CocoDisplay():
         if a_max!=0:
             max_p=math.floor(math.log10(math.fabs(a_max)))
 
-        p=max(min_p,max_p)
+        if a_min==0:
+            if a_max==0:
+                p=0
+            else:
+                p=max_p
+        else:
+            if a_max==0:
+                p=min_p
+            else:
+                p=max(min_p,max_p)
 
         if a_min!=0:
             min_r=math.floor(a_min/10**(p-1))*10**(p-1) # min range rounded
@@ -578,7 +587,7 @@ class CocoDisplay():
         data['geoid'] = data.index.astype(str)
 
         data=data[['geoid','location',which_data,'geometry']]
-        data[which_data] = round(data[which_data])
+        #data[which_data] = round(data[which_data]) # why ? 
         data = data.set_index('geoid')
 
         centroid=unary_union(data.geometry).centroid

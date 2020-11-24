@@ -324,7 +324,7 @@ class DataBase():
 
    def flat_list(self, matrix):
         ''' Flatten list function used in covid19 methods'''
-        
+
         flatten_matrix = []
         for sublist in matrix:
             for val in sublist:
@@ -441,11 +441,11 @@ class DataBase():
         elif option != None:
             raise CoaKeyError('The option '+option+' is not recognized in get_stat. Error.')
 
-        datos=[dt.strptime(d, '%m/%d/%y') for d in self.get_dates()]
+        datos=[dt.strptime(d, '%d/%m/%y') for d in self.get_dates()]
         i = 0
         temp=[]
         for coun in clist:
-            if len(coun)==0: 
+            if len(coun)==0:
                 continue
 
             if len(currentout[i]):

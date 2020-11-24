@@ -258,7 +258,7 @@ class CocoDisplay():
                    when = when.strftime('%m/%d/%y')
                else:
                    when = date
-               check_valid_date(when)
+               
                val_per_country = defaultdict(list)
                for w in loc:
                    retrieved_at = babepandas.loc(babepandas['date'] == when)
@@ -553,7 +553,7 @@ class CocoDisplay():
             when = when.strftime('%m/%d/%y')
         else:
             when = date
-        check_valid_date(when)
+
         if type(which_data) is None.__class__:
             which_data = mypandas.columns[2]
             label = which_data

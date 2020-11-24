@@ -183,6 +183,8 @@ class CocoDisplay():
 
         if a_max!=0:
             max_r=math.ceil(a_max/10**(p-1))*10**(p-1)
+        else:
+            max_r=0
 
         if min_r==max_r:
             if min_r==0:

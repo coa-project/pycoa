@@ -36,7 +36,7 @@ setup(
         'folium',\
         'geopandas',\
         'geopy',\
-        'inspect', \
+        #'inspect', \
         #'io',\ std
         #'itertools',\  std
         #'json',\  std

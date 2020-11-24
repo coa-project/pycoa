@@ -199,7 +199,7 @@ class CocoDisplay():
         return (min_r,max_r)
 
     @staticmethod
-    def pycoa_histo(babepandas, input_names_data = None, bins=None,title = None, width_height = None, date ='last'):
+    def pycoa_histo(babepandas, input_names_data = None, bins=None,title = None, width_height = None, date='last'):
         """Create a Bokeh histogram from a pandas input
 
         Keyword arguments

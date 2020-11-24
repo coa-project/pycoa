@@ -67,8 +67,7 @@ _cocoplot = cd.CocoDisplay(_db)
 
 _listwhat=['cumul','diff',  # first one is default, nota:  we must avoid uppercases
             'daily',
-            'weekly',
-            'date:']
+            'weekly']
 
 _listoutput=['list','dict','array','pandas'] # first one is default for get
 
@@ -222,18 +221,18 @@ def get(**kwargs):
                             'See listwhich() for list.')
 
     pandy = _db.get_stats(which=which,location=where,option=option,output='pandas').rename(columns={'location': 'where'})
+
     pandy['weekly'] = pandy.groupby('where')['diff'].rolling(7).mean().values
     db_first_date = pandy.date.min()
     db_last_date = pandy.date.max()
 
-    if what[:5] == 'date:':
-        date = what[5:]
-        check_valid_date(date)
-        if  db_first_date  <= datetime.datetime.strptime(date, '%m/%d/%Y')  <= db_last_date:
-            pandy = pandy.loc[pandy.date==date]
-        else:
-            raise CoaKeyError('Your date is out of database range, please give a date in'
-                                'coherence with your db')
+    if when_beg < db_first_date:
+        when_beg = db_first_date
+    if when_end > db_last_date:
+        when_end=db_last_date
+
+    # when cut
+    pandy=pandy[(pandy.date>=when_beg) & (pandy.date<=when_end)]
 
     if output == 'pandas':
         pandy = pandy
@@ -292,7 +291,7 @@ def decoplot(func):
             * scrollmenu_plot: two date charts which can be selected from scroll menu,
                                 according to the locations which were selected
         """
-        kwargs_test(kwargs,['where','what','which','whom','input','width_height','option'],
+        kwargs_test(kwargs,['where','what','which','whom','when','input','width_height','option'],
                 'Bad args used in the pycoa.plot() function.')
 
         input_arg=kwargs.get('input',None)
@@ -317,9 +316,7 @@ def decoplot(func):
             if what == 'daily':
                 what = 'diff'
             which = what
-            if what[:5] == 'date:':
-                date = what[5:]
-                raise CoaTypeError('date not available for plot function ...')
+            
         title=kwargs.get('title',title)
         return func(t,which,title,width_height)
     return generic_plot
@@ -357,7 +354,7 @@ def hist(**kwargs):
                 'weekly' (rolling daily over 1 week).
                 'date:date_value' return which value at the date date_value
     """
-    kwargs_test(kwargs,['where','what','which','whom','input','bins'],
+    kwargs_test(kwargs,['where','what','which','whom','when','input','bins'],
             'Bad args used in the pycoa.hist() function.')
 
     input_arg=kwargs.get('input',None)
@@ -372,20 +369,17 @@ def hist(**kwargs):
     which=kwargs.get('which',listwhich()[0])
     bins=kwargs.get('bins',None)
     width_height=kwargs.get('width_height',None)
-    what=kwargs.get('what',None)
+    what=kwargs.get('what',listwhat()[0])
     title = 'Data type: ' + which
     date=kwargs.get('date','last')
-    if type(what) is not None.__class__:
-        if what[:5] == 'date:':
-            date = what[5:]
-        else:
-            title += ' (' + what + ')'
+
+    title += ' (' + what + ')'
 
     if what == 'cumul' and _whom == 'jhu':
             what = which
 
     title=kwargs.get('title',title)
-    fig=_cocoplot.pycoa_histo(t,which,bins,title,width_height,date)
+    fig=_cocoplot.pycoa_histo(t,which,bins,title,width_height,'last')
 
     show(fig)
 
@@ -401,7 +395,7 @@ def map(**kwargs):
                 'weekly' (rolling daily over 1 week).
                 'date:date_value' return which value at the date date_value
     """
-    kwargs_test(kwargs,['where','what','which','whom','input'],
+    kwargs_test(kwargs,['where','what','which','whom','when','input'],
             'Bad args used in the pycoa.map() function.')
 
     input_arg=kwargs.get('input',None)
@@ -421,9 +415,9 @@ def map(**kwargs):
         what = which
     if what == 'daily':
         which = 'diff'
-    date=kwargs.get('date','last')
+
     if type(what) is not None.__class__:
         if what[:5] == 'date:':
             date = what[5:]
 
-    return _cocoplot.return_map(t,which,date=date)
+    return _cocoplot.return_map(t,which,date='last')

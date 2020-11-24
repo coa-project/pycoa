@@ -88,8 +88,10 @@ def check_valid_date(date):
 def extract_dates(when):
     """Expecting None or 1 or 2 dates separated by :. The format is a string. 
     If 2 dates are given, they must be ordered.
+    When 1 date is given, assume that's the latest which is given.
+    When None date is give, the oldest date is 01/01/0001, the newest is now.
+
     It returns 2 datetime object. If nothing given, the oldest date is 01/01/0001, 
-    the newest is now.
     """
     w0=datetime.datetime(1,1,1) # minimal year is 1
     w1=datetime.datetime.now()
@@ -101,10 +103,11 @@ def extract_dates(when):
 
         if len(w)>2 :
             raise CoaTypeError("Too many dates given. Expecting 1 or 2 with : as a separator. ")
-        if len(w) > 0:
-            w0=check_valid_date(w[0])
+        if len(w) == 1:
+            w1=check_valid_date(w[0])
         if len(w) > 1:
             w1=check_valid_date(w[1])
+            w0=check_valid_date(w[0])
 
         if w0>w1:
             raise CoaTypeError("First date must occur before the second one.")

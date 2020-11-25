@@ -560,9 +560,8 @@ class CocoDisplay():
         label , what ='',''
         if date == "last" :
             when = mypandas['date'].max()
-            when = when.strftime('%m/%d/%y')
         else:
-            when = date
+            when = check_valid_date(date)
 
         if type(which_data) is None.__class__:
             which_data = mypandas.columns[2]
@@ -573,9 +572,7 @@ class CocoDisplay():
                what = 'day to day diffence'
             else:
                what = 'cumulative sum'
-            label = mypandas.columns[2] + ' (' + what +  ' @ ' + when + ')'
-
-
+            label = mypandas.columns[2] + ' (' + what +  ' @ ' + when.strftime('%d-%m-%Y') + ')'
 
         jhu_stuff = mypandas.loc[(mypandas.date == when)]
 
@@ -587,10 +584,10 @@ class CocoDisplay():
         data['geoid'] = data.index.astype(str)
 
         data=data[['geoid','location',which_data,'geometry']]
-        #data[which_data] = round(data[which_data]) # why ? 
         data = data.set_index('geoid')
 
         centroid=unary_union(data.geometry).centroid
+    
         min_col,max_col=CocoDisplay.min_max_range(0,max(data[which_data]))
         colormap = branca.colormap.linear.RdPu_09.scale(min_col,max_col)
         #colormap = (colormap.to_step(n=len(data[which_data]),method='log'))

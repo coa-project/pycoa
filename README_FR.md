@@ -38,5 +38,5 @@ La documentation complète se trouve sur <a href="https://github.com/coa-project
 
 ### Contact
 * [`support@pycoa.fr`](mailto:support@pycoa.fr)
-* This page : [`pycoa.fr`](http://pycoa.fr)
+* La page web : [`pycoa.fr`](http://pycoa.fr)
 * Sur twitter : [`@pycoa_fr`](https://twitter.com/pycoa_fr)

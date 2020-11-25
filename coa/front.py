@@ -418,29 +418,27 @@ def hist(**kwargs):
 def map(**kwargs):
     """Create a map according to arguments and options.
     See help(hist).
-    what   --   which data are computed, either in cumulative mode
-                ('cumul', default value), 'daily' or 'diff' and
-                'weekly' (rolling daily over 1 week).
     """
-    kwargs_test(kwargs,['where','what','which','whom','when','input'],
+    kwargs_test(kwargs,['where','what','which','whom','when','input','input_field'],
             'Bad args used in the pycoa.map() function.')
-
+    
+    which=''
     input_arg=kwargs.get('input',None)
     where=kwargs.get('where',None)
 
-    if input_arg != None:
-        if not isinstance(input_arg,pd.DataFrame):
-            raise CoaTypeError('Waiting input as valid pycoa pandas '
-                'dataframe. See help.')
+    if isinstance(input_arg,pd.DataFrame):
         t=input_arg
-    else:
+        which=kwargs.get('input_field',listwhich()[0]+'/cumul')
+    elif input_arg==None:   
         t=get(**kwargs,output='pandas')
-
-    which=kwargs.get('which',listwhich()[0])
-    what=kwargs.get('what',None)
-    if what == 'cumul' and _whom == 'jhu':
-        what = which
-    if what == 'daily':
-        which = 'diff'
+        which=kwargs.get('which',listwhich()[0])
+        what=kwargs.get('what',None)
+        if what == 'cumul' and _whom == 'jhu':
+            what = which
+        if what == 'daily':
+            which = 'diff'
+    else:
+        raise CoaTypeError('Waiting input as valid pycoa pandas '
+            'dataframe. See help.')
 
     return _cocoplot.return_map(t,which,date='last')

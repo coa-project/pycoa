@@ -157,8 +157,9 @@ class CocoDisplay():
 
             standardfig.legend.location = "bottom_left"
 
-        standardfig.xaxis.formatter = DatetimeTickFormatter(
-        days=["%d %B %Y"], months=["%d %B %Y"], years=["%d %B %Y"])
+            standardfig.xaxis.formatter = DatetimeTickFormatter(
+        days=["%d/%m/%y"], months=["%d/%m/%y"], years=["%b %Y"])
+
         tabs = Tabs(tabs=panels)
         return tabs
 

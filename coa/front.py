@@ -277,46 +277,59 @@ def decoplot(func):
 
         where (mandatory), what, which, whom, when : (see help(get))
 
-        input  --   input data to plot within the pycoa framework (e.g.
-                    after some analysis or filtering). Default is None which
-                    means that we use the basic raw data through the get
-                    function.
-                    When the 'input' keyword is set, where, what, which,
-                    whom when keywords are ignored.
-                    input should be given as valid pycoa pandas dataframe.
-        - width_height : width and height of the picture .
+        input       --  input data to plot within the pycoa framework (e.g.
+                        after some analysis or filtering). Default is None which
+                        means that we use the basic raw data through the get
+                        function.
+                        When the 'input' keyword is set, where, what, which,
+                        whom when keywords are ignored.
+                        input should be given as valid pycoa pandas dataframe.
+
+        input_field --  is the name of the field of the input pandas to plot.
+                        Default is 'deaths/cumul', the default output field of
+                        the get() function.
+
+        width_height : width and height of the picture .
                     If specified should be a list of width and height.
                     For instance width_height=[400,500]
+
         - Two methods from this decorators can be used:
             * plot : date chart  according to location
             * scrollmenu_plot: two date charts which can be selected from scroll menu,
                                 according to the locations which were selected
         """
-        kwargs_test(kwargs,['where','what','which','whom','when','input','width_height','option'],
-                'Bad args used in the pycoa.plot() function.')
+        kwargs_test(kwargs,['where','what','which','whom','when', \
+            'input','input_field','width_height','option'],
+            'Bad args used in the pycoa.plot() function.')
 
         input_arg=kwargs.get('input',None)
 
-        if input_arg != None:
-            if not isinstance(input_arg,pd.DataFrame):
-                raise CoaTypeError('Waiting input as valid pycoa pandas '
-                    'dataframe. See help.')
-            t=input_arg
-        else:
-            t=get(**kwargs,output='pandas')
-
-        which=kwargs.get('which',listwhich()[0])
-        what=kwargs.get('what',None)
-        if what == 'cumul' and _whom == 'jhu':
-            what = which
-        option=kwargs.get('option',None)
+        title=''
+        which=''
         width_height=kwargs.get('width_height',None)
-        title = 'Data type: ' + which
-        if what :
-            title += '( '+ what + ' )'
-            if what == 'daily':
-                what = 'diff'
-            which = what
+
+        if isinstance(input_arg,pd.DataFrame):
+            t=input_arg
+            which=kwargs.get('input_field',listwhich()[0]+'/cumul')
+        elif input_arg==None:
+            t=get(**kwargs,output='pandas')
+            print(t.tail())
+
+            which=kwargs.get('which',listwhich()[0])
+            what=kwargs.get('what',None)
+            if what == 'cumul' and _whom == 'jhu':
+                what = which
+            option=kwargs.get('option',None)
+            
+            title = 'Data type: ' + which
+            if what :
+                title += '( '+ what + ' )'
+                if what == 'daily':
+                    what = 'diff'
+                which = what
+        else:
+            raise CoaTypeError('Waiting input as valid pycoa pandas '
+                    'dataframe. See help.')
 
         title=kwargs.get('title',title)
         return func(t,which,title,width_height)

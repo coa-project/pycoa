@@ -1,4 +1,4 @@
-#  PyCoA version v1.0 <img src="https://github.com/coa-project/coa-project.github.io/blob/main/fig/logo-anime.gif" width="140px" align=top> 
+#  PyCoA version v1.0 <img src="https://github.com/coa-project/coa-project.github.io/blob/main/fig/logo-anime.gif" width="140px" align=bottom > 
 
 _Avril/Novembre 2020_
 
@@ -39,6 +39,4 @@ La documentation complète se trouve sur <a href="https://github.com/coa-project
 ### Contact
 * [`support@pycoa.fr`](mailto:support@pycoa.fr)
 * This page : [`pycoa.fr`](http://pycoa.fr)
-
-<a href="https://twitter.com/pycoa_fr?ref_src=twsrc%5Etfw" class="twitter-follow-button" data-show-count="false">Suivre @pycoa_fr</a>
-<script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+* Sur twitter : [`@pycoa_fr`](https://twitter.com/pycoa_fr)

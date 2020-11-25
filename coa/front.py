@@ -355,15 +355,29 @@ def hist(**kwargs):
     Keyword arguments
     -----------------
 
-    where (mandatory), what, which, whom, when : (see help(get))
-    input  --   input data to plot within the pycoa framework (e.g.
-                after some analysis or filtering). Default is None which
-                means that we use the basic raw data through the get
-                function.
-                When the 'input' keyword is set, where, what, which,
-                whom keywords are ignored.
+    where (mandatory if no input), what, which, whom, when : (see help(get))
+
+
+    bins        --  number of bins used. If none provided, a default 
+                    value will be used.
+
+    input       --  input data to plot within the pycoa framework (e.g.
+                    after some analysis or filtering). Default is None which
+                    means that we use the basic raw data through the get
+                    function.
+                    When the 'input' keyword is set, where, what, which,
+                    whom when keywords are ignored.
+                    input should be given as valid pycoa pandas dataframe.
+
+    input_field --  is the name of the field of the input pandas to plot.
+                    Default is 'deaths/cumul', the default output field of
+                    the get() function.
+
+    width_height : width and height of the picture .
+                If specified should be a list of width and height.
+                For instance width_height=[400,500]
     """
-    kwargs_test(kwargs,['where','what','which','whom','when','input','bins'],
+    kwargs_test(kwargs,['where','what','which','whom','when','input','input_field','bins'],
             'Bad args used in the pycoa.hist() function.')
 
     input_arg=kwargs.get('input',None)

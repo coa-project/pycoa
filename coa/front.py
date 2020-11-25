@@ -293,43 +293,42 @@ def decoplot(func):
                     If specified should be a list of width and height.
                     For instance width_height=[400,500]
 
+        title       --  to force the title of the plot
+
         - Two methods from this decorators can be used:
             * plot : date chart  according to location
             * scrollmenu_plot: two date charts which can be selected from scroll menu,
                                 according to the locations which were selected
         """
         kwargs_test(kwargs,['where','what','which','whom','when', \
-            'input','input_field','width_height','option'],
+            'input','input_field','width_height','option','title'],
             'Bad args used in the pycoa.plot() function.')
 
         input_arg=kwargs.get('input',None)
 
-        title=''
         which=''
         width_height=kwargs.get('width_height',None)
+        what=kwargs.get('what',None)
 
         if isinstance(input_arg,pd.DataFrame):
             t=input_arg
             which=kwargs.get('input_field',listwhich()[0]+'/cumul')
         elif input_arg==None:
             t=get(**kwargs,output='pandas')
-            print(t.tail())
-
             which=kwargs.get('which',listwhich()[0])
-            what=kwargs.get('what',None)
             if what == 'cumul' and _whom == 'jhu':
                 what = which
             option=kwargs.get('option',None)
-            
-            title = 'Data type: ' + which
-            if what :
-                title += '( '+ what + ' )'
-                if what == 'daily':
-                    what = 'diff'
-                which = what
         else:
             raise CoaTypeError('Waiting input as valid pycoa pandas '
                     'dataframe. See help.')
+
+        title = 'Data type: ' + which
+        if what :
+            title += '( '+ what + ' )'
+            if what == 'daily':
+                what = 'diff'
+            which = what
 
         title=kwargs.get('title',title)
         return func(t,which,title,width_height)

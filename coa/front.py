@@ -381,22 +381,27 @@ def hist(**kwargs):
             'Bad args used in the pycoa.hist() function.')
 
     input_arg=kwargs.get('input',None)
-    if input_arg != None:
-        if not isinstance(input_arg,pd.DataFrame):
-            raise CoaTypeError('Waiting input as valid pycoa pandas '
-                'dataframe. See help.')
-        t=input_arg
-    else:
-        t=get(**kwargs,output='pandas')
 
-    which=kwargs.get('which',listwhich()[0])
+    if isinstance(input_arg,pd.DataFrame):
+        t=input_arg
+        which=kwargs.get('input_field',listwhich()[0]+'/cumul')
+        what=None
+    elif input_arg==None:
+        t=get(**kwargs,output='pandas')
+        which=kwargs.get('which',listwhich()[0])
+        what=kwargs.get('what',listwhat()[0])
+    else:
+        raise CoaTypeError('Waiting input as valid pycoa pandas '
+            'dataframe. See help.')
+
     bins=kwargs.get('bins',None)
     width_height=kwargs.get('width_height',None)
-    what=kwargs.get('what',listwhat()[0])
+    
     title = 'Data type: ' + which
     date=kwargs.get('date','last')
 
-    title += ' (' + what + ')'
+    if what!=None:
+        title += ' (' + what + ')'
 
     if what == 'cumul' and _whom == 'jhu':
             what = which

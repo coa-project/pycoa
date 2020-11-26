@@ -506,17 +506,16 @@ class GeoRegion():
 
         verb("Init of GeoRegion()")
         try:
-            p_m49=pd.read_html(self._source_dict["UN_M49"])[0]
+            p_m49=pd.read_html(self._source_dict["UN_M49"])[1]
         except:
             raise CoaConnectionError('Cannot connect to the UN_M49 '
                     'wikipedia page. '
                     'Please check your connection or availability of the page.')
 
-
-
         p_m49.columns=['code','region_name']
         p_m49['region_name']=[r.split('(')[0].rstrip() for r in p_m49.region_name]  # suppress information in parenthesis in region name
         p_m49.set_index('code')
+
         self._region_dict.update(p_m49.to_dict('split')['data'])
         self._region_dict.update({  "UE":"European Union",
                                     "G7":"G7",

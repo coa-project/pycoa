@@ -65,6 +65,9 @@ import numpy as np
 from shapely.ops import unary_union
 import io
 from PIL import Image
+from io import BytesIO
+import base64
+import matplotlib.pyplot as plt
 
 width_height_default = [500,400]
 class CocoDisplay():
@@ -588,7 +591,7 @@ class CocoDisplay():
         data = data.set_index('geoid')
 
         centroid=unary_union(data.geometry).centroid
-    
+
         min_col,max_col=CocoDisplay.min_max_range(0,max(data[which_data]))
         colormap = branca.colormap.linear.RdPu_09.scale(min_col,max_col)
         #colormap = (colormap.to_step(n=len(data[which_data]),method='log'))
@@ -618,70 +621,33 @@ class CocoDisplay():
         colormap.add_to(mapa)
         #folium.LayerControl(autoZIndex=False, collapsed=False).add_to(mapa)
         return mapa
-'''
-        choro = folium.Choropleth(
-        geo_data=data,
-        name='Covid19cases',
-        data=data,
-        columns=['geoid', which_data],
-        key_on='feature.id',
-        fill_color='PuRd',
-        fill_opacity=0.7,
-        line_opacity=0.2,
-        #scale=(0,100),
-        line_color='white',
-        line_weight=0,
-        highlight=False,
-        smooth_factor=1.0).add_to(mapa)
-        mapa.add_child(colormap)
-        folium.GeoJson(data,
-               name="Cases",
-               style_function=lambda x: {'color':'transparent','fillColor':'transparent','weight':0},
-               highlight_function=lambda x: {'weight':2, 'color':'green'},
-               tooltip=folium.GeoJsonTooltip(fields=['location',which_data],
-                                             aliases = ['country','totcases'],
-                                             labels=False)
-                      ).add_to(mapa)
-'''
+
+    @staticmethod
+    def sparkline(data, figsize=(2, 0.25), **kwargs):
+        """
+        Returns a HTML image tag containing a base64 encoded sparkline style plot
+        """
+        data = list(data)
+        *_, ax = plt.subplots(1, 1, figsize=figsize, **kwargs)
+
+        ax.plot(data)
+        ax.fill_between(range(len(data)), data, len(data)*[min(data)], alpha=0.1)
+        ax.set_axis_off()
+        img = BytesIO()
+        plt.savefig(img)
+        plt.close()
+        return '<img src="data:image/png;base64, {}" />'.format(base64.b64encode(img.getvalue()).decode())
 
 
-def resume_pandas(self,pd):
-    pd['New cases (last 30 days)'] = pd['deaths'].apply(self.sparkline)
-
-'''
-    babypandas_diff=self.p.getStats(country=self.countries,type='Diff',which='deaths',output='pandas')
-    babypandas_diff=babypandas_diff.set_index('date')
-    babypandas_cumul=self.p.getStats(country=self.countries,type='Cumul',which='deaths',output='pandas')
-    babypandas_cumul=babypandas_cumul.set_index('date')
-
-    n=self.SetTotalDaysConsidered(self.p.getDates()[0],self.stop_date_fit)
-    [self.returnFits(i) for i in self.countries]
-
-    pop_pd=w.getData()[w.getData()['Country'].isin(self.countries)]
-        pop=pop_pd.sort_values(by=['Country'])['Population']
-
-    Pourcentage=[[100*(self.GetTodayProjNdeaths()[i]-\
-                      (babypandas_cumul.loc[babypandas_cumul['country']==i]).loc[self.stop_date_fit]['cases'])\
-                  /(babypandas_cumul.loc[babypandas_cumul['country']==i]).loc[self.stop_date_fit]['cases'],0]\
-                 [self.GetTodayProjNdeaths()[i] == -1]\
-                 for i in self.countries]
-
-    print(Pourcentage)
-
-    resume =  pd.DataFrame({
-                  'Country':self.countries,'Population':pop,
-                  'Totaldeaths':babypandas_cumul.loc[self.stop_date_fit]['cases'].to_list(),
-                  'TotaldeathsProj':[self.GetTodayProjNdeaths()[i] for i in self.countries],
-                  'Diff%': Pourcentage,
-                  'Total Forecast': [crys.GetFitsParameters()[i][1] for i in self.countries],
-                  'Estimated pick': [crys.GetFitsParameters()[i][0] for i in self.countries],
-                  'Last deaths': babypandas_diff.loc[self.stop_date_fit]['cases'].to_list(),
-                  'Caseslist':(babypandas_diff.sort_values('date').groupby('country').apply(lambda x: x['cases'].tail(30)).values[:]).tolist()
-    })
-    resume['New cases (last 30 days)'] = resume['Caseslist'].apply(self.sparkline)
-    last_date=self.stop_date_fit
-    title='Resume and forcast for COVID-19 pandemy @ ' + str(last_date)
-    resume=resume.loc[:, resume.columns != 'Caseslist']
-    resume=resume.set_index('Country')
-    resume=resume.sort_values(by=['Country'])
-'''
+    def spark_pandas(self,pandy,which_data):
+        '''
+        Return pandas : location as index andwhich_data as sparkline (latest 30 values)
+        '''
+        pd.DataFrame._repr_html_ = lambda self: self.to_html(escape=False)
+        loc = pandy['location'].unique()
+        resume =  pd.DataFrame({
+                'location':loc,
+                'cases':
+                [CocoDisplay.sparkline(pandy.groupby('location')[which_data].apply(list)[i][-30:])
+                for i in loc]})
+        return resume.set_index('location')

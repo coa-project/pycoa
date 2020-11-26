@@ -1,0 +1,19 @@
+name: Build Docs and Open PR
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      src_path: /coa
+      dst_path: /docs
+    steps:
+    - uses: actions/checkout@v2
+    - name: Generate Python Docs
+      uses: jbheard/markdown-docs@v1
+    - name: Open docs update PR
+      uses: peter-evans/create-pull-request@v2
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}

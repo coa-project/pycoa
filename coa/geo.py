@@ -514,11 +514,8 @@ class GeoRegion():
 
         p_m49=p_m49[['Code', 'Area']]
         p_m49=p_m49.rename(columns={'Code': 'code','Area':'region_name'})
-        #p_m49.columns=['code','region_name','Subregions']
         p_m49['region_name']=[r.split('(')[0].rstrip() for r in p_m49.region_name]  # suppress information in parenthesis in region name
-        p_m49['code']= p_m49['code'].transform(lambda x: str(x))
         p_m49.set_index('code')
-
         self._region_dict.update(p_m49.to_dict('split')['data'])
         self._region_dict.update({  "UE":"European Union",
                                     "G7":"G7",
@@ -546,13 +543,12 @@ class GeoRegion():
             if row.iso3 != '–' : # meaning a non standard iso in wikipedia UN GeoScheme
                 for r in row.m49.replace(" ","").split('<'):
                     idx.append(row.iso3)
-                    reg.append(r)
+                    reg.append(int(r))
                     cap.append(row.capital)
         self._p_gs=pd.DataFrame({'iso3':idx,'capital':cap,'region':reg})
         self._p_gs=self._p_gs.merge(p_m49,how='left',left_on='region',\
                             right_on='code').drop(["code"],axis=1)
 
-        self._p_gs['region']= self._p_gs['region'].transform(lambda x: int(x))
 
     def get_source(self):
         return self._source_dict

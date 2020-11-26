@@ -545,12 +545,13 @@ class GeoRegion():
             if row.iso3 != '–' : # meaning a non standard iso in wikipedia UN GeoScheme
                 for r in row.m49.replace(" ","").split('<'):
                     idx.append(row.iso3)
-                    reg.append(int(r))
+                    reg.append(r)
                     cap.append(row.capital)
         self._p_gs=pd.DataFrame({'iso3':idx,'capital':cap,'region':reg})
         self._p_gs=self._p_gs.merge(p_m49,how='left',left_on='region',\
                             right_on='code').drop(["code"],axis=1)
-
+        self._p_gs['region']= self._p_gs['region'].transform(lambda x: int(x))
+    
     def get_source(self):
         return self._source_dict
 

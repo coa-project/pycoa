@@ -299,7 +299,7 @@ class GeoInfo():
             self._gm=gm
         else:
             self._gm=GeoManager()
-            
+
         self._grp=self._gm._gr.get_pandas()
 
     def get_list_field(self):
@@ -503,10 +503,10 @@ class GeoRegion():
 
 
         # --- get the UN M49 information and organize the data in the _region_dict
-        
+
         verb("Init of GeoRegion()")
         try:
-            p_m49=pd.read_html(self._source_dict["UN_M49"])[1]
+            p_m49=pd.read_html(self._source_dict["UN_M49"])[0]
         except:
             raise CoaConnectionError('Cannot connect to the UN_M49 '
                     'wikipedia page. '
@@ -517,7 +517,6 @@ class GeoRegion():
         p_m49.columns=['code','region_name']
         p_m49['region_name']=[r.split('(')[0].rstrip() for r in p_m49.region_name]  # suppress information in parenthesis in region name
         p_m49.set_index('code')
-
         self._region_dict.update(p_m49.to_dict('split')['data'])
         self._region_dict.update({  "UE":"European Union",
                                     "G7":"G7",
@@ -567,7 +566,7 @@ class GeoRegion():
             raise CoaKeyError("The given region is not a str type.")
 
         region=region.title()  # if not properly capitalized
-        
+
         if region not in self.get_region_list():
             raise CoaKeyError('The given region "'+str(region)+'" is unknown.')
 

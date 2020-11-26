@@ -226,5 +226,3 @@ width_height : width and height of the picture . If specified should be a list o
 
 Create a map according to arguments and options. See help(hist). 
 
-
-

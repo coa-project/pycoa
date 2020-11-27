@@ -89,12 +89,14 @@ class GeoManager():
         return self._standard
 
     def set_standard(self,standard):
-        """ set the working standard type within the GeoManager class.
+        """
+        set the working standard type within the GeoManager class.
         The standard should meet the get_list_standard() requirement
         @throws CoaTypeError if argument is not a strin
         @throws CoaKeyError if argument not understood
         @author tjbtjbtjb
-        @param {'self':self, 'standard':standard string to set}
+        @param self self
+        @param standard standard string to set
         @return the new used standard
         """
         if not isinstance(standard,str):

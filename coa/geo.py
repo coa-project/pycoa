@@ -65,9 +65,6 @@ class GeoManager():
     def get_list_standard(self):
         """ return the list of supported standard name of countries.
         First one is default for the class
-        @author tjbtjbtjb
-        @return the list of supported standard name of countries. First one is default for the class.
-        @param self
         """
         return self._list_standard
 
@@ -92,12 +89,6 @@ class GeoManager():
         """
         set the working standard type within the GeoManager class.
         The standard should meet the get_list_standard() requirement
-        @throws CoaTypeError if argument is not a strin
-        @throws CoaKeyError if argument not understood
-        @author tjbtjbtjb
-        @param self self
-        @param standard standard string to set
-        @return the new used standard
         """
         if not isinstance(standard,str):
             raise CoaTypeError('GeoManager error, the standard argument'

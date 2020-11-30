@@ -113,7 +113,9 @@ class GeoManager():
         output           -- 'list' (default), 'dict' or 'pandas'
         db               -- database name to help conversion.
                             Default : None, meaning best effort to convert.
-                            Known database : jhu, wordometer
+                            Known database : jhu, wordometer... 
+                            See get_list_db() for full list of known db for 
+                            standardization
         interpret_region -- Boolean, default=False. If yes, the output should
                             be only 'list'.
         """

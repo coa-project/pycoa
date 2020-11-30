@@ -261,6 +261,7 @@ class GeoManager():
                     "South Korea":"KOR",\
                     "Swaziland":"SWZ",\
                     "United States Virgin Islands":"VIR",\
+                    "Iran":"IRN",\
                 })
         return [translation_dict.get(k,k) for k in w]
 

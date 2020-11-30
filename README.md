@@ -26,7 +26,7 @@ cf.get(where=['usa'], what='daily', which='recovered',output='pandas')
 
 `PyCoA` works currently inside `Jupyter` notebook, over a local install or on online platforms such as <a href="https://colab.research.google.com/" >Google Colab</a>.
 
-A basic demo code is available as a <a href="https://github.com/coa-project/coabook/blob/master/demo_pycoa.ipynb" >notebook on GitHub</a> or directly as <a href="https://colab.research.google.com/github/coa-project/coabook/blob/master/demo_pycoa.ipynb" >Google Colab notebook</a>.
+A basic demo code is available as a notebook on <a href="https://github.com/coa-project/coabook/blob/master/demo_pycoa.ipynb" target=_blank /><img src="https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png" height="20" alt="GitHub logo" /> GitHub</a>, on <a href="https://colab.research.google.com/github/coa-project/coabook/blob/master/demo_pycoa.ipynb" target=_blank ><img src="https://colab.research.google.com/img/colab_favicon_256px.png" height="20" alt="Google colab logo" /> Google Colab</a>, or on <a href="https://nbviewer.jupyter.org/github/coa-project/coabook/blob/master/demo_pycoa.ipynb" target=_blank ><img src="https://nbviewer.jupyter.org/static/img/nav_logo.svg" height="20" alt="NbViewer logo" /> Jupyter NbViewer</a>. Other notebooks are providing in our <a href="https://github.com/coa-project/coabook/blob/master/README.md" target=_blank >coabook page</a>.
 
 Full documentation is on <a href="https://github.com/coa-project/pycoa/wiki/Home" target=_blank>the Wiki</a>.
 

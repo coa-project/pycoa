@@ -26,7 +26,7 @@ cf.get(where=['usa'], what='daily', which='recovered',output='pandas')
 
 PyCoA fonctionne actuellement au sein de _notebooks_ `Jupyter`, que l'installation soit locale ou bien sur des plateformes en ligne comme <a href="https://colab.research.google.com/" >Google Colab</a>.
 
-Un code de démonstration simple est accesible comme sous forme d'un <a href="https://github.com/coa-project/coabook/blob/master/demo_pycoa.ipynb" >notebook sur GitHub</a> ou bien directement en tant que <a href="https://colab.research.google.com/github/coa-project/coabook/blob/master/demo_pycoa.ipynb">Google Colab notebook</a>.
+Un code de démonstration simple est accesible comme sous forme d'un notebook sur <a href="https://github.com/coa-project/coabook/blob/master/demo_pycoa.ipynb" target=_blank /><img src="https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png" height="20" alt="GitHub logo" /> GitHub</a>, sur <a href="https://colab.research.google.com/github/coa-project/coabook/blob/master/demo_pycoa.ipynb" target=_blank ><img src="https://colab.research.google.com/img/colab_favicon_256px.png" height="20" alt="Google colab logo" /> Google Colab</a>, ou sur <a href="https://nbviewer.jupyter.org/github/coa-project/coabook/blob/master/demo_pycoa.ipynb" target=_blank ><img src="https://nbviewer.jupyter.org/static/img/nav_logo.svg" height="20" alt="NbViewer logo" /> Jupyter NbViewer</a>. D'autres _notebooks_ sont fournis via notre <a href="https://github.com/coa-project/coabook/blob/master/README.md" target=_blank >page coabook</a>.
 
 La documentation complète se trouve sur <a href="https://github.com/coa-project/pycoa/wiki/FR:Home" >le Wiki</a>.
 

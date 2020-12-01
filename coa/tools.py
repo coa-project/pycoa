@@ -19,7 +19,15 @@ printing.
 """
 
 import datetime
-from coa.error import CoaKeyError,CoaTypeError
+import time
+import os.path
+import requests
+from tempfile import gettempdir
+from getpass import getuser
+from zlib import crc32
+from urllib.parse import urlparse
+
+from coa.error import CoaKeyError,CoaTypeError,CoaConnectionError
 
 _verbose_mode = 1 # default
 
@@ -113,3 +121,36 @@ def extract_dates(when):
             raise CoaTypeError("First date must occur before the second one.")
 
     return w0,w1
+
+def get_local_from_url(url,expiration_time=0,suffix=''):
+    """"Download data from the given url and store it into a local file. 
+
+    If the expiration time is 0 (default), the data will never be downloaded anymore if available.
+    If the expiration time is < 0, it forces to download the file.
+    If the expiration time (in seconds) is lower than time difference between now and last modification
+    time of the file, the file is downloaded. 
+
+    One may add a suffix to the local filename if known.
+    """
+
+    tmpdir=os.path.join(gettempdir(),"pycoa_data"+"_"+getuser())
+    if not os.path.exists(tmpdir):
+        os.makedirs(tmpdir)
+
+    local_filename=os.path.join(tmpdir,urlparse(url).netloc+"_"+str(crc32(bytes(url,'utf-8')))+suffix)
+    
+    if expiration_time >=0 and os.path.exists(local_filename):
+        if expiration_time==0 or time.time()-os.path.getmtime(local_filename)<expiration_time:
+            return local_filename
+
+    # if not : download the file
+    try:
+        urlfile = requests.get(url, allow_redirects=True)
+    except:
+        raise CoaConnectionError('Cannot access to the url '+\
+            url+' . Please check your internet connection or url path.')
+    fp=open(local_filename,'wb')
+    fp.write(urlfile.content)
+    fp.close()
+
+    return local_filename

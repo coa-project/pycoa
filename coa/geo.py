@@ -617,3 +617,129 @@ class GeoRegion():
 
     def get_pandas(self):
         return self._p_gs
+
+class GeoCountry():
+    """GeoCountry class definition.
+    This class provides functions for specific countries and their states / departments / regions,
+    and their geo properties (geometry, population if available, etc.)
+    
+    The list of supported countries is given by get_list_countries() function """
+
+    _country_info_dict = {'FRA':'https://datanova.laposte.fr/explore/dataset/geoflar-departements-2015/download/?format=shp&timezone=Europe/Berlin&lang=fr'}
+
+    def __init__(self,country=None):
+        """ __init__ member function. 
+        Must give as arg the country to deal with, as a valid ISO3 string
+        """
+        self._country=country
+        if country == None:
+            return None
+
+        if not country in self.get_list_countries():
+            raise CoaKeyError("Country "+str(country)+" not supported. Please see get_list_countries() and help. ")
+
+        url=self._country_info_dict[country]
+        self._country_data = gpd.read_file(url)
+
+        # country by country, adapt the read file informations
+        if self._country=='FRA':
+
+            # adding standardized name for region, subregion
+            for old,new in {\
+                'code_dept':'code_subregion',\
+                'nom_dept':'name_subregion',\
+                'code_reg':'code_region',\
+                'nom_reg':'name_region',\
+                'nom_chf':'name_town',\
+                }.items() :
+                self._country_data[new]=self._country_data[old]
+
+            # Moving DROM-COM near hexagon
+            #list_translation={"GUADELOUPE":(63,23),
+            #                  "MARTINIQUE":(63,23),
+            #                  "GUYANE":(50,35),
+            #                  "REUNION":(-51,60),
+            #                  "MAYOTTE":(-38,51.5)}
+            #for d,t in list_translation.items():
+            #    self._country_data[self._country_data["nom_dept"]==d,"geometry"] = \
+            #        self._country_data[self._country_data["nom_dept"]==d]["geometry"].translate(t[0],t[1])
+            # Add Ile de France zoom 
+            #idf_translation=(-6.5,-5)
+            #idf_scale=5
+            #idf_center=(-4,44)
+            #z=self._country_data[self._country_data["code_dept"].isin(['75','92','93','94'])].copy()
+            #z['geometry']=z.translate(idf_translation[0],idf_translation[1]).scale(xfact=idf_scale,yfact=idf_scale,origin=idf_center)
+            #self._country_data=self._country_data.append(z)
+
+    def get_country(self):
+        """ Return the current country used.
+        """
+        return self._country
+
+    def get_list_countries(self):
+        """ This function returns back the list of supported countries
+        """
+        return sorted(list(self._country_info_dict.keys()))
+
+    def is_init(self):
+        """Test if the country is initialized. Return True if it is. False if not.
+        """
+        if self.get_country() != None:
+            return True
+        else:
+            return False
+
+    def test_is_init(self):
+        """Test if the country is initialized. If not, raise a CoaDbError.
+        """
+        if self.is_init():
+            return True
+        else:
+            raise CoaDbError("The country is not set. Use a constructor with non empty country string.")
+
+    def get_region_list(self):
+        """ Return the list of available regions with code, name and geometry
+        """
+        if self.test_is_init():
+            return self._country_data[['code_region','name_region']].sort_values('code_region')
+
+    def get_subregion_list(self):
+        """ Return the list of available subregions with code, name and geometry
+        """
+        if self.test_is_init():
+            return self._country_data[['code_subregion','name_subregion','geometry']].sort_values('code_subregion')
+
+    def get_list_properties(self):
+        """Return the list of available properties for the current country
+        """
+        if self.test_is_init():
+            return sorted(self._country_data.columns.to_list())
+
+    def get_data(self):
+        """Return the whole geopandas data
+        """
+        if self.test_is_init():
+            return self._country_data.copy()
+
+    def add_info(self,data,prop):
+        """Return a the data pandas.Dataframe with an additionnal column with property prop.
+
+        Arguments : 
+        data : pandas.Dataframe object
+        prop : string of list of string of properties to add.
+        """
+        test_is_init()
+        
+        if type(data) != type(pd.DataFrame()):
+            raise CoaTypeError("Expecting a pandas Dataframe as input data")
+
+        if not isinstance(prop,list):
+            prop=[prop] # make the prop input a list if needed
+
+        if not all(isinstance(p, str) for p in prop):
+            raise CoaTypeError("Each property should be a string whereas "+str(prop)+" is not a list of string.")
+
+        if not prop in self.get_list_properties():
+            raise CoaKeyError("The property "+prop+" is not available for country "+self.get_country()+".")
+
+        return data

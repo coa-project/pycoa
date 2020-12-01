@@ -29,7 +29,7 @@ import pandas as pd
 import geopandas as gpd
 import requests
 
-from coa.tools import verb,kwargs_test
+from coa.tools import verb,kwargs_test,get_local_from_url
 from coa.error import *
 
 # ---------------------------------------------------------------------
@@ -625,6 +625,7 @@ class GeoCountry():
     
     The list of supported countries is given by get_list_countries() function """
 
+    # Assuming zip file here
     _country_info_dict = {'FRA':'https://datanova.laposte.fr/explore/dataset/geoflar-departements-2015/download/?format=shp&timezone=Europe/Berlin&lang=fr'}
 
     def __init__(self,country=None):
@@ -639,7 +640,7 @@ class GeoCountry():
             raise CoaKeyError("Country "+str(country)+" not supported. Please see get_list_countries() and help. ")
 
         url=self._country_info_dict[country]
-        self._country_data = gpd.read_file(url)
+        self._country_data = gpd.read_file('zip://'+get_local_from_url(url,0,'.zip')) # under the hypothesis this is a zip file
 
         # country by country, adapt the read file informations
         if self._country=='FRA':

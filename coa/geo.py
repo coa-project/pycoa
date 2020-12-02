@@ -460,14 +460,9 @@ class GeoInfo():
             elif f == 'geometry':
                 if self._data_geometry.empty:
                     geojsondatafile = 'https://raw.githubusercontent.com/johan/world.geo.json/master/countries.geo.json'
-                    try:
-                        self._data_geometry = gpd.read_file(geojsondatafile)[["id","geometry"]]
-                        self._data_geometry.columns=["id_tmp","geometry"]
+                    self._data_geometry = gpd.read_file(get_local_from_url(geojsondatafile,0,'.json'))[["id","geometry"]]
+                    self._data_geometry.columns=["id_tmp","geometry"]
                         # countains id as iso3 , country name , geometry
-                    except:
-                        raise CoaConnectionError('Cannot access to the '
-                            'geo json data for countries. '
-                            'Check internet connection.')
 
                 p=p.merge(self._data_geometry,how='left',\
                     left_on='iso3_tmp',right_on='id_tmp',\
@@ -509,12 +504,8 @@ class GeoRegion():
         # --- get the UN M49 information and organize the data in the _region_dict
 
         verb("Init of GeoRegion()")
-        try:
-            p_m49=pd.read_html(self._source_dict["UN_M49"])[1]
-        except:
-            raise CoaConnectionError('Cannot connect to the UN_M49 '
-                    'wikipedia page. '
-                    'Please check your connection or availability of the page.')
+
+        p_m49=pd.read_html(get_local_from_url(self._source_dict["UN_M49"],0))[1]
 
         p_m49.columns=['code','region_name']
         p_m49['region_name']=[r.split('(')[0].rstrip() for r in p_m49.region_name]  # suppress information in parenthesis in region name
@@ -531,12 +522,7 @@ class GeoRegion():
 
 
         # --- get the UnitedNation GeoScheme and organize the data
-        try:
-            p_gs=pd.read_html(self._source_dict["GeoScheme"])[0]
-        except:
-            raise CoaConnectionError('Cannot connect to the UN GeoScheme '
-                    'wikipedia page. '
-                    'Please check your connection or availability of the page.')
+        p_gs=pd.read_html(get_local_from_url(self._source_dict["GeoScheme"],0))[0]
         p_gs.columns=['country','capital','iso2','iso3','num','m49']
 
         idx=[]

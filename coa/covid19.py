@@ -22,7 +22,7 @@ import numpy as np
 from datetime import datetime as dt
 import pandas as pd
 import sys
-from coa.tools import info,verb,kwargs_test
+from coa.tools import info,verb,kwargs_test,get_local_from_url
 import coa.geo as coge
 from coa.error import *
 from scipy import stats as sps
@@ -203,7 +203,7 @@ class DataBase():
         for ext in jhu_files_ext:
             fileName = "time_series_covid19_" + ext + "_global.csv"
             url = self.database_url + fileName
-            pandas_jhu_db = pandas.read_csv(url, sep = ',')
+            pandas_jhu_db = pandas.read_csv(get_local_from_url(url,7200), sep = ',') # cached for 2 hours
             pandas_jhu_db = pandas_jhu_db.drop(columns=['Province/State','Lat','Long'])
             pandas_jhu_db = pandas_jhu_db.rename(columns={'Country/Region':'location'})
             pandas_jhu_db = pandas_jhu_db.sort_values(by=['location'])
@@ -232,7 +232,7 @@ class DataBase():
         encoding = kwargs.get('encoding', None)
         if encoding:
             encoding = encoding
-        pandas_db = pandas.read_csv(self.database_url,sep=separator,dtype=dico_cast, encoding = encoding )
+        pandas_db = pandas.read_csv(get_local_from_url(self.database_url,7200),sep=separator,dtype=dico_cast, encoding = encoding ) # cached for 2 hours
 
         constraints = kwargs.get('constraints', None)
         rename_columns = kwargs.get('rename_columns', None)

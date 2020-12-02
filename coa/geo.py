@@ -290,10 +290,13 @@ class GeoInfo():
         'geometry':'https://github.com/johan/world.geo.json/',\
         'region_code_list':'https://en.wikipedia.org/wiki/List_of_countries_by_United_Nations_geoscheme',\
         'region_name_list':'https://en.wikipedia.org/wiki/List_of_countries_by_United_Nations_geoscheme',\
-        'capital':'https://en.wikipedia.org/wiki/List_of_countries_by_United_Nations_geoscheme'}
+        'capital':'https://en.wikipedia.org/wiki/List_of_countries_by_United_Nations_geoscheme',\
+        'flag':'https://github.com/linssen/country-flag-icons/blob/master/countries.json',\
+        }
 
     _data_geometry = pd.DataFrame()
     _data_population = pd.DataFrame()
+    _data_flag = pd.DataFrame()
 
     def __init__(self,gm=0):
         """ __init__ member function.
@@ -461,10 +464,19 @@ class GeoInfo():
                     left_on='iso3_tmp',right_on='id_tmp',\
                     suffixes=('','_tmp')).drop(['id_tmp'],axis=1)
 
+            # -----------------------------------------------------------
+            elif f == 'flag':
+                if self._data_flag.empty:
+                    self._data_flag = pd.read_json(get_local_from_url('https://github.com/linssen/country-flag-icons/raw/master/countries.json',0))
+                    self._data_flag['flag_url']='http:'+self._data_flag['file_url']
+
+                p=p.merge(self._data_flag[['alpha3','flag_url']],how='left',\
+                    left_on='iso3_tmp',right_on='alpha3').drop(['alpha3'],axis=1)
+
         return p.drop(['iso2_tmp','iso3_tmp'],axis=1,errors='ignore')
 
 # ---------------------------------------------------------------------
-# --- GeoInfo class ---------------------------------------------------
+# --- GeoRegion class -------------------------------------------------
 # ---------------------------------------------------------------------
 
 class GeoRegion():
@@ -596,6 +608,11 @@ class GeoRegion():
 
     def get_pandas(self):
         return self._p_gs
+
+
+# ---------------------------------------------------------------------
+# --- GeoCountryclass -------------------------------------------------
+# ---------------------------------------------------------------------
 
 class GeoCountry():
     """GeoCountry class definition.

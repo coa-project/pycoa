@@ -402,13 +402,6 @@ class GeoInfo():
             # ----------------------------------------------------------
             elif f in ['population','area','fertility','median_age','urban_rate']:
                 if self._data_population.empty:
-                    url_worldometers="https://www.worldometers.info/world-population/population-by-country/"
-                    try:
-                        htmlContent = requests.get(url_worldometers).content
-                    except:
-                        raise CoaConnectionError('Cannot connect to the database '
-                                'worldometers.info. '
-                                'Please check your connection or availabilty of the db')
 
                     field_descr=( (0,'','idx'),
                         (1,'Country','country'),
@@ -419,8 +412,8 @@ class GeoInfo():
                         (10,'Urban','urban_rate'),
                         ) # containts tuples with position in table, name of column, new name of field
 
-                    # get data
-                    self._data_population = pd.read_html(htmlContent)[0].iloc[:,[x[0] for x in field_descr]]
+                    # get data with cache ok for about 1 month
+                    self._data_population = pd.read_html(get_local_from_url('https://www.worldometers.info/world-population/population-by-country/',30e5) ) [0].iloc[:,[x[0] for x in field_descr]]
 
                     # test that field order hasn't changed in the db
                     if not all (col.startswith(field_descr[i][1]) for i,col in enumerate(self._data_population.columns) ):

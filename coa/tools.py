@@ -27,7 +27,7 @@ from getpass import getuser
 from zlib import crc32
 from urllib.parse import urlparse
 
-from coa.error import CoaKeyError,CoaTypeError,CoaConnectionError
+from coa.error import CoaKeyError,CoaTypeError,CoaConnectionError,CoaNotManagedError
 
 _verbose_mode = 1 # default
 
@@ -139,18 +139,28 @@ def get_local_from_url(url,expiration_time=0,suffix=''):
 
     local_filename=os.path.join(tmpdir,urlparse(url).netloc+"_"+str(crc32(bytes(url,'utf-8')))+suffix)
     
-    if expiration_time >=0 and os.path.exists(local_filename):
+    local_file_exists=os.path.exists(local_filename)
+
+    if expiration_time >=0 and local_file_exists:
         if expiration_time==0 or time.time()-os.path.getmtime(local_filename)<expiration_time:
+            verb('Using locally stored data for '+url)
             return local_filename
 
     # if not : download the file
     try:
         urlfile = requests.get(url, allow_redirects=True)
-    except:
-        raise CoaConnectionError('Cannot access to the url '+\
-            url+' . Please check your internet connection or url path.')
-    fp=open(local_filename,'wb')
-    fp.write(urlfile.content)
-    fp.close()
+        fp=open(local_filename,'wb')
+        fp.write(urlfile.content)
+        fp.close()
+        verb('Download content of '+url+' . Locally stored as cached data in '+local_filename)
+    except requests.exceptions.RequestException :
+        if local_file_exists and expiration_time >=0 :
+            info('Cannot access to '+url+' . Will use locally stored cached version.')
+            pass
+        else:
+            raise CoaConnectionError('Cannot access to the url '+\
+                url+' . Please check your internet connection or url path.')
+    except Exception as e2:
+        raise CoaNotManagedError(type(e2).__name__+" : "+str(e2))
 
     return local_filename

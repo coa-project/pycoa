@@ -31,6 +31,18 @@ from coa.error import CoaKeyError,CoaTypeError,CoaConnectionError,CoaNotManagedE
 
 _verbose_mode = 1 # default
 
+def get_verbose_mode():
+    """Return the verbose mode
+    """
+    return _verbose_mode
+
+def set_verbose_mode(v):
+    """Set the verbose mode
+    """
+    global _verbose_mode
+    _verbose_mode=v
+    return get_verbose_mode()
+
 def info(*args):
     """Print to stdout with similar args as the builtin print function,
     if _verbose_mode > 0

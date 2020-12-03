@@ -624,6 +624,10 @@ class GeoCountry():
     # Assuming zip file here
     _country_info_dict = {'FRA':'https://datanova.laposte.fr/explore/dataset/geoflar-departements-2015/download/?format=shp&timezone=Europe/Berlin&lang=fr'}
 
+    _source_dict = {'FRA':{'Basics':_country_info_dict['FRA'],\
+                            'Subregion Flags':'http://sticker-departement.com/',\
+                            'Region Flags':'https://fr.wikipedia.org/wiki/R%C3%A9gion_fran%C3%A7aise'}}
+
     def __init__(self,country=None):
         """ __init__ member function. 
         Must give as arg the country to deal with, as a valid ISO3 string
@@ -668,6 +672,11 @@ class GeoCountry():
             #z['geometry']=z.translate(idf_translation[0],idf_translation[1]).scale(xfact=idf_scale,yfact=idf_scale,origin=idf_center)
             #self._country_data=self._country_data.append(z)
 
+    def get_source(self):
+        """ Return informations about URL sources
+        """
+        return self._source_dict
+        
     def get_country(self):
         """ Return the current country used.
         """

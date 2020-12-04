@@ -27,6 +27,7 @@ import pycountry as pc
 import pycountry_convert as pcc
 import pandas as pd
 import geopandas as gpd
+import shapely
 import requests
 import bs4
 
@@ -677,8 +678,7 @@ class GeoCountry():
 
             self._country_data=self._country_data.merge(p_reg_flag,how='left',\
                     left_on='code_reg',right_on='code_region') # merging with flag and correct names
-            self._country_data.drop(['code_reg','nom_reg'],axis=1,inplace=True) # removing some column without interest
-
+        
             # standardize name for region, subregion
             self._country_data.rename(columns={\
                 'code_dept':'code_subregion',\
@@ -686,22 +686,39 @@ class GeoCountry():
                 'nom_chf':'name_town',\
                 },inplace=True)
 
+            self._country_data.drop(['id_geofla','code_reg','nom_reg','x_chf_lieu','y_chf_lieu','x_centroid','y_centroid'],axis=1,inplace=True) # removing some column without interest 
+
             # Moving DROM-COM near hexagon
-            #list_translation={"GUADELOUPE":(63,23),
-            #                  "MARTINIQUE":(63,23),
-            #                  "GUYANE":(50,35),
-            #                  "REUNION":(-51,60),
-            #                  "MAYOTTE":(-38,51.5)}
-            #for d,t in list_translation.items():
-            #    self._country_data[self._country_data["nom_dept"]==d,"geometry"] = \
-            #        self._country_data[self._country_data["nom_dept"]==d]["geometry"].translate(t[0],t[1])
+            list_translation={"GUADELOUPE":(63,23),
+                             "MARTINIQUE":(63,23),
+                             "GUYANE":(50,35),
+                             "REUNION":(-51,60),
+                             "MAYOTTE":(-38,51.5)}
+            tmp = []
+            for index, poi in self._country_data.iterrows():
+                x=0
+                y=0
+                w=self._country_data.loc[index,"name_subregion"]
+                if w in list_translation.keys():
+                    x=list_translation[w][0]
+                    y=list_translation[w][1]
+                g = shapely.affinity.translate(self._country_data.loc[index, 'geometry'], xoff=x, yoff=y)
+                tmp.append(g)
+            self._country_data['geometry']=tmp
+
             # Add Ile de France zoom 
-            #idf_translation=(-6.5,-5)
-            #idf_scale=5
-            #idf_center=(-4,44)
-            #z=self._country_data[self._country_data["code_dept"].isin(['75','92','93','94'])].copy()
-            #z['geometry']=z.translate(idf_translation[0],idf_translation[1]).scale(xfact=idf_scale,yfact=idf_scale,origin=idf_center)
-            #self._country_data=self._country_data.append(z)
+            idf_translation=(-6.5,-5)
+            idf_scale=5
+            idf_center=(-4,44)
+            tmp = []
+            for index, poi in self._country_data.iterrows():
+                g=self._country_data.loc[index, 'geometry']
+                if self._country_data.loc[index,'code_subregion'] in ['75','92','93','94']:
+                    g2=shapely.affinity.scale(shapely.affinity.translate(g,xoff=idf_translation[0],yoff=idf_translation[1]),\
+                                            xfact=idf_scale,yfact=idf_scale,origin=idf_center)
+                    g=shapely.ops.unary_union([g,g2])
+                tmp.append(g)
+            self._country_data['geometry']=tmp
 
     def get_source(self):
         """ Return informations about URL sources

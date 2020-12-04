@@ -28,6 +28,7 @@ import pycountry_convert as pcc
 import pandas as pd
 import geopandas as gpd
 import requests
+import bs4
 
 from coa.tools import verb,kwargs_test,get_local_from_url
 from coa.error import *
@@ -643,17 +644,47 @@ class GeoCountry():
         self._country_data = gpd.read_file('zip://'+get_local_from_url(url,0,'.zip')) # under the hypothesis this is a zip file
 
         # country by country, adapt the read file informations
+
+        # --- 'FRA' case ---------------------------------------------------------------------------------------
         if self._country=='FRA':
 
-            # adding standardized name for region, subregion
-            for old,new in {\
+            # adding a flag for subregion (departements)
+            self._country_data['flag_subregion']=self._source_dict['FRA']['Subregion Flags']+'img/dept/sticker_plaque_immat_'+\
+                self._country_data['code_dept']+'_'+\
+                [n.lower() for n in self._country_data['nom_dept']]+'_moto.png' # picture of a sticker for motobikes, not so bad...
+
+            # Reading information to get region flags and correct names of regions
+            f_reg_flag=open(get_local_from_url(self._source_dict['FRA']['Region Flags'],0), 'r')
+            content_reg_flag = f_reg_flag.read()
+            f_reg_flag.close()
+            soup_reg_flag = bs4.BeautifulSoup(content_reg_flag,'lxml')
+            for img in soup_reg_flag.find_all('img'):  # need to convert <img tags to src content for pandas_read 
+                src=img.get('src')
+                if src[0] == '/':
+                    src='http:'+src
+                img.replace_with(src)
+
+            tabs_reg_flag=pd.read_html(str(soup_reg_flag)) # pandas read the modified html
+            metropole=tabs_reg_flag[5][["Logo","Dénomination","Code INSEE[5]"]]  # getting 5th table, and only usefull columns
+            ultramarin=tabs_reg_flag[6][["Logo","Dénomination","Code INSEE[5]"]] # getting 6th table
+            p_reg_flag=pd.concat([metropole,ultramarin]).rename(columns={"Code INSEE[5]":"code_region",\
+                                                                        "Logo":"flag_region",\
+                                                                        "Dénomination":"name_region"})
+
+            p_reg_flag=p_reg_flag[pd.notnull(p_reg_flag["code_region"])]  # select only valid rows
+            p_reg_flag["name_region"]=[ n.split('[')[0] for n in p_reg_flag["name_region"] ] # remove footnote [k] index from wikipedia
+            p_reg_flag["code_region"]=[ str(int(c)).zfill(2) for c in p_reg_flag["code_region"] ] # convert to str for merge the code, adding 1 leading 0 if needed
+
+            self._country_data=self._country_data.merge(p_reg_flag,how='left',\
+                    left_on='code_reg',right_on='code_region') # merging with flag and correct names
+            self._country_data.drop(['code_reg','nom_reg'],axis=1,inplace=True) # removing some column without interest
+
+            # standardize name for region, subregion
+            self._country_data.rename(columns={\
                 'code_dept':'code_subregion',\
                 'nom_dept':'name_subregion',\
-                'code_reg':'code_region',\
-                'nom_reg':'name_region',\
                 'nom_chf':'name_town',\
-                }.items() :
-                self._country_data[new]=self._country_data[old]
+                },inplace=True)
 
             # Moving DROM-COM near hexagon
             #list_translation={"GUADELOUPE":(63,23),
@@ -676,7 +707,7 @@ class GeoCountry():
         """ Return informations about URL sources
         """
         return self._source_dict
-        
+
     def get_country(self):
         """ Return the current country used.
         """

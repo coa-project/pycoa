@@ -30,6 +30,7 @@ setup(
         'altair',\
         'bokeh',\
         'branca',\
+        'bs4',\
         #'collections',\   std
         #'copy',\  std
         'datetime',\

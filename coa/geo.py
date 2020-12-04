@@ -775,25 +775,71 @@ class GeoCountry():
         if self.test_is_init():
             return self._country_data.copy()
 
-    def add_info(self,data,prop):
+    def add_info(self,**kwargs):
         """Return a the data pandas.Dataframe with an additionnal column with property prop.
 
         Arguments : 
-        data : pandas.Dataframe object
-        prop : string of list of string of properties to add.
+        input      : pandas.Dataframe object. Mandatory.
+        field      : field of properties to add. Should be within the get_list_prop() list. Mandatory.
+        input_key  : input geo key of the input pandas dataframe. Default  'where'
+        geofield   : internal geo field to make the merge. Default 'code_subregion' 
+        overload   : Allow to overload a field. Boolean value. Default : False
         """
-        test_is_init()
-        
-        if type(data) != type(pd.DataFrame()):
-            raise CoaTypeError("Expecting a pandas Dataframe as input data")
 
+        # Test of args
+        kwargs_test(kwargs,['input','field','input_key','geofield','overload'],
+            'Bad args used in the add_field() function.')
+
+        # Testing input
+        data=kwargs.get('input',None) # the panda
+        if not isinstance(data,pd.DataFrame):
+            raise CoaTypeError('You should provide a valid input pandas'
+                ' DataFrame as input. See help.')
+        data=data.copy()
+
+        # Testing input_key
+        input_key=kwargs.get('input_key','where')
+        if not isinstance(input_key,str):
+            raise CoaTypeError('The input_key should be given as a string.')
+        if input_key not in data.columns.tolist():
+            raise CoaKeyError('The input_key "'+input_key+'" given is '
+                'not a valid column name of the input pandas dataframe.')
+
+        # Testing geofield
+        geofield=kwargs.get('geofield','code_subregion')
+        if not isinstance(geofield,str):
+            raise CoaTypeError('The geofield should be given as a string.')
+        if geofield not in self._country_data.columns.tolist():
+            raise CoaKeyError('The geofield "'+geofield+'" given is '
+                'not a valid column name of the available data. '
+                'See get_list_properties() for valid fields.')
+
+        # Testing fields
+        prop=kwargs.get('field',None) # field list
+        if prop == None:
+            raise CoaKeyError('No field given. See help.')
         if not isinstance(prop,list):
             prop=[prop] # make the prop input a list if needed
 
         if not all(isinstance(p, str) for p in prop):
             raise CoaTypeError("Each property should be a string whereas "+str(prop)+" is not a list of string.")
 
-        if not prop in self.get_list_properties():
+        if not all(p in self.get_list_properties() for p in prop):
             raise CoaKeyError("The property "+prop+" is not available for country "+self.get_country()+".")
 
-        return data
+        # Testing overload 
+        overload=kwargs.get('overload',False)
+        if not isinstance(overload,bool):
+            raise CoaTypeError('The overload option should be a boolean.')
+
+        if not overload and not all(p not in data.columns.tolist() for p in prop):
+            raise CoaKeyError('Some fields already exist in you panda '
+                'dataframe columns. You may set overload to True.')
+
+        # Is the oject properly initialized ?
+        self.test_is_init()
+        
+        # Now let's go for merging
+        prop.append('code_subregion')
+        return data.merge(self._country_data[prop],how='left',left_on=input_key,\
+                            right_on=geofield)

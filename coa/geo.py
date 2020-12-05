@@ -683,7 +683,7 @@ class GeoCountry():
             self._country_data.rename(columns={\
                 'code_dept':'code_subregion',\
                 'nom_dept':'name_subregion',\
-                'nom_chf':'name_town',\
+                'nom_chf':'town_subregion',\
                 },inplace=True)
 
             self._country_data.drop(['id_geofla','code_reg','nom_reg','x_chf_lieu','y_chf_lieu','x_centroid','y_centroid'],axis=1,inplace=True) # removing some column without interest 

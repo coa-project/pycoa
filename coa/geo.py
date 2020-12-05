@@ -720,6 +720,9 @@ class GeoCountry():
                 tmp.append(g)
             self._country_data['geometry']=tmp
 
+            self._country_data_region=None
+            self._country_data_subregion=None
+
     def get_source(self):
         """ Return informations about URL sources
         """
@@ -754,14 +757,16 @@ class GeoCountry():
     def get_region_list(self):
         """ Return the list of available regions with code, name and geometry
         """
-        if self.test_is_init():
-            return self._country_data[['code_region','name_region']].sort_values('code_region')
+        cols=[c for c in self.get_list_properties() if '_region' in c]
+        cols.append('geometry')
+        return self.get_data(True)[cols]
 
     def get_subregion_list(self):
         """ Return the list of available subregions with code, name and geometry
         """
-        if self.test_is_init():
-            return self._country_data[['code_subregion','name_subregion','geometry']].sort_values('code_subregion')
+        cols=[c for c in self.get_list_properties() if '_subregion' in c ]
+        cols.append('geometry')
+        return self.get_data()[cols]
 
     def get_list_properties(self):
         """Return the list of available properties for the current country
@@ -769,25 +774,42 @@ class GeoCountry():
         if self.test_is_init():
             return sorted(self._country_data.columns.to_list())
 
-    def get_data(self):
+    def get_data(self,region_version=False):
         """Return the whole geopandas data
         """
         if self.test_is_init():
-            return self._country_data.copy()
+            if region_version:
+                if not isinstance(self._country_data_region,pd.DataFrame): # i.e. is None
+                    col_reg=[c for c in self._country_data.columns.tolist() if '_region' in c]
+                    col=col_reg.copy()
+                    col.append('code_subregion') # to get the list of subregion in region
+                    col.append('geometry') # to merge the geometry of subregions
+                    pr=self._country_data[col].copy()
+                    pr['code_subregion']=pr.code_subregion.apply(lambda x: [x])
+                    self._country_data_region=pr.dissolve(by=col_reg,aggfunc='sum').sort_values(by='code_region').reset_index()
+                return self._country_data_region
+            else:
+                if not isinstance(self._country_data_subregion,pd.DataFrame): #i.e. is None
+                    self._country_data_subregion=self._country_data.sort_values(by='code_subregion')
+                return self._country_data_subregion
 
     def add_info(self,**kwargs):
         """Return a the data pandas.Dataframe with an additionnal column with property prop.
 
         Arguments : 
-        input      : pandas.Dataframe object. Mandatory.
-        field      : field of properties to add. Should be within the get_list_prop() list. Mandatory.
-        input_key  : input geo key of the input pandas dataframe. Default  'where'
-        geofield   : internal geo field to make the merge. Default 'code_subregion' 
+        input        : pandas.Dataframe object. Mandatory.
+        field        : field of properties to add. Should be within the get_list_prop() list. Mandatory.
+        input_key    : input geo key of the input pandas dataframe. Default  'where'
+        geofield     : internal geo field to make the merge. Default 'code_subregion' 
+        region_merging : Boolean value. Default False, except if the geofield contains '_region'. 
+                       If True, the merge between input dans GeoCountry data is done within the 
+                       region version of the data, not the subregion data which is the default 
+                       behavious.
         overload   : Allow to overload a field. Boolean value. Default : False
         """
 
         # Test of args
-        kwargs_test(kwargs,['input','field','input_key','geofield','overload'],
+        kwargs_test(kwargs,['input','field','input_key','geofield','geotype','overload'],
             'Bad args used in the add_field() function.')
 
         # Testing input
@@ -813,6 +835,16 @@ class GeoCountry():
             raise CoaKeyError('The geofield "'+geofield+'" given is '
                 'not a valid column name of the available data. '
                 'See get_list_properties() for valid fields.')
+
+        region_merging=kwargs.get('region_merging',None)
+        if region_merging == None:
+            if '_region' in geofield:
+                region_merging=True 
+            else:
+                region_merging=False
+
+        if not instance(region_merging,bool):
+            raise CoaKeyError('The region_mergin key should be boolean. See help.')
 
         # Testing fields
         prop=kwargs.get('field',None) # field list
@@ -841,5 +873,5 @@ class GeoCountry():
         
         # Now let's go for merging
         prop.append('code_subregion')
-        return data.merge(self._country_data[prop],how='left',left_on=input_key,\
+        return data.merge(self.get_data(region_merging)[prop],how='left',left_on=input_key,\
                             right_on=geofield)

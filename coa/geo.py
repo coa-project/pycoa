@@ -624,11 +624,13 @@ class GeoCountry():
     The list of supported countries is given by get_list_countries() function """
 
     # Assuming zip file here
-    _country_info_dict = {'FRA':'https://datanova.laposte.fr/explore/dataset/geoflar-departements-2015/download/?format=shp&timezone=Europe/Berlin&lang=fr'}
+    _country_info_dict = {'FRA':'https://datanova.laposte.fr/explore/dataset/geoflar-departements-2015/download/?format=shp&timezone=Europe/Berlin&lang=fr',\
+                    }
 
     _source_dict = {'FRA':{'Basics':_country_info_dict['FRA'],\
-                            'Subregion Flags':'http://sticker-departement.com/',\
-                            'Region Flags':'https://fr.wikipedia.org/wiki/R%C3%A9gion_fran%C3%A7aise'}}
+                    'Subregion Flags':'http://sticker-departement.com/',\
+                    'Region Flags':'https://fr.wikipedia.org/w/index.php?title=R%C3%A9gion_fran%C3%A7aise&oldid=177269957'},\
+                    }
 
     def __init__(self,country=None):
         """ __init__ member function. 
@@ -640,6 +642,9 @@ class GeoCountry():
 
         if not country in self.get_list_countries():
             raise CoaKeyError("Country "+str(country)+" not supported. Please see get_list_countries() and help. ")
+
+        self._country_data_region=None
+        self._country_data_subregion=None
 
         url=self._country_info_dict[country]
         self._country_data = gpd.read_file('zip://'+get_local_from_url(url,0,'.zip')) # under the hypothesis this is a zip file
@@ -719,9 +724,6 @@ class GeoCountry():
                     g=shapely.ops.unary_union([g,g2])
                 tmp.append(g)
             self._country_data['geometry']=tmp
-
-            self._country_data_region=None
-            self._country_data_subregion=None
 
     def get_source(self):
         """ Return informations about URL sources

@@ -289,7 +289,8 @@ class GeoInfo():
         'fertility':'https://www.worldometers.info/world-population/population-by-country/',\
         'median_age':'https://www.worldometers.info/world-population/population-by-country/',\
         'urban_rate':'https://www.worldometers.info/world-population/population-by-country/',\
-        'geometry':'https://github.com/johan/world.geo.json/',\
+        #'geometry':'https://github.com/johan/world.geo.json/',\
+        'geometry':'http://thematicmapping.org/downloads/world_borders.php',\
         'region_code_list':'https://en.wikipedia.org/wiki/List_of_countries_by_United_Nations_geoscheme',\
         'region_name_list':'https://en.wikipedia.org/wiki/List_of_countries_by_United_Nations_geoscheme',\
         'capital':'https://en.wikipedia.org/wiki/List_of_countries_by_United_Nations_geoscheme',\
@@ -457,10 +458,12 @@ class GeoInfo():
             # ----------------------------------------------------------
             elif f == 'geometry':
                 if self._data_geometry.empty:
-                    geojsondatafile = 'https://raw.githubusercontent.com/johan/world.geo.json/master/countries.geo.json'
-                    self._data_geometry = gpd.read_file(get_local_from_url(geojsondatafile,0,'.json'))[["id","geometry"]]
+                    #geojsondatafile = 'https://raw.githubusercontent.com/johan/world.geo.json/master/countries.geo.json'
+                    #self._data_geometry = gpd.read_file(get_local_from_url(geojsondatafile,0,'.json'))[["id","geometry"]]
+                    world_geometry_url_zipfile='http://thematicmapping.org/downloads/TM_WORLD_BORDERS_SIMPL-0.3.zip' # too much simplified version ?
+                    # world_geometry_url_zipfile='http://thematicmapping.org/downloads/TM_WORLD_BORDERS-0.3.zip' # too precize version ? 
+                    self._data_geometry = gpd.read_file('zip://'+get_local_from_url(world_geometry_url_zipfile,0,'.zip'))[['ISO3','geometry']]
                     self._data_geometry.columns=["id_tmp","geometry"]
-                        # countains id as iso3 , country name , geometry
 
                 p=p.merge(self._data_geometry,how='left',\
                     left_on='iso3_tmp',right_on='id_tmp',\

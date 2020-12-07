@@ -20,6 +20,7 @@ import random
 import math
 import pandas as pd
 import geopandas as gpd
+from coa.tools import kwargs_test,check_valid_date,extract_dates
 
 import datetime
 from datetime import datetime as dt
@@ -27,22 +28,27 @@ from collections import defaultdict
 from coa.error import *
 import bokeh
 from bokeh.io import show, output_notebook
-from bokeh.models import ColumnDataSource, TableColumn, DataTable,ColorBar, HoverTool, Legend
+from bokeh.models import ColumnDataSource, TableColumn, DataTable,ColorBar, HoverTool, Legend,BasicTicker
+from bokeh.models import GeoJSONDataSource, LinearColorMapper, ColorBar, NumeralTickFormatter
 from bokeh.plotting import figure, output_file, show
 from bokeh.palettes import brewer
 from bokeh.layouts import row, column, gridplot
-from bokeh.models import CustomJS, Slider, Select, Plot, \
+from bokeh.models import CustomJS, CustomJSHover, Slider, Select, Plot, \
     Button, LinearAxis, Range1d, DatetimeTickFormatter
 from bokeh.models import CheckboxGroup, RadioGroup, Toggle, RadioGroup
 from bokeh.palettes import Paired12
+from bokeh.tile_providers import CARTODBPOSITRON, get_provider
 from bokeh.models.widgets import Tabs, Panel
+from bokeh.palettes import Viridis256, Cividis256, Turbo256
 from bokeh.models import Label, LabelSet
 from bokeh.models import ColumnDataSource, Grid, Line, LinearAxis, Plot
 from bokeh.models import DataRange1d
 from bokeh.models import LogScale
 from bokeh.models import PrintfTickFormatter
 from bokeh.models import PolyDrawTool
+from bokeh.models import BasicTickFormatter
 from bokeh.io import export_png, export_svgs
+from bokeh.tile_providers import get_provider, WIKIMEDIA, CARTODBPOSITRON, STAMEN_TERRAIN, STAMEN_TONER, ESRI_IMAGERY, OSM
 
 import bokeh.palettes
 import itertools
@@ -52,12 +58,13 @@ import coa.geo as coge
 from coa.tools import info,verb,check_valid_date
 
 from pyproj import CRS
-#import plotly.express as px
-#import plotly.graph_objects as go
-#from branca.colormap import LinearColormap
+
 import branca.colormap
-from branca.element import Figure
+from branca.element import Element
+from branca.element import Figure, IFrame
+from branca.utilities import legend_scaler
 import folium
+from folium.plugins import FloatImage
 import json
 from geopy.geocoders import Nominatim
 import altair as alt
@@ -68,34 +75,110 @@ from PIL import Image
 from io import BytesIO
 import base64
 import matplotlib.pyplot as plt
+from PIL import Image, ImageDraw, ImageFont
 
-width_height_default = [500,400]
+width_height_default = [600,337] #337 magical value to avoid scroll menu in bokeh map
 class CocoDisplay():
     def __init__(self,db=None):
         verb("Init of CocoDisplay()")
         self.colors = itertools.cycle(Paired12)
-        self.coco_circle = []
-        self.coco_line = []
-        self.base_fig = None
-        self.hover_tool = None
-        self.increment = 1
+        self.plot_width =  width_height_default[0]
+        self.plot_height =  width_height_default[1]
+        if db:
+            self.db_citation = db.get_db()
+        self.all_available_display_keys=['where','which','what','date','plot_height','plot_width','title','bins','var_displayed']
+        g=coge.GeoManager()
+        g.set_standard('name')
+        self.pandas_world = pd.DataFrame({'location':g.to_standard(['world'],interpret_region=True),
+                                    'which':np.nan,'cumul':np.nan,'diff':np.nan})
         if db == None:
             self.info = coge.GeoInfo()
         else:
             self.info = coge.GeoInfo(db.geo)
 
-    def standardfig(self,title=None, axis_type='linear',x_axis_type='datetime'):
-         return figure(title=title,plot_width=400, plot_height=300,y_axis_type=axis_type,x_axis_type=x_axis_type,
-         tools=['save','box_zoom,box_select,crosshair,reset'])
+    def standard_input(self,mypandas,**kwargs):
+        '''
+        Parse a standard input, return :
+            - pandas: with location keyword (eventually force a column named 'where' to 'location')
+            - dico:
+                * keys = [plot_width, plot_width, titlebar, date, when, bins, what, which, var_displayed]
+        Note that method used only the needed variables, some of them are useless
+        '''
+        input_dico={}
+        if 'where' in mypandas.columns:
+            mypandas = mypandas.rename(columns={'where':'location'})
+        kwargs_test(kwargs,self.all_available_display_keys,
+        'Bad args used in the return_bkmap display function.')
+        plot_width = kwargs.get('plot_width', self.plot_width)
+        plot_height = kwargs.get('plot_height', self.plot_height)
+        if plot_width != self.plot_width:
+            self.plot_width = plot_width
+        if plot_height != self.plot_height:
+            self.plot_height = plot_height
+        input_dico['plot_width']=plot_width
+        input_dico['plot_height']=plot_height
 
-    @staticmethod
-    def pycoa_date_plot(babepandas, input_names_data = None,title = None, width_height = None):
+        date = kwargs.get('date', None)
+        bins = kwargs.get('bins',50)
+        if bins != 50:
+            bins = bins
+        input_dico['bins']=bins
+
+        what = kwargs.get('what', None)
+        input_dico['what']=what
+
+        which =  mypandas.columns[2]
+        input_dico['which']=which
+        var_displayed=which
+        when = mypandas.date.max()
+
+        if date:
+            when = check_valid_date(date)
+            when = dt.strptime(date,'%d/%m/%Y')
+        titlebar = which + ' (@' + when.strftime('%d/%m/%Y') +')'
+        if what:
+            if what not in ['daily','diff','cumul','weekly']:
+                raise CoaTypeError('what argument is not diff nor cumul. See help.')
+            else:
+                var_displayed = what
+                if what == 'diff':
+                    titlebar = which + ' (' + 'day to day diffence ' +  ' @ ' + when.strftime('%d/%m/%Y') + ')'
+                elif what == 'cumul':
+                    titlebar = which + ' (' + 'cumulative sum ' +  ' @ ' + when.strftime('%d/%m/%Y') + ')'
+                else:
+                    titlebar = which + ' (' + what +  ' @ ' + when.strftime('%d/%m/%Y') + ')'    
+
+        title = kwargs.get('title', None)
+        input_dico['title']=title
+        input_dico['titlebar']=titlebar
+        input_dico['var_displayed']=var_displayed
+        input_dico['when']=when
+        input_dico['data_base'] = 'jhu'
+        if hasattr(mypandas,'data_base'):
+            self.db_citation = mypandas.data_base
+            input_dico['data_base'] = mypandas.data_base
+        else:
+            self.db_citation =  'jhu'
+        return mypandas, input_dico
+
+    def standardfig(self, **kwargs):
+         """
+         Create a standard Bokeh figure, with pycoa.frlabel,used in all the bokeh charts
+         """
+         fig=figure(**kwargs,plot_width=self.plot_width,plot_height=self.plot_height,
+         tools=['save','box_zoom,reset'],toolbar_location="right")
+         logo_db_citation = Label(x=0.005*self.plot_width, y=0.01*self.plot_height, x_units='screen', y_units='screen',
+         text_font_size='1.5vh',text='©pycoa.fr (data from: {})'.format(self.db_citation))
+         fig.add_layout(logo_db_citation)
+         return fig
+
+    def pycoa_date_plot(self,mypandas, input_field = None, **kwargs):
         """Create a Bokeh date chart from pandas input (x axis is a date format)
 
         Keyword arguments
         -----------------
         - babepandas : pandas where the data is considered
-        - input_names_data : variable from pandas data.
+        - input_field : variable from pandas data.
           * variable or list of variables available in babepandas (i.e available in the babepandas columns name  )
           * If pandas is produced from pycoa get_stat method 'diff' or 'cumul' variable are available
         - title: title for the figure , no title by default
@@ -105,60 +188,60 @@ class CocoDisplay():
         -----------------
         HoverTool is available it returns location, date and value
         """
+        mypandas,dico = self.standard_input(mypandas,**kwargs)
 
         dict_filter_data = defaultdict(list)
         tooltips='Date: @date{%F} <br>  $name: @$name'
 
-        if type(input_names_data) is None.__class__:
-            print("Need variable to plot", file=sys.stderr)
+        if type(input_field) is None.__class__:
+           if dico['which']:
+               input_field = dico['which']
+           if dico['what']:
+               input_field = dico['what']
+           if type(dico['which']) and type(dico['what'])  is None.__class__:
+               CoaTypeError('What do you want me to do ?. No variable to histogram . See help.')
 
-        if not isinstance(input_names_data, list):
-           input_names_data=[input_names_data]
+        if not isinstance(input_field, list):
+           input_field=[input_field]
 
-        if 'where' in babepandas.columns:
-            babepandas = babepandas.rename(columns={'where':'location'})
-        if 'location' in babepandas.columns:
+        if 'location' in mypandas.columns:
             tooltips='Location: @location <br> Date: @date{%F} <br>  $name: @$name'
-            loc = babepandas['location'].unique()
+            loc = mypandas['location'].unique()
             shorten_loc = [ i if len(i)<15 else i.replace('-',' ').split()[0]+'...'+i.replace('-',' ').split()[-1] for i in loc]
-            for i in input_names_data:
+            for i in input_field:
                 dict_filter_data[i] =  \
-                    dict(babepandas.loc[babepandas['location'].isin(loc)].groupby('location').__iter__())
+                    dict(mypandas.loc[(mypandas['location'].isin(loc)) & (mypandas['date']<=dico['when']) ].groupby('location').__iter__())
                 for j in range(len(loc)):
                     dict_filter_data[i][shorten_loc[j]] = dict_filter_data[i].pop(loc[j])
 
         else:
-            for i in input_names_data:
-                dict_filter_data[i] = {i:babepandas}
+            for i in input_field:
+                dict_filter_data[i] = {i:mypandas}
 
         hover_tool = HoverTool(tooltips=tooltips,formatters={'@date': 'datetime'})
 
         panels = []
         for axis_type in ["linear", "log"]:
-            if width_height:
-                plot_width  = width_height[0]
-                plot_height = width_height[1]
-            else :
-                plot_width  = width_height_default[0]
-                plot_height = width_height_default[1]
-            standardfig = figure(plot_width=plot_width, plot_height=plot_height,y_axis_type=axis_type, x_axis_type='datetime',
-            tools=['save','box_zoom,box_select,crosshair,reset'],toolbar_location="below")
+            standardfig =  self.standardfig(y_axis_type=axis_type, x_axis_type='datetime',title= dico['titlebar'])
             standardfig.yaxis[0].formatter = PrintfTickFormatter(format="%4.2e")
-            if title:
-                standardfig.title.text = title
+
             standardfig.add_tools(hover_tool)
             colors = itertools.cycle(Paired12)
-            for i in input_names_data:
-                p = [standardfig.line(x='date', y=i, source=ColumnDataSource(value),
-                color=next(colors), line_width=3, legend_label=key,
-                name=i,hover_line_width=4) for key,value in dict_filter_data[i].items()]
-
+            for i in input_field:
+                if len(input_field)>1:
+                    p = [standardfig.line(x='date', y=i, source=ColumnDataSource(value),
+                    color=next(colors), line_width=3, legend_label=key+' ('+i+')',
+                    name=i,hover_line_width=4) for key,value in dict_filter_data[i].items()]
+                else:
+                    p = [standardfig.line(x='date', y=i, source=ColumnDataSource(value),
+                    color=next(colors), line_width=3, legend_label=key,
+                    name=i,hover_line_width=4) for key,value in dict_filter_data[i].items()]
             standardfig.legend.label_text_font_size = "12px"
             panel = Panel(child=standardfig , title=axis_type)
             panels.append(panel)
             standardfig.legend.background_fill_alpha = 0.6
 
-            standardfig.legend.location = "bottom_left"
+            standardfig.legend.location = "bottom_right"
 
             standardfig.xaxis.formatter = DatetimeTickFormatter(
         days=["%d/%m/%y"], months=["%d/%m/%y"], years=["%b %Y"])
@@ -213,19 +296,18 @@ class CocoDisplay():
 
         return (min_r,max_r)
 
-    @staticmethod
-    def pycoa_histo(babepandas, input_names_data = None, bins=None,title = None, width_height = None, date='last'):
+    def pycoa_histo(self,mypandas,input_field = None,**kwargs):
         """Create a Bokeh histogram from a pandas input
 
         Keyword arguments
         -----------------
         babepandas : pandas consided
-        input_names_data : variable from pandas data. If pandas is produced from pycoa get_stat method
+        input_field : variable from pandas data. If pandas is produced from pycoa get_stat method
         then 'diff' and 'cumul' can be also used
         title: title for the figure , no title by default
         width_height : as a list of width and height of the histo, default [500,400]
         bins : number of bins of the hitogram default 50
-        date : - default 'last'
+        date : - default None
                Value at the last date (from database point of view) and for all the location defined in
                the pandas will be computed
                - date
@@ -238,126 +320,97 @@ class CocoDisplay():
         HoverTool is available it returns position of the middle of the bin and the value. In the case where
         date='all' i.e all the date for all the location then location name is provided
         """
-
+        mypandas,dico = self.standard_input(mypandas,**kwargs)
         dict_histo = defaultdict(list)
 
-        if type(input_names_data) is None.__class__:
-            print("Need variable to plot", file=sys.stderr)
+        if type(input_field) is None.__class__:
+           if dico['which']:
+               input_field = dico['which']
+           if dico['what']:
+               input_field = dico['what']
+           if type(dico['which']) and type(dico['what'])  is None.__class__:
+               CoaTypeError('What do you want me to do ?. No variable to histogram . See help.')
 
-        if 'where' in babepandas.columns:
-            babepandas = babepandas.rename(columns={'where':'location'})
-        if 'location' in babepandas.columns:
+        if 'location' in mypandas.columns:
             tooltips='Value at around @middle_bin : @val'
-            loc = babepandas['location'].unique()
+            loc = mypandas['location'].unique()
             shorten_loc = [ i if len(i)<15 else i.replace('-',' ').split()[0]+'...'+i.replace('-',' ').split()[-1] for i in loc]
 
-            if date == 'all':
-                if bins:
-                    bins = bins
-                else:
-                    bins = 50
 
-                tooltips='Location: @location <br> Value at around @middle_bin : @val'
-                for w in loc:
-                    histo,edges = np.histogram((babepandas.loc[babepandas['location'] == w][input_names_data]),density=False, bins=bins)
-                    dict_histo[w] = pd.DataFrame({'location':w,'val': histo,
-                       'left': edges[:-1],
-                       'right': edges[1:],
-                       'middle_bin':np.floor(edges[:-1]+(edges[1:]-edges[:-1])/2)})
-                for j in range(len(loc)):
-                    dict_histo[shorten_loc[j]] = dict_histo.pop(loc[j])
-            else:
-               tooltips = 'Contributors : @contributors'
-               if date == "last" :
-                   when = babepandas['date'].max()
+            for w in loc:
+                histo,edges = np.histogram((mypandas.loc[mypandas['location'] == w][input_field]),density=False, bins=dico['bins'])
+                dict_histo[w] = pd.DataFrame({'location':w,'val': histo,
+                   'left': edges[:-1],
+                   'right': edges[1:],
+                   'middle_bin':np.floor(edges[:-1]+(edges[1:]-edges[:-1])/2)})
+            for j in range(len(loc)):
+                dict_histo[shorten_loc[j]] = dict_histo.pop(loc[j])
+
+            tooltips = 'Contributors : @contributors'
+
+            val_per_country = defaultdict(list)
+            for w in loc:
+               retrieved_at = mypandas.loc[(mypandas['date'] == dico['when'])]
+               if retrieved_at.empty:
+                   raise CoaTypeError('Noting to retrieve at this date:', dico['when'])
                else:
-                   when = date
-
-               val_per_country = defaultdict(list)
-               for w in loc:
-                   retrieved_at = babepandas.loc[(babepandas['date'] == when)]
-                   if retrieved_at.empty:
-                       raise CoaTypeError('Noting to retrieve at this date:', when)
-                   else:
-                       val = babepandas.loc[(babepandas['location'] == w) & (babepandas['date'] == when)][input_names_data].values
+                   val = mypandas.loc[(mypandas['location'] == w) & (mypandas['date'] == dico['when'])][input_field].values
                    #val_per_country.append(val)
-                   val_per_country[w]=val
-               if type(when) != str:
-                   when = when.strftime('%d-%m-%Y')
-               l_data=list(val_per_country.values())
+               val_per_country[w]=val
 
-               # good nb of bins
-               l_n=len(l_data)
-               if bins:
-                  bins = bins
-               else:
-                  bins = math.ceil(2*l_n**(1./3))# Rice rule
-                  if bins<8:
+            l_data=list(val_per_country.values())
+            # good nb of bins
+            l_n=len(l_data)
+            if dico['bins']:
+              bins = dico['bins']
+            else:
+              bins = math.ceil(2*l_n**(1./3))# Rice rule
+              if bins<8:
                      bins=8
 
-               histo,edges = np.histogram(l_data,density=False, bins=bins,range=CocoDisplay.min_max_range(np.min(l_data),np.max(l_data)))
-
-               contributors=[]
-               for i,j in zip(edges[:-1],edges[1:]):
-                   res = [key for key, val in filter(lambda sub: int(sub[1]) >= i and
-                                   int(sub[1]) <= j, val_per_country.items())]
+            histo,edges = np.histogram(l_data,density=False, bins=bins,range=CocoDisplay.min_max_range(np.min(l_data),np.max(l_data)))
+            contributors=[]
+            for i,j in zip(edges[:-1],edges[1:]):
+                   res = [key for key, val in filter(lambda sub: int(sub[1]) >= i and int(sub[1]) <= j, val_per_country.items())]
                    contributors.append(res)
-               frame_histo = pd.DataFrame({'val': histo,'left': edges[:-1],'right': edges[1:],
-               'middle_bin':np.floor(edges[:-1]+(edges[1:]-edges[:-1])/2),
-               'contributors':contributors})
-
+            frame_histo = pd.DataFrame({'val': histo,'left': edges[:-1],'right': edges[1:],
+              'middle_bin':np.floor(edges[:-1]+(edges[1:]-edges[:-1])/2),
+              'contributors':contributors})
+        x_max=max(edges[1:])
+        y_max=max(histo)
         hover_tool = HoverTool(tooltips=tooltips)
         panels = []
         bottom=0
 
-
         for axis_type in ["linear", "log"]:
-            if width_height:
-                plot_width  = width_height[0]
-                plot_height = width_height[1]
-            else :
-                plot_width  = width_height_default[0]
-                plot_height = width_height_default[1]
-            standardfig = figure(plot_width=plot_width, plot_height=plot_height,y_axis_type=axis_type,
-            tools=['save','box_zoom,box_select,crosshair,reset'],toolbar_location="below")
+            standardfig = self.standardfig(y_axis_type=axis_type)
             standardfig.xaxis[0].formatter = PrintfTickFormatter(format="%4.2e")
-            if title:
-                standardfig.title.text = title
+            #standardfig.title.text = dico['titlebar']
             standardfig.add_tools(hover_tool)
             colors = itertools.cycle(Paired12)
 
             if axis_type=="log":
-                bottom=1
-            label = []
-            if date == 'all' :
-                p=[standardfig.quad(source=ColumnDataSource(value),top='val', bottom=bottom, left='left', right='right',name=key,
-                    fill_color=next(colors),legend_label=key) for key,value in dict_histo.items()]
+                bottom=0.0001
             else:
-                if input_names_data == babepandas.columns[2]:
-                    label = input_names_data + ' @ ' + when
-                else:
-                    label = babepandas.columns[2] + ' (' +input_names_data + ') @ ' + when
-                p=standardfig.quad(source=ColumnDataSource(frame_histo),top='val', bottom=bottom, left='left', right='right',
-                fill_color=next(colors),legend_label=label)
+                standardfig.y_range=Range1d(0, y_max)
+            label = dico['titlebar']
+            p=standardfig.quad(source=ColumnDataSource(frame_histo),top='val', bottom=bottom, left='left', right='right',
+            fill_color=next(colors),legend_label=label)
 
-            #legend = Legend(items=[(list(standardfig.legend.items[p.index(i)].label.values())[0],[i]) for i in p],location="center")
-            #standardfig.add_layout(legend,'right')
+            standardfig.x_range=Range1d(0, x_max)
             standardfig.legend.label_text_font_size = "12px"
-
             panel = Panel(child=standardfig , title=axis_type)
             panels.append(panel)
         tabs = Tabs(tabs=panels)
         return tabs
 
-
-    @staticmethod
-    def scrolling_menu(babepandas, input_names_data = None,title = None, width_height = None):
+    def scrolling_menu(self,mypandas,input_field = None,**kwargs):
         """Create a Bokeh plot with a date axis from pandas input
 
         Keyword arguments
         -----------------
         babepandas : pandas where the data is considered
-        input_names_data : variable from pandas data . If pandas is produced from cocoas get_stat method
+        input_field : variable from pandas data . If pandas is produced from cocoas get_stat method
         the 'diff' or 'cumul' are available
         A list of names_data can be given
         title: title for the figure , no title by default
@@ -367,21 +420,30 @@ class CocoDisplay():
         -----------------
         HoverTool is available it returns location, date and value
         """
+        mypandas,dico = self.standard_input(mypandas,**kwargs)
+
         tooltips='Date: @date{%F} <br>  $name: @$name'
         hover_tool = HoverTool(tooltips=tooltips,formatters={'@date': 'datetime'})
 
-        if type(input_names_data) is None.__class__:
-            print("Need variable to plot", file=sys.stderr)
-        if 'where' in babepandas.columns:
-            babepandas = babepandas.rename(columns={'where':'location'})
-        if 'location' in babepandas.columns:
+        if type(input_field) is None.__class__:
+           if dico['which']:
+               input_field = dico['which']
+           if dico['what']:
+               input_field = dico['what']
+           if type(dico['which']) and type(dico['what'])  is None.__class__:
+               CoaTypeError('What do you want me to do ?. No variable to histogram . See help.')
+
+        if 'location' in mypandas.columns:
             tooltips='Location: @location <br> Date: @date{%F} <br>  $name: @$name'
-            loc = list(babepandas['location'].unique())
+            loc = list(mypandas['location'].unique())
             loc = sorted(loc)
+            if len(loc) < 2:
+                raise CoaTypeError('What do you want me to do ? You have selected, only one country.'
+                                    'There is no sens to use this method. See help.')
             shorten_loc = [ i if len(i)<15 else i.replace('-',' ').split()[0]+'...'+i.replace('-',' ').split()[-1] for i in loc]
 
 
-        data  = pd.pivot_table(babepandas,index='date',columns='location',values=input_names_data)
+        data  = pd.pivot_table(mypandas,index='date',columns='location',values=input_field)
         [data.rename(columns={i:j},inplace=True) for i,j in zip(loc,shorten_loc)]
         data=data.reset_index()
         source = ColumnDataSource(data)
@@ -397,31 +459,20 @@ class CocoDisplay():
         hover_tool = HoverTool(tooltips=[
                         ("Cases", '@cases'),
                         ('date', '@date{%F}')],
-                        formatters={'@date': 'datetime'},mode='vline')
+                        formatters={'@date': 'datetime'})
         panels = []
         for axis_type in ["linear", "log"]:
-            if width_height:
-                plot_width  = width_height[0]
-                plot_height = width_height[1]
-            else :
-                plot_width  = width_height_default[0]
-                plot_height = width_height_default[1]
-
-            standardfig = figure(plot_width=plot_width, plot_height=plot_height,y_axis_type=axis_type,
-            x_axis_type='datetime',tools=[hover_tool,'save','box_zoom,box_select,crosshair,reset'],
-            toolbar_location="below")
+            standardfig = self.standardfig(y_axis_type=axis_type,x_axis_type='datetime')
             standardfig.yaxis[0].formatter = PrintfTickFormatter(format="%4.2e")
-            if title:
-                standardfig.title.text = title
+            if dico['title']:
+                standardfig.title.text = dico['title']
             standardfig.add_tools(hover_tool)
             colors = itertools.cycle(Paired12)
-
-            standardfig.line(x='date', y='cases', source=src1, color='red',
+            standardfig.line(x='date', y='cases', source=src1, color='firebrick',alpha=0.7,
             line_width=2, legend_label=name1, hover_line_width=3)
-            standardfig.line(x='date', y='cases', source=src2, color='blue',
+            standardfig.line(x='date', y='cases', source=src2, color='navy',alpha=0.7,
             line_width=2, legend_label=name2, hover_line_width=3)
-
-            standardfig.legend.location = 'bottom_left'
+            standardfig.legend.location = 'bottom_right'
             panel = Panel(child=standardfig, title=axis_type)
             panels.append(panel)
         code="""
@@ -440,9 +491,10 @@ class CocoDisplay():
 
         tabs = Tabs(tabs=panels)
         layout = row(column(row(select_countries1, select_countries2), row(tabs)))
+        label = dico['titlebar']
         return layout
 
-    def CrystalFig(self, crys, err_y):
+    def crystal_fig(self, crys, err_y):
         sline = []
         scolumn = []
         i = 1
@@ -507,7 +559,6 @@ class CocoDisplay():
         print("deleted in descriptor object")
         del self.value
 
-
     @staticmethod
     def save_map2png(map=None,pngfile='map.png'):
         '''
@@ -536,92 +587,195 @@ class CocoDisplay():
             height_policy="auto",width_policy="auto",index_position=None)
         export_png(data_table, filename = pngfile)
 
-    def return_map(self,mypandas,which_data = None,width_height = None, date = 'last'):
-        """Create a Folium map from a pandas input
+    def get_geodata(self,mypandas):
+        '''
+         return a GeoDataFrame used in map display (see map_bokeh and map_folium)
+         Argument : mypandas, the pandas to be analysed. Only location or where columns
+         name is mandatory.
+         The output format is the following :
+         geoid | location |  geometry (POLYGON or MULTIPOLYGON)
+         Example :  get_geodata(d)
+        '''
+        if not isinstance(mypandas, pd.DataFrame):
+                raise CoaTypeError('Waiting for pandas input.See help.')
+        else:
+            if not any(elem in mypandas.columns.tolist() for elem in ['location','where']):
+                raise CoaTypeError('location nor where columns is presents in your pandas.'
+                                'One of them is mandatory. See help.')
+            if 'where' in mypandas.columns:
+                mypandas = mypandas.rename(columns={'where':'location'})
+        a = self.info.add_field(field=['geometry'],input=mypandas ,geofield='location')
+        data=gpd.GeoDataFrame(self.info.add_field(input=a,geofield='location',field=['country_name']),
+        crs="EPSG:4326")
+        data = data.loc[data.geometry != None]
+        data['geoid'] = data.index.astype(str)
+        data=data[['geoid','location','geometry']]
+        data = data.set_index('geoid')
+        return data
 
+    def bokeh_map(self,mypandas,input_field = None,**kwargs):
+        """Create a Bokeh map from a pandas input
+        Keyword arguments
+        -----------------
+        babepandas : pandas considered
+        Input parameters:
+          - what (default:None) at precise date: by default get_which() set in get_stats()
+           could be 'diff' or cumul
+          - date (default:None): at which date data would be seen
+          - plot_width, plot_height (default [500,400]): bokeh variable for map size
+        Known issue: can not avoid to display value when there are Nan values
+        """
+        #esri = get_provider(WIKIMEDIA)
+
+        mypandas,dico = self.standard_input(mypandas,**kwargs)
+
+        if type(input_field) is None.__class__:
+           input_field = dico['var_displayed']
+        else:
+            input_field = input_field
+
+        mypandas_filtered = mypandas.loc[(mypandas.date == dico['when'])]
+        mypandas_filtered = mypandas_filtered.drop(columns=['date'])
+        my_countries = mypandas.location.to_list()
+
+        self.pandas_world = self.pandas_world.rename(columns={'which':dico['which']})
+        self.pandas_world = self.pandas_world[~self.pandas_world.location.isin(my_countries)]
+        self.pandas_world = self.pandas_world.append(mypandas_filtered)
+
+        geopdwd = self.get_geodata(self.pandas_world)
+        geopdwd = geopdwd#.to_crs('EPSG:3857')#+proj=wintri')
+        geopdwd = geopdwd.reset_index()
+        geopdwd = pd.merge(geopdwd,self.pandas_world,on='location')
+        geopdwd = geopdwd.set_index("geoid")
+
+        merged_json = json.loads(geopdwd.to_json())
+        json_data = json.dumps(merged_json)
+        geosourceword = GeoJSONDataSource(geojson = json_data)
+
+        geofiltered = self.get_geodata(mypandas_filtered)#.to_crs('EPSG:3857')
+        minx, miny, maxx, maxy=unary_union(geofiltered.geometry).bounds
+        standardfig = self.standardfig(title=dico['titlebar'], x_range=Range1d(minx, maxx), y_range=Range1d(miny, maxy))
+        standardfig.plot_height=dico['plot_height']+20
+        min_col,max_col=CocoDisplay.min_max_range(0,np.nanmax(geopdwd[input_field]))
+
+        #standardfig.add_tile(esri)
+        color_mapper = LinearColorMapper(palette='Turbo256', low = min_col, high = max_col, nan_color = '#d9d9d9')
+        color_bar = ColorBar(color_mapper=color_mapper, label_standoff=4,
+                            border_line_color=None,location = (0,0), orientation = 'horizontal', ticker=BasicTicker())
+        color_bar.formatter = BasicTickFormatter(use_scientific=True,precision=1,power_limit_low=int(max_col))
+        standardfig.add_layout(color_bar, 'below')
+        standardfig.xaxis.visible = False
+        standardfig.yaxis.visible = False
+        standardfig.xgrid.grid_line_color = None
+        standardfig.ygrid.grid_line_color = None
+        standardfig.patches('xs','ys', source = geosourceword,fill_color = {'field':input_field, 'transform' : color_mapper},
+                  line_color = 'black', line_width = 0.25, fill_alpha = 1)
+        cases_custom = CustomJSHover(code="""
+        var value;
+        if(value>0)
+            return value.toExponential(2).toString();
+
+        """)
+        standardfig.add_tools(HoverTool(
+        tooltips=[('location','@location'),(input_field,'@'+input_field+'{custom}'),],
+        formatters={'location':'printf','@'+input_field:cases_custom,},
+        point_policy="follow_mouse"
+        ))
+
+        return standardfig
+
+    def map_folium(self,mypandas,input_field = None,**kwargs):
+        """Create a Folium map from a pandas input
+        Folium limite so far:
+            - scale format can not be changed (no way to use scientific notation)
+            - map can not be saved as png only html format
+                - save_map2png for this purpose (available only in command line, not in iconic form)
         Keyword arguments
         -----------------
         babepandas : pandas consided
         which_data: variable from pandas data. If pandas is produced from pycoa get_stat method
         then 'diff' and 'cumul' can be also used
         width_height : as a list of width and height of the histo, default [500,400]
-        date : - default 'last'
+        date : - default 'None'
                Value at the last date (from database point of view) and for all the location defined in
                the pandas will be computed
                - date
                Value at date (from database point of view) and for all the location defined in the pandas
                will be computed
+        Known issue: format for scale can not be changed. When data value are important
+        overlaped display appear
         """
-        if 'where' in mypandas.columns:
-            mypandas = mypandas.rename(columns={'where':'location'})
+        mypandas,dico = self.standard_input(mypandas,**kwargs)
 
-        if width_height:
-            plot_width  = width_height[0]
-            plot_height = width_height[1]
-        else :
-            plot_width  = width_height_default[0]
-            plot_height = width_height_default[1]
-        label , what ='',''
-        if date == "last" :
-            when = mypandas['date'].max()
-        else:
-            when = check_valid_date(date)
+        if type(input_field) is None.__class__:
+           input_field = dico['var_displayed']
 
-        if type(which_data) is None.__class__:
-            which_data = mypandas.columns[2]
-            label = which_data
-        else:
-            which_data = which_data
-            if which_data == 'diff' :
-               what = 'day to day diffence'
-            else:
-               what = 'cumulative sum'
-            label = mypandas.columns[2] + ' (' + what +  ' @ ' + when.strftime('%d-%m-%Y') + ')'
+        mypandas_filtered = mypandas.loc[(mypandas.date == dico['when'])]
+        mypandas_filtered = mypandas_filtered.drop(columns=['date'])
 
-        jhu_stuff = mypandas.loc[(mypandas.date == when)]
+        geopdwd = self.get_geodata(mypandas_filtered)
+        geopdwd = geopdwd.reset_index()
+        geopdwd = pd.merge(geopdwd,mypandas_filtered,on='location')
+        geopdwd = geopdwd.set_index("geoid")
+        centroid=unary_union(geopdwd.geometry).centroid
 
-        a = self.info.add_field(field=['geometry'],input=jhu_stuff ,geofield='location')
-
-        data=gpd.GeoDataFrame(self.info.add_field(input=a,geofield='location',\
-                                  field=['country_name']),crs="EPSG:4326")
-        data = data.loc[data.geometry != None]
-        data['geoid'] = data.index.astype(str)
-
-        data=data[['geoid','location',which_data,'geometry']]
-        data = data.set_index('geoid')
-
-        centroid=unary_union(data.geometry).centroid
-
-        min_col,max_col=CocoDisplay.min_max_range(0,max(data[which_data]))
-        colormap = branca.colormap.linear.RdPu_09.scale(min_col,max_col)
-        #colormap = (colormap.to_step(n=len(data[which_data]),method='log'))
-        colormap.caption = 'Covid-19 cases : ' + label
-        fig = Figure(width=plot_width, height=plot_height)
+        fig = Figure(width=self.plot_width, height=self.plot_height)
         mapa = folium.Map(location=[centroid.y, centroid.x], zoom_start=2)
-        #tiles='https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}.png',
-        #attr = "IGN")
         fig.add_child(mapa)
+
+        min_col,max_col=CocoDisplay.min_max_range(0,max(geopdwd[input_field]))
+        colormap = branca.colormap.linear.RdPu_09.scale(min_col,max_col)
+        colormap.caption = 'Covid-19 cases : ' + dico['titlebar']
+        colormap.add_to(mapa)
+        map_id = colormap.get_name()
+
+        my_js = """
+        var div = document.getElementById('legend');
+        var ticks = document.getElementsByClassName('tick')
+        for(var i = 0; i < ticks.length; i++){
+        var values = ticks[i].textContent.replace(',','')
+        val = parseFloat(values).toExponential(2).toString()
+        if(parseFloat(ticks[i].textContent) == 0) val = 0.
+        div.innerHTML = div.innerHTML.replace(ticks[i].textContent,val);
+        }
+        """
+        e = Element(my_js)
+        html = colormap.get_root()
+        html.script.get_root().render()
+        html.script._children[e.get_name()] = e
+
+        W, H = (300,200)
+        im = Image.new("RGBA",(W,H))
+        draw = ImageDraw.Draw(im)
+        msg = "©pycoa.fr (data from: {})".format(dico['data_base'])
+        w, h = draw.textsize(msg)
+        fnt = ImageFont.truetype('/Library/Fonts/Arial.ttf', 12)
+        draw.text((2,0), msg, font=fnt,fill=(0, 0, 0))
+        im.crop((0, 0,2*w,2*h)).save("pycoatextlogo.png", "PNG")
+        FloatImage("pycoatextlogo.png", bottom=-2, left=1).add_to(mapa)
+        geopdwd[input_field+'scientific_format']=(['{:e}'.format(i) for i in geopdwd[input_field]])
         folium.GeoJson(
-            data,
+            geopdwd,
             style_function=lambda x:
             {
-                #'fillColor': '#ffffffff' if x['properties'][which_data] < max(data[which_data]/1000.) else
-                'fillColor':colormap(x['properties'][which_data]),
+                'fillColor':colormap(x['properties'][input_field]),
                 'fillOpacity': 0.8,
                 'color' : None,
             },
-            name="Cases",
             highlight_function=lambda x: {'weight':2, 'color':'green'},
-            tooltip=folium.GeoJsonTooltip(fields=['location',which_data],
-                                              aliases = ['country','totcases'],
-                                              labels=False),
-
-
+            tooltip=folium.features.GeoJsonTooltip(fields=['location',input_field+'scientific_format'],
+                aliases=['location:',input_field+":"],
+                style="""
+                        background-color: #F0EFEF;
+                        border: 2px solid black;
+                        border-radius: 3px;
+                        box-shadow: 3px;
+                        opacity: 0.2;
+                        """),
+                #'<div style="background-color: royalblue 0.2; color: black; padding: 2px; border: 1px solid black; border-radius: 2px;">'+input_field+'</div>'])
         ).add_to(mapa)
-        colormap.add_to(mapa)
-        #folium.LayerControl(autoZIndex=False, collapsed=False).add_to(mapa)
-        return mapa
 
+        return mapa
     @staticmethod
     def sparkline(data, figsize=(2, 0.25), **kwargs):
         """
@@ -637,7 +791,6 @@ class CocoDisplay():
         plt.savefig(img)
         plt.close()
         return '<img src="data:image/png;base64, {}" />'.format(base64.b64encode(img.getvalue()).decode())
-
 
     def spark_pandas(self,pandy,which_data):
         '''

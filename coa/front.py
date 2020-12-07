@@ -164,7 +164,7 @@ def get(**kwargs):
     whom   --   Database specification (overload the setbase()
                 function). See listwhom() for supported list
                 function). See listwhom() for supported list
-    when   --   dates are given under the format dd/mm/yyyy. In the when 
+    when   --   dates are given under the format dd/mm/yyyy. In the when
                 option, one can give one date which will be the end of
                 the data slice. Or one can give two dates separated with
                 ":", which will define the time cut for the output data
@@ -180,7 +180,7 @@ def get(**kwargs):
                 monotonous increasing.
                 is available. By default : no option.
     """
-    kwargs_test(kwargs,['where','what','which','whom','when','output','option'],
+    kwargs_test(kwargs,['where','what','which','whom','when','output','option','visu'],
             'Bad args used in the pycoa.get() function.')
 
     global _db,_whom
@@ -222,7 +222,6 @@ def get(**kwargs):
                             'See listwhich() for list.')
 
     pandy = _db.get_stats(which=which,location=where,option=option,output='pandas').rename(columns={'location': 'where'})
-
     pandy['weekly'] = pandy.groupby('where')['diff'].rolling(7).mean().reset_index(level=0, drop=True)
     db_first_date = pandy.date.min()
     db_last_date = pandy.date.max()
@@ -260,6 +259,7 @@ def get(**kwargs):
             pandy = my_list
             if output == 'array':
                 pandy = np.array(pandy)
+
     return pandy
 
 # ----------------------------------------------------------------------
@@ -301,7 +301,7 @@ def decoplot(func):
                                 according to the locations which were selected
         """
         kwargs_test(kwargs,['where','what','which','whom','when', \
-            'input','input_field','width_height','option','title'],
+            'input','input_field','width_height','option','title','whichones'],
             'Bad args used in the pycoa.plot() function.')
 
         input_arg=kwargs.get('input',None)
@@ -323,25 +323,29 @@ def decoplot(func):
             raise CoaTypeError('Waiting input as valid pycoa pandas '
                     'dataframe. See help.')
 
-        title = 'Data type: ' + which
+        to_plot = which
         if what :
-            title += '( '+ what + ' )'
             if what == 'daily':
                 what = 'diff'
-            which = what
+            to_plot = what
+        whichones=kwargs.get('whichones',None)
+        if whichones:
+            if isinstance(whichones, list):
+                to_plot = whichones
+            else:
+              raise CoaTypeError('Waiting a list ')
 
-        title=kwargs.get('title',title)
-        return func(t,which,title,width_height)
+        return func(t,to_plot,**kwargs)
     return generic_plot
 
 @decoplot
-def plot(t,which,title,width_height):
-    fig = _cocoplot.pycoa_date_plot(t,which,title,width_height)
+def plot(t,to_plot,**kwargs):
+    fig = _cocoplot.pycoa_date_plot(t,to_plot)
     show(fig)
 
 @decoplot
-def scrollmenu_plot(t,which,title,width_height):
-    fig = _cocoplot.scrolling_menu(t,which,title,width_height)
+def scrollmenu_plot(t,to_plot,**kwargs):
+    fig = _cocoplot.scrolling_menu(t,to_plot)
     show(fig)
 
 # ----------------------------------------------------------------------
@@ -358,7 +362,7 @@ def hist(**kwargs):
     where (mandatory if no input), what, which, whom, when : (see help(get))
 
 
-    bins        --  number of bins used. If none provided, a default 
+    bins        --  number of bins used. If none provided, a default
                     value will be used.
 
     input       --  input data to plot within the pycoa framework (e.g.
@@ -381,7 +385,6 @@ def hist(**kwargs):
             'Bad args used in the pycoa.hist() function.')
 
     input_arg=kwargs.get('input',None)
-
     if isinstance(input_arg,pd.DataFrame):
         t=input_arg
         which=kwargs.get('input_field',listwhich()[0]+'/cumul')
@@ -395,20 +398,15 @@ def hist(**kwargs):
             'dataframe. See help.')
 
     bins=kwargs.get('bins',None)
-    width_height=kwargs.get('width_height',None)
-    
-    title = 'Data type: ' + which
-    date=kwargs.get('date','last')
+    date=kwargs.get('date',None)
+    to_plot = which
+    if what:
+        to_plot = what
+        if what == 'cumul' and _whom == 'jhu':
+            to_plot = which
 
-    if what!=None:
-        title += ' (' + what + ')'
 
-    if what == 'cumul' and _whom == 'jhu':
-            what = which
-
-    title=kwargs.get('title',title)
-    fig=_cocoplot.pycoa_histo(t,which,bins,title,width_height,date='last')
-
+    fig=_cocoplot.pycoa_histo(t,to_plot,**kwargs)
     show(fig)
 
 # ----------------------------------------------------------------------
@@ -419,26 +417,33 @@ def map(**kwargs):
     """Create a map according to arguments and options.
     See help(hist).
     """
-    kwargs_test(kwargs,['where','what','which','whom','when','input','input_field'],
+    kwargs_test(kwargs,['where','what','which','whom','when','input','input_field','visu'],
             'Bad args used in the pycoa.map() function.')
-    
+
     which=''
     input_arg=kwargs.get('input',None)
     where=kwargs.get('where',None)
-
+    what=kwargs.get('what',None)
+    if what:
+        field = what
+    visu=kwargs.get('visu','bokeh')
     if isinstance(input_arg,pd.DataFrame):
         t=input_arg
-        which=kwargs.get('input_field',listwhich()[0]+'/cumul')
-    elif input_arg==None:   
+        which=kwargs.get('input_field',listwhich()[0])
+        field = which 
+        which+='/cumul'
+    elif input_arg==None:
         t=get(**kwargs,output='pandas')
         which=kwargs.get('which',listwhich()[0])
-        what=kwargs.get('what',None)
-        if what == 'cumul' and _whom == 'jhu':
-            what = which
-        if what == 'daily':
-            which = 'diff'
+        field = which
+        if what == 'weekly' or what== 'daily':
+            what = None
     else:
         raise CoaTypeError('Waiting input as valid pycoa pandas '
             'dataframe. See help.')
-
-    return _cocoplot.return_map(t,which,date='last')
+    if visu == 'bokeh':
+        return show(_cocoplot.bokeh_map(t,input_field=field))
+    elif visu == 'folium':
+        return _cocoplot.map_folium(t,input_field=field)
+    else:
+        raise CoaTypeError('Waiting for a valid visualisation. So far: \'bokeh\' or \'folium\'.See help.')

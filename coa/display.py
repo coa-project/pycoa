@@ -719,7 +719,30 @@ class CocoDisplay():
         geopdwd = geopdwd.set_index("geoid")
         centroid=unary_union(geopdwd.geometry).centroid
 
+<<<<<<< HEAD
         fig = Figure(width=self.plot_width, height=self.plot_height)
+=======
+        if not 'geometry' in jhu_stuff.columns:
+            a = self.info.add_field(field=['geometry'],input=jhu_stuff ,geofield='location')
+        else:
+            a = jhu_stuff.copy()
+
+        data=gpd.GeoDataFrame(self.info.add_field(input=a,geofield='location',\
+                                  field=['country_name']),crs="EPSG:4326")
+        data = data.loc[data.geometry != None]
+        data['geoid'] = data.index.astype(str)
+
+        data=data[['geoid','location',which_data,'geometry']]
+        data = data.set_index('geoid')
+
+        centroid=unary_union(data.geometry).centroid
+
+        min_col,max_col=CocoDisplay.min_max_range(0,max(data[which_data]))
+        colormap = branca.colormap.linear.RdPu_09.scale(min_col,max_col)
+        #colormap = (colormap.to_step(n=len(data[which_data]),method='log'))
+        colormap.caption = 'Covid-19 cases : ' + label
+        fig = Figure(width=plot_width, height=plot_height)
+>>>>>>> ad7a6049a9fa2494cc8b9105a05dc92ae412f66c
         mapa = folium.Map(location=[centroid.y, centroid.x], zoom_start=2)
         fig.add_child(mapa)
 

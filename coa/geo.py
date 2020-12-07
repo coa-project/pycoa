@@ -289,7 +289,8 @@ class GeoInfo():
         'fertility':'https://www.worldometers.info/world-population/population-by-country/',\
         'median_age':'https://www.worldometers.info/world-population/population-by-country/',\
         'urban_rate':'https://www.worldometers.info/world-population/population-by-country/',\
-        'geometry':'https://github.com/johan/world.geo.json/',\
+        #'geometry':'https://github.com/johan/world.geo.json/',\
+        'geometry':'http://thematicmapping.org/downloads/world_borders.php and https://github.com/johan/world.geo.json/',\
         'region_code_list':'https://en.wikipedia.org/wiki/List_of_countries_by_United_Nations_geoscheme',\
         'region_name_list':'https://en.wikipedia.org/wiki/List_of_countries_by_United_Nations_geoscheme',\
         'capital':'https://en.wikipedia.org/wiki/List_of_countries_by_United_Nations_geoscheme',\
@@ -457,10 +458,18 @@ class GeoInfo():
             # ----------------------------------------------------------
             elif f == 'geometry':
                 if self._data_geometry.empty:
-                    geojsondatafile = 'https://raw.githubusercontent.com/johan/world.geo.json/master/countries.geo.json'
-                    self._data_geometry = gpd.read_file(get_local_from_url(geojsondatafile,0,'.json'))[["id","geometry"]]
+                    #geojsondatafile = 'https://raw.githubusercontent.com/johan/world.geo.json/master/countries.geo.json'
+                    #self._data_geometry = gpd.read_file(get_local_from_url(geojsondatafile,0,'.json'))[["id","geometry"]]
+                    world_geometry_url_zipfile='http://thematicmapping.org/downloads/TM_WORLD_BORDERS_SIMPL-0.3.zip' # too much simplified version ?
+                    # world_geometry_url_zipfile='http://thematicmapping.org/downloads/TM_WORLD_BORDERS-0.3.zip' # too precize version ? 
+                    self._data_geometry = gpd.read_file('zip://'+get_local_from_url(world_geometry_url_zipfile,0,'.zip'))[['ISO3','geometry']]
                     self._data_geometry.columns=["id_tmp","geometry"]
-                        # countains id as iso3 , country name , geometry
+
+                    # About Sudan and South Sudan, not properly managed by this database
+                    self._data_geometry=self._data_geometry.append({'id_tmp':'SSD','geometry':None},ignore_index=True) # adding the SSD row
+                    for newc in ['SSD','SDN']:
+                        newgeo=gpd.read_file(get_local_from_url('https://github.com/johan/world.geo.json/raw/master/countries/'+newc+'.geo.json'))
+                        self._data_geometry.loc[self._data_geometry.id_tmp==newc,'geometry']=newgeo.loc[newgeo.id==newc,'geometry'][0]
 
                 p=p.merge(self._data_geometry,how='left',\
                     left_on='iso3_tmp',right_on='id_tmp',\
@@ -624,11 +633,13 @@ class GeoCountry():
     The list of supported countries is given by get_list_countries() function """
 
     # Assuming zip file here
-    _country_info_dict = {'FRA':'https://datanova.laposte.fr/explore/dataset/geoflar-departements-2015/download/?format=shp&timezone=Europe/Berlin&lang=fr'}
+    _country_info_dict = {'FRA':'https://datanova.laposte.fr/explore/dataset/geoflar-departements-2015/download/?format=shp&timezone=Europe/Berlin&lang=fr',\
+                    }
 
     _source_dict = {'FRA':{'Basics':_country_info_dict['FRA'],\
-                            'Subregion Flags':'http://sticker-departement.com/',\
-                            'Region Flags':'https://fr.wikipedia.org/wiki/R%C3%A9gion_fran%C3%A7aise'}}
+                    'Subregion Flags':'http://sticker-departement.com/',\
+                    'Region Flags':'https://fr.wikipedia.org/w/index.php?title=R%C3%A9gion_fran%C3%A7aise&oldid=177269957'},\
+                    }
 
     def __init__(self,country=None):
         """ __init__ member function. 
@@ -640,6 +651,9 @@ class GeoCountry():
 
         if not country in self.get_list_countries():
             raise CoaKeyError("Country "+str(country)+" not supported. Please see get_list_countries() and help. ")
+
+        self._country_data_region=None
+        self._country_data_subregion=None
 
         url=self._country_info_dict[country]
         self._country_data = gpd.read_file('zip://'+get_local_from_url(url,0,'.zip')) # under the hypothesis this is a zip file
@@ -719,9 +733,6 @@ class GeoCountry():
                     g=shapely.ops.unary_union([g,g2])
                 tmp.append(g)
             self._country_data['geometry']=tmp
-
-            self._country_data_region=None
-            self._country_data_subregion=None
 
     def get_source(self):
         """ Return informations about URL sources

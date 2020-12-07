@@ -580,7 +580,10 @@ class CocoDisplay():
 
         jhu_stuff = mypandas.loc[(mypandas.date == when)]
 
-        a = self.info.add_field(field=['geometry'],input=jhu_stuff ,geofield='location')
+        if not 'geometry' in jhu_stuff.columns:
+            a = self.info.add_field(field=['geometry'],input=jhu_stuff ,geofield='location')
+        else:
+            a = jhu_stuff.copy()
 
         data=gpd.GeoDataFrame(self.info.add_field(input=a,geofield='location',\
                                   field=['country_name']),crs="EPSG:4326")

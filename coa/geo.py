@@ -290,7 +290,7 @@ class GeoInfo():
         'median_age':'https://www.worldometers.info/world-population/population-by-country/',\
         'urban_rate':'https://www.worldometers.info/world-population/population-by-country/',\
         #'geometry':'https://github.com/johan/world.geo.json/',\
-        'geometry':'http://thematicmapping.org/downloads/world_borders.php',\
+        'geometry':'http://thematicmapping.org/downloads/world_borders.php and https://github.com/johan/world.geo.json/',\
         'region_code_list':'https://en.wikipedia.org/wiki/List_of_countries_by_United_Nations_geoscheme',\
         'region_name_list':'https://en.wikipedia.org/wiki/List_of_countries_by_United_Nations_geoscheme',\
         'capital':'https://en.wikipedia.org/wiki/List_of_countries_by_United_Nations_geoscheme',\
@@ -464,6 +464,12 @@ class GeoInfo():
                     # world_geometry_url_zipfile='http://thematicmapping.org/downloads/TM_WORLD_BORDERS-0.3.zip' # too precize version ? 
                     self._data_geometry = gpd.read_file('zip://'+get_local_from_url(world_geometry_url_zipfile,0,'.zip'))[['ISO3','geometry']]
                     self._data_geometry.columns=["id_tmp","geometry"]
+
+                    # About Sudan and South Sudan, not properly managed by this database
+                    self._data_geometry=self._data_geometry.append({'id_tmp':'SSD','geometry':None},ignore_index=True) # adding the SSD row
+                    for newc in ['SSD','SDN']:
+                        newgeo=gpd.read_file(get_local_from_url('https://github.com/johan/world.geo.json/raw/master/countries/'+newc+'.geo.json'))
+                        self._data_geometry.loc[self._data_geometry.id_tmp==newc,'geometry']=newgeo.loc[newgeo.id==newc,'geometry'][0]
 
                 p=p.merge(self._data_geometry,how='left',\
                     left_on='iso3_tmp',right_on='id_tmp',\

@@ -39,7 +39,7 @@ from bokeh.models import CheckboxGroup, RadioGroup, Toggle, RadioGroup
 from bokeh.palettes import Paired12
 from bokeh.tile_providers import CARTODBPOSITRON, get_provider
 from bokeh.models.widgets import Tabs, Panel
-from bokeh.palettes import Viridis256, Cividis256, Turbo256
+from bokeh.palettes import Viridis256, Cividis256, Turbo256, Magma256
 from bokeh.models import Label, LabelSet
 from bokeh.models import ColumnDataSource, Grid, Line, LinearAxis, Plot
 from bokeh.models import DataRange1d
@@ -666,7 +666,7 @@ class CocoDisplay():
         min_col,max_col=CocoDisplay.min_max_range(0,np.nanmax(geopdwd[input_field]))
 
         #standardfig.add_tile(esri)
-        color_mapper = LinearColorMapper(palette='Turbo256', low = min_col, high = max_col, nan_color = '#d9d9d9')
+        color_mapper = LinearColorMapper(palette=Viridis256, low = min_col, high = max_col, nan_color = '#d9d9d9')
         color_bar = ColorBar(color_mapper=color_mapper, label_standoff=4,
                             border_line_color=None,location = (0,0), orientation = 'horizontal', ticker=BasicTicker())
         color_bar.formatter = BasicTickFormatter(use_scientific=True,precision=1,power_limit_low=int(max_col))
@@ -760,7 +760,7 @@ class CocoDisplay():
         draw.text((2,0), msg, font=fnt,fill=(0, 0, 0))
         im.crop((0, 0,2*w,2*h)).save("pycoatextlogo.png", "PNG")
         FloatImage("pycoatextlogo.png", bottom=-2, left=1).add_to(mapa)
-        geopdwd[input_field+'scientific_format']=(['{:e}'.format(i) for i in geopdwd[input_field]])
+        geopdwd[input_field+'scientific_format']=(['{:.3g}'.format(i) for i in geopdwd[input_field]])
         folium.GeoJson(
             geopdwd,
             style_function=lambda x:

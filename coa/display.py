@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+    # -*- coding: utf-8 -*-
 
 """
 Project : PyCoA
@@ -122,7 +122,7 @@ class CocoDisplay():
         bins = kwargs.get('bins',50)
         if bins != 50:
             bins = bins
-        input_dico['bins']=bins
+        input_dico['bins'] = bins
 
         what = kwargs.get('what', None)
         input_dico['what']=what
@@ -142,11 +142,11 @@ class CocoDisplay():
             else:
                 var_displayed = what
                 if what == 'diff':
-                    titlebar = which + ' (' + 'day to day diffence ' +  ' @ ' + when.strftime('%d/%m/%Y') + ')'
+                    titlebar = which + ' (' + 'day to day difference ' +  ' @ ' + when.strftime('%d/%m/%Y') + ')'
                 elif what == 'cumul':
                     titlebar = which + ' (' + 'cumulative sum ' +  ' @ ' + when.strftime('%d/%m/%Y') + ')'
                 else:
-                    titlebar = which + ' (' + what +  ' @ ' + when.strftime('%d/%m/%Y') + ')'    
+                    titlebar = which + ' (' + what +  ' @ ' + when.strftime('%d/%m/%Y') + ')'
 
         title = kwargs.get('title', None)
         input_dico['title']=title
@@ -200,9 +200,16 @@ class CocoDisplay():
                input_field = dico['what']
            if type(dico['which']) and type(dico['what'])  is None.__class__:
                CoaTypeError('What do you want me to do ?. No variable to histogram . See help.')
+        else:
+                if not isinstance(input_field, list):
+                    text_input = input_field
+                else:
+                    text_input = '-'
+                    text_input= text_input.join(input_field)
+                dico['titlebar'] = text_input + ' (@ ' + dico['when'].strftime('%d/%m/%Y') + ')'
 
         if not isinstance(input_field, list):
-           input_field=[input_field]
+            input_field=[input_field]
 
         if 'location' in mypandas.columns:
             tooltips='Location: @location <br> Date: @date{%F} <br>  $name: @$name'
@@ -336,9 +343,9 @@ class CocoDisplay():
             loc = mypandas['location'].unique()
             shorten_loc = [ i if len(i)<15 else i.replace('-',' ').split()[0]+'...'+i.replace('-',' ').split()[-1] for i in loc]
 
-
             for w in loc:
-                histo,edges = np.histogram((mypandas.loc[mypandas['location'] == w][input_field]),density=False, bins=dico['bins'])
+                histo,edges = np.histogram((mypandas.loc[mypandas['location'] == w][input_field].dropna()),density=False, bins=dico['bins'])
+
                 dict_histo[w] = pd.DataFrame({'location':w,'val': histo,
                    'left': edges[:-1],
                    'right': edges[1:],

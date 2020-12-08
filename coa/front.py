@@ -180,7 +180,7 @@ def get(**kwargs):
                 monotonous increasing.
                 is available. By default : no option.
     """
-    kwargs_test(kwargs,['where','what','which','whom','when','output','option','visu'],
+    kwargs_test(kwargs,['where','what','which','whom','when','output','option','bins'],
             'Bad args used in the pycoa.get() function.')
 
     global _db,_whom
@@ -301,7 +301,7 @@ def decoplot(func):
                                 according to the locations which were selected
         """
         kwargs_test(kwargs,['where','what','which','whom','when', \
-            'input','input_field','width_height','option','title','whichones'],
+            'input','input_field','width_height','option','title'],
             'Bad args used in the pycoa.plot() function.')
 
         input_arg=kwargs.get('input',None)
@@ -324,28 +324,21 @@ def decoplot(func):
                     'dataframe. See help.')
 
         to_plot = which
-        if what :
-            if what == 'daily':
-                what = 'diff'
-            to_plot = what
-        whichones=kwargs.get('whichones',None)
-        if whichones:
-            if isinstance(whichones, list):
-                to_plot = whichones
-            else:
-              raise CoaTypeError('Waiting a list ')
-
-        return func(t,to_plot,**kwargs)
+        #if what :
+        #    if what == 'daily':
+        #        what = 'diff'
+        #    to_plot = what
+        return func(t,**kwargs)
     return generic_plot
 
 @decoplot
-def plot(t,to_plot,**kwargs):
-    fig = _cocoplot.pycoa_date_plot(t,to_plot)
+def plot(t,**kwargs):
+    fig = _cocoplot.pycoa_date_plot(t,**kwargs)
     show(fig)
 
 @decoplot
-def scrollmenu_plot(t,to_plot,**kwargs):
-    fig = _cocoplot.scrolling_menu(t,to_plot)
+def scrollmenu_plot(t,**kwargs):
+    fig = _cocoplot.scrolling_menu(t,**kwargs)
     show(fig)
 
 # ----------------------------------------------------------------------
@@ -405,8 +398,7 @@ def hist(**kwargs):
         if what == 'cumul' and _whom == 'jhu':
             to_plot = which
 
-
-    fig=_cocoplot.pycoa_histo(t,to_plot,**kwargs)
+    fig=_cocoplot.pycoa_histo(t,**kwargs)
     show(fig)
 
 # ----------------------------------------------------------------------
@@ -430,7 +422,7 @@ def map(**kwargs):
     if isinstance(input_arg,pd.DataFrame):
         t=input_arg
         which=kwargs.get('input_field',listwhich()[0])
-        field = which 
+        field = which
         which+='/cumul'
     elif input_arg==None:
         t=get(**kwargs,output='pandas')

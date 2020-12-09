@@ -394,7 +394,6 @@ class DataBase():
         if not all(isinstance(c, str) for c in clist):
             raise CoaWhereError("Location via the where keyword should be given as strings. ")
 
-
         if self.db != 'spf' and self.db != 'opencovid19':
             self.geo.set_standard('name')
             clist=self.geo.to_standard(clist,output='list',interpret_region=True)
@@ -462,6 +461,8 @@ class DataBase():
 
             temp.append(pd.DataFrame(data))
             i+=1
+        pandy = pd.concat(temp)
+        pandy['weekly'] = pandy.groupby('location')[kwargs['which']].rolling(7).mean().reset_index(level=0, drop=True)
 
         if output == "array":
             if process_data == 'cumul':
@@ -477,7 +478,7 @@ class DataBase():
 
         #if len(clist) == 1 :
         #    temp[0] = temp[0].drop(columns=['location'])
-        pandy = pd.concat(temp)
+
         if temp==[]:
             raise CoaWhereError('No valid country available')
 

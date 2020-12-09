@@ -213,7 +213,6 @@ def get(**kwargs):
                             'See listwhich() for list.')
 
     pandy = _db.get_stats(which=which,location=where,option=option,output='pandas').rename(columns={'location': 'where'})
-    pandy['weekly'] = pandy.groupby('where')['diff'].rolling(7).mean().reset_index(level=0, drop=True)
     db_first_date = pandy.date.min()
     db_last_date = pandy.date.max()
 

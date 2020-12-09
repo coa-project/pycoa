@@ -611,7 +611,12 @@ class CocoDisplay():
                                 'One of them is mandatory. See help.')
             if 'where' in mypandas.columns:
                 mypandas = mypandas.rename(columns={'where':'location'})
-        a = self.info.add_field(field=['geometry'],input=mypandas ,geofield='location')
+
+        if not 'geometry' in mypandas.columns:
+            a = self.info.add_field(field=['geometry'],input=mypandas ,geofield='location')
+        else:
+            a = mypandas.copy()
+
         data=gpd.GeoDataFrame(self.info.add_field(input=a,geofield='location',field=['country_name']),
         crs="EPSG:4326")
         data = data.loc[data.geometry != None]

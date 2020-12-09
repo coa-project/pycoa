@@ -19,7 +19,6 @@ The parser class gives a simplier access through an already filled dict of data
 import pandas
 from collections import defaultdict
 import numpy as np
-from datetime import datetime as dt
 import pandas as pd
 import sys
 from coa.tools import info,verb,kwargs_test,get_local_from_url

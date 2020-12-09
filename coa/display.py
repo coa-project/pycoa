@@ -121,7 +121,7 @@ class CocoDisplay():
                 if what == 'diff':
                     titlebar = which + ' (' + 'day to day difference ' +  ' @ ' + when.strftime('%d/%m/%Y') + ')'
                 if what == 'weekly':
-                    titlebar = which + ' (' + 'weekly cumulative sum ' +  ' @ ' + when.strftime('%d/%m/%Y') + ')'
+                    titlebar = which + ' (' + 'daily rolling over 1 week' +  ' @ ' + when.strftime('%d/%m/%Y') + ')'
                 elif what == 'cumul':
                     titlebar = which + ' (' + 'cumulative sum ' +  ' @ ' + when.strftime('%d/%m/%Y') + ')'
                 else:

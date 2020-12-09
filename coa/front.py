@@ -226,14 +226,14 @@ def get(**kwargs):
     pandy=pandy[(pandy.date>=when_beg) & (pandy.date<=when_end)]
     casted_data = None
     if output == 'pandas':
-         pandy = pandy.drop(columns=which)
+         pandy = pandy.drop(columns=['cumul'])
+         pandy['cumul'] = pandy[which]
          casted_data = pandy
     else:
         col_name = ''
         if what == 'daily' or what == 'diff':
             col_name = 'diff'
         if what == 'cumul' and _whom == 'jhu':
-            pandy = pandy.drop(columns=['cumul'])
             col_name = which
         if what == 'weekly':
             col_name = 'weekly'

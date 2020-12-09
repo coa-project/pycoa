@@ -478,10 +478,6 @@ class DataBase():
         #if len(clist) == 1 :
         #    temp[0] = temp[0].drop(columns=['location'])
         pandy = pd.concat(temp)
-        if self.db == 'jhu' :
-            # jhu give the cumul not the current value ... but we 3 columns is needed
-            pandy = pandy.drop(columns=['cumul'])
-            pandy['cumul'] = pandy[kwargs['which']]
         if temp==[]:
             raise CoaWhereError('No valid country available')
 

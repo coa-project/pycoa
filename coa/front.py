@@ -171,7 +171,7 @@ def get(**kwargs):
                 monotonous increasing.
                 is available. By default : no option.
     """
-    kwargs_test(kwargs,['where','what','which','whom','when','output','option','bins'],
+    kwargs_test(kwargs,['where','what','which','whom','when','output','option','bins','title'],
             'Bad args used in the pycoa.get() function.')
 
     global _db,_whom
@@ -365,7 +365,7 @@ def hist(**kwargs):
                 If specified should be a list of width and height.
                 For instance width_height=[400,500]
     """
-    kwargs_test(kwargs,['where','what','which','whom','when','input','input_field','bins'],
+    kwargs_test(kwargs,['where','what','which','whom','when','input','input_field','bins','title'],
             'Bad args used in the pycoa.hist() function.')
 
     input_arg=kwargs.get('input',None)

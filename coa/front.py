@@ -226,8 +226,7 @@ def get(**kwargs):
     pandy=pandy[(pandy.date>=when_beg) & (pandy.date<=when_end)]
     casted_data = None
     if output == 'pandas':
-         pandy = pandy.drop(columns=['cumul'])
-         pandy = pandy.rename(columns={which:'cumul'})
+         pandy = pandy.drop(columns=which)
          casted_data = pandy
     else:
         col_name = ''

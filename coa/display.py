@@ -36,6 +36,7 @@ from bokeh.models import ColumnDataSource, TableColumn, DataTable,ColorBar, \
     PrintfTickFormatter, BasicTickFormatter, CustomJS, CustomJSHover, Select, \
     Range1d, DatetimeTickFormatter
 from bokeh.models.widgets import Tabs, Panel
+from bokeh.palettes import Viridis256, Cividis256, Turbo256, Magma256
 from bokeh.plotting import figure
 from bokeh.layouts import row, column, gridplot
 from bokeh.palettes import Paired12
@@ -646,7 +647,7 @@ class CocoDisplay():
         min_col,max_col=CocoDisplay.min_max_range(0,np.nanmax(geopdwd[input_field]))
 
         #standardfig.add_tile(esri)
-        Viridis256.reverse()
+        #Viridis256.reverse()
         color_mapper = LinearColorMapper(palette=Viridis256, low = min_col, high = max_col, nan_color = '#d9d9d9')
         color_bar = ColorBar(color_mapper=color_mapper, label_standoff=4,
                             border_line_color=None,location = (0,0), orientation = 'horizontal', ticker=BasicTicker())

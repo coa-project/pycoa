@@ -311,7 +311,7 @@ class DataBase():
                 {self.dicos_countries[keys_words][loc].append(data) for loc,data in zip(d_loc,d_data)}
 
                 self.dict_current_days[keys_words] = {loc:list(np.sum(data, 0)) for loc,data in \
-               self.dicos_countries[keys_words].items()}
+                self.dicos_countries[keys_words].items()}
 
                 self.dict_cumul_days[keys_words] = {loc: np.nancumsum(data) for loc,data in \
                 self.dict_current_days[keys_words].items()}
@@ -477,11 +477,15 @@ class DataBase():
 
         #if len(clist) == 1 :
         #    temp[0] = temp[0].drop(columns=['location'])
-
+        pandy = pd.concat(temp)
+        if self.db == 'jhu' :
+            # jhu give the cumul not the current value ... but we 3 columns is needed
+            pandy = pandy.drop(columns=['cumul'])
+            pandy['cumul'] = pandy[kwargs['which']]
         if temp==[]:
             raise CoaWhereError('No valid country available')
 
-        return pd.concat(temp)
+        return pandy
 
    ## https://www.kaggle.com/freealf/estimation-of-rt-from-cases
    def smooth_cases(self,cases):

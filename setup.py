@@ -28,34 +28,42 @@ setup(
     # Needed for dependencies
     install_requires=[ \
         'altair',\
+        #'base64',\ #std
         'bokeh',\
         'branca',\
         'bs4',\
-        #'collections',\   std
+        #'collections',\  # std
         #'copy',\  std
         'datetime',\
         'folium',\
         'geopandas',\
         'geopy',\
-        #'inspect', \should be std
-        #'io',\ std
-        #'itertools',\  std
-        #'json',\  std
-        #'math',\   std
+        #'getpass',\ #std
+        #'inspect', \ #should be std
+        #'io',\ #std
+        #'itertools',\  #std
+        #'json',\  #std
+        'Known',\
+        #'math',\   #std
         'matplotlib',\
         'numpy',\
+        #'os',\ # std
         'pandas',\
-        #'PIL',\ should be std
+        #'PIL',\ #should be std
         'plotly',\
         'pycountry',\
         'pycountry_convert',\
         'pyproj',\
-        #'random',\   std
+        #'random',\   #std
         'requests',\
         'scipy',\
         'shapely',\
-        #'sys',\   std
-        #'warnings',\  std
+        #'sys',\   #std
+        #'tempfile', \ #std
+        #'time', \ #std
+        #'urllib', \
+        #'warnings',\  #std
+        #'zlib', \ #std
         ],
     # The license can be anything you like
     license='MIT',

@@ -16,66 +16,42 @@ An interface module to easily plot pycoa data with bokeh
 
 """
 
-import random
+from coa.tools import kwargs_test,check_valid_date,extract_dates,info,verb
+import coa.geo as coge
+from coa.error import *
+
 import math
 import pandas as pd
 import geopandas as gpd
-from coa.tools import kwargs_test,check_valid_date,extract_dates
-
-import datetime
-from datetime import datetime as dt
-from collections import defaultdict
-from coa.error import *
-import bokeh
-from bokeh.io import show, output_notebook
-from bokeh.models import ColumnDataSource, TableColumn, DataTable,ColorBar, HoverTool, Legend,BasicTicker
-from bokeh.models import GeoJSONDataSource, LinearColorMapper, ColorBar, NumeralTickFormatter
-from bokeh.plotting import figure, output_file, show
-from bokeh.palettes import brewer
-from bokeh.layouts import row, column, gridplot
-from bokeh.models import CustomJS, CustomJSHover, Slider, Select, Plot, \
-    Button, LinearAxis, Range1d, DatetimeTickFormatter
-from bokeh.models import CheckboxGroup, RadioGroup, Toggle, RadioGroup
-from bokeh.palettes import Paired12
-from bokeh.tile_providers import CARTODBPOSITRON, get_provider
-from bokeh.models.widgets import Tabs, Panel
-from bokeh.palettes import Viridis256, Cividis256, Turbo256, Magma256
-from bokeh.models import Label, LabelSet
-from bokeh.models import ColumnDataSource, Grid, Line, LinearAxis, Plot
-from bokeh.models import DataRange1d
-from bokeh.models import LogScale
-from bokeh.models import PrintfTickFormatter
-from bokeh.models import PolyDrawTool
-from bokeh.models import BasicTickFormatter
-from bokeh.io import export_png, export_svgs
-from bokeh.tile_providers import get_provider, WIKIMEDIA, CARTODBPOSITRON, STAMEN_TERRAIN, STAMEN_TONER, ESRI_IMAGERY, OSM
-
-import bokeh.palettes
-import itertools
-import sys
-
-import coa.geo as coge
-from coa.tools import info,verb,check_valid_date
-
-from pyproj import CRS
-
-import branca.colormap
-from branca.element import Element
-from branca.element import Figure, IFrame
-from branca.utilities import legend_scaler
-import folium
-from folium.plugins import FloatImage
-import json
-from geopy.geocoders import Nominatim
-import altair as alt
 import numpy as np
-from shapely.ops import unary_union
+from collections import defaultdict
+import itertools
+import json
 import io
-from PIL import Image
 from io import BytesIO
 import base64
-import matplotlib.pyplot as plt
+
+from bokeh.models import ColumnDataSource, TableColumn, DataTable,ColorBar, \
+    HoverTool,BasicTicker, GeoJSONDataSource, LinearColorMapper, Label, \
+    PrintfTickFormatter, BasicTickFormatter, CustomJS, CustomJSHover, Select, \
+    Range1d, DatetimeTickFormatter
+from bokeh.models.widgets import Tabs, Panel
+from bokeh.plotting import figure
+from bokeh.layouts import row, column, gridplot
+from bokeh.palettes import Paired12
+from bokeh.io import export_png
+
+import branca.colormap
+from branca.element import Element, Figure
+
+import folium
+from folium.plugins import FloatImage
+
+from shapely.ops import unary_union
+
 from PIL import Image, ImageDraw, ImageFont
+
+import matplotlib.pyplot as plt
 
 width_height_default = [600,337] #337 magical value to avoid scroll menu in bokeh map
 class CocoDisplay():
@@ -133,8 +109,7 @@ class CocoDisplay():
         when = mypandas.date.max()
 
         if date:
-            when = check_valid_date(date)
-            when = dt.strptime(date,'%d/%m/%Y')
+            when = extract_dates(date)
         titlebar = which + ' (@' + when.strftime('%d/%m/%Y') +')'
         if what:
             if what not in ['daily','diff','cumul','weekly']:
@@ -519,7 +494,7 @@ class CocoDisplay():
                     fig = figure(plot_width=300, plot_height=200,
                                  tools=['box_zoom,box_select,crosshair,reset'], title=leg, x_axis_type="datetime")
 
-                    date = [datetime.strptime(i, '%m/%d/%y')
+                    date = [extract_dates(i)
                             for i in self.p.getDates()]
                     if err_y:
                         fig.circle(
@@ -611,7 +586,12 @@ class CocoDisplay():
                                 'One of them is mandatory. See help.')
             if 'where' in mypandas.columns:
                 mypandas = mypandas.rename(columns={'where':'location'})
-        a = self.info.add_field(field=['geometry'],input=mypandas ,geofield='location')
+
+        if not 'geometry' in mypandas.columns:
+            a = self.info.add_field(field=['geometry'],input=mypandas ,geofield='location')
+        else:
+            a = mypandas.copy()
+
         data=gpd.GeoDataFrame(self.info.add_field(input=a,geofield='location',field=['country_name']),
         crs="EPSG:4326")
         data = data.loc[data.geometry != None]

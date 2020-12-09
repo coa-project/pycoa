@@ -28,7 +28,6 @@ import pycountry_convert as pcc
 import pandas as pd
 import geopandas as gpd
 import shapely
-import requests
 import bs4
 
 from coa.tools import verb,kwargs_test,get_local_from_url

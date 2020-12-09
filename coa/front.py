@@ -32,25 +32,16 @@ Basic usage
 """
 
 # --- Imports ----------------------------------------------------------
-import warnings
-from copy import copy
-import matplotlib.pyplot as plt
 import pandas as pd
-import geopandas as gpd
 import inspect
-from coa.tools import kwargs_test,check_valid_date,extract_dates
+from coa.tools import kwargs_test,extract_dates
 import coa.covid19 as coco
-import coa.geo as coge
 from coa.error import *
 import coa.display as cd
 import numpy as np
 from bokeh.io import show, output_notebook
-output_notebook(hide_banner=True)
 
-from bokeh.plotting import figure
-from bokeh.models import GeoJSONDataSource, LinearColorMapper, ColorBar, HoverTool
-from bokeh.palettes import brewer
-import json
+output_notebook(hide_banner=True)
 
 # --- Needed global private variables ----------------------------------
 _listwhom=['jhu',    # John Hopkins University first base, default

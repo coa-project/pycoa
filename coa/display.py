@@ -41,6 +41,7 @@ from bokeh.plotting import figure
 from bokeh.layouts import row, column, gridplot
 from bokeh.palettes import Paired12
 from bokeh.io import export_png
+from bokeh import events
 
 import branca.colormap
 from branca.element import Element, Figure
@@ -151,6 +152,19 @@ class CocoDisplay():
          fig.add_layout(logo_db_citation)
          return fig
 
+    @staticmethod
+    def bokeh_legend(bkfigure):
+        toggle_legend_js = CustomJS(args=dict(leg=bkfigure.legend[0]), code="""
+                            if (leg.visible) {
+                            leg.visible = false
+                            }
+                            else {
+                            leg.visible = true
+                            }
+                            """)
+        bkfigure.js_on_event(events.DoubleTap, toggle_legend_js)
+
+
     def pycoa_date_plot(self,mypandas, input_field = None, **kwargs):
         """Create a Bokeh date chart from pandas input (x axis is a date format)
 
@@ -230,8 +244,8 @@ class CocoDisplay():
             standardfig.legend.location = "bottom_right"
 
             standardfig.xaxis.formatter = DatetimeTickFormatter(
-        days=["%d/%m/%y"], months=["%d/%m/%y"], years=["%b %Y"])
-
+                days=["%d/%m/%y"], months=["%d/%m/%y"], years=["%b %Y"])
+            CocoDisplay.bokeh_legend(standardfig)
         tabs = Tabs(tabs=panels)
         return tabs
 
@@ -387,6 +401,8 @@ class CocoDisplay():
             standardfig.legend.label_text_font_size = "12px"
             panel = Panel(child=standardfig , title=axis_type)
             panels.append(panel)
+            CocoDisplay.bokeh_legend(standardfig)
+
         tabs = Tabs(tabs=panels)
         return tabs
 

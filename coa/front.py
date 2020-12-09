@@ -192,6 +192,7 @@ def get(**kwargs):
     when=kwargs.get('when',None)
 
     output=kwargs.get('output',listoutput()[0])
+
     if output not in listoutput():
         raise CoaKeyError('Output option '+output+' not supported. See help().')
     if not where:
@@ -202,7 +203,6 @@ def get(**kwargs):
         whom=_whom
     if whom != _whom:
         setwhom(whom)
-
     when_beg,when_end=extract_dates(when)
 
     if option:
@@ -233,34 +233,35 @@ def get(**kwargs):
 
     # when cut
     pandy=pandy[(pandy.date>=when_beg) & (pandy.date<=when_end)]
-
+    casted_data = None
     if output == 'pandas':
-        pandy = pandy
-        if inspect.stack()[1].function == '<module>':
-            pandy = pandy.rename(columns={'diff':'daily'})
-            pandy = pandy.drop(columns=['cumul'])
-            pandy = pandy.rename(columns={which:which+'/cumul'})
+         pandy = pandy.drop(columns=['cumul'])
+         pandy = pandy.rename(columns={which:'cumul'})
+         casted_data = pandy
     else:
+        col_name = ''
         if what == 'daily' or what == 'diff':
-            which = 'diff'
+            col_name = 'diff'
         if what == 'cumul' and _whom == 'jhu':
-            which = which
+            pandy = pandy.drop(columns=['cumul'])
+            col_name = which
         if what == 'weekly':
-            which = 'weekly'
-        pandy = pd.pivot_table(pandy, index='date',columns='where',values=which).to_dict('series')
+            col_name = 'weekly'
+
+        casted_data = pd.pivot_table(pandy, index='date',columns='where',values=col_name).to_dict('series')
         if output == 'dict':
-            pandy = pandy
+            casted_data = pandy
         if output == 'list' or output == 'array':
             my_list = []
             for keys,values in pandy.items():
                 vc=[]
                 vc=[i for i in values]
                 my_list.append(vc)
-            pandy = my_list
+            casted_data = my_list
             if output == 'array':
-                pandy = np.array(pandy)
+                casted_data = np.array(pandy)
 
-    return pandy
+    return casted_data
 
 # ----------------------------------------------------------------------
 # --- plot(**kwargs) ---------------------------------------------------
@@ -392,10 +393,9 @@ def hist(**kwargs):
 
     bins=kwargs.get('bins',None)
     date=kwargs.get('date',None)
-    if what:
-        if what == 'cumul' and _whom == 'jhu':
-            kwargs['what'] = None
-    print(kwargs)
+    #if what:
+    #    if what == 'cumul' and _whom == 'jhu':
+    #        kwargs['what'] = None
     fig=_cocoplot.pycoa_histo(t,**kwargs)
     show(fig)
 

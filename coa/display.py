@@ -108,7 +108,8 @@ class CocoDisplay():
         input_dico['which']=which
         var_displayed=which
         when = mypandas.date.max()
-
+        title = kwargs.get('title', None)
+        input_dico['title']=title
         if date:
             when = extract_dates(date)
         titlebar = which + ' (@' + when.strftime('%d/%m/%Y') +')'
@@ -126,8 +127,8 @@ class CocoDisplay():
                 else:
                     titlebar = which + ' (' + what +  ' @ ' + when.strftime('%d/%m/%Y') + ')'
 
-        title = kwargs.get('title', None)
-        input_dico['title']=title
+        if title:
+            titlebar = title
         input_dico['titlebar']=titlebar
         input_dico['var_displayed']=var_displayed
         input_dico['when']=when

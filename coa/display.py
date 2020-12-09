@@ -666,6 +666,7 @@ class CocoDisplay():
         min_col,max_col=CocoDisplay.min_max_range(0,np.nanmax(geopdwd[input_field]))
 
         #standardfig.add_tile(esri)
+        Viridis256.reverse()
         color_mapper = LinearColorMapper(palette=Viridis256, low = min_col, high = max_col, nan_color = '#d9d9d9')
         color_bar = ColorBar(color_mapper=color_mapper, label_standoff=4,
                             border_line_color=None,location = (0,0), orientation = 'horizontal', ticker=BasicTicker())

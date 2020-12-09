@@ -392,12 +392,10 @@ def hist(**kwargs):
 
     bins=kwargs.get('bins',None)
     date=kwargs.get('date',None)
-    to_plot = which
     if what:
-        to_plot = what
         if what == 'cumul' and _whom == 'jhu':
-            to_plot = which
-
+            kwargs['what'] = None
+    print(kwargs)
     fig=_cocoplot.pycoa_histo(t,**kwargs)
     show(fig)
 
@@ -429,7 +427,7 @@ def map(**kwargs):
         which=kwargs.get('which',listwhich()[0])
         field = which
         if what == 'weekly' or what== 'daily':
-            what = None
+            kwargs['what'] = None
     else:
         raise CoaTypeError('Waiting input as valid pycoa pandas '
             'dataframe. See help.')

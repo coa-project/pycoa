@@ -803,7 +803,7 @@ class GeoCountry():
                     self._country_data_subregion=self._country_data.sort_values(by='code_subregion')
                 return self._country_data_subregion
 
-    def add_info(self,**kwargs):
+    def add_field(self,**kwargs):
         """Return a the data pandas.Dataframe with an additionnal column with property prop.
 
         Arguments : 

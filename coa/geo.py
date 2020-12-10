@@ -114,8 +114,8 @@ class GeoManager():
         output           -- 'list' (default), 'dict' or 'pandas'
         db               -- database name to help conversion.
                             Default : None, meaning best effort to convert.
-                            Known database : jhu, wordometer... 
-                            See get_list_db() for full list of known db for 
+                            Known database : jhu, wordometer...
+                            See get_list_db() for full list of known db for
                             standardization
         interpret_region -- Boolean, default=False. If yes, the output should
                             be only 'list'.
@@ -460,7 +460,7 @@ class GeoInfo():
                     #geojsondatafile = 'https://raw.githubusercontent.com/johan/world.geo.json/master/countries.geo.json'
                     #self._data_geometry = gpd.read_file(get_local_from_url(geojsondatafile,0,'.json'))[["id","geometry"]]
                     world_geometry_url_zipfile='http://thematicmapping.org/downloads/TM_WORLD_BORDERS_SIMPL-0.3.zip' # too much simplified version ?
-                    # world_geometry_url_zipfile='http://thematicmapping.org/downloads/TM_WORLD_BORDERS-0.3.zip' # too precize version ? 
+                    # world_geometry_url_zipfile='http://thematicmapping.org/downloads/TM_WORLD_BORDERS-0.3.zip' # too precize version ?
                     self._data_geometry = gpd.read_file('zip://'+get_local_from_url(world_geometry_url_zipfile,0,'.zip'))[['ISO3','geometry']]
                     self._data_geometry.columns=["id_tmp","geometry"]
 
@@ -553,7 +553,7 @@ class GeoRegion():
         self._p_gs=pd.DataFrame({'iso3':idx,'capital':cap,'region':reg})
         self._p_gs=self._p_gs.merge(p_m49,how='left',left_on='region',\
                             right_on='code').drop(["code"],axis=1)
-    
+
     def get_source(self):
         return self._source_dict
 
@@ -628,7 +628,7 @@ class GeoCountry():
     """GeoCountry class definition.
     This class provides functions for specific countries and their states / departments / regions,
     and their geo properties (geometry, population if available, etc.)
-    
+
     The list of supported countries is given by get_list_countries() function """
 
     # Assuming zip file here
@@ -640,9 +640,12 @@ class GeoCountry():
                     'Region Flags':'https://fr.wikipedia.org/w/index.php?title=R%C3%A9gion_fran%C3%A7aise&oldid=177269957'},\
                     }
 
-    def __init__(self,country=None):
-        """ __init__ member function. 
-        Must give as arg the country to deal with, as a valid ISO3 string
+    def __init__(self,country=None,dense_geometry=False):
+        """ __init__ member function.
+        Must give as arg the country to deal with, as a valid ISO3 string.
+
+        If extended_geometry==True is set, the geometry of subregions and region is changed in order to have dense
+        overall geometry.
         """
         self._country=country
         if country == None:
@@ -672,7 +675,7 @@ class GeoCountry():
             content_reg_flag = f_reg_flag.read()
             f_reg_flag.close()
             soup_reg_flag = bs4.BeautifulSoup(content_reg_flag,'lxml')
-            for img in soup_reg_flag.find_all('img'):  # need to convert <img tags to src content for pandas_read 
+            for img in soup_reg_flag.find_all('img'):  # need to convert <img tags to src content for pandas_read
                 src=img.get('src')
                 if src[0] == '/':
                     src='http:'+src
@@ -691,7 +694,7 @@ class GeoCountry():
 
             self._country_data=self._country_data.merge(p_reg_flag,how='left',\
                     left_on='code_reg',right_on='code_region') # merging with flag and correct names
-        
+
             # standardize name for region, subregion
             self._country_data.rename(columns={\
                 'code_dept':'code_subregion',\
@@ -699,39 +702,40 @@ class GeoCountry():
                 'nom_chf':'town_subregion',\
                 },inplace=True)
 
-            self._country_data.drop(['id_geofla','code_reg','nom_reg','x_chf_lieu','y_chf_lieu','x_centroid','y_centroid'],axis=1,inplace=True) # removing some column without interest 
+            self._country_data.drop(['id_geofla','code_reg','nom_reg','x_chf_lieu','y_chf_lieu','x_centroid','y_centroid'],axis=1,inplace=True) # removing some column without interest
 
-            # Moving DROM-COM near hexagon
-            list_translation={"GUADELOUPE":(63,23),
-                             "MARTINIQUE":(63,23),
-                             "GUYANE":(50,35),
-                             "REUNION":(-51,60),
-                             "MAYOTTE":(-38,51.5)}
-            tmp = []
-            for index, poi in self._country_data.iterrows():
-                x=0
-                y=0
-                w=self._country_data.loc[index,"name_subregion"]
-                if w in list_translation.keys():
-                    x=list_translation[w][0]
-                    y=list_translation[w][1]
-                g = shapely.affinity.translate(self._country_data.loc[index, 'geometry'], xoff=x, yoff=y)
-                tmp.append(g)
-            self._country_data['geometry']=tmp
+            if dense_geometry == True :
+                # Moving DROM-COM near hexagon
+                list_translation={"GUADELOUPE":(63,23),
+                                 "MARTINIQUE":(63,23),
+                                 "GUYANE":(50,35),
+                                 "REUNION":(-51,60),
+                                 "MAYOTTE":(-38,51.5)}
+                tmp = []
+                for index, poi in self._country_data.iterrows():
+                    x=0
+                    y=0
+                    w=self._country_data.loc[index,"name_subregion"]
+                    if w in list_translation.keys():
+                        x=list_translation[w][0]
+                        y=list_translation[w][1]
+                    g = shapely.affinity.translate(self._country_data.loc[index, 'geometry'], xoff=x, yoff=y)
+                    tmp.append(g)
+                self._country_data['geometry']=tmp
 
-            # Add Ile de France zoom 
-            idf_translation=(-6.5,-5)
-            idf_scale=5
-            idf_center=(-4,44)
-            tmp = []
-            for index, poi in self._country_data.iterrows():
-                g=self._country_data.loc[index, 'geometry']
-                if self._country_data.loc[index,'code_subregion'] in ['75','92','93','94']:
-                    g2=shapely.affinity.scale(shapely.affinity.translate(g,xoff=idf_translation[0],yoff=idf_translation[1]),\
-                                            xfact=idf_scale,yfact=idf_scale,origin=idf_center)
-                    g=shapely.ops.unary_union([g,g2])
-                tmp.append(g)
-            self._country_data['geometry']=tmp
+                # Add Ile de France zoom
+                idf_translation=(-6.5,-5)
+                idf_scale=5
+                idf_center=(-4,44)
+                tmp = []
+                for index, poi in self._country_data.iterrows():
+                    g=self._country_data.loc[index, 'geometry']
+                    if self._country_data.loc[index,'code_subregion'] in ['75','92','93','94']:
+                        g2=shapely.affinity.scale(shapely.affinity.translate(g,xoff=idf_translation[0],yoff=idf_translation[1]),\
+                                                xfact=idf_scale,yfact=idf_scale,origin=idf_center)
+                        g=shapely.ops.unary_union([g,g2])
+                    tmp.append(g)
+                self._country_data['geometry']=tmp
 
     def get_source(self):
         """ Return informations about URL sources
@@ -803,17 +807,17 @@ class GeoCountry():
                     self._country_data_subregion=self._country_data.sort_values(by='code_subregion')
                 return self._country_data_subregion
 
-    def add_info(self,**kwargs):
+    def add_field(self,**kwargs):
         """Return a the data pandas.Dataframe with an additionnal column with property prop.
 
-        Arguments : 
+        Arguments :
         input        : pandas.Dataframe object. Mandatory.
         field        : field of properties to add. Should be within the get_list_prop() list. Mandatory.
         input_key    : input geo key of the input pandas dataframe. Default  'where'
-        geofield     : internal geo field to make the merge. Default 'code_subregion' 
-        region_merging : Boolean value. Default False, except if the geofield contains '_region'. 
-                       If True, the merge between input dans GeoCountry data is done within the 
-                       region version of the data, not the subregion data which is the default 
+        geofield     : internal geo field to make the merge. Default 'code_subregion'
+        region_merging : Boolean value. Default False, except if the geofield contains '_region'.
+                       If True, the merge between input dans GeoCountry data is done within the
+                       region version of the data, not the subregion data which is the default
                        behavious.
         overload   : Allow to overload a field. Boolean value. Default : False
         """
@@ -849,11 +853,11 @@ class GeoCountry():
         region_merging=kwargs.get('region_merging',None)
         if region_merging == None:
             if '_region' in geofield:
-                region_merging=True 
+                region_merging=True
             else:
                 region_merging=False
 
-        if not instance(region_merging,bool):
+        if not isinstance(region_merging,bool):
             raise CoaKeyError('The region_mergin key should be boolean. See help.')
 
         # Testing fields
@@ -869,7 +873,7 @@ class GeoCountry():
         if not all(p in self.get_list_properties() for p in prop):
             raise CoaKeyError("The property "+prop+" is not available for country "+self.get_country()+".")
 
-        # Testing overload 
+        # Testing overload
         overload=kwargs.get('overload',False)
         if not isinstance(overload,bool):
             raise CoaTypeError('The overload option should be a boolean.')
@@ -880,7 +884,7 @@ class GeoCountry():
 
         # Is the oject properly initialized ?
         self.test_is_init()
-        
+
         # Now let's go for merging
         prop.append('code_subregion')
         return data.merge(self.get_data(region_merging)[prop],how='left',left_on=input_key,\

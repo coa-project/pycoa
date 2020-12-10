@@ -640,9 +640,12 @@ class GeoCountry():
                     'Region Flags':'https://fr.wikipedia.org/w/index.php?title=R%C3%A9gion_fran%C3%A7aise&oldid=177269957'},\
                     }
 
-    def __init__(self,country=None):
+    def __init__(self,country=None,dense_geometry=False):
         """ __init__ member function. 
-        Must give as arg the country to deal with, as a valid ISO3 string
+        Must give as arg the country to deal with, as a valid ISO3 string.
+
+        If extended_geometry==True is set, the geometry of subregions and region is changed in order to have dense 
+        overall geometry.
         """
         self._country=country
         if country == None:
@@ -701,37 +704,38 @@ class GeoCountry():
 
             self._country_data.drop(['id_geofla','code_reg','nom_reg','x_chf_lieu','y_chf_lieu','x_centroid','y_centroid'],axis=1,inplace=True) # removing some column without interest 
 
-            # Moving DROM-COM near hexagon
-            list_translation={"GUADELOUPE":(63,23),
-                             "MARTINIQUE":(63,23),
-                             "GUYANE":(50,35),
-                             "REUNION":(-51,60),
-                             "MAYOTTE":(-38,51.5)}
-            tmp = []
-            for index, poi in self._country_data.iterrows():
-                x=0
-                y=0
-                w=self._country_data.loc[index,"name_subregion"]
-                if w in list_translation.keys():
-                    x=list_translation[w][0]
-                    y=list_translation[w][1]
-                g = shapely.affinity.translate(self._country_data.loc[index, 'geometry'], xoff=x, yoff=y)
-                tmp.append(g)
-            self._country_data['geometry']=tmp
+            if dense_geometry == True :
+                # Moving DROM-COM near hexagon
+                list_translation={"GUADELOUPE":(63,23),
+                                 "MARTINIQUE":(63,23),
+                                 "GUYANE":(50,35),
+                                 "REUNION":(-51,60),
+                                 "MAYOTTE":(-38,51.5)}
+                tmp = []
+                for index, poi in self._country_data.iterrows():
+                    x=0
+                    y=0
+                    w=self._country_data.loc[index,"name_subregion"]
+                    if w in list_translation.keys():
+                        x=list_translation[w][0]
+                        y=list_translation[w][1]
+                    g = shapely.affinity.translate(self._country_data.loc[index, 'geometry'], xoff=x, yoff=y)
+                    tmp.append(g)
+                self._country_data['geometry']=tmp
 
-            # Add Ile de France zoom 
-            idf_translation=(-6.5,-5)
-            idf_scale=5
-            idf_center=(-4,44)
-            tmp = []
-            for index, poi in self._country_data.iterrows():
-                g=self._country_data.loc[index, 'geometry']
-                if self._country_data.loc[index,'code_subregion'] in ['75','92','93','94']:
-                    g2=shapely.affinity.scale(shapely.affinity.translate(g,xoff=idf_translation[0],yoff=idf_translation[1]),\
-                                            xfact=idf_scale,yfact=idf_scale,origin=idf_center)
-                    g=shapely.ops.unary_union([g,g2])
-                tmp.append(g)
-            self._country_data['geometry']=tmp
+                # Add Ile de France zoom 
+                idf_translation=(-6.5,-5)
+                idf_scale=5
+                idf_center=(-4,44)
+                tmp = []
+                for index, poi in self._country_data.iterrows():
+                    g=self._country_data.loc[index, 'geometry']
+                    if self._country_data.loc[index,'code_subregion'] in ['75','92','93','94']:
+                        g2=shapely.affinity.scale(shapely.affinity.translate(g,xoff=idf_translation[0],yoff=idf_translation[1]),\
+                                                xfact=idf_scale,yfact=idf_scale,origin=idf_center)
+                        g=shapely.ops.unary_union([g,g2])
+                    tmp.append(g)
+                self._country_data['geometry']=tmp
 
     def get_source(self):
         """ Return informations about URL sources

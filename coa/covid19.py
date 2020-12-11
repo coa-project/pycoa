@@ -23,6 +23,7 @@ import pandas as pd
 import sys
 from coa.tools import info,verb,kwargs_test,get_local_from_url
 import coa.geo as coge
+import coa.display as codisplay
 from coa.error import *
 from scipy import stats as sps
 import random
@@ -51,8 +52,10 @@ class DataBase():
         self.location_more_info={}
         self.database_columns_not_computed={}
         self.db =  db_name
-        if self.db != 'spf' and self.db != 'opencovid19':
+        if self.db == 'jhu' or  self.db == 'owid':
             self.geo = coge.GeoManager('name')
+        if self.db == 'opencovid19':
+            self.geo = coge.GeoCountry('FRA',True)
 
         if self.db not in self.database_name:
             raise CoaDbError('Unknown ' + self.db + '. Available database so far in PyCoa are : ' + str(self.database_name) ,file=sys.stderr)
@@ -108,11 +111,15 @@ class DataBase():
                 self.pandas_datase = self.pandas_index_location_date_to_jhu_format(result,columns_skipped=columns_skipped)
             elif self.db == 'opencovid19':
                 info('OPENCOVID19 selected ...')
-                rename={'jour':'date','maille_nom':'location'}
-                constraints={'granularite':'pays'}
-                columns_skipped = ['maille_code','source_nom','source_url','source_archive','source_type']
+                rename={'maille_code':'location'}
+                #constraints = {'granularite':'departement'}
+                drop_field  = {'granularite':['pays','monde','region']}
+                columns_skipped = ['granularite','maille_nom','source_nom','source_url','source_archive','source_type']
                 opencovid19 = self.csv_to_pandas_index_location_date('https://raw.githubusercontent.com/opencovid19-fr/data/master/dist/chiffres-cles.csv',
-                           constraints=constraints,rename_columns=rename,separator=',')
+                            drop_field=drop_field,rename_columns=rename,separator=',')
+                opencovid19 = opencovid19.reset_index()
+                opencovid19['location'] = opencovid19['location'].apply(lambda x: x.replace('COM-','').replace('DEP-',''))
+                opencovid19 = opencovid19.set_index('location','date')
                 self.pandas_datase = self.pandas_index_location_date_to_jhu_format(opencovid19,columns_skipped=columns_skipped)
             elif self.db == 'owid':
                 info('OWID aka \"Our World in Data\" database selected ...')
@@ -126,10 +133,7 @@ class DataBase():
             self.fill_pycoa_field()
             info('Few information concernant the selected database : ', self.get_db())
             info('Available which key-words for: ',self.get_available_keys_words())
-            if self.get_db() != 'opencovid19':
-                info('Example of location : ',  ', '.join(random.choices(self.get_locations(), k=5)), ' ...')
-            else:
-                info('Only available location: ', self.get_locations())
+            info('Example of location : ',  ', '.join(random.choices(self.get_locations(), k=5)), ' ...')
             info('Last date data ', self.get_dates()[-1])
 
 
@@ -232,7 +236,6 @@ class DataBase():
         if encoding:
             encoding = encoding
         pandas_db = pandas.read_csv(get_local_from_url(self.database_url,7200),sep=separator,dtype=dico_cast, encoding = encoding ) # cached for 2 hours
-
         constraints = kwargs.get('constraints', None)
         rename_columns = kwargs.get('rename_columns', None)
         drop_field = kwargs.get('drop_field', None)
@@ -241,6 +244,7 @@ class DataBase():
             for key,val in constraints.items():
                 pandas_db = pandas_db.loc[pandas_db[key] == val]
                 pandas_db = pandas_db.drop(columns=key)
+
         if drop_field:
             for key,val in drop_field.items():
                 for i in val:
@@ -299,12 +303,12 @@ class DataBase():
                 if self.db != 'jhu' : # needed since not same nb of rows for deaths,recovered and confirmed
                     if one_time_enough == False:
                         d_loc  = df[keys_words].to_dict('split')['index']
-                        if self.db != 'spf' and self.db != 'opencovid19' and one_time_enough == False:
+                        if self.db == 'jhu' or self.db == 'owid' and one_time_enough == False:
                             d_loc=self.geo.to_standard(list(d_loc),output='list',db=self.get_db(),interpret_region=True)
                         one_time_enough = True
                 else :
                     d_loc  = df[keys_words].to_dict('split')['index']
-                    if self.db != 'spf' and self.db != 'opencovid19' and one_time_enough == False:
+                    if self.db == 'jhu' or self.db == 'owid' and one_time_enough == False:
                         d_loc=self.geo.to_standard(list(d_loc),output='list',db=self.get_db(),interpret_region=True)
 
                 d_data = df[keys_words].to_dict('split')['data']
@@ -394,7 +398,7 @@ class DataBase():
         if not all(isinstance(c, str) for c in clist):
             raise CoaWhereError("Location via the where keyword should be given as strings. ")
 
-        if self.db != 'spf' and self.db != 'opencovid19':
+        if self.db == 'jhu' or self.db == 'owid':
             self.geo.set_standard('name')
             clist=self.geo.to_standard(clist,output='list',interpret_region=True)
 
@@ -405,10 +409,10 @@ class DataBase():
             raise CoaKeyError(kwargs['which']+' is not a available for' + self.db + 'database name. '
             'See get_available_keys_words() for the full list.')
 
-        clist=list(set(clist)) # to suppress duplicate countries
-
-        diff_locations = list(set(clist) - set(self.get_locations()))
-        clist = [i for i in clist if i not in diff_locations]
+        if self.db == 'jhu' or self.db == 'owid':
+            clist=list(set(clist)) # to suppress duplicate countrie
+            diff_locations = list(set(clist) - set(self.get_locations()))
+            clist = [i for i in clist if i not in diff_locations]
 
         currentout = np.array(tuple(dict(
             (c, (self.get_current_days()[kwargs['which']][c])) for c in clist).values()))
@@ -442,6 +446,7 @@ class DataBase():
         datos=self.get_dates()
         i = 0
         temp=[]
+
         for coun in clist:
             if len(coun)==0:
                 continue
@@ -461,6 +466,7 @@ class DataBase():
 
             temp.append(pd.DataFrame(data))
             i+=1
+
         pandy = pd.concat(temp)
         pandy['weekly'] = pandy.groupby('location')[kwargs['which']].rolling(7).mean().reset_index(level=0, drop=True)
 
@@ -481,7 +487,7 @@ class DataBase():
 
         if temp==[]:
             raise CoaWhereError('No valid country available')
-
+        pandy.db_citation = self.get_db()
         return pandy
 
    ## https://www.kaggle.com/freealf/estimation-of-rt-from-cases
@@ -505,6 +511,8 @@ class DataBase():
 
         return smoothed
 
+   def get_display(self):
+       return codisplay.CocoDisplay(self.db)
 
    def get_posteriors(self,sr, window=7, min_periods=1):
         # We create an array for every possible value of Rt

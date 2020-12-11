@@ -54,25 +54,29 @@ from shapely.ops import unary_union
 from PIL import Image, ImageDraw, ImageFont
 
 import matplotlib.pyplot as plt
-
+import datetime as dt
 width_height_default = [600,337] #337 magical value to avoid scroll menu in bokeh map
 class CocoDisplay():
     def __init__(self,db=None):
         verb("Init of CocoDisplay()")
+        self.database_name = db
         self.colors = itertools.cycle(Paired12)
         self.plot_width =  width_height_default[0]
         self.plot_height =  width_height_default[1]
-        if db:
-            self.db_citation = db.get_db()
-        self.all_available_display_keys=['where','which','what','date','plot_height','plot_width','title','bins','var_displayed']
+
+        self.all_available_display_keys=['where','which','what','date','when','plot_height','plot_width','title','bins','var_displayed',
+        'option','input','input_field']
         g=coge.GeoManager()
         g.set_standard('name')
         self.pandas_world = pd.DataFrame({'location':g.to_standard(['world'],interpret_region=True),
-                                    'which':np.nan,'cumul':np.nan,'diff':np.nan})
-        if db == None:
-            self.info = coge.GeoInfo()
-        else:
-            self.info = coge.GeoInfo(db.geo)
+                                    'which':np.nan,'cumul':np.nan,'diff':np.nan,'weekly':np.nan})
+        self.infoword = coge.GeoInfo()
+
+        c=coge.GeoCountry('FRA',True)
+        self.pandas_country = pd.DataFrame({'location':c.get_data()['code_subregion'],
+                                       'which':np.nan,'cumul':np.nan,'diff':np.nan,'weekly':np.nan})
+        self.infocountry = c
+
 
     def standard_input(self,mypandas,**kwargs):
         '''
@@ -85,8 +89,7 @@ class CocoDisplay():
         input_dico={}
         if 'where' in mypandas.columns:
             mypandas = mypandas.rename(columns={'where':'location'})
-        kwargs_test(kwargs,self.all_available_display_keys,
-        'Bad args used in the return_bkmap display function.')
+        kwargs_test(kwargs,self.all_available_display_keys,'Bad args used in the display function.')
         plot_width = kwargs.get('plot_width', self.plot_width)
         plot_height = kwargs.get('plot_height', self.plot_height)
         if plot_width != self.plot_width:
@@ -118,37 +121,33 @@ class CocoDisplay():
             if what not in ['daily','diff','cumul','weekly']:
                 raise CoaTypeError('what argument is not diff nor cumul. See help.')
             else:
-                var_displayed = what
-                if what == 'diff':
+                if what == 'daily' or what == 'diff':
                     titlebar = which + ' (' + 'day to day difference ' +  ' @ ' + when.strftime('%d/%m/%Y') + ')'
+                    what = 'diff'
                 if what == 'weekly':
                     titlebar = which + ' (' + 'daily rolling over 1 week' +  ' @ ' + when.strftime('%d/%m/%Y') + ')'
                 elif what == 'cumul':
                     titlebar = which + ' (' + 'cumulative sum ' +  ' @ ' + when.strftime('%d/%m/%Y') + ')'
-                else:
-                    titlebar = which + ' (' + what +  ' @ ' + when.strftime('%d/%m/%Y') + ')'
+                #else:
+                #    titlebar = which + ' (' + what +  ' @ ' + when.strftime('%d/%m/%Y') + ')'
+                var_displayed = what
 
         if title:
             titlebar = title
         input_dico['titlebar']=titlebar
         input_dico['var_displayed']=var_displayed
         input_dico['when']=when
-        input_dico['data_base'] = 'jhu'
-        if hasattr(mypandas,'data_base'):
-            self.db_citation = mypandas.data_base
-            input_dico['data_base'] = mypandas.data_base
-        else:
-            self.db_citation =  'jhu'
+        input_dico['data_base'] = self.database_name
         return mypandas, input_dico
 
-    def standardfig(self, **kwargs):
+    def standardfig(self,dbname=None,**kwargs):
          """
          Create a standard Bokeh figure, with pycoa.frlabel,used in all the bokeh charts
          """
          fig=figure(**kwargs,plot_width=self.plot_width,plot_height=self.plot_height,
          tools=['save','box_zoom,reset'],toolbar_location="right")
          logo_db_citation = Label(x=0.005*self.plot_width, y=0.01*self.plot_height, x_units='screen', y_units='screen',
-         text_font_size='1.5vh',text='©pycoa.fr (data from: {})'.format(self.db_citation))
+         text_font_size='1.5vh',text='©pycoa.fr (data from: {})'.format(self.database_name))
          fig.add_layout(logo_db_citation)
          return fig
 
@@ -190,7 +189,7 @@ class CocoDisplay():
            if dico['which']:
                input_field = dico['which']
            if dico['what']:
-               input_field = dico['what']
+               input_field = dico['var_displayed']
            if type(dico['which']) and type(dico['what'])  is None.__class__:
                CoaTypeError('What do you want me to do ?. No variable to histogram . See help.')
         else:
@@ -199,7 +198,6 @@ class CocoDisplay():
                 else:
                     text_input = '-'
                     text_input= text_input.join(input_field)
-                dico['titlebar'] = text_input + ' (@ ' + dico['when'].strftime('%d/%m/%Y') + ')'
 
         if not isinstance(input_field, list):
             input_field=[input_field]
@@ -589,7 +587,7 @@ class CocoDisplay():
             height_policy="auto",width_policy="auto",index_position=None)
         export_png(data_table, filename = pngfile)
 
-    def get_geodata(self,mypandas):
+    def get_geodata(self,mypandas,flag=None):
         '''
          return a GeoDataFrame used in map display (see map_bokeh and map_folium)
          Argument : mypandas, the pandas to be analysed. Only location or where columns
@@ -598,6 +596,7 @@ class CocoDisplay():
          geoid | location |  geometry (POLYGON or MULTIPOLYGON)
          Example :  get_geodata(d)
         '''
+
         if not isinstance(mypandas, pd.DataFrame):
                 raise CoaTypeError('Waiting for pandas input.See help.')
         else:
@@ -607,18 +606,43 @@ class CocoDisplay():
             if 'where' in mypandas.columns:
                 mypandas = mypandas.rename(columns={'where':'location'})
 
+        columns_keeped=''
         if not 'geometry' in mypandas.columns:
-            a = self.info.add_field(field=['geometry'],input=mypandas ,geofield='location')
-        else:
-            a = mypandas.copy()
+            if flag == 'spf':
+                data = gpd.GeoDataFrame(self.infocountry.add_field(input=mypandas,input_key='location',
+                field=['geometry','town_subregion','name_subregion']),crs="EPSG:4326")
+                columns_keeped = ['geoid','location','geometry','town_subregion','name_subregion']
+                meta_data = 'country'
+            else:
+                a = self.infoword.add_field(field=['geometry'],input=mypandas ,geofield='location')
+                data=gpd.GeoDataFrame(self.infoword.add_field(input=a,geofield='location',field=['country_name']),
+                crs="EPSG:4326")
+                columns_keeped = ['geoid','location','geometry']
+                meta_data = 'world'
 
-        data=gpd.GeoDataFrame(self.info.add_field(input=a,geofield='location',field=['country_name']),
-        crs="EPSG:4326")
         data = data.loc[data.geometry != None]
         data['geoid'] = data.index.astype(str)
-        data=data[['geoid','location','geometry']]
+        data=data[columns_keeped]
         data = data.set_index('geoid')
+        data.meta_geoinfo = meta_data
         return data
+
+    @staticmethod
+    def changeto_nonan_date(df=None,when=None,field=None):
+        value=np.nan
+        if np.isnan(value):
+            value=np.nan
+            j=0
+            while(np.isnan(value) == True):
+                value = np.nanmax(df.loc[df.date==when-dt.timedelta(days=j)][field])
+                j+=1
+            if j>1:
+                print(when, 'all the value seems to be nan! I will find an other previous date')
+                print("Here the date I will take:", when-dt.timedelta(days=j-1))
+            nonandata=when-dt.timedelta(days=j-1)
+        else:
+            nonandata = when
+        return  nonandata
 
     def bokeh_map(self,mypandas,input_field = None,**kwargs):
         """Create a Bokeh map from a pandas input
@@ -641,28 +665,47 @@ class CocoDisplay():
         else:
             input_field = input_field
 
+        flag = ''
+        minx, miny, maxx, maxy=0,0,0,0
+        if self.database_name == 'spf' or  self.database_name == 'opencovid19':
+            panda2map = self.pandas_country
+            name_displayed = 'town_subregion'
+            flag = 'spf'
+            #minx, miny, maxx, maxy=-5.77, 37.11, 9.56, 51.09
+        else:
+            panda2map = self.pandas_world
+            name_displayed = 'location'
+            #minx, miny, maxx, maxy=unary_union(geopdwd.geometry).bounds
+            flag = 'world'
+
         mypandas_filtered = mypandas.loc[(mypandas.date == dico['when'])]
+
+        if CocoDisplay.changeto_nonan_date(mypandas, dico['when'],input_field) != dico['when']:
+            dico['when'] = CocoDisplay.changeto_nonan_date(mypandas,dico['when'],input_field)
+            mypandas_filtered = mypandas.loc[(mypandas.date == dico['when'])]
+            dico['titlebar']+=' due to nan I shifted date to '+  dico['when'].strftime("%d/%m/%Y")
+
         mypandas_filtered = mypandas_filtered.drop(columns=['date'])
         my_countries = mypandas.location.to_list()
 
-        self.pandas_world = self.pandas_world.rename(columns={'which':dico['which']})
-        self.pandas_world = self.pandas_world[~self.pandas_world.location.isin(my_countries)]
-        self.pandas_world = self.pandas_world.append(mypandas_filtered)
+        panda2map = panda2map.rename(columns={'which':dico['which']})
+        panda2map = panda2map[~panda2map.location.isin(my_countries)]
+        panda2map = panda2map.append(mypandas_filtered)
 
-        geopdwd = self.get_geodata(self.pandas_world)
+        geopdwd = self.get_geodata(panda2map,flag)
         geopdwd = geopdwd#.to_crs('EPSG:3857')#+proj=wintri')
         geopdwd = geopdwd.reset_index()
-        geopdwd = pd.merge(geopdwd,self.pandas_world,on='location')
+        geopdwd = pd.merge(geopdwd,panda2map,on='location')
         geopdwd = geopdwd.set_index("geoid")
 
         merged_json = json.loads(geopdwd.to_json())
         json_data = json.dumps(merged_json)
-        geosourceword = GeoJSONDataSource(geojson = json_data)
-
-        geofiltered = self.get_geodata(mypandas_filtered)#.to_crs('EPSG:3857')
-        minx, miny, maxx, maxy=unary_union(geofiltered.geometry).bounds
+        geosource = GeoJSONDataSource(geojson = json_data)
+        minx, miny, maxx, maxy=unary_union(geopdwd.geometry).bounds
         standardfig = self.standardfig(title=dico['titlebar'], x_range=Range1d(minx, maxx), y_range=Range1d(miny, maxy))
-        standardfig.plot_height=dico['plot_height']+20
+        standardfig.plot_height=dico['plot_height']+100
+        standardfig.plot_width = dico['plot_width']-100
+
         min_col,max_col=CocoDisplay.min_max_range(0,np.nanmax(geopdwd[input_field]))
 
         #standardfig.add_tile(esri)
@@ -676,7 +719,7 @@ class CocoDisplay():
         standardfig.yaxis.visible = False
         standardfig.xgrid.grid_line_color = None
         standardfig.ygrid.grid_line_color = None
-        standardfig.patches('xs','ys', source = geosourceword,fill_color = {'field':input_field, 'transform' : color_mapper},
+        standardfig.patches('xs','ys', source = geosource,fill_color = {'field':input_field, 'transform' : color_mapper},
                   line_color = 'black', line_width = 0.25, fill_alpha = 1)
         cases_custom = CustomJSHover(code="""
         var value;
@@ -685,8 +728,8 @@ class CocoDisplay():
 
         """)
         standardfig.add_tools(HoverTool(
-        tooltips=[('location','@location'),(input_field,'@'+input_field+'{custom}'),],
-        formatters={'location':'printf','@'+input_field:cases_custom,},
+        tooltips=[(name_displayed,'@'+name_displayed),(input_field,'@'+input_field+'{custom}'),],
+        formatters={name_displayed:'printf','@'+input_field:cases_custom,},
         point_policy="follow_mouse"
         ))
 
@@ -719,16 +762,33 @@ class CocoDisplay():
            input_field = dico['var_displayed']
 
         mypandas_filtered = mypandas.loc[(mypandas.date == dico['when'])]
+        if CocoDisplay.changeto_nonan_date(mypandas, dico['when'],input_field) != dico['when']:
+            dico['when'] = CocoDisplay.changeto_nonan_date(mypandas,dico['when'],input_field)
+            mypandas_filtered = mypandas.loc[(mypandas.date == dico['when'])]
+            dico['titlebar']+=' due to nan I shifted date to '+  dico['when'].strftime("%d/%m/%Y")
+
         mypandas_filtered = mypandas_filtered.drop(columns=['date'])
 
-        geopdwd = self.get_geodata(mypandas_filtered)
+        flag = ''
+        if self.database_name == 'spf' or  self.database_name == 'opencovid19':
+            panda2map = self.pandas_country
+            flag = 'spf'
+            name_displayed = 'town_subregion'
+            zoom = 5
+        else:
+            panda2map = self.pandas_world
+            flag = 'world'
+            name_displayed = 'location'
+            zoom = 2
+
+        geopdwd = self.get_geodata(mypandas_filtered,flag)
         geopdwd = geopdwd.reset_index()
         geopdwd = pd.merge(geopdwd,mypandas_filtered,on='location')
         geopdwd = geopdwd.set_index("geoid")
         centroid=unary_union(geopdwd.geometry).centroid
 
         fig = Figure(width=self.plot_width, height=self.plot_height)
-        mapa = folium.Map(location=[centroid.y, centroid.x], zoom_start=2)
+        mapa = folium.Map(location=[centroid.y, centroid.x], zoom_start=zoom)
         fig.add_child(mapa)
 
         min_col,max_col=CocoDisplay.min_max_range(0,max(geopdwd[input_field]))
@@ -755,7 +815,7 @@ class CocoDisplay():
         W, H = (300,200)
         im = Image.new("RGBA",(W,H))
         draw = ImageDraw.Draw(im)
-        msg = "©pycoa.fr (data from: {})".format(dico['data_base'])
+        msg = "©pycoa.fr (data from: {})".format(self.database_name)
         w, h = draw.textsize(msg)
         fnt = ImageFont.truetype('/Library/Fonts/Arial.ttf', 12)
         draw.text((2,0), msg, font=fnt,fill=(0, 0, 0))
@@ -771,8 +831,8 @@ class CocoDisplay():
                 'color' : None,
             },
             highlight_function=lambda x: {'weight':2, 'color':'green'},
-            tooltip=folium.features.GeoJsonTooltip(fields=['location',input_field+'scientific_format'],
-                aliases=['location:',input_field+":"],
+            tooltip=folium.features.GeoJsonTooltip(fields=[name_displayed,input_field+'scientific_format'],
+                aliases=[name_displayed+':',input_field+":"],
                 style="""
                         background-color: #F0EFEF;
                         border: 2px solid black;

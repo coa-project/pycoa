@@ -51,8 +51,8 @@ _listwhom=['jhu',    # John Hopkins University first base, default
 _whom = _listwhom[0] # default base
 
 _db = coco.DataBase(_whom) # initialization with default
-_cocoplot = cd.CocoDisplay(_db)
-
+#_cocoplot = cd.CocoDisplay(_db)
+_cocoplot = _db.get_display()
 
 _listwhat=['cumul','diff',  # first one is default, nota:  we must avoid uppercases
             'daily',

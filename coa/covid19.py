@@ -136,7 +136,6 @@ class DataBase():
             info('Example of location : ',  ', '.join(random.choices(self.get_locations(), k=5)), ' ...')
             info('Last date data ', self.get_dates()[-1])
 
-
    def get_db(self):
         '''
         Return the Covid19 database selected, so far:

@@ -171,7 +171,7 @@ def get(**kwargs):
                 monotonous increasing.
                 is available. By default : no option.
     """
-    kwargs_test(kwargs,['where','what','which','whom','when','output','option','bins','title'],
+    kwargs_test(kwargs,['where','what','which','whom','when','output','option','bins','title','visu'],
             'Bad args used in the pycoa.get() function.')
 
     global _db,_whom

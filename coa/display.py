@@ -587,7 +587,7 @@ class CocoDisplay():
             height_policy="auto",width_policy="auto",index_position=None)
         export_png(data_table, filename = pngfile)
 
-    def get_geodata(self,mypandas,flag=None):
+    def get_geodata(self,mypandas):
         '''
          return a GeoDataFrame used in map display (see map_bokeh and map_folium)
          Argument : mypandas, the pandas to be analysed. Only location or where columns
@@ -608,7 +608,7 @@ class CocoDisplay():
 
         columns_keeped=''
         if not 'geometry' in mypandas.columns:
-            if flag == 'spf':
+            if self.database_name == 'spf' or self.database_name == 'opencovid19':
                 data = gpd.GeoDataFrame(self.infocountry.add_field(input=mypandas,input_key='location',
                 field=['geometry','town_subregion','name_subregion']),crs="EPSG:4326")
                 columns_keeped = ['geoid','location','geometry','town_subregion','name_subregion']
@@ -670,13 +670,11 @@ class CocoDisplay():
         if self.database_name == 'spf' or  self.database_name == 'opencovid19':
             panda2map = self.pandas_country
             name_displayed = 'town_subregion'
-            flag = 'spf'
             #minx, miny, maxx, maxy=-5.77, 37.11, 9.56, 51.09
         else:
             panda2map = self.pandas_world
             name_displayed = 'location'
             #minx, miny, maxx, maxy=unary_union(geopdwd.geometry).bounds
-            flag = 'world'
 
         mypandas_filtered = mypandas.loc[(mypandas.date == dico['when'])]
 
@@ -692,7 +690,7 @@ class CocoDisplay():
         panda2map = panda2map[~panda2map.location.isin(my_countries)]
         panda2map = panda2map.append(mypandas_filtered)
 
-        geopdwd = self.get_geodata(panda2map,flag)
+        geopdwd = self.get_geodata(panda2map)
         geopdwd = geopdwd#.to_crs('EPSG:3857')#+proj=wintri')
         geopdwd = geopdwd.reset_index()
         geopdwd = pd.merge(geopdwd,panda2map,on='location')
@@ -772,16 +770,14 @@ class CocoDisplay():
         flag = ''
         if self.database_name == 'spf' or  self.database_name == 'opencovid19':
             panda2map = self.pandas_country
-            flag = 'spf'
             name_displayed = 'town_subregion'
             zoom = 5
         else:
             panda2map = self.pandas_world
-            flag = 'world'
             name_displayed = 'location'
             zoom = 2
 
-        geopdwd = self.get_geodata(mypandas_filtered,flag)
+        geopdwd = self.get_geodata(mypandas_filtered)
         geopdwd = geopdwd.reset_index()
         geopdwd = pd.merge(geopdwd,mypandas_filtered,on='location')
         geopdwd = geopdwd.set_index("geoid")

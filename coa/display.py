@@ -670,11 +670,10 @@ class CocoDisplay():
         if self.database_name == 'spf' or  self.database_name == 'opencovid19':
             panda2map = self.pandas_country
             name_displayed = 'town_subregion'
-            #minx, miny, maxx, maxy=-5.77, 37.11, 9.56, 51.09
+            
         else:
             panda2map = self.pandas_world
             name_displayed = 'location'
-            #minx, miny, maxx, maxy=unary_union(geopdwd.geometry).bounds
 
         mypandas_filtered = mypandas.loc[(mypandas.date == dico['when'])]
 
@@ -685,6 +684,7 @@ class CocoDisplay():
 
         mypandas_filtered = mypandas_filtered.drop(columns=['date'])
         my_countries = mypandas.location.to_list()
+
 
         panda2map = panda2map.rename(columns={'which':dico['which']})
         panda2map = panda2map[~panda2map.location.isin(my_countries)]
@@ -699,8 +699,8 @@ class CocoDisplay():
         merged_json = json.loads(geopdwd.to_json())
         json_data = json.dumps(merged_json)
         geosource = GeoJSONDataSource(geojson = json_data)
-        minx, miny, maxx, maxy=unary_union(geopdwd.geometry).bounds
-        standardfig = self.standardfig(title=dico['titlebar'], x_range=Range1d(minx, maxx), y_range=Range1d(miny, maxy))
+        #minx, miny, maxx, maxy=unary_union(geopdwd.geometry).bounds
+        standardfig = self.standardfig(title=dico['titlebar'])#, x_range=Range1d(minx, maxx), y_range=Range1d(miny, maxy))
         standardfig.plot_height=dico['plot_height']+100
         standardfig.plot_width = dico['plot_width']-100
 

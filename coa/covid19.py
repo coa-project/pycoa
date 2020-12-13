@@ -112,11 +112,11 @@ class DataBase():
             elif self.db == 'opencovid19':
                 info('OPENCOVID19 selected ...')
                 rename={'maille_code':'location'}
-                #constraints = {'granularite':'departement'}
+                cast={'source_nom':'string','source_type':'string'}
                 drop_field  = {'granularite':['pays','monde','region']}
                 columns_skipped = ['granularite','maille_nom','source_nom','source_url','source_archive','source_type']
                 opencovid19 = self.csv_to_pandas_index_location_date('https://raw.githubusercontent.com/opencovid19-fr/data/master/dist/chiffres-cles.csv',
-                            drop_field=drop_field,rename_columns=rename,separator=',')
+                            drop_field=drop_field,rename_columns=rename,separator=',',cast=cast)
                 opencovid19 = opencovid19.reset_index()
                 opencovid19['location'] = opencovid19['location'].apply(lambda x: x.replace('COM-','').replace('DEP-',''))
                 opencovid19 = opencovid19.set_index('location','date')

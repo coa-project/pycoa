@@ -700,8 +700,14 @@ class CocoDisplay():
         json_data = json.dumps(merged_json)
         geosource = GeoJSONDataSource(geojson = json_data)
 
-        geobounds = geopdwd.loc[geopdwd.location.isin(my_countries)]
-        minx, miny, maxx, maxy=unary_union(geobounds.geometry).bounds
+        # slow version …
+        # geobounds = geopdwd.loc[geopdwd.location.isin(my_countries)]
+        # minx, miny, maxx, maxy=unary_union(geobounds.geometry).bounds 
+        # high speed version …
+        gbounds = (geopdwd.loc[geopdwd.location.isin(my_countries)]).bounds
+        maxx,maxy = gbounds.max()[['maxx','maxy']]
+        minx,miny = gbounds.min()[['minx','miny']]
+
         standardfig = self.standardfig(title=dico['titlebar'], x_range=Range1d(minx, maxx), y_range=Range1d(miny, maxy))
         standardfig.plot_height=dico['plot_height']+100
         standardfig.plot_width = dico['plot_width']-100

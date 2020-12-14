@@ -633,11 +633,14 @@ class GeoCountry():
 
     # Assuming zip file here
     _country_info_dict = {'FRA':'https://datanova.laposte.fr/explore/dataset/geoflar-departements-2015/download/?format=shp&timezone=Europe/Berlin&lang=fr',\
+                    'USA':'https://alicia.data.socrata.com/api/geospatial/jhnu-yfrj?method=export&format=Original'
                     }
 
     _source_dict = {'FRA':{'Basics':_country_info_dict['FRA'],\
                     'Subregion Flags':'http://sticker-departement.com/',\
                     'Region Flags':'https://fr.wikipedia.org/w/index.php?title=R%C3%A9gion_fran%C3%A7aise&oldid=177269957'},\
+                    'USA':{'Basics':_country_info_dict['USA'],\
+                    'Subregion informations':'https://en.wikipedia.org/wiki/List_of_states_and_territories_of_the_United_States'}
                     }
 
     def __init__(self,country=None,dense_geometry=False):
@@ -737,6 +740,21 @@ class GeoCountry():
                     tmp.append(g)
                 self._country_data['geometry']=tmp
 
+        # --- 'USA' case ---------------------------------------------------------------------------------------
+        elif self._country == 'USA':
+            self._country_data.rename(columns={\
+                'STATE_NAME':'name_subregion',\
+                'STATE_ABBR':'code_subregion',\
+                'SUB_REGION':'code_region'},\
+                inplace=True)
+            self._country_data['name_region'] = self._country_data['code_region']
+            self._country_data.drop(['DRAWSEQ','STATE_FIPS'],axis=1,inplace=True)
+
+            h_us=pd.read_html(get_local_from_url('https://en.wikipedia.org/wiki/List_of_states_and_territories_of_the_United_States',0))
+            h_us=h_us[0][h_us[0].columns[[1,2,5,7]]]
+            h_us.columns=['code_subregion','town_subregion','population_subregion','area_subregion']
+            self._country_data=self._country_data.merge(h_us,how='left',on='code_subregion')
+
     def get_source(self):
         """ Return informations about URL sources
         """
@@ -796,8 +814,13 @@ class GeoCountry():
                 if not isinstance(self._country_data_region,pd.DataFrame): # i.e. is None
                     col_reg=[c for c in self._country_data.columns.tolist() if '_region' in c]
                     col=col_reg.copy()
-                    col.append('code_subregion') # to get the list of subregion in region
                     col.append('geometry') # to merge the geometry of subregions
+                    for p in self.get_list_properties():
+                        if ('_subregion' in p) and pd.api.types.is_numeric_dtype(self._country_data[p]):
+                            col.append(p)
+                    if not 'code_subregion' in col:
+                        col.append('code_subregion') # to get the list of subregion in region
+
                     pr=self._country_data[col].copy()
                     pr['code_subregion']=pr.code_subregion.apply(lambda x: [x])
                     self._country_data_region=pr.dissolve(by=col_reg,aggfunc='sum').sort_values(by='code_region').reset_index()

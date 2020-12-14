@@ -124,7 +124,7 @@ class CocoDisplay():
         input_dico['title']=title
         if date:
             when = extract_dates(date)
-        titlebar = which + ' (@' + when.strftime('%d/%m/%Y') +')'
+        titlebar = which + ' (@' + when[1].strftime('%d/%m/%Y') +')'
         if what:
             if what not in ['daily','diff','cumul','weekly']:
                 raise CoaTypeError('what argument is not diff nor cumul. See help.')
@@ -144,7 +144,7 @@ class CocoDisplay():
             titlebar = title
         input_dico['titlebar']=titlebar
         input_dico['var_displayed']=var_displayed
-        input_dico['when']=when
+        input_dico['when']=when[1]
         input_dico['data_base'] = self.database_name
         return mypandas, input_dico
 
@@ -642,8 +642,8 @@ class CocoDisplay():
             value=np.nan
             j=0
             while(np.isnan(value) == True):
-                value = np.nanmax(df.loc[df.date==when-dt.timedelta(days=j)][field])
-                j+=1
+                    value = np.nanmax(df.loc[df.date==when-dt.timedelta(days=j)][field])
+                    j+=1
             if j>1:
                 print(when, 'all the value seems to be nan! I will find an other previous date')
                 print("Here the date I will take:", when-dt.timedelta(days=j-1))

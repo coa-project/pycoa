@@ -248,7 +248,7 @@ class CocoDisplay():
             panels.append(panel)
             standardfig.legend.background_fill_alpha = 0.6
 
-            standardfig.legend.location = "bottom_right"
+            standardfig.legend.location = "top_left"
 
             standardfig.xaxis.formatter = DatetimeTickFormatter(
                 days=["%d/%m/%y"], months=["%d/%m/%y"], years=["%b %Y"])

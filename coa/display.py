@@ -124,7 +124,8 @@ class CocoDisplay():
         input_dico['title']=title
         if date:
             when = extract_dates(date)
-        titlebar = which + ' (@' + when[1].strftime('%d/%m/%Y') +')'
+            when =  when[1]
+        titlebar = which + ' (@ ' + when.strftime('%d/%m/%Y') +')'
         if what:
             if what not in ['daily','diff','cumul','weekly']:
                 raise CoaTypeError('what argument is not diff nor cumul. See help.')
@@ -144,7 +145,7 @@ class CocoDisplay():
             titlebar = title
         input_dico['titlebar']=titlebar
         input_dico['var_displayed']=var_displayed
-        input_dico['when']=when[1]
+        input_dico['when']=when
         input_dico['data_base'] = self.database_name
         return mypandas, input_dico
 

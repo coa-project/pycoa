@@ -750,9 +750,21 @@ class GeoCountry():
             self._country_data['name_region'] = self._country_data['code_region']
             self._country_data.drop(['DRAWSEQ','STATE_FIPS'],axis=1,inplace=True)
 
-            h_us=pd.read_html(get_local_from_url('https://en.wikipedia.org/wiki/List_of_states_and_territories_of_the_United_States',0))
-            h_us=h_us[0][h_us[0].columns[[1,2,5,7]]]
-            h_us.columns=['code_subregion','town_subregion','population_subregion','area_subregion']
+            # Adding informations from wikipedia
+            f_us=open(get_local_from_url(self._source_dict['USA']['Subregion informations'],0), 'r')
+            content_us = f_us.read()
+            f_us.close()
+            soup_us = bs4.BeautifulSoup(content_us,'lxml')
+            for img in soup_us.find_all('img'):  # need to convert <img tags to src content for pandas_read
+                src=img.get('src')
+                if src[0] == '/':
+                    src='http:'+src
+                img.replace_with(src)
+
+            h_us=pd.read_html(str(soup_us)) # pandas read the modified html
+            h_us=h_us[0][h_us[0].columns[[0,1,2,5,7]]]
+            h_us.columns=['flag_subregion','code_subregion','town_subregion','population_subregion','area_subregion']
+            h_us['flag_subregion'] = [ h.split('\xa0')[0] for h in h_us['flag_subregion'] ]
             self._country_data=self._country_data.merge(h_us,how='left',on='code_subregion')
 
     def get_source(self):

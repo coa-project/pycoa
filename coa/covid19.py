@@ -116,7 +116,7 @@ class DataBase():
             elif self.db == 'opencovid19':
                 info('OPENCOVID19 selected ...')
                 rename={'maille_code':'location'}
-                cast={'source_nom':'string','source_type':'string'}
+                cast={'source_nom':'string'}
                 drop_field  = {'granularite':['pays','monde','region']}
                 columns_skipped = ['granularite','maille_nom','source_nom','source_url','source_archive','source_type']
                 opencovid19 = self.csv_to_pandas_index_location_date('https://raw.githubusercontent.com/opencovid19-fr/data/master/dist/chiffres-cles.csv',
@@ -223,7 +223,6 @@ class DataBase():
                 pandas_jhu_db = pandas_jhu_db.rename(columns={'Country_Region':'location'})
                 pandas_jhu_db = pandas_jhu_db.drop(columns=['UID','iso2','iso3','code3','FIPS',
                                     'Admin2','Province_State','Lat','Long_','Combined_Key'])
-
             pandas_jhu_db = pandas_jhu_db.sort_values(by=['location'])
             pandas_jhu_db = pandas_jhu_db.set_index('location')
             self.dates    = pandas.to_datetime(pandas_jhu_db.columns,errors='coerce')

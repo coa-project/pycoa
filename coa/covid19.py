@@ -41,7 +41,7 @@ class DataBase():
          Fill the pandas_datase
         '''
         verb("Init of covid19.DataBase()")
-        self.database_name=['jhu','spf','owid','opencovid19']
+        self.database_name=['jhu','owid','jhu-usa','spf','opencovid19']
         self.pandas_datase = {}
         self.available_keys_words=[]
         self.dates = []
@@ -54,14 +54,18 @@ class DataBase():
         self.db =  db_name
         if self.db == 'jhu' or  self.db == 'owid':
             self.geo = coge.GeoManager('name')
-        if self.db == 'opencovid19':
+        if self.db =='spf' or self.db == 'opencovid19':
             self.geo = coge.GeoCountry('FRA',True)
-
+        if self.db =='jhu-usa':
+            self.geo = coge.GeoCountry('USA',True)
         if self.db not in self.database_name:
             raise CoaDbError('Unknown ' + self.db + '. Available database so far in PyCoa are : ' + str(self.database_name) ,file=sys.stderr)
         else:
             if self.db == 'jhu':
                 info('JHU aka Johns Hopkins database selected ...')
+                self.pandas_datase = self.parse_convert_jhu()
+            if self.db == 'jhu-usa':
+                info('USA, JHU aka Johns Hopkins database selected ...')
                 self.pandas_datase = self.parse_convert_jhu()
             elif self.db == 'spf':
                 info('SPF aka Sante Publique France database selected ...')
@@ -197,17 +201,29 @@ class DataBase():
    def parse_convert_jhu(self):
         ''' For center for Systems Science and Engineering (CSSE) at Johns Hopkins University
             COVID-19 Data Repository by the see homepage: https://github.com/CSSEGISandData/COVID-19 '''
+
         self.database_url = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/"+\
-        "csse_covid_19_data/csse_covid_19_time_series/"
+                                "csse_covid_19_data/csse_covid_19_time_series/"
         jhu_files_ext = ['deaths', 'confirmed', 'recovered']
         pandas_jhu = {}
+        if self.db == 'jhu':
+            extansion =  "_global.csv"
+        else:
+            extansion = "_US.csv"
+            jhu_files_ext = ['confirmed','deaths']
         self.available_keys_words = jhu_files_ext
         for ext in jhu_files_ext:
-            fileName = "time_series_covid19_" + ext + "_global.csv"
+            fileName = "time_series_covid19_" + ext + extansion
             url = self.database_url + fileName
             pandas_jhu_db = pandas.read_csv(get_local_from_url(url,7200), sep = ',') # cached for 2 hours
-            pandas_jhu_db = pandas_jhu_db.drop(columns=['Province/State','Lat','Long'])
-            pandas_jhu_db = pandas_jhu_db.rename(columns={'Country/Region':'location'})
+            if self.db == 'jhu':
+                pandas_jhu_db = pandas_jhu_db.rename(columns={'Country/Region':'location'})
+                pandas_jhu_db = pandas_jhu_db.drop(columns=['Province/State','Lat','Long'])
+            else:
+                pandas_jhu_db = pandas_jhu_db.rename(columns={'Country_Region':'location'})
+                pandas_jhu_db = pandas_jhu_db.drop(columns=['UID','iso2','iso3','code3','FIPS',
+                                    'Admin2','Province_State','Lat','Long_','Combined_Key'])
+
             pandas_jhu_db = pandas_jhu_db.sort_values(by=['location'])
             pandas_jhu_db = pandas_jhu_db.set_index('location')
             self.dates    = pandas.to_datetime(pandas_jhu_db.columns,errors='coerce')
@@ -299,16 +315,19 @@ class DataBase():
                 self.dict_cumul_days[keys_words] = defaultdict(list)
                 self.dict_diff_days[keys_words] = defaultdict(list)
 
-                if self.db != 'jhu' : # needed since not same nb of rows for deaths,recovered and confirmed
+                if self.db != 'jhu' and self.db != 'jhu-usa': # needed since not same nb of rows for deaths,recovered and confirmed
                     if one_time_enough == False:
                         d_loc  = df[keys_words].to_dict('split')['index']
-                        if self.db == 'jhu' or self.db == 'owid' and one_time_enough == False:
+                        if self.db == 'owid' and one_time_enough == False:
                             d_loc=self.geo.to_standard(list(d_loc),output='list',db=self.get_db(),interpret_region=True)
+
                         one_time_enough = True
                 else :
                     d_loc  = df[keys_words].to_dict('split')['index']
-                    if self.db == 'jhu' or self.db == 'owid' and one_time_enough == False:
+                    if self.db == 'jhu' and one_time_enough == False:
                         d_loc=self.geo.to_standard(list(d_loc),output='list',db=self.get_db(),interpret_region=True)
+                    if self.db == 'jhu-usa' and one_time_enough == False:
+                        d_loc=self.geo.get_subregion_list()['code_subregion']
 
                 d_data = df[keys_words].to_dict('split')['data']
                 {self.dicos_countries[keys_words][loc].append(data) for loc,data in zip(d_loc,d_data)}
@@ -397,10 +416,6 @@ class DataBase():
         if not all(isinstance(c, str) for c in clist):
             raise CoaWhereError("Location via the where keyword should be given as strings. ")
 
-        if self.db == 'jhu' or self.db == 'owid':
-            self.geo.set_standard('name')
-            clist=self.geo.to_standard(clist,output='list',interpret_region=True)
-
         output = kwargs.get('output','pandas')
         process_data = kwargs.get('type', None)
 
@@ -408,7 +423,12 @@ class DataBase():
             raise CoaKeyError(kwargs['which']+' is not a available for' + self.db + 'database name. '
             'See get_available_keys_words() for the full list.')
 
-        if self.db == 'jhu' or self.db == 'owid':
+        if self.db == 'jhu' or self.db == 'owid' or self.db == 'jhu-usa':
+            if self.db == 'jhu-usa':
+                clist=self.geo.get_subregion_list()['code_subregion']
+            else:
+                self.geo.set_standard('name')
+                clist=self.geo.to_standard(clist,output='list',interpret_region=True)
             clist=list(set(clist)) # to suppress duplicate countrie
             diff_locations = list(set(clist) - set(self.get_locations()))
             clist = [i for i in clist if i not in diff_locations]
@@ -462,7 +482,6 @@ class DataBase():
                 'cumul':val2,
                 'diff': val3
                 }
-
             temp.append(pd.DataFrame(data))
             i+=1
 

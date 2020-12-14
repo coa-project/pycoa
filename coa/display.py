@@ -66,16 +66,24 @@ class CocoDisplay():
 
         self.all_available_display_keys=['where','which','what','date','when','plot_height','plot_width','title','bins','var_displayed',
         'option','input','input_field']
-        g=coge.GeoManager()
-        g.set_standard('name')
-        self.pandas_world = pd.DataFrame({'location':g.to_standard(['world'],interpret_region=True),
-                                    'which':np.nan,'cumul':np.nan,'diff':np.nan,'weekly':np.nan})
-        self.infoword = coge.GeoInfo()
 
-        c=coge.GeoCountry('FRA',True)
-        self.pandas_country = pd.DataFrame({'location':c.get_data()['code_subregion'],
-                                       'which':np.nan,'cumul':np.nan,'diff':np.nan,'weekly':np.nan})
-        self.infocountry = c
+        if self.database_name == 'jhu' or self.database_name == 'owid':
+            g=coge.GeoManager()
+            g.set_standard('name')
+            self.pandas_world = pd.DataFrame({'location':g.to_standard(['world'],interpret_region=True),
+                                    'which':np.nan,'cumul':np.nan,'diff':np.nan,'weekly':np.nan})
+            self.infoword = coge.GeoInfo()
+
+        if self.database_name == 'spf' or self.database_name == 'opencovid19':
+            c=coge.GeoCountry('FRA',True)
+            self.pandas_country = pd.DataFrame({'location':c.get_data()['code_subregion'],
+                                                   'which':np.nan,'cumul':np.nan,'diff':np.nan,'weekly':np.nan})
+            self.infocountry = c
+        if self.database_name == 'jhu-usa':
+            c=coge.GeoCountry('USA',True)
+            self.pandas_country = pd.DataFrame({'location':c.get_data()['code_subregion'],
+                                                   'which':np.nan,'cumul':np.nan,'diff':np.nan,'weekly':np.nan})
+            self.infocountry = c
 
 
     def standard_input(self,mypandas,**kwargs):
@@ -608,7 +616,7 @@ class CocoDisplay():
 
         columns_keeped=''
         if not 'geometry' in mypandas.columns:
-            if self.database_name == 'spf' or self.database_name == 'opencovid19':
+            if self.database_name == 'spf' or self.database_name == 'opencovid19' or self.database_name == 'jhu-usa':
                 data = gpd.GeoDataFrame(self.infocountry.add_field(input=mypandas,input_key='location',
                 field=['geometry','town_subregion','name_subregion']),crs="EPSG:4326")
                 columns_keeped = ['geoid','location','geometry','town_subregion','name_subregion']
@@ -667,7 +675,7 @@ class CocoDisplay():
 
         flag = ''
         minx, miny, maxx, maxy=0,0,0,0
-        if self.database_name == 'spf' or  self.database_name == 'opencovid19':
+        if self.database_name == 'spf' or  self.database_name == 'opencovid19' or self.database_name == 'jhu-usa':
             panda2map = self.pandas_country
             name_displayed = 'town_subregion'
 
@@ -700,8 +708,16 @@ class CocoDisplay():
         json_data = json.dumps(merged_json)
         geosource = GeoJSONDataSource(geojson = json_data)
 
-        geobounds = geopdwd.loc[geopdwd.location.isin(my_countries)]
-        minx, miny, maxx, maxy=unary_union(geobounds.geometry).bounds
+        #geobounds = geopdwd.loc[geopdwd.location.isin(my_countries)]
+        #minx, miny, maxx, maxy=unary_union(geobounds.geometry).bounds
+        # slow version …
+        # geobounds = geopdwd.loc[geopdwd.location.isin(my_countries)]
+        # minx, miny, maxx, maxy=unary_union(geobounds.geometry).bounds
+        # high speed version …
+        gbounds = (geopdwd.loc[geopdwd.location.isin(my_countries)]).bounds
+        maxx,maxy = gbounds.max()[['maxx','maxy']]
+        minx,miny = gbounds.min()[['minx','miny']]
+
         standardfig = self.standardfig(title=dico['titlebar'], x_range=Range1d(minx, maxx), y_range=Range1d(miny, maxy))
         standardfig.plot_height=dico['plot_height']+100
         standardfig.plot_width = dico['plot_width']-100
@@ -770,7 +786,7 @@ class CocoDisplay():
         mypandas_filtered = mypandas_filtered.drop(columns=['date'])
 
         flag = ''
-        if self.database_name == 'spf' or  self.database_name == 'opencovid19':
+        if self.database_name == 'spf' or  self.database_name == 'opencovid19' or self.database_name == 'jhu-usa':
             panda2map = self.pandas_country
             name_displayed = 'town_subregion'
             zoom = 5

@@ -445,6 +445,8 @@ class DataBase():
             currentout = np.array(currentout, dtype=float)
             for c in range(diffout.shape[0]):
                 yy = np.array(diffout[c, :], dtype=float)
+                where_nan = np.isnan(yy)
+                yy[where_nan] = 0.
                 for kk in np.where(yy < 0)[0]:
                     k = int(kk)
                     val_to_repart = -yy[k]

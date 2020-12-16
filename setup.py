@@ -27,33 +27,27 @@ setup(
     packages=['coa'],
     # Needed for dependencies
     install_requires=[ \
-        'altair',\
         #'base64',\ #std
         'bokeh',\
         'branca',\
         'bs4',\
         #'collections',\  # std
-        #'copy',\  std
         'datetime',\
         'folium',\
         'geopandas',\
-        'geopy',\
         #'getpass',\ #std
         #'inspect', \ #should be std
         #'io',\ #std
         #'itertools',\  #std
         #'json',\  #std
-        'Known',\
         #'math',\   #std
         'matplotlib',\
         'numpy',\
         #'os',\ # std
         'pandas',\
         #'PIL',\ #should be std
-        'plotly',\
         'pycountry',\
         'pycountry_convert',\
-        'pyproj',\
         #'random',\   #std
         'requests',\
         'scipy',\

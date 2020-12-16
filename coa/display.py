@@ -210,10 +210,10 @@ class CocoDisplay():
                 else:
                     text_input = '-'
                     text_input= text_input.join(input_field)
+                dico['titlebar'] = text_input + ' (@ ' + dico['when'].strftime('%d/%m/%Y') +')'
 
         if not isinstance(input_field, list):
             input_field=[input_field]
-
         if 'location' in mypandas.columns:
             tooltips='Location: @location <br> Date: @date{%F} <br>  $name: @$name'
             loc = mypandas['location'].unique()

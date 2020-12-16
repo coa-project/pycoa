@@ -531,7 +531,9 @@ class DataBase():
         return smoothed
 
    def get_display(self):
-       return codisplay.CocoDisplay(self.db)
+       co = None
+       co = codisplay.CocoDisplay(self.db)
+       return co
 
    def get_posteriors(self,sr, window=7, min_periods=1):
         # We create an array for every possible value of Rt

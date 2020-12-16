@@ -116,7 +116,7 @@ class DataBase():
             elif self.db == 'opencovid19':
                 info('OPENCOVID19 selected ...')
                 rename={'maille_code':'location'}
-                cast={'source_nom':'string'}
+                cast={'source_url':str,'source_archive':str,'source_type':str}
                 drop_field  = {'granularite':['pays','monde','region']}
                 columns_skipped = ['granularite','maille_nom','source_nom','source_url','source_archive','source_type']
                 opencovid19 = self.csv_to_pandas_index_location_date('https://raw.githubusercontent.com/opencovid19-fr/data/master/dist/chiffres-cles.csv',
@@ -445,6 +445,8 @@ class DataBase():
             currentout = np.array(currentout, dtype=float)
             for c in range(diffout.shape[0]):
                 yy = np.array(diffout[c, :], dtype=float)
+                where_nan = np.isnan(yy)
+                yy[where_nan] = 0.
                 for kk in np.where(yy < 0)[0]:
                     k = int(kk)
                     val_to_repart = -yy[k]
@@ -529,7 +531,9 @@ class DataBase():
         return smoothed
 
    def get_display(self):
-       return codisplay.CocoDisplay(self.db)
+       co = None
+       co = codisplay.CocoDisplay(self.db)
+       return co
 
    def get_posteriors(self,sr, window=7, min_periods=1):
         # We create an array for every possible value of Rt

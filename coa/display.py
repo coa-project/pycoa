@@ -695,10 +695,10 @@ class CocoDisplay():
             dico['titlebar']+=' due to nan I shifted date to '+  dico['when'].strftime("%d/%m/%Y")
 
         mypandas_filtered = mypandas_filtered.drop(columns=['date'])
-        my_countries = mypandas.location.to_list()
+        my_location = mypandas.location.to_list()
 
         panda2map = panda2map.rename(columns={'which':dico['which']})
-        panda2map = panda2map[~panda2map.location.isin(my_countries)]
+        panda2map = panda2map[~panda2map.location.isin(my_location)]
         panda2map = panda2map.append(mypandas_filtered)
 
         geopdwd = self.get_geodata(panda2map)
@@ -715,9 +715,7 @@ class CocoDisplay():
         # geobounds = geopdwd.loc[geopdwd.location.isin(my_countries)]
         # minx, miny, maxx, maxy=unary_union(geobounds.geometry).bounds
         # high speed version …
-        gbounds = (geopdwd.loc[geopdwd.location.isin(my_countries)]).bounds
-        maxx,maxy = gbounds.max()[['maxx','maxy']]
-        minx,miny = gbounds.min()[['minx','miny']]
+        minx, miny, maxx, maxy = (geopdwd.loc[geopdwd.location.isin(my_location)]).total_bounds
 
         standardfig = self.standardfig(title=dico['titlebar'], x_range=Range1d(minx, maxx), y_range=Range1d(miny, maxy))
         standardfig.plot_height=dico['plot_height']+100
@@ -789,8 +787,13 @@ class CocoDisplay():
         flag = ''
         if self.database_name == 'spf' or  self.database_name == 'opencovid19' or self.database_name == 'jhu-usa':
             panda2map = self.pandas_country
+            panda2map = panda2map.loc[(panda2map.location != '2A') & (panda2map.location != '2B')]
+            panda2map = panda2map.copy()
+            panda2map['location2']=pd.Series([int(i) for i in panda2map.location])
+            panda2map=panda2map.loc[lambda x: panda2map.location2 <100]
             name_displayed = 'town_subregion'
-            zoom = 5
+            my_c = mypandas.location.to_list()
+            zoom = 4
         else:
             panda2map = self.pandas_world
             name_displayed = 'location'
@@ -800,10 +803,12 @@ class CocoDisplay():
         geopdwd = geopdwd.reset_index()
         geopdwd = pd.merge(geopdwd,mypandas_filtered,on='location')
         geopdwd = geopdwd.set_index("geoid")
-        centroid=unary_union(geopdwd.geometry).centroid
 
+        my_location = panda2map.location.to_list()
+        minx, miny, maxx, maxy = (geopdwd.loc[geopdwd.location.isin(my_location)]).total_bounds
+
+        mapa = folium.Map(location=[ (maxy+miny)/2., (maxx+minx)/2.], zoom_start=zoom)
         fig = Figure(width=self.plot_width, height=self.plot_height)
-        mapa = folium.Map(location=[centroid.y, centroid.x], zoom_start=zoom)
         fig.add_child(mapa)
 
         min_col,max_col=CocoDisplay.min_max_range(0,max(geopdwd[input_field]))

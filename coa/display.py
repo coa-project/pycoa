@@ -116,7 +116,10 @@ class CocoDisplay():
         what = kwargs.get('what', None)
         input_dico['what']=what
 
-        which =  mypandas.columns[2]
+        if 'location' in mypandas:
+            which =  mypandas.columns[2]
+        else:
+            which =  mypandas.columns[1]
         input_dico['which']=which
         var_displayed=which
         when = mypandas.date.max()

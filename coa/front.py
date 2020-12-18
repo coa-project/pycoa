@@ -110,6 +110,7 @@ def setwhom(base):
             'See pycoa.listbase() for the full list.')
     if _whom != base:
         _db = coco.DataBase(base)
+        _whom = base
     return _db.get_available_keys_words()
 
 # ----------------------------------------------------------------------

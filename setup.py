@@ -27,37 +27,20 @@ setup(
     packages=['coa'],
     # Needed for dependencies
     install_requires=[ \
-        #'base64',\ #std
         'bokeh',\
         'branca',\
         'bs4',\
-        #'collections',\  # std
         'datetime',\
         'folium',\
         'geopandas',\
-        #'getpass',\ #std
-        #'inspect', \ #should be std
-        #'io',\ #std
-        #'itertools',\  #std
-        #'json',\  #std
-        #'math',\   #std
         'matplotlib',\
         'numpy',\
-        #'os',\ # std
         'pandas',\
-        #'PIL',\ #should be std
         'pycountry',\
         'pycountry_convert',\
-        #'random',\   #std
         'requests',\
         'scipy',\
         'shapely',\
-        #'sys',\   #std
-        #'tempfile', \ #std
-        #'time', \ #std
-        #'urllib', \
-        #'warnings',\  #std
-        #'zlib', \ #std
         ],
     # The license can be anything you like
     license='MIT',

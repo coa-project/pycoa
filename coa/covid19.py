@@ -28,7 +28,7 @@ from coa.error import *
 from scipy import stats as sps
 import random
 
-class DataBase():
+class DataBase(object):
    '''
    DataBase class
    Parse a Covid-19 database and filled the pandas python objet : pandas_datase
@@ -52,6 +52,8 @@ class DataBase():
         self.location_more_info={}
         self.database_columns_not_computed={}
         self.db =  db_name
+        self.set_display(self.db)
+
         if self.db == 'jhu' or  self.db == 'owid':
             self.geo = coge.GeoManager('name')
         if self.db =='spf' or self.db == 'opencovid19':
@@ -139,6 +141,11 @@ class DataBase():
             info('Available which key-words for: ',self.get_available_keys_words())
             info('Example of location : ',  ', '.join(random.choices(self.get_locations(), k=5)), ' ...')
             info('Last date data ', self.get_dates()[-1])
+
+   @staticmethod
+   def factory(db_name):
+       datab = DataBase(db_name)
+       return  datab,datab.get_display()
 
    def get_db(self):
         '''
@@ -531,9 +538,10 @@ class DataBase():
         return smoothed
 
    def get_display(self):
-       co = None
-       co = codisplay.CocoDisplay(self.db)
-       return co
+       return self.codisp
+
+   def set_display(self,db):
+       self.codisp = codisplay.CocoDisplay(db)
 
    def get_posteriors(self,sr, window=7, min_periods=1):
         # We create an array for every possible value of Rt

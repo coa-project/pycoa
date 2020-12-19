@@ -63,7 +63,6 @@ class CocoDisplay():
         self.colors = itertools.cycle(Paired12)
         self.plot_width =  width_height_default[0]
         self.plot_height =  width_height_default[1]
-
         self.all_available_display_keys=['where','which','what','date','when','plot_height','plot_width','title','bins','var_displayed',
         'option','input','input_field']
 
@@ -84,7 +83,6 @@ class CocoDisplay():
             self.pandas_country = pd.DataFrame({'location':c.get_data()['code_subregion'],
                                                    'which':np.nan,'cumul':np.nan,'diff':np.nan,'weekly':np.nan})
             self.infocountry = c
-
 
     def standard_input(self,mypandas,**kwargs):
         '''
@@ -150,6 +148,7 @@ class CocoDisplay():
         input_dico['var_displayed']=var_displayed
         input_dico['when']=when
         input_dico['data_base'] = self.database_name
+
         return mypandas, input_dico
 
     def standardfig(self,dbname=None,**kwargs):
@@ -159,7 +158,7 @@ class CocoDisplay():
          fig=figure(**kwargs,plot_width=self.plot_width,plot_height=self.plot_height,
          tools=['save','box_zoom,reset'],toolbar_location="right")
          logo_db_citation = Label(x=0.005*self.plot_width, y=0.01*self.plot_height, x_units='screen', y_units='screen',
-         text_font_size='1.5vh',text='©pycoa.fr (data from: {})'.format(self.database_name))
+                text_font_size='1.5vh',text='©pycoa.fr (data from: {})'.format(self.database_name))
          fig.add_layout(logo_db_citation)
          return fig
 
@@ -193,7 +192,6 @@ class CocoDisplay():
         HoverTool is available it returns location, date and value
         """
         mypandas,dico = self.standard_input(mypandas,**kwargs)
-
         dict_filter_data = defaultdict(list)
         tooltips='Date: @date{%F} <br>  $name: @$name'
 
@@ -234,7 +232,6 @@ class CocoDisplay():
         for axis_type in ["linear", "log"]:
             standardfig =  self.standardfig(y_axis_type=axis_type, x_axis_type='datetime',title= dico['titlebar'])
             standardfig.yaxis[0].formatter = PrintfTickFormatter(format="%4.2e")
-
             standardfig.add_tools(hover_tool)
             colors = itertools.cycle(Paired12)
             for i in input_field:
@@ -789,8 +786,9 @@ class CocoDisplay():
             panda2map = self.pandas_country
             panda2map = panda2map.loc[(panda2map.location != '2A') & (panda2map.location != '2B')]
             panda2map = panda2map.copy()
-            panda2map['location2']=pd.Series([int(i) for i in panda2map.location])
-            panda2map=panda2map.loc[lambda x: panda2map.location2 <100]
+            if self.database_name != 'jhu-usa':
+                panda2map['location2']=pd.Series([int(i) for i in panda2map.location])
+                panda2map=panda2map.loc[lambda x: panda2map.location2 <100]
             name_displayed = 'town_subregion'
             my_c = mypandas.location.to_list()
             zoom = 4

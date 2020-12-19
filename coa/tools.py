@@ -126,8 +126,10 @@ def extract_dates(when):
         if len(w) == 1:
             w1=check_valid_date(w[0])
         if len(w) > 1:
-            w1=check_valid_date(w[1])
-            w0=check_valid_date(w[0])
+            if w[1] != '':
+                w1=check_valid_date(w[1])
+            if w[0] != '':
+                w0=check_valid_date(w[0])
 
         if w0>w1:
             raise CoaTypeError("First date must occur before the second one.")

@@ -407,8 +407,8 @@ def map(**kwargs):
         raise CoaTypeError('Waiting input as valid pycoa pandas '
             'dataframe. See help.')
     if visu == 'bokeh':
-        return show(_cocoplot.bokeh_map(t,**kwargs))
+        return show(_cocoplot.bokeh_map(t,input_field=None,**kwargs))
     elif visu == 'folium':
-        return _cocoplot.map_folium(t,**kwargs)
+        return _cocoplot.map_folium(t,input_field=None,**kwargs)
     else:
         raise CoaTypeError('Waiting for a valid visualisation. So far: \'bokeh\' or \'folium\'.See help.')

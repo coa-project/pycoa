@@ -64,7 +64,7 @@ class CocoDisplay():
         self.plot_width =  width_height_default[0]
         self.plot_height =  width_height_default[1]
         self.all_available_display_keys=['where','which','what','when','title_temporal','plot_height','plot_width','title','bins','var_displayed',
-        'option','input','input_field']
+        'option','input','input_field','visu']
 
         if self.database_name == 'jhu' or self.database_name == 'owid':
             g=coge.GeoManager()
@@ -126,13 +126,16 @@ class CocoDisplay():
         when = kwargs.get('when', None)
         input_dico['when'] = when
         title_temporal=''
+        when_beg = mypandas.date.min()
+        when_end = mypandas.date.max()
         if when:
             input_dico['when']=when
-            when_beg,when_end = extract_dates(when)
+            when_beg, when_end = extract_dates(when)
             if when_beg == dt.datetime(1,1,1):
-                title_temporal =  ' (' + when_end.strftime('%d/%m/%Y') + ')'
-            else:
-                title_temporal =  ' (' + 'between ' + when_beg.strftime('%d/%m/%Y') +' and ' + when_end.strftime('%d/%m/%Y') + ')'
+                when_beg = mypandas.date.min()
+            if  when_end == '':
+                when_end = mypandas.date.min()
+        title_temporal =  ' (' + 'between ' + when_beg.strftime('%d/%m/%Y') +' and ' + when_end.strftime('%d/%m/%Y') + ')'
         #else:
         #    title_temporal =  mypandas['date'].max().strftime('%d/%m/%Y')
 
@@ -645,7 +648,7 @@ class CocoDisplay():
             else:
                 a = self.infoword.add_field(field=['geometry'],input=mypandas ,geofield='location')
                 data=gpd.GeoDataFrame(self.infoword.add_field(input=a,geofield='location',field=['country_name']),
-                crs='epsg:2957')#crs="EPSG:4326")
+                crs="EPSG:4326")
                 columns_keeped = ['geoid','location','geometry']
                 meta_data = 'world'
 
@@ -673,7 +676,7 @@ class CocoDisplay():
             nonandata = when_end
         return  nonandata
 
-    def bokeh_map(self,mypandas,**kwargs):
+    def bokeh_map(self,mypandas,input_field = None,**kwargs):
         """Create a Bokeh map from a pandas input
         Keyword arguments
         -----------------
@@ -690,12 +693,13 @@ class CocoDisplay():
           - plot_width, plot_height (default [500,400]): bokeh variable for map size
         Known issue: can not avoid to display value when there are Nan values
         """
-        #esri = get_provider(WIKIMEDIA)
-
         mypandas,dico = self.standard_input(mypandas,**kwargs)
-        input_field = dico['var_displayed']
 
-        flag = ''
+        if type(input_field) is None.__class__:
+           input_field = dico['var_displayed']
+        else:
+            input_field = input_field
+
         minx, miny, maxx, maxy=0,0,0,0
         if self.database_name == 'spf' or  self.database_name == 'opencovid19' or self.database_name == 'jhu-usa':
             panda2map = self.pandas_country
@@ -772,7 +776,7 @@ class CocoDisplay():
 
         return standardfig
 
-    def map_folium(self,mypandas,**kwargs):
+    def map_folium(self,mypandas,input_field=None,**kwargs):
         """Create a Folium map from a pandas input
         Folium limite so far:
             - scale format can not be changed (no way to use scientific notation)
@@ -810,8 +814,6 @@ class CocoDisplay():
             dico['titlebar']+=' due to nan I shifted date to '+  when_end.strftime("%d/%m/%Y")
 
         mypandas_filtered = mypandas_filtered.drop(columns=['date'])
-
-        flag = ''
         if self.database_name == 'spf' or  self.database_name == 'opencovid19' or self.database_name == 'jhu-usa':
             panda2map = self.pandas_country
             panda2map = panda2map.loc[(panda2map.location != '2A') & (panda2map.location != '2B')]
@@ -826,6 +828,7 @@ class CocoDisplay():
             panda2map = self.pandas_world
             name_displayed = 'location'
             zoom = 2
+
 
         geopdwd = self.get_geodata(mypandas_filtered)
         geopdwd = geopdwd.reset_index()

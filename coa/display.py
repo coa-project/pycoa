@@ -55,7 +55,7 @@ from PIL import Image, ImageDraw, ImageFont
 
 import matplotlib.pyplot as plt
 import datetime as dt
-width_height_default = [600,337] #337 magical value to avoid scroll menu in bokeh map
+width_height_default = [680,330] #337 magical value to avoid scroll menu in bokeh map
 class CocoDisplay():
     def __init__(self,db=None):
         verb("Init of CocoDisplay()")
@@ -63,7 +63,7 @@ class CocoDisplay():
         self.colors = itertools.cycle(Paired12)
         self.plot_width =  width_height_default[0]
         self.plot_height =  width_height_default[1]
-        self.all_available_display_keys=['where','which','what','date','when','plot_height','plot_width','title','bins','var_displayed',
+        self.all_available_display_keys=['where','which','what','when','title_temporal','plot_height','plot_width','title','bins','var_displayed',
         'option','input','input_field']
 
         if self.database_name == 'jhu' or self.database_name == 'owid':
@@ -89,7 +89,7 @@ class CocoDisplay():
         Parse a standard input, return :
             - pandas: with location keyword (eventually force a column named 'where' to 'location')
             - dico:
-                * keys = [plot_width, plot_width, titlebar, date, when, bins, what, which, var_displayed]
+                * keys = [plot_width, plot_width, titlebar, when, title_temporal,bins, what, which, var_displayed]
         Note that method used only the needed variables, some of them are useless
         '''
         input_dico={}
@@ -105,7 +105,6 @@ class CocoDisplay():
         input_dico['plot_width']=plot_width
         input_dico['plot_height']=plot_height
 
-        date = kwargs.get('date', None)
         bins = kwargs.get('bins',50)
         if bins != 50:
             bins = bins
@@ -118,26 +117,38 @@ class CocoDisplay():
             which =  mypandas.columns[2]
         else:
             which =  mypandas.columns[1]
+
         input_dico['which']=which
         var_displayed=which
-        when = mypandas.date.max()
+
         title = kwargs.get('title', None)
         input_dico['title']=title
-        if date:
-            when = extract_dates(date)
-            when =  when[1]
-        titlebar = which + ' (@ ' + when.strftime('%d/%m/%Y') +')'
+        when = kwargs.get('when', None)
+        input_dico['when'] = when
+        title_temporal=''
+        if when:
+            input_dico['when']=when
+            when_beg,when_end = extract_dates(when)
+            if when_beg == dt.datetime(1,1,1):
+                title_temporal =  ' (' + when_end.strftime('%d/%m/%Y') + ')'
+            else:
+                title_temporal =  ' (' + 'between ' + when_beg.strftime('%d/%m/%Y') +' and ' + when_end.strftime('%d/%m/%Y') + ')'
+        #else:
+        #    title_temporal =  mypandas['date'].max().strftime('%d/%m/%Y')
+
+        input_dico['title_temporal'] = title_temporal
+        titlebar = which + title_temporal
         if what:
             if what not in ['daily','diff','cumul','weekly']:
                 raise CoaTypeError('what argument is not diff nor cumul. See help.')
             else:
                 if what == 'daily' or what == 'diff':
-                    titlebar = which + ' (' + 'day to day difference ' +  ' @ ' + when.strftime('%d/%m/%Y') + ')'
+                    titlebar = which + ', ' + 'day to day difference ' +  title_temporal
                     what = 'diff'
                 if what == 'weekly':
-                    titlebar = which + ' (' + 'daily rolling over 1 week' +  ' @ ' + when.strftime('%d/%m/%Y') + ')'
+                    titlebar = which + ', ' + 'daily rolling over 1 week' + title_temporal
                 elif what == 'cumul':
-                    titlebar = which + ' (' + 'cumulative sum ' +  ' @ ' + when.strftime('%d/%m/%Y') + ')'
+                    titlebar = which + ', ' + 'cumulative sum ' +  title_temporal
                 #else:
                 #    titlebar = which + ' (' + what +  ' @ ' + when.strftime('%d/%m/%Y') + ')'
                 var_displayed = what
@@ -146,7 +157,6 @@ class CocoDisplay():
             titlebar = title
         input_dico['titlebar']=titlebar
         input_dico['var_displayed']=var_displayed
-        input_dico['when']=when
         input_dico['data_base'] = self.database_name
 
         return mypandas, input_dico
@@ -157,8 +167,9 @@ class CocoDisplay():
          """
          fig=figure(**kwargs,plot_width=self.plot_width,plot_height=self.plot_height,
          tools=['save','box_zoom,reset'],toolbar_location="right")
-         logo_db_citation = Label(x=0.005*self.plot_width, y=0.01*self.plot_height, x_units='screen', y_units='screen',
-                text_font_size='1.5vh',text='©pycoa.fr (data from: {})'.format(self.database_name))
+         logo_db_citation = Label(x=0.005*self.plot_width, y=0.01*self.plot_height, x_units='screen',
+          y_units='screen',text_font_size='1.5vh',background_fill_color='white', background_fill_alpha=.75,
+          text='©pycoa.fr (data from: {})'.format(self.database_name))
          fig.add_layout(logo_db_citation)
          return fig
 
@@ -208,7 +219,8 @@ class CocoDisplay():
                 else:
                     text_input = '-'
                     text_input= text_input.join(input_field)
-                dico['titlebar'] = text_input + ' (@ ' + dico['when'].strftime('%d/%m/%Y') +')'
+
+                dico['titlebar'] = text_input + ' (@ ' + dico['title_temporal'] +')'
 
         if not isinstance(input_field, list):
             input_field=[input_field]
@@ -217,8 +229,16 @@ class CocoDisplay():
             loc = mypandas['location'].unique()
             shorten_loc = [ i if len(i)<15 else i.replace('-',' ').split()[0]+'...'+i.replace('-',' ').split()[-1] for i in loc]
             for i in input_field:
+                if dico['when']:
+                    when_beg,when_end=extract_dates(dico['when'])
+                    if when_beg == dt.datetime(1,1,1):
+                        when_beg = mypandas['date'].min()
+                else:
+                    when_beg,when_end = mypandas['date'].min(), mypandas['date'].max()
+
                 dict_filter_data[i] =  \
-                    dict(mypandas.loc[(mypandas['location'].isin(loc)) & (mypandas['date']<=dico['when']) ].groupby('location').__iter__())
+                    dict(mypandas.loc[(mypandas['location'].isin(loc)) &
+                                     (mypandas['date']>=when_beg) & (mypandas['date']<=when_end) ].groupby('location').__iter__())
                 for j in range(len(loc)):
                     dict_filter_data[i][shorten_loc[j]] = dict_filter_data[i].pop(loc[j])
 
@@ -314,29 +334,26 @@ class CocoDisplay():
         title: title for the figure , no title by default
         width_height : as a list of width and height of the histo, default [500,400]
         bins : number of bins of the hitogram default 50
-        date : - default None
-               Value at the last date (from database point of view) and for all the location defined in
-               the pandas will be computed
-               - date
-               Value at date (from database point of view) and for all the location defined in the pandas
-               will be computed
-               - 'all'
-               Value for all the date and for all the location will be computed
+        when : - default None
+                dates are given under the format dd/mm/yyyy. In the when
+                option, one can give one date which will be the end of
+                the data slice. Or one can give two dates separated with
+                ":", which will define the time cut for the output data
+                btw those two dates.
+
         Note
         -----------------
-        HoverTool is available it returns position of the middle of the bin and the value. In the case where
-        date='all' i.e all the date for all the location then location name is provided
+        HoverTool is available it returns position of the middle of the bin and the value.
         """
         mypandas,dico = self.standard_input(mypandas,**kwargs)
         dict_histo = defaultdict(list)
 
         if type(input_field) is None.__class__:
-           if dico['which']:
-               input_field = dico['which']
-           if dico['what']:
-               input_field = dico['what']
+           input_field = dico['var_displayed']
            if type(dico['which']) and type(dico['what'])  is None.__class__:
                CoaTypeError('What do you want me to do ?. No variable to histogram . See help.')
+        else:
+            input_field = input_field
 
         if 'location' in mypandas.columns:
             tooltips='Value at around @middle_bin : @val'
@@ -357,11 +374,15 @@ class CocoDisplay():
 
             val_per_country = defaultdict(list)
             for w in loc:
-               retrieved_at = mypandas.loc[(mypandas['date'] == dico['when'])]
-               if retrieved_at.empty:
-                   raise CoaTypeError('Noting to retrieve at this date:', dico['when'])
+               if dico['when']:
+                    when_beg,when_end=extract_dates(dico['when'])
                else:
-                   val = mypandas.loc[(mypandas['location'] == w) & (mypandas['date'] == dico['when'])][input_field].values
+                    when_beg,when_end = mypandas['date'].min(), mypandas['date'].max()
+               retrieved_at = mypandas.loc[(mypandas['date'] == when_end)]
+               if retrieved_at.empty:
+                   raise CoaTypeError('Noting to retrieve at this date:', when_end)
+               else:
+                   val = mypandas.loc[(mypandas['location'] == w) & (mypandas['date'] ==  when_end)][input_field].values
                    #val_per_country.append(val)
                val_per_country[w]=val
 
@@ -625,7 +646,7 @@ class CocoDisplay():
             else:
                 a = self.infoword.add_field(field=['geometry'],input=mypandas ,geofield='location')
                 data=gpd.GeoDataFrame(self.infoword.add_field(input=a,geofield='location',field=['country_name']),
-                crs="EPSG:4326")
+                crs='epsg:2957')#crs="EPSG:4326")
                 columns_keeped = ['geoid','location','geometry']
                 meta_data = 'world'
 
@@ -637,20 +658,20 @@ class CocoDisplay():
         return data
 
     @staticmethod
-    def changeto_nonan_date(df=None,when=None,field=None):
+    def changeto_nonan_date(df=None,when_end=None,field=None):
         value=np.nan
         if np.isnan(value):
             value=np.nan
             j=0
             while(np.isnan(value) == True):
-                    value = np.nanmax(df.loc[df.date==when-dt.timedelta(days=j)][field])
+                    value = np.nanmax(df.loc[df.date == when_end-dt.timedelta(days=j)][field])
                     j+=1
             if j>1:
-                print(when, 'all the value seems to be nan! I will find an other previous date')
-                print("Here the date I will take:", when-dt.timedelta(days=j-1))
-            nonandata=when-dt.timedelta(days=j-1)
+                print(when_end, 'all the value seems to be nan! I will find an other previous date')
+                print("Here the date I will take:", when_end-dt.timedelta(days=j-1))
+            nonandata=when_end-dt.timedelta(days=j-1)
         else:
-            nonandata = when
+            nonandata = when_end
         return  nonandata
 
     def bokeh_map(self,mypandas,input_field = None,**kwargs):
@@ -661,7 +682,12 @@ class CocoDisplay():
         Input parameters:
           - what (default:None) at precise date: by default get_which() set in get_stats()
            could be 'diff' or cumul
-          - date (default:None): at which date data would be seen
+          - when   --   dates are given under the format dd/mm/yyyy. In the when
+                          option, one can give one date which will be the end of
+                          the data slice. Or one can give two dates separated with
+                          ":", which will define the time cut for the output data
+                          btw those two dates.
+                         Only the when_end date is taking into account [:dd/mm/yyyy]
           - plot_width, plot_height (default [500,400]): bokeh variable for map size
         Known issue: can not avoid to display value when there are Nan values
         """
@@ -684,12 +710,16 @@ class CocoDisplay():
             panda2map = self.pandas_world
             name_displayed = 'location'
 
-        mypandas_filtered = mypandas.loc[(mypandas.date == dico['when'])]
+        if dico['when']:
+            when_beg,when_end=extract_dates(dico['when'])
+        else:
+            when_end = mypandas.date.max()
+        mypandas_filtered = mypandas.loc[mypandas.date == when_end]
 
-        if CocoDisplay.changeto_nonan_date(mypandas, dico['when'],input_field) != dico['when']:
-            dico['when'] = CocoDisplay.changeto_nonan_date(mypandas,dico['when'],input_field)
-            mypandas_filtered = mypandas.loc[(mypandas.date == dico['when'])]
-            dico['titlebar']+=' due to nan I shifted date to '+  dico['when'].strftime("%d/%m/%Y")
+        if CocoDisplay.changeto_nonan_date(mypandas, when_end,input_field) != when_end:
+            when_end = CocoDisplay.changeto_nonan_date(mypandas,when_end,input_field)
+            mypandas_filtered = mypandas.loc[(mypandas.date == when_end)]
+            dico['titlebar']+=' due to nan I shifted date to '+  when_end.strftime("%d/%m/%Y")
 
         mypandas_filtered = mypandas_filtered.drop(columns=['date'])
         my_location = mypandas.location.to_list()
@@ -715,8 +745,9 @@ class CocoDisplay():
         minx, miny, maxx, maxy = (geopdwd.loc[geopdwd.location.isin(my_location)]).total_bounds
 
         standardfig = self.standardfig(title=dico['titlebar'], x_range=Range1d(minx, maxx), y_range=Range1d(miny, maxy))
-        standardfig.plot_height=dico['plot_height']+100
-        standardfig.plot_width = dico['plot_width']-100
+        if self.database_name == 'spf' or  self.database_name == 'opencovid19' or self.database_name == 'jhu-usa':
+            standardfig.plot_height = dico['plot_height'] + 100
+            standardfig.plot_width  = dico['plot_width'] - 100
 
         min_col,max_col=CocoDisplay.min_max_range(0,np.nanmax(geopdwd[input_field]))
 
@@ -759,12 +790,12 @@ class CocoDisplay():
         which_data: variable from pandas data. If pandas is produced from pycoa get_stat method
         then 'diff' and 'cumul' can be also used
         width_height : as a list of width and height of the histo, default [500,400]
-        date : - default 'None'
-               Value at the last date (from database point of view) and for all the location defined in
-               the pandas will be computed
-               - date
-               Value at date (from database point of view) and for all the location defined in the pandas
-               will be computed
+        when   --   dates are given under the format dd/mm/yyyy. In the when
+                        option, one can give one date which will be the end of
+                        the data slice. Or one can give two dates separated with
+                        ":", which will define the time cut for the output data
+                        btw those two dates.
+                    only the when_end date is taking into account [:dd/mm/yyyy]
         Known issue: format for scale can not be changed. When data value are important
         overlaped display appear
         """
@@ -773,11 +804,17 @@ class CocoDisplay():
         if type(input_field) is None.__class__:
            input_field = dico['var_displayed']
 
-        mypandas_filtered = mypandas.loc[(mypandas.date == dico['when'])]
-        if CocoDisplay.changeto_nonan_date(mypandas, dico['when'],input_field) != dico['when']:
-            dico['when'] = CocoDisplay.changeto_nonan_date(mypandas,dico['when'],input_field)
-            mypandas_filtered = mypandas.loc[(mypandas.date == dico['when'])]
-            dico['titlebar']+=' due to nan I shifted date to '+  dico['when'].strftime("%d/%m/%Y")
+        if dico['when']:
+            when_beg,when_end=extract_dates(dico['when'])
+        else:
+            when_end = mypandas.date.max()
+        mypandas_filtered = mypandas.loc[mypandas.date == when_end]
+
+        mypandas_filtered = mypandas.loc[(mypandas.date == when_end)]
+        if CocoDisplay.changeto_nonan_date(mypandas, when_end,input_field) != when_end:
+            when_end = CocoDisplay.changeto_nonan_date(mypandas,when_end,input_field)
+            mypandas_filtered = mypandas.loc[(mypandas.date == when_end)]
+            dico['titlebar']+=' due to nan I shifted date to '+  when_end.strftime("%d/%m/%Y")
 
         mypandas_filtered = mypandas_filtered.drop(columns=['date'])
 

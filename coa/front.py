@@ -407,6 +407,7 @@ def map(**kwargs):
     if what:
         field = what
     visu=kwargs.get('visu','bokeh')
+    print(kwargs)
     if isinstance(input_arg,pd.DataFrame):
         t=input_arg
         which=kwargs.get('input_field',listwhich()[0])

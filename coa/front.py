@@ -313,12 +313,6 @@ def decoplot(func):
         else:
             raise CoaTypeError('Waiting input as valid pycoa pandas '
                     'dataframe. See help.')
-
-        to_plot = which
-        #if what :
-        #    if what == 'daily':
-        #        what = 'diff'
-        #    to_plot = what
         return func(t,**kwargs)
     return generic_plot
 
@@ -383,9 +377,6 @@ def hist(**kwargs):
 
     bins=kwargs.get('bins',None)
     date=kwargs.get('date',None)
-    #if what:
-    #    if what == 'cumul' and _whom == 'jhu':
-    #        kwargs['what'] = None
     fig=_cocoplot.pycoa_histo(t,**kwargs)
     show(fig)
 
@@ -397,34 +388,27 @@ def map(**kwargs):
     """Create a map according to arguments and options.
     See help(hist).
     """
-    kwargs_test(kwargs,['where','what','which','whom','when','input','input_field','visu'],
+    kwargs_test(kwargs,['where','what','which','whom','when','input','visu'],
             'Bad args used in the pycoa.map() function.')
-
     which=''
     input_arg=kwargs.get('input',None)
     where=kwargs.get('where',None)
     what=kwargs.get('what',None)
-    if what:
-        field = what
     visu=kwargs.get('visu','bokeh')
-    print(kwargs)
+
     if isinstance(input_arg,pd.DataFrame):
         t=input_arg
         which=kwargs.get('input_field',listwhich()[0])
-        field = which
         which+='/cumul'
     elif input_arg==None:
         t=get(**kwargs,output='pandas')
         which=kwargs.get('which',listwhich()[0])
-        field = which
-        if what == 'weekly' or what== 'daily':
-            kwargs['what'] = None
     else:
         raise CoaTypeError('Waiting input as valid pycoa pandas '
             'dataframe. See help.')
     if visu == 'bokeh':
-        return show(_cocoplot.bokeh_map(t,input_field=field))
+        return show(_cocoplot.bokeh_map(t,**kwargs))
     elif visu == 'folium':
-        return _cocoplot.map_folium(t,input_field=field)
+        return _cocoplot.map_folium(t,**kwargs)
     else:
         raise CoaTypeError('Waiting for a valid visualisation. So far: \'bokeh\' or \'folium\'.See help.')

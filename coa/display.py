@@ -139,19 +139,19 @@ class CocoDisplay():
         input_dico['title_temporal'] = title_temporal
         titlebar = which + title_temporal
         if what:
-            if what not in ['daily','diff','cumul','weekly']:
-                raise CoaTypeError('what argument is not diff nor cumul. See help.')
+            if what == 'daily' or what == 'diff':
+                titlebar = which + ', ' + 'day to day difference ' +  title_temporal
+                what = 'diff'
+            elif what == 'weekly':
+                titlebar = which + ', ' + 'daily rolling over 1 week' + title_temporal
+            elif what == 'cumul':
+                titlebar = which + ', ' + 'cumulative sum ' +  title_temporal
             else:
-                if what == 'daily' or what == 'diff':
-                    titlebar = which + ', ' + 'day to day difference ' +  title_temporal
-                    what = 'diff'
-                if what == 'weekly':
-                    titlebar = which + ', ' + 'daily rolling over 1 week' + title_temporal
-                elif what == 'cumul':
-                    titlebar = which + ', ' + 'cumulative sum ' +  title_temporal
+                raise CoaTypeError('what argument is not daily, diff, cumul nor weekly . See help.')
                 #else:
                 #    titlebar = which + ' (' + what +  ' @ ' + when.strftime('%d/%m/%Y') + ')'
-                var_displayed = what
+            var_displayed = what
+
 
         if title:
             titlebar = title
@@ -347,7 +347,6 @@ class CocoDisplay():
         """
         mypandas,dico = self.standard_input(mypandas,**kwargs)
         dict_histo = defaultdict(list)
-
         if type(input_field) is None.__class__:
            input_field = dico['var_displayed']
            if type(dico['which']) and type(dico['what'])  is None.__class__:
@@ -674,7 +673,7 @@ class CocoDisplay():
             nonandata = when_end
         return  nonandata
 
-    def bokeh_map(self,mypandas,input_field = None,**kwargs):
+    def bokeh_map(self,mypandas,**kwargs):
         """Create a Bokeh map from a pandas input
         Keyword arguments
         -----------------
@@ -694,18 +693,13 @@ class CocoDisplay():
         #esri = get_provider(WIKIMEDIA)
 
         mypandas,dico = self.standard_input(mypandas,**kwargs)
-
-        if type(input_field) is None.__class__:
-           input_field = dico['var_displayed']
-        else:
-            input_field = input_field
+        input_field = dico['var_displayed']
 
         flag = ''
         minx, miny, maxx, maxy=0,0,0,0
         if self.database_name == 'spf' or  self.database_name == 'opencovid19' or self.database_name == 'jhu-usa':
             panda2map = self.pandas_country
             name_displayed = 'town_subregion'
-
         else:
             panda2map = self.pandas_world
             name_displayed = 'location'
@@ -778,7 +772,7 @@ class CocoDisplay():
 
         return standardfig
 
-    def map_folium(self,mypandas,input_field = None,**kwargs):
+    def map_folium(self,mypandas,**kwargs):
         """Create a Folium map from a pandas input
         Folium limite so far:
             - scale format can not be changed (no way to use scientific notation)
@@ -801,8 +795,7 @@ class CocoDisplay():
         """
         mypandas,dico = self.standard_input(mypandas,**kwargs)
 
-        if type(input_field) is None.__class__:
-           input_field = dico['var_displayed']
+        input_field = dico['var_displayed']
 
         if dico['when']:
             when_beg,when_end=extract_dates(dico['when'])

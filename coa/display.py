@@ -84,7 +84,7 @@ class CocoDisplay():
                                                    'which':np.nan,'cumul':np.nan,'diff':np.nan,'weekly':np.nan})
             self.infocountry = c
 
-    def standard_input(self,mypandas,**kwargs):
+    def standard_input(self,mypandas,input_field=None,**kwargs):
         '''
         Parse a standard input, return :
             - pandas: with location keyword (eventually force a column named 'where' to 'location')
@@ -141,20 +141,24 @@ class CocoDisplay():
 
         input_dico['title_temporal'] = title_temporal
         titlebar = which + title_temporal
-        if what:
-            if what == 'daily' or what == 'diff':
-                titlebar = which + ', ' + 'day to day difference ' +  title_temporal
-                what = 'diff'
-            elif what == 'weekly':
-                titlebar = which + ', ' + 'daily rolling over 1 week' + title_temporal
-            elif what == 'cumul':
-                titlebar = which + ', ' + 'cumulative sum ' +  title_temporal
-            else:
-                raise CoaTypeError('what argument is not daily, diff, cumul nor weekly . See help.')
-                #else:
-                #    titlebar = which + ' (' + what +  ' @ ' + when.strftime('%d/%m/%Y') + ')'
-            var_displayed = what
 
+        if input_field:
+            titlebar = input_field + ', ' + 'cumulative sum ' +  title_temporal
+            input_dico['input_field'] = input_field
+        else:
+            if what:
+                if what == 'daily' or what == 'diff':
+                    titlebar = which + ', ' + 'day to day difference ' +  title_temporal
+                    what = 'diff'
+                elif what == 'weekly':
+                    titlebar = which + ', ' + 'daily rolling over 1 week' + title_temporal
+                elif what == 'cumul':
+                    titlebar = which + ', ' + 'cumulative sum ' +  title_temporal
+                else:
+                    raise CoaTypeError('what argument is not daily, diff, cumul nor weekly . See help.')
+                    #else:
+                    #    titlebar = which + ' (' + what +  ' @ ' + when.strftime('%d/%m/%Y') + ')'
+                var_displayed = what
 
         if title:
             titlebar = title
@@ -205,7 +209,7 @@ class CocoDisplay():
         -----------------
         HoverTool is available it returns location, date and value
         """
-        mypandas,dico = self.standard_input(mypandas,**kwargs)
+        mypandas,dico = self.standard_input(mypandas,input_field=input_field,**kwargs)
         dict_filter_data = defaultdict(list)
         tooltips='Date: @date{%F} <br>  $name: @$name'
 
@@ -348,14 +352,12 @@ class CocoDisplay():
         -----------------
         HoverTool is available it returns position of the middle of the bin and the value.
         """
-        mypandas,dico = self.standard_input(mypandas,**kwargs)
+        mypandas,dico = self.standard_input(mypandas,input_field=input_field,**kwargs)
         dict_histo = defaultdict(list)
-        if type(input_field) is None.__class__:
-           input_field = dico['var_displayed']
-           if type(dico['which']) and type(dico['what'])  is None.__class__:
-               CoaTypeError('What do you want me to do ?. No variable to histogram . See help.')
+        if dico['input_field']:
+            input_field = dico['input_field']
         else:
-            input_field = input_field
+            input_field = dico['var_displayed']
 
         if 'location' in mypandas.columns:
             tooltips='Value at around @middle_bin : @val'
@@ -452,18 +454,15 @@ class CocoDisplay():
         -----------------
         HoverTool is available it returns location, date and value
         """
-        mypandas,dico = self.standard_input(mypandas,**kwargs)
+        mypandas,dico = self.standard_input(mypandas,input_field=input_field,**kwargs)
+        if dico['input_field']:
+            input_field = dico['input_field']
+        else:
+            input_field = dico['var_displayed']
+
 
         tooltips='Date: @date{%F} <br>  $name: @$name'
         hover_tool = HoverTool(tooltips=tooltips,formatters={'@date': 'datetime'})
-
-        if type(input_field) is None.__class__:
-           if dico['which']:
-               input_field = dico['which']
-           if dico['what']:
-               input_field = dico['what']
-           if type(dico['which']) and type(dico['what'])  is None.__class__:
-               CoaTypeError('What do you want me to do ?. No variable to histogram . See help.')
 
         if 'location' in mypandas.columns:
             tooltips='Location: @location <br> Date: @date{%F} <br>  $name: @$name'
@@ -693,12 +692,11 @@ class CocoDisplay():
           - plot_width, plot_height (default [500,400]): bokeh variable for map size
         Known issue: can not avoid to display value when there are Nan values
         """
-        mypandas,dico = self.standard_input(mypandas,**kwargs)
-
-        if type(input_field) is None.__class__:
-           input_field = dico['var_displayed']
+        mypandas,dico = self.standard_input(mypandas,input_field=input_field,**kwargs)
+        if dico['input_field']:
+            input_field = dico['input_field']
         else:
-            input_field = input_field
+            input_field = dico['var_displayed']
 
         minx, miny, maxx, maxy=0,0,0,0
         if self.database_name == 'spf' or  self.database_name == 'opencovid19' or self.database_name == 'jhu-usa':
@@ -797,9 +795,13 @@ class CocoDisplay():
         Known issue: format for scale can not be changed. When data value are important
         overlaped display appear
         """
-        mypandas,dico = self.standard_input(mypandas,**kwargs)
+        mypandas,dico = self.standard_input(mypandas,input_field=input_field,**kwargs)
 
-        input_field = dico['var_displayed']
+        if dico['input_field']:
+            input_field = dico['input_field']
+        else:
+            input_field = dico['var_displayed']
+
 
         if dico['when']:
             when_beg,when_end=extract_dates(dico['when'])

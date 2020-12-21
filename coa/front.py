@@ -362,11 +362,14 @@ def hist(**kwargs):
     kwargs_test(kwargs,['where','what','which','whom','when','input','input_field','bins','title'],
             'Bad args used in the pycoa.hist() function.')
 
+    bins=kwargs.get('bins',None)
+    date=kwargs.get('date',None)
+    input_field=None
     input_arg=kwargs.get('input',None)
     if isinstance(input_arg,pd.DataFrame):
         t=input_arg
-        which=kwargs.get('input_field',listwhich()[0]+'/cumul')
-        what=None
+        input_field=kwargs.get('input_field')
+        kwargs={}
     elif input_arg==None:
         t=get(**kwargs,output='pandas')
         which=kwargs.get('which',listwhich()[0])
@@ -375,9 +378,7 @@ def hist(**kwargs):
         raise CoaTypeError('Waiting input as valid pycoa pandas '
             'dataframe. See help.')
 
-    bins=kwargs.get('bins',None)
-    date=kwargs.get('date',None)
-    fig=_cocoplot.pycoa_histo(t,**kwargs)
+    fig=_cocoplot.pycoa_histo(t,input_field,**kwargs)
     show(fig)
 
 # ----------------------------------------------------------------------
@@ -388,30 +389,28 @@ def map(**kwargs):
     """Create a map according to arguments and options.
     See help(hist).
     """
-    kwargs_test(kwargs,['where','what','which','whom','when','input','visu'],
+    kwargs_test(kwargs,['where','what','which','whom','when','input','visu','input_field'],
             'Bad args used in the pycoa.map() function.')
     which=''
     input_arg=kwargs.get('input',None)
     where=kwargs.get('where',None)
     what=kwargs.get('what',None)
     visu=kwargs.get('visu','bokeh')
-
+    input_field = None
     if isinstance(input_arg,pd.DataFrame):
         t=input_arg
-        which=kwargs.get('input_field',listwhich()[0])
-        input_field = which
-        which+='/cumul'
+        input_field=kwargs.get('input_field')
+        kwargs={}
     elif input_arg==None:
         t=get(**kwargs,output='pandas')
         which=kwargs.get('which',listwhich()[0])
-        input_field = None
     else:
         raise CoaTypeError('Waiting input as valid pycoa pandas '
             'dataframe. See help.')
 
     if visu == 'bokeh':
-        return show(_cocoplot.bokeh_map(t,input_field=input_field,**kwargs))
+        return show(_cocoplot.bokeh_map(t,input_field,**kwargs))
     elif visu == 'folium':
-        return _cocoplot.map_folium(t,input_field=input_field,**kwargs)
+        return _cocoplot.map_folium(t,input_field,**kwargs)
     else:
         raise CoaTypeError('Waiting for a valid visualisation. So far: \'bokeh\' or \'folium\'.See help.')

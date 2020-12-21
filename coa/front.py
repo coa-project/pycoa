@@ -399,16 +399,19 @@ def map(**kwargs):
     if isinstance(input_arg,pd.DataFrame):
         t=input_arg
         which=kwargs.get('input_field',listwhich()[0])
+        input_field = which
         which+='/cumul'
     elif input_arg==None:
         t=get(**kwargs,output='pandas')
         which=kwargs.get('which',listwhich()[0])
+        input_field = None
     else:
         raise CoaTypeError('Waiting input as valid pycoa pandas '
             'dataframe. See help.')
+
     if visu == 'bokeh':
-        return show(_cocoplot.bokeh_map(t,input_field=None,**kwargs))
+        return show(_cocoplot.bokeh_map(t,input_field=input_field,**kwargs))
     elif visu == 'folium':
-        return _cocoplot.map_folium(t,input_field=None,**kwargs)
+        return _cocoplot.map_folium(t,input_field=input_field,**kwargs)
     else:
         raise CoaTypeError('Waiting for a valid visualisation. So far: \'bokeh\' or \'folium\'.See help.')

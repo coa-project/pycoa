@@ -448,28 +448,49 @@ class DataBase(object):
             (c, self.get_diff_days()[kwargs['which']][c]) for c in clist).values()))
 
         option = kwargs.get('option', None)
-        if option == 'nonneg':
+
+        if not isinstance(option,list):
+            option=[option]
+        for o in option:
             diffout = np.array(diffout, dtype=float)
             currentout = np.array(currentout, dtype=float)
             for c in range(diffout.shape[0]):
-                yy = np.array(diffout[c, :], dtype=float)
-                where_nan = np.isnan(yy)
-                yy[where_nan] = 0.
-                for kk in np.where(yy < 0)[0]:
-                    k = int(kk)
-                    val_to_repart = -yy[k]
-                    if k < np.size(yy)-1:
-                        yy[k] = (yy[k+1]+yy[k-1])/2
-                    else:
-                        yy[k] = yy[k-1]
-                    val_to_repart = val_to_repart + yy[k]
-                    s = np.sum(yy[0:k])
-                    yy[0:k] = yy[0:k]*(1-float(val_to_repart)/s)
-                diffout[c, :] = yy
-                currentout[c, :] = np.cumsum(yy)
-                cumulout[c, :] = np.cumsum(np.cumsum(yy))
-        elif option != None:
-            raise CoaKeyError('The option '+option+' is not recognized in get_stat. Error.')
+                if o == 'nonneg':
+                    yy = np.array(diffout[c, :], dtype=float)
+                    where_nan = np.isnan(yy)
+                    yy[where_nan] = 0.
+                    for kk in np.where(yy < 0)[0]:
+                        k = int(kk)
+                        val_to_repart = -yy[k]
+                        if k < np.size(yy)-1:
+                            yy[k] = (yy[k+1]+yy[k-1])/2
+                        else:
+                            yy[k] = yy[k-1]
+                        val_to_repart = val_to_repart + yy[k]
+                        s = np.sum(yy[0:k])
+                        yy[0:k] = yy[0:k]*(1-float(val_to_repart)/s)
+                    diffout[c, :] = yy
+                    currentout[c, :] = np.cumsum(yy)
+                    cumulout[c, :] = np.cumsum(np.cumsum(yy))
+                elif o == 'fillnan0':
+                    yy = np.array(currentout[c, :], dtype=float)
+                    yy = np.nan_to_num(yy,nan=0.)
+                    currentout[c, :] = yy
+                    cumulout[c, :] = np.cumsum(yy)
+                    diffout[c, :] = np.diff(yy,0,0)
+                elif o == 'fillnanf':
+                    yy = np.array(currentout[c, :], dtype=float)
+                    prev_yy=None
+                    for k in range(len(yy)):
+                        if np.isnan(yy[k]) and prev_yy != None:
+                            yy[k]=prev_yy
+                        else:
+                            prev_yy=yy[k]
+                    currentout[c, :] = yy
+                    cumulout[c, :] = np.cumsum(yy)
+                    diffout[c, :] = np.diff(yy,0,0)
+                elif o != None:
+                    raise CoaKeyError('The option '+o+' is not recognized in get_stat. Error.')
 
         datos=self.get_dates()
         i = 0

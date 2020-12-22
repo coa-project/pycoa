@@ -198,12 +198,6 @@ def get(**kwargs):
         setwhom(whom)
     when_beg,when_end=extract_dates(when)
 
-    if option:
-        if option != 'nonneg':
-            raise CoaKeyError('Waiting for option a valid option ... so far nonneg')
-        else:
-            option = 'nonneg'
-
     if not bool([s for s in listwhat() if what.startswith(s)]):
         raise CoaKeyError('What option '+ what +' not supported. '
                             'See listwhat() for full list.')

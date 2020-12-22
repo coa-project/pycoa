@@ -52,14 +52,19 @@ class DataBase(object):
         self.location_more_info={}
         self.database_columns_not_computed={}
         self.db =  db_name
+        self.geo_all = ''
         self.set_display(self.db)
 
         if self.db == 'jhu' or  self.db == 'owid':
             self.geo = coge.GeoManager('name')
+            self.geo_all='world'
         if self.db =='spf' or self.db == 'opencovid19':
             self.geo = coge.GeoCountry('FRA',True)
+            self.geo_all = self.geo.get_subregion_list()
         if self.db =='jhu-usa':
             self.geo = coge.GeoCountry('USA',True)
+            self.geo_all = self.geo.get_subregion_list()
+
         if self.db not in self.database_name:
             raise CoaDbError('Unknown ' + self.db + '. Available database so far in PyCoa are : ' + str(self.database_name) ,file=sys.stderr)
         else:
@@ -416,6 +421,9 @@ class DataBase(object):
         kwargs_test(kwargs,['location','output','type','which','option',],
             'Bad args used in the get_stats() function.')
 
+        if kwargs['location']==None:
+            kwargs['location']=self.geo_all
+            
         if not isinstance(kwargs['location'], list):
             clist = ([kwargs['location']]).copy()
         else:

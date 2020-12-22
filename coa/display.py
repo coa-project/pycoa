@@ -56,6 +56,7 @@ from PIL import Image, ImageDraw, ImageFont
 import matplotlib.pyplot as plt
 import datetime as dt
 width_height_default = [680,330] #337 magical value to avoid scroll menu in bokeh map
+
 class CocoDisplay():
     def __init__(self,db=None):
         verb("Init of CocoDisplay() with db="+str(db))

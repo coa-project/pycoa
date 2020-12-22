@@ -58,7 +58,7 @@ import datetime as dt
 width_height_default = [680,330] #337 magical value to avoid scroll menu in bokeh map
 class CocoDisplay():
     def __init__(self,db=None):
-        verb("Init of CocoDisplay()")
+        verb("Init of CocoDisplay() with db="+str(db))
         self.database_name = db
         self.colors = itertools.cycle(Paired12)
         self.plot_width =  width_height_default[0]

@@ -384,7 +384,7 @@ def map(**kwargs):
     """Create a map according to arguments and options.
     See help(hist).
     """
-    kwargs_test(kwargs,['where','what','which','whom','when','input','visu','input_field'],
+    kwargs_test(kwargs,['where','what','which','whom','when','input','visu','input_field','option'],
             'Bad args used in the pycoa.map() function.')
     which=''
     input_arg=kwargs.get('input',None)

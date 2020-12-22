@@ -143,7 +143,7 @@ class CocoDisplay():
         titlebar = which + title_temporal
 
         if input_field:
-            titlebar = input_field + ', ' + 'cumulative sum ' +  title_temporal
+            titlebar = input_field  +  title_temporal
             input_dico['input_field'] = input_field
         else:
             if what:
@@ -209,25 +209,28 @@ class CocoDisplay():
         -----------------
         HoverTool is available it returns location, date and value
         """
-        mypandas,dico = self.standard_input(mypandas,input_field=input_field,**kwargs)
+        mypandas,dico = self.standard_input(mypandas,input_field,**kwargs)
         dict_filter_data = defaultdict(list)
         tooltips='Date: @date{%F} <br>  $name: @$name'
 
-        if type(input_field) is None.__class__:
-           if dico['which']:
-               input_field = dico['which']
-           if dico['what']:
-               input_field = dico['var_displayed']
-           if type(dico['which']) and type(dico['what'])  is None.__class__:
-               CoaTypeError('What do you want me to do ?. No variable to histogram . See help.')
+        if type(input_field) is None.__class__ and dico['which'] is None.__class__ :
+           input_field = mypandas.columns[2]
         else:
+            if type(input_field) is None.__class__:
+                input_field = dico['var_displayed']
+            else:
+                input_field = dico['input_field']
                 if not isinstance(input_field, list):
                     text_input = input_field
                 else:
                     text_input = '-'
                     text_input= text_input.join(input_field)
-
-                dico['titlebar'] = text_input + ' (@ ' + dico['title_temporal'] +')'
+        if dico['when']:
+            when_beg,when_end=extract_dates(dico['when'])
+            if when_beg == dt.datetime(1,1,1):
+                when_beg = mypandas['date'].min()
+        else:
+            when_beg,when_end = mypandas['date'].min(), mypandas['date'].max()
 
         if not isinstance(input_field, list):
             input_field=[input_field]
@@ -236,22 +239,15 @@ class CocoDisplay():
             loc = mypandas['location'].unique()
             shorten_loc = [ i if len(i)<15 else i.replace('-',' ').split()[0]+'...'+i.replace('-',' ').split()[-1] for i in loc]
             for i in input_field:
-                if dico['when']:
-                    when_beg,when_end=extract_dates(dico['when'])
-                    if when_beg == dt.datetime(1,1,1):
-                        when_beg = mypandas['date'].min()
-                else:
-                    when_beg,when_end = mypandas['date'].min(), mypandas['date'].max()
-
                 dict_filter_data[i] =  \
                     dict(mypandas.loc[(mypandas['location'].isin(loc)) &
                                      (mypandas['date']>=when_beg) & (mypandas['date']<=when_end) ].groupby('location').__iter__())
+
                 for j in range(len(loc)):
                     dict_filter_data[i][shorten_loc[j]] = dict_filter_data[i].pop(loc[j])
-
         else:
             for i in input_field:
-                dict_filter_data[i] = {i:mypandas}
+                dict_filter_data[i] = {i:mypandas.loc[(mypandas['date']>=when_beg) & (mypandas['date']<=when_end)]}
 
         hover_tool = HoverTool(tooltips=tooltips,formatters={'@date': 'datetime'})
 
@@ -352,12 +348,15 @@ class CocoDisplay():
         -----------------
         HoverTool is available it returns position of the middle of the bin and the value.
         """
-        mypandas,dico = self.standard_input(mypandas,input_field=input_field,**kwargs)
+        mypandas,dico = self.standard_input(mypandas,input_field,**kwargs)
         dict_histo = defaultdict(list)
-        if dico['input_field']:
-            input_field = dico['input_field']
+        if type(input_field) is None.__class__ and dico['which'] is None.__class__ :
+           input_field = mypandas.columns[2]
         else:
-            input_field = dico['var_displayed']
+            if type(input_field) is None.__class__:
+                input_field = dico['var_displayed']
+            else:
+                input_field = dico['input_field']
 
         if 'location' in mypandas.columns:
             tooltips='Value at around @middle_bin : @val'
@@ -454,15 +453,25 @@ class CocoDisplay():
         -----------------
         HoverTool is available it returns location, date and value
         """
-        mypandas,dico = self.standard_input(mypandas,input_field=input_field,**kwargs)
-        if dico['input_field']:
-            input_field = dico['input_field']
-        else:
-            input_field = dico['var_displayed']
+        mypandas,dico = self.standard_input(mypandas,input_field,**kwargs)
 
+        if type(input_field) is None.__class__ and dico['which'] is None.__class__ :
+           input_field = mypandas.columns[2]
+        else:
+            if type(input_field) is None.__class__:
+                input_field = dico['var_displayed']
+            else:
+                input_field = dico['input_field']
 
         tooltips='Date: @date{%F} <br>  $name: @$name'
         hover_tool = HoverTool(tooltips=tooltips,formatters={'@date': 'datetime'})
+
+        if dico['when']:
+            when_beg,when_end=extract_dates(dico['when'])
+            if when_beg == dt.datetime(1,1,1):
+                when_beg = mypandas['date'].min()
+        else:
+            when_beg,when_end = mypandas['date'].min(), mypandas['date'].max()
 
         if 'location' in mypandas.columns:
             tooltips='Location: @location <br> Date: @date{%F} <br>  $name: @$name'
@@ -473,7 +482,7 @@ class CocoDisplay():
                                     'There is no sens to use this method. See help.')
             shorten_loc = [ i if len(i)<15 else i.replace('-',' ').split()[0]+'...'+i.replace('-',' ').split()[-1] for i in loc]
 
-
+        mypandas = mypandas.loc[(mypandas['date']>=when_beg) & (mypandas['date']<=when_end)]
         data  = pd.pivot_table(mypandas,index='date',columns='location',values=input_field)
         [data.rename(columns={i:j},inplace=True) for i,j in zip(loc,shorten_loc)]
         data=data.reset_index()
@@ -493,7 +502,7 @@ class CocoDisplay():
                         formatters={'@date': 'datetime'})
         panels = []
         for axis_type in ["linear", "log"]:
-            standardfig = self.standardfig(y_axis_type=axis_type,x_axis_type='datetime')
+            standardfig = self.standardfig(y_axis_type=axis_type,x_axis_type='datetime',title= dico['titlebar'])
             standardfig.yaxis[0].formatter = PrintfTickFormatter(format="%4.2e")
             if dico['title']:
                 standardfig.title.text = dico['title']
@@ -692,11 +701,16 @@ class CocoDisplay():
           - plot_width, plot_height (default [500,400]): bokeh variable for map size
         Known issue: can not avoid to display value when there are Nan values
         """
-        mypandas,dico = self.standard_input(mypandas,input_field=input_field,**kwargs)
-        if dico['input_field']:
-            input_field = dico['input_field']
+        mypandas,dico = self.standard_input(mypandas,input_field,**kwargs)
+
+        if type(input_field) is None.__class__ and dico['which'] is None.__class__ :
+           input_field = mypandas.columns[2]
         else:
-            input_field = dico['var_displayed']
+            if type(input_field) is None.__class__:
+                input_field = dico['var_displayed']
+            else:
+                input_field = dico['input_field']
+
 
         minx, miny, maxx, maxy=0,0,0,0
         if self.database_name == 'spf' or  self.database_name == 'opencovid19' or self.database_name == 'jhu-usa':
@@ -795,12 +809,15 @@ class CocoDisplay():
         Known issue: format for scale can not be changed. When data value are important
         overlaped display appear
         """
-        mypandas,dico = self.standard_input(mypandas,input_field=input_field,**kwargs)
+        mypandas,dico = self.standard_input(mypandas,input_field,**kwargs)
 
-        if dico['input_field']:
-            input_field = dico['input_field']
+        if type(input_field) is None.__class__ and dico['which'] is None.__class__ :
+           input_field = mypandas.columns[2]
         else:
-            input_field = dico['var_displayed']
+            if type(input_field) is None.__class__:
+                input_field = dico['var_displayed']
+            else:
+                input_field = dico['input_field']
 
 
         if dico['when']:

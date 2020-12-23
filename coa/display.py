@@ -34,7 +34,7 @@ import base64
 from bokeh.models import ColumnDataSource, TableColumn, DataTable,ColorBar, \
     HoverTool,BasicTicker, GeoJSONDataSource, LinearColorMapper, Label, \
     PrintfTickFormatter, BasicTickFormatter, CustomJS, CustomJSHover, Select, \
-    Range1d, DatetimeTickFormatter
+    Range1d, DatetimeTickFormatter, Legend, LegendItem
 from bokeh.models.widgets import Tabs, Panel
 from bokeh.palettes import Viridis256, Cividis256, Turbo256, Magma256
 from bokeh.plotting import figure
@@ -71,7 +71,7 @@ class CocoDisplay():
             g=coge.GeoManager()
             g.set_standard('name')
             self.pandas_world = pd.DataFrame({'location':g.to_standard(['world'],interpret_region=True),
-                                    'which':np.nan,'cumul':np.nan,'daily':np.nan,'weekly':np.nan})   
+                                    'which':np.nan,'cumul':np.nan,'daily':np.nan,'weekly':np.nan})
             self.infoword = coge.GeoInfo()
 
         if self.database_name == 'spf' or self.database_name == 'opencovid19':
@@ -477,13 +477,9 @@ class CocoDisplay():
         [data.rename(columns={i:j},inplace=True) for i,j in zip(loc,shorten_loc)]
         data=data.reset_index()
         source = ColumnDataSource(data)
-
         filter_data1 = data[['date', shorten_loc[0]]].rename(columns={shorten_loc[0]: 'cases'})
-        name1=shorten_loc[0]
         src1 = ColumnDataSource(filter_data1)
-
         filter_data2 = data[['date', shorten_loc[1]]].rename(columns={shorten_loc[1]: 'cases'})
-        name2=shorten_loc[1]
         src2 = ColumnDataSource(filter_data2)
 
         hover_tool = HoverTool(tooltips=[
@@ -492,37 +488,40 @@ class CocoDisplay():
                         formatters={'@date': 'datetime'})
         panels = []
         for axis_type in ["linear", "log"]:
-            standardfig = self.standardfig(y_axis_type=axis_type,x_axis_type='datetime',title= dico['titlebar'])
+            standardfig = self.standardfig(y_axis_type=axis_type,
+            x_axis_type='datetime',title= dico['titlebar'])
             standardfig.yaxis[0].formatter = PrintfTickFormatter(format="%4.2e")
             if dico['title']:
                 standardfig.title.text = dico['title']
             standardfig.add_tools(hover_tool)
             colors = itertools.cycle(Paired12)
-            standardfig.line(x='date', y='cases', source=src1, color='firebrick',alpha=0.7,
-            line_width=2, legend_label=name1, hover_line_width=3)
-            standardfig.line(x='date', y='cases', source=src2, color='navy',alpha=0.7,
-            line_width=2, legend_label=name2, hover_line_width=3)
-            standardfig.legend.location = 'bottom_right'
-            panel = Panel(child=standardfig, title=axis_type)
+
+            def add_line(src,options, init,  color):
+                s = Select(options=options, value=init)
+                r = standardfig.line(x='date', y='cases', source=src, line_width=3, line_color=color)
+                li = LegendItem(label=init, renderers=[r])
+                s.js_on_change('value', CustomJS(args=dict(s0=source, s1=src),
+                                     code = """
+                                            var c = cb_obj.value;
+                                            var y = s0.data[c];
+                                            s1.data['cases'] = y;
+                                            s1.change.emit();
+                                            ax=p1.yaxis[0];
+                                     """))
+                return s, li
+
+            s1, li1 = add_line(src1,shorten_loc, shorten_loc[0], 'navy')
+            s2, li2 = add_line(src2,shorten_loc, shorten_loc[1], 'firebrick')
+
+            standardfig.add_layout(Legend(items=[li1, li2]))
+            standardfig.legend.location = 'top_left'
+            layout = row(column(row(s1, s2), row(standardfig)))
+            panel = Panel(child=layout, title=axis_type)
             panels.append(panel)
-        code="""
-            var c = cb_obj.value;
-            var y = s0.data[c];
-            s1.data['cases'] = y;
-            s1.change.emit();
-            ax=p1.yaxis[0]
-        """
-        callback1 = CustomJS(args=dict(s0=source, s1=src1), code=code)
-        callback2 = CustomJS(args=dict(s0=source, s1=src2), code=code)
-        select_countries1 = Select(title="red chart", value=shorten_loc[0], options=shorten_loc)
-        select_countries1.js_on_change('value', callback1)
-        select_countries2 = Select(title="blue chart", value=shorten_loc[1], options=shorten_loc)
-        select_countries2.js_on_change('value', callback2)
 
         tabs = Tabs(tabs=panels)
-        layout = row(column(row(select_countries1, select_countries2), row(tabs)))
         label = dico['titlebar']
-        return layout
+        return tabs
 
     def crystal_fig(self, crys, err_y):
         sline = []

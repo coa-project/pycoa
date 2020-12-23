@@ -117,7 +117,6 @@ def extract_dates(when):
     #w1=datetime.datetime.now()
     w0=datetime.date(1,1,1) # minimal year is 1
     w1=datetime.date.today()
-    print(w0,w1)
     if when:  # when input is not None, assume min and max date
         if type(when) != type(str()):
             raise CoaTypeError("Date expected as string.")

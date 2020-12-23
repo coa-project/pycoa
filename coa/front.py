@@ -54,7 +54,7 @@ _db = coco.DataBase(_whom) # initialization with default
 #_cocoplot = cd.CocoDisplay(_db)
 _cocoplot = _db.get_display()
 
-_listwhat=['cumul','diff',  # first one is default, nota:  we must avoid uppercases
+_listwhat=['cumul',  # first one is default, nota:  we must avoid uppercases
             'daily',
             'weekly']
 
@@ -150,8 +150,8 @@ def get(**kwargs):
                 'recovered' …). See listwhat() function for full
                 list according to the used database.
     what   --   which data are computed, either in cumulative mode
-                ('cumul', default value), 'daily' or 'diff' and
-                'weekly' (rolling daily over 1 week) . See
+                ('cumul', default value), or 'daily' (diff with previous day
+                and 'weekly' (diff with previous week). See
                 listwhich() for fullist of available
                 Full list of which keyword with the listwhich() function.
     whom   --   Database specification (overload the setbase()
@@ -226,8 +226,8 @@ def get(**kwargs):
          casted_data = pandy
     else:
         col_name = ''
-        if what == 'daily' or what == 'diff':
-            col_name = 'diff'
+        if what == 'daily':
+            col_name = 'daily' # prev 'diff'
         if what == 'cumul' and _whom == 'jhu':
             col_name = which
         if what == 'weekly':

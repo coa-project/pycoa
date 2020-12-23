@@ -423,7 +423,7 @@ class DataBase(object):
 
         if kwargs['location']==None:
             kwargs['location']=self.geo_all
-            
+
         if not isinstance(kwargs['location'], list):
             clist = ([kwargs['location']]).copy()
         else:
@@ -518,18 +518,19 @@ class DataBase(object):
                 'date': datos,
                 kwargs['which']:val1,
                 'cumul':val2,
-                'diff': val3
+                'daily': val3  # prev 'diff'
                 }
             temp.append(pd.DataFrame(data))
             i+=1
 
         pandy = pd.concat(temp)
-        pandy['weekly'] = pandy.groupby('location')[kwargs['which']].rolling(7).mean().reset_index(level=0, drop=True)
+        # pandy['weekly'] = pandy.groupby('location')[kwargs['which']].rolling(7).mean().reset_index(level=0, drop=True) # old smooth version
+        pandy['weekly'] = pandy.groupby('location')[kwargs['which']].diff(periods=7).reset_index(level=0,drop=True)
 
         if output == "array":
             if process_data == 'cumul':
                 out = cumulout
-            elif process_data == 'diff':
+            elif process_data == 'daily': # prev 'diff'
 	            out = diffout
             else:
                 out =  currentout

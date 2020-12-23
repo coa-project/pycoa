@@ -71,18 +71,18 @@ class CocoDisplay():
             g=coge.GeoManager()
             g.set_standard('name')
             self.pandas_world = pd.DataFrame({'location':g.to_standard(['world'],interpret_region=True),
-                                    'which':np.nan,'cumul':np.nan,'diff':np.nan,'weekly':np.nan})
+                                    'which':np.nan,'cumul':np.nan,'daily':np.nan,'weekly':np.nan})   
             self.infoword = coge.GeoInfo()
 
         if self.database_name == 'spf' or self.database_name == 'opencovid19':
             c=coge.GeoCountry('FRA',True)
             self.pandas_country = pd.DataFrame({'location':c.get_data()['code_subregion'],
-                                                   'which':np.nan,'cumul':np.nan,'diff':np.nan,'weekly':np.nan})
+                                                   'which':np.nan,'cumul':np.nan,'daily':np.nan,'weekly':np.nan})
             self.infocountry = c
         if self.database_name == 'jhu-usa':
             c=coge.GeoCountry('USA',True)
             self.pandas_country = pd.DataFrame({'location':c.get_data()['code_subregion'],
-                                                   'which':np.nan,'cumul':np.nan,'diff':np.nan,'weekly':np.nan})
+                                                   'which':np.nan,'cumul':np.nan,'daily':np.nan,'weekly':np.nan})
             self.infocountry = c
 
     def standard_input(self,mypandas,input_field=None,**kwargs):
@@ -148,15 +148,15 @@ class CocoDisplay():
             input_dico['input_field'] = input_field
         else:
             if what:
-                if what == 'daily' or what == 'diff':
+                if what == 'daily':
                     titlebar = which + ', ' + 'day to day difference ' +  title_temporal
-                    what = 'diff'
+                    what = 'daily'
                 elif what == 'weekly':
-                    titlebar = which + ', ' + 'daily rolling over 1 week' + title_temporal
+                    titlebar = which + ', ' + 'week to week difference' + title_temporal
                 elif what == 'cumul':
                     titlebar = which + ', ' + 'cumulative sum ' +  title_temporal
                 else:
-                    raise CoaTypeError('what argument is not daily, diff, cumul nor weekly . See help.')
+                    raise CoaTypeError('what argument is not daily, daily, cumul nor weekly . See help.')
                     #else:
                     #    titlebar = which + ' (' + what +  ' @ ' + when.strftime('%d/%m/%Y') + ')'
                 var_displayed = what

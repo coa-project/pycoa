@@ -151,7 +151,6 @@ class CocoDisplay():
             if what:
                 if what == 'daily':
                     titlebar = which + ', ' + 'day to day difference ' +  title_temporal
-                    what = 'daily'
                 elif what == 'weekly':
                     titlebar = which + ', ' + 'week to week difference' + title_temporal
                 elif what == 'cumul':

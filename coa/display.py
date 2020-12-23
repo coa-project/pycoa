@@ -65,7 +65,7 @@ class CocoDisplay():
         self.plot_width =  width_height_default[0]
         self.plot_height =  width_height_default[1]
         self.all_available_display_keys=['where','which','what','when','title_temporal','plot_height','plot_width','title','bins','var_displayed',
-        'option','input','input_field','visu']
+        'option','input','input_field','visu','plot_last_date']
 
         if self.database_name == 'jhu' or self.database_name == 'owid':
             g=coge.GeoManager()
@@ -139,7 +139,10 @@ class CocoDisplay():
             if input_dico['when_end'] == '':
                 input_dico['when_end'] = mypandas.date.max()
 
-        title_temporal =  ' (' + 'between ' + input_dico['when_beg'].strftime('%d/%m/%Y') +' and ' + input_dico['when_end'].strftime('%d/%m/%Y') + ')'
+        if kwargs.get('plot_last_date',None) == True:
+            title_temporal =  ' (at ' + input_dico['when_end'].strftime('%d/%m/%Y') + ')'
+        else:
+            title_temporal =  ' (' + 'between ' + input_dico['when_beg'].strftime('%d/%m/%Y') +' and ' + input_dico['when_end'].strftime('%d/%m/%Y') + ')'
 
         input_dico['title_temporal'] = title_temporal
         titlebar = which + title_temporal
@@ -344,7 +347,7 @@ class CocoDisplay():
         -----------------
         HoverTool is available it returns position of the middle of the bin and the value.
         """
-        mypandas,dico = self.standard_input(mypandas,input_field,**kwargs)
+        mypandas,dico = self.standard_input(mypandas,input_field,**kwargs,plot_last_date=True)
         dict_histo = defaultdict(list)
         if type(input_field) is None.__class__ and dico['which'] is None.__class__ :
            input_field = mypandas.columns[2]
@@ -683,7 +686,7 @@ class CocoDisplay():
           - plot_width, plot_height (default [500,400]): bokeh variable for map size
         Known issue: can not avoid to display value when there are Nan values
         """
-        mypandas,dico = self.standard_input(mypandas,input_field,**kwargs)
+        mypandas,dico = self.standard_input(mypandas,input_field,**kwargs,plot_last_date=True)
 
         if type(input_field) is None.__class__ and dico['which'] is None.__class__ :
            input_field = mypandas.columns[2]
@@ -789,7 +792,7 @@ class CocoDisplay():
         Known issue: format for scale can not be changed. When data value are important
         overlaped display appear
         """
-        mypandas,dico = self.standard_input(mypandas,input_field,**kwargs)
+        mypandas,dico = self.standard_input(mypandas,input_field,**kwargs,plot_last_date=True)
 
         if type(input_field) is None.__class__ and dico['which'] is None.__class__ :
            input_field = mypandas.columns[2]

@@ -238,7 +238,8 @@ class DataBase(object):
                                     'Admin2','Province_State','Lat','Long_','Combined_Key'])
             pandas_jhu_db = pandas_jhu_db.sort_values(by=['location'])
             pandas_jhu_db = pandas_jhu_db.set_index('location')
-            self.dates    = pandas.to_datetime(pandas_jhu_db.columns,errors='coerce')
+            #self.dates    = pandas.to_datetime(pandas_jhu_db.columns,errors='coerce')
+            self.dates    = pandas_jhu_db.columns.dt.date
             pandas_jhu[ext] = pandas_jhu_db
         return pandas_jhu
 
@@ -385,7 +386,7 @@ class DataBase(object):
 
    def get_dates(self):
         ''' Return all dates available in the current database'''
-        return self.dates
+        return self.dates.date
 
    def get_locations(self):
         ''' Return available location countries / regions in the current database '''

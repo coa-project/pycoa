@@ -238,8 +238,7 @@ class DataBase(object):
                                     'Admin2','Province_State','Lat','Long_','Combined_Key'])
             pandas_jhu_db = pandas_jhu_db.sort_values(by=['location'])
             pandas_jhu_db = pandas_jhu_db.set_index('location')
-            #self.dates    = pandas.to_datetime(pandas_jhu_db.columns,errors='coerce')
-            self.dates    = pandas_jhu_db.columns.dt.date
+            self.dates    = pandas.to_datetime(pandas_jhu_db.columns,errors='coerce')
             pandas_jhu[ext] = pandas_jhu_db
         return pandas_jhu
 
@@ -424,7 +423,7 @@ class DataBase(object):
 
         if kwargs['location']==None:
             kwargs['location']=self.geo_all
-            
+
         if not isinstance(kwargs['location'], list):
             clist = ([kwargs['location']]).copy()
         else:

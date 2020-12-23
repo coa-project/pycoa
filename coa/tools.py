@@ -9,9 +9,9 @@ Module : coa.tools
 About
 -----
 This is the PyCoA tools module to be considered as a swiss knife list of functions.
-One find function for 
+One find function for
  - verbose or warning mode management.
- - kwargs analysis 
+ - kwargs analysis
 
 The _verbose_mode variable should be set to 0 if no printing output needed. The
 default value is 1 (print information to stdout). The 2 value grants a debug level information
@@ -49,14 +49,14 @@ def info(*args):
     """
     if _verbose_mode > 0:
         print(*args)
-        
+
 def verb(*args):
     """Print to stdout with similar args as the builtin print function,
     if _verbose_mode > 1
     """
     if _verbose_mode > 1:
         print(*args)
-        
+
 def kwargs_test(given_args,expected_args,error_string):
     """Test that the list of kwargs is compatible with expected args. If not
     it raises a CoaKeyError with error_string.
@@ -100,22 +100,24 @@ def check_valid_date(date):
             "for month or day, 4 digits for year.")
 
     try:
-        return datetime.datetime(int(year),int(month),int(day))
+        return datetime.date(int(year),int(month),int(day))
     except ValueError:
         raise CoaTypeError("Check consistancy of the given date. e.g. the day (btw 1 and 31), " \
             "the month (btw 1 and 12) and the year value.")
 
 def extract_dates(when):
-    """Expecting None or 1 or 2 dates separated by :. The format is a string. 
+    """Expecting None or 1 or 2 dates separated by :. The format is a string.
     If 2 dates are given, they must be ordered.
     When 1 date is given, assume that's the latest which is given.
     When None date is give, the oldest date is 01/01/0001, the newest is now.
 
-    It returns 2 datetime object. If nothing given, the oldest date is 01/01/0001, 
+    It returns 2 datetime object. If nothing given, the oldest date is 01/01/0001,
     """
-    w0=datetime.datetime(1,1,1) # minimal year is 1
-    w1=datetime.datetime.now()
-
+    #w0=datetime.datetime(1,1,1) # minimal year is 1
+    #w1=datetime.datetime.now()
+    w0=datetime.date(1,1,1) # minimal year is 1
+    w1=datetime.date.today()
+    print(w0,w1)
     if when:  # when input is not None, assume min and max date
         if type(when) != type(str()):
             raise CoaTypeError("Date expected as string.")
@@ -137,12 +139,12 @@ def extract_dates(when):
     return w0,w1
 
 def get_local_from_url(url,expiration_time=0,suffix=''):
-    """"Download data from the given url and store it into a local file. 
+    """"Download data from the given url and store it into a local file.
 
     If the expiration time is 0 (default), the data will never be downloaded anymore if available.
     If the expiration time is < 0, it forces to download the file.
     If the expiration time (in seconds) is lower than time difference between now and last modification
-    time of the file, the file is downloaded. 
+    time of the file, the file is downloaded.
 
     One may add a suffix to the local filename if known.
     """
@@ -152,7 +154,7 @@ def get_local_from_url(url,expiration_time=0,suffix=''):
         os.makedirs(tmpdir)
 
     local_filename=os.path.join(tmpdir,urlparse(url).netloc+"_"+str(crc32(bytes(url,'utf-8')))+suffix)
-    
+
     local_file_exists=os.path.exists(local_filename)
 
     if expiration_time >=0 and local_file_exists:

@@ -385,7 +385,7 @@ class DataBase(object):
 
    def get_dates(self):
         ''' Return all dates available in the current database'''
-        return self.dates
+        return self.dates.date
 
    def get_locations(self):
         ''' Return available location countries / regions in the current database '''

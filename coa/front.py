@@ -358,7 +358,7 @@ def hist(**kwargs):
             'Bad args used in the pycoa.hist() function.')
 
     bins=kwargs.get('bins',None)
-    date=kwargs.get('date',None)
+    when=kwargs.get('when',None)
     input_field=None
     input_arg=kwargs.get('input',None)
     if isinstance(input_arg,pd.DataFrame):

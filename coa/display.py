@@ -127,18 +127,19 @@ class CocoDisplay():
         when = kwargs.get('when', None)
         input_dico['when'] = when
         title_temporal=''
-        when_beg = mypandas.date.min()
-        when_end = mypandas.date.max()
+
+        input_dico['when_beg'] = mypandas.date.min()
+        input_dico['when_end'] = mypandas.date.max()
+
         if when:
-            input_dico['when']=when
-            when_beg, when_end = extract_dates(when)
-            if when_beg == dt.datetime(1,1,1):
-                when_beg = mypandas.date.min()
-            if  when_end == '':
-                when_end = mypandas.date.min()
-        title_temporal =  ' (' + 'between ' + when_beg.strftime('%d/%m/%Y') +' and ' + when_end.strftime('%d/%m/%Y') + ')'
-        #else:
-        #    title_temporal =  mypandas['date'].max().strftime('%d/%m/%Y')
+            input_dico['when_beg'],input_dico['when_end']=extract_dates(when)
+            if input_dico['when_beg'] == dt.date(1,1,1):
+                input_dico['when_beg'] = mypandas['date'].min()
+
+            if input_dico['when_end'] == '':
+                input_dico['when_end'] = mypandas.date.max()
+
+        title_temporal =  ' (' + 'between ' + input_dico['when_beg'].strftime('%d/%m/%Y') +' and ' + input_dico['when_end'].strftime('%d/%m/%Y') + ')'
 
         input_dico['title_temporal'] = title_temporal
         titlebar = which + title_temporal
@@ -226,12 +227,7 @@ class CocoDisplay():
                 else:
                     text_input = '-'
                     text_input= text_input.join(input_field)
-        if dico['when']:
-            when_beg,when_end=extract_dates(dico['when'])
-            if when_beg == dt.datetime(1,1,1):
-                when_beg = mypandas['date'].min()
-        else:
-            when_beg,when_end = mypandas['date'].min(), mypandas['date'].max()
+
 
         if not isinstance(input_field, list):
             input_field=[input_field]
@@ -242,13 +238,13 @@ class CocoDisplay():
             for i in input_field:
                 dict_filter_data[i] =  \
                     dict(mypandas.loc[(mypandas['location'].isin(loc)) &
-                                     (mypandas['date']>=when_beg) & (mypandas['date']<=when_end) ].groupby('location').__iter__())
+                                     (mypandas['date']>=dico['when_beg']) & (mypandas['date']<=dico['when_end']) ].groupby('location').__iter__())
 
                 for j in range(len(loc)):
                     dict_filter_data[i][shorten_loc[j]] = dict_filter_data[i].pop(loc[j])
         else:
             for i in input_field:
-                dict_filter_data[i] = {i:mypandas.loc[(mypandas['date']>=when_beg) & (mypandas['date']<=when_end)]}
+                dict_filter_data[i] = {i:mypandas.loc[(mypandas['date']>=dico['when_beg']) & (mypandas['date']<=dico['when_end'])]}
 
         hover_tool = HoverTool(tooltips=tooltips,formatters={'@date': 'datetime'})
 
@@ -359,13 +355,17 @@ class CocoDisplay():
             else:
                 input_field = dico['input_field']
 
+        when_end = CocoDisplay.changeto_nonan_date(mypandas, dico['when_end'],input_field)
+        dico['when_end'] = when_end
         if 'location' in mypandas.columns:
             tooltips='Value at around @middle_bin : @val'
             loc = mypandas['location'].unique()
             shorten_loc = [ i if len(i)<15 else i.replace('-',' ').split()[0]+'...'+i.replace('-',' ').split()[-1] for i in loc]
 
             for w in loc:
-                histo,edges = np.histogram((mypandas.loc[mypandas['location'] == w][input_field].dropna()),density=False, bins=dico['bins'])
+                histo,edges = np.histogram((mypandas.loc[(mypandas['location'] == w) &
+                                                        (mypandas['date']>=dico['when_beg']) & (mypandas['date']<=dico['when_end'])]
+                                                        [input_field].dropna()),density=False, bins=dico['bins'])
 
                 dict_histo[w] = pd.DataFrame({'location':w,'val': histo,
                    'left': edges[:-1],
@@ -378,15 +378,8 @@ class CocoDisplay():
 
             val_per_country = defaultdict(list)
             for w in loc:
-               if dico['when']:
-                    when_beg,when_end=extract_dates(dico['when'])
-               else:
-                    when_beg,when_end = mypandas['date'].min(), mypandas['date'].max()
-               retrieved_at = mypandas.loc[(mypandas['date'] == when_end)]
-               if retrieved_at.empty:
-                   raise CoaTypeError('Noting to retrieve at this date:', when_end)
-               else:
-                   val = mypandas.loc[(mypandas['location'] == w) & (mypandas['date'] ==  when_end)][input_field].values
+               mypandas = mypandas.loc[(mypandas.date == dico['when_end'])]
+               val = mypandas.loc[mypandas['location'] == w][input_field].values
                    #val_per_country.append(val)
                val_per_country[w]=val
 
@@ -467,12 +460,6 @@ class CocoDisplay():
         tooltips='Date: @date{%F} <br>  $name: @$name'
         hover_tool = HoverTool(tooltips=tooltips,formatters={'@date': 'datetime'})
 
-        if dico['when']:
-            when_beg,when_end=extract_dates(dico['when'])
-            if when_beg == dt.datetime(1,1,1):
-                when_beg = mypandas['date'].min()
-        else:
-            when_beg,when_end = mypandas['date'].min(), mypandas['date'].max()
 
         if 'location' in mypandas.columns:
             tooltips='Location: @location <br> Date: @date{%F} <br>  $name: @$name'
@@ -483,7 +470,7 @@ class CocoDisplay():
                                     'There is no sens to use this method. See help.')
             shorten_loc = [ i if len(i)<15 else i.replace('-',' ').split()[0]+'...'+i.replace('-',' ').split()[-1] for i in loc]
 
-        mypandas = mypandas.loc[(mypandas['date']>=when_beg) & (mypandas['date']<=when_end)]
+        mypandas = mypandas.loc[(mypandas['date']>=dico['when_beg']) & (mypandas['date']<=dico['when_end'])]
         data  = pd.pivot_table(mypandas,index='date',columns='location',values=input_field)
         [data.rename(columns={i:j},inplace=True) for i,j in zip(loc,shorten_loc)]
         data=data.reset_index()
@@ -670,20 +657,15 @@ class CocoDisplay():
 
     @staticmethod
     def changeto_nonan_date(df=None,when_end=None,field=None):
-        value=np.nan
-        if np.isnan(value):
-            value=np.nan
-            j=0
-            while(np.isnan(value) == True):
-                    value = np.nanmax(df.loc[df.date == when_end-dt.timedelta(days=j)][field])
-                    j+=1
-            if j>1:
-                print(when_end, 'all the value seems to be nan! I will find an other previous date')
-                print("Here the date I will take:", when_end-dt.timedelta(days=j-1))
-            nonandata=when_end-dt.timedelta(days=j-1)
-        else:
-            nonandata = when_end
-        return  nonandata
+        boolval=True
+        j=0
+        while(boolval == True):
+                boolval = df.loc[df.date == (when_end-dt.timedelta(days=j))][field].dropna().empty
+                j+=1
+        if j>1:
+            print(when_end, 'all the value seems to be nan! I will find an other previous date')
+            print("Here the date I will take:", when_end-dt.timedelta(days=j-1))
+        return  when_end-dt.timedelta(days=j-1)
 
     def bokeh_map(self,mypandas,input_field = None,**kwargs):
         """Create a Bokeh map from a pandas input
@@ -721,16 +703,14 @@ class CocoDisplay():
             panda2map = self.pandas_world
             name_displayed = 'location'
 
-        if dico['when']:
-            when_beg,when_end=extract_dates(dico['when'])
-        else:
-            when_end = mypandas.date.max()
-        mypandas_filtered = mypandas.loc[mypandas.date == when_end]
+        when_end = CocoDisplay.changeto_nonan_date(mypandas, dico['when_end'],input_field)
+        dico['when_end'] = when_end
+        mypandas_filtered = mypandas.loc[mypandas.date == dico['when_end']]
 
-        if CocoDisplay.changeto_nonan_date(mypandas, when_end,input_field) != when_end:
-            when_end = CocoDisplay.changeto_nonan_date(mypandas,when_end,input_field)
-            mypandas_filtered = mypandas.loc[(mypandas.date == when_end)]
-            dico['titlebar']+=' due to nan I shifted date to '+  when_end.strftime("%d/%m/%Y")
+        if CocoDisplay.changeto_nonan_date(mypandas, dico['when_end'],input_field) != dico['when_end']:
+            when_end = CocoDisplay.changeto_nonan_date(mypandas,dico['when_end'],input_field)
+            mypandas_filtered = mypandas.loc[(mypandas.date == dico['when_end'])]
+            dico['titlebar']+=' due to nan I shifted date to '+  dico['when_end'].strftime("%d/%m/%Y")
 
         mypandas_filtered = mypandas_filtered.drop(columns=['date'])
         my_location = mypandas.location.to_list()
@@ -820,18 +800,15 @@ class CocoDisplay():
             else:
                 input_field = dico['input_field']
 
+        when_end = CocoDisplay.changeto_nonan_date(mypandas, dico['when_end'],input_field)
+        dico['when_end'] = when_end
+        mypandas_filtered = mypandas.loc[mypandas.date == dico['when_end']]
 
-        if dico['when']:
-            when_beg,when_end=extract_dates(dico['when'])
-        else:
-            when_end = mypandas.date.max()
-        mypandas_filtered = mypandas.loc[mypandas.date == when_end]
-
-        mypandas_filtered = mypandas.loc[(mypandas.date == when_end)]
-        if CocoDisplay.changeto_nonan_date(mypandas, when_end,input_field) != when_end:
-            when_end = CocoDisplay.changeto_nonan_date(mypandas,when_end,input_field)
-            mypandas_filtered = mypandas.loc[(mypandas.date == when_end)]
-            dico['titlebar']+=' due to nan I shifted date to '+  when_end.strftime("%d/%m/%Y")
+        mypandas_filtered = mypandas.loc[(mypandas.date == dico['when_end'])]
+        if CocoDisplay.changeto_nonan_date(mypandas, dico['when_end'],input_field) != dico['when_end']:
+            when_end = CocoDisplay.changeto_nonan_date(mypandas,dico['when_end'],input_field)
+            mypandas_filtered = mypandas.loc[(mypandas.date == dico['when_end'])]
+            dico['titlebar']+=' due to nan I shifted date to '+  dico['when_end'].strftime("%d/%m/%Y")
 
         mypandas_filtered = mypandas_filtered.drop(columns=['date'])
         if self.database_name == 'spf' or  self.database_name == 'opencovid19' or self.database_name == 'jhu-usa':
@@ -849,7 +826,6 @@ class CocoDisplay():
             name_displayed = 'location'
             zoom = 2
 
-
         geopdwd = self.get_geodata(mypandas_filtered)
         geopdwd = geopdwd.reset_index()
         geopdwd = pd.merge(geopdwd,mypandas_filtered,on='location')
@@ -864,7 +840,7 @@ class CocoDisplay():
 
         min_col,max_col=CocoDisplay.min_max_range(0,max(geopdwd[input_field]))
         colormap = branca.colormap.linear.RdPu_09.scale(min_col,max_col)
-        colormap.caption = 'Covid-19 cases : ' + dico['titlebar']
+        colormap.caption = 'Cases : ' + dico['titlebar']
         colormap.add_to(mapa)
         map_id = colormap.get_name()
 

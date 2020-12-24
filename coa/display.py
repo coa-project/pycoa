@@ -205,7 +205,7 @@ class CocoDisplay():
         - babepandas : pandas where the data is considered
         - input_field : variable from pandas data.
           * variable or list of variables available in babepandas (i.e available in the babepandas columns name  )
-          * If pandas is produced from pycoa get_stat method 'diff' or 'cumul' variable are available
+          * If pandas is produced from pycoa get_stat method 'daily','weekly' or 'cumul' variable are available
         - title: title for the figure , no title by default
         - width_height : width and height of the figure,  default [400,300]
 
@@ -332,7 +332,7 @@ class CocoDisplay():
         -----------------
         babepandas : pandas consided
         input_field : variable from pandas data. If pandas is produced from pycoa get_stat method
-        then 'diff' and 'cumul' can be also used
+        then 'daily','weekly' and 'cumul' can be also used
         title: title for the figure , no title by default
         width_height : as a list of width and height of the histo, default [500,400]
         bins : number of bins of the hitogram default 50
@@ -440,7 +440,7 @@ class CocoDisplay():
         -----------------
         babepandas : pandas where the data is considered
         input_field : variable from pandas data . If pandas is produced from cocoas get_stat method
-        the 'diff' or 'cumul' are available
+        the 'daily' or 'cumul' are available
         A list of names_data can be given
         title: title for the figure , no title by default
         width_height : width and height of the figure,  default [400,300]
@@ -675,7 +675,7 @@ class CocoDisplay():
         babepandas : pandas considered
         Input parameters:
           - what (default:None) at precise date: by default get_which() set in get_stats()
-           could be 'diff' or cumul
+           could be 'daily' or cumul or 'weekly'
           - when   --   dates are given under the format dd/mm/yyyy. In the when
                           option, one can give one date which will be the end of
                           the data slice. Or one can give two dates separated with
@@ -780,7 +780,7 @@ class CocoDisplay():
         -----------------
         babepandas : pandas consided
         which_data: variable from pandas data. If pandas is produced from pycoa get_stat method
-        then 'diff' and 'cumul' can be also used
+        then 'daily', 'weekly' and 'cumul' can be also used
         width_height : as a list of width and height of the histo, default [500,400]
         when   --   dates are given under the format dd/mm/yyyy. In the when
                         option, one can give one date which will be the end of

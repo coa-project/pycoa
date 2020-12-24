@@ -516,7 +516,7 @@ class DataBase(object):
                     cumulout[c, :] = np.cumsum(yy)
                     diffout[c, :] = np.diff(yy,0,0)
                 elif o != None:
-                    raise CoaKeyError('The option '+o+' is not recognized in get_stat. See get_available_options() for list. Error.')
+                    raise CoaKeyError('The option '+o+' is not recognized in get_stats. See get_available_options() for list.')
 
         datos=self.get_dates()
         i = 0
@@ -536,19 +536,19 @@ class DataBase(object):
                 'date': datos,
                 kwargs['which']:val1,
                 'cumul':val2,
-                'daily': val3  # prev 'diff'
+                'daily': val3 
                 }
             temp.append(pd.DataFrame(data))
             i+=1
 
         pandy = pd.concat(temp)
-        # pandy['weekly'] = pandy.groupby('location')[kwargs['which']].rolling(7).mean().reset_index(level=0, drop=True) # old smooth version
+
         pandy['weekly'] = pandy.groupby('location')[kwargs['which']].diff(periods=7).reset_index(level=0,drop=True)
 
         if output == "array":
             if process_data == 'cumul':
                 out = cumulout
-            elif process_data == 'daily': # prev 'diff'
+            elif process_data == 'daily':
 	            out = diffout
             else:
                 out =  currentout

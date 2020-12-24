@@ -132,6 +132,18 @@ def listwhich(dbname=None):
             'See pycoa.listwhom() for the full list.')
     return _db.get_available_keys_words()
 
+def listoption(dbname=None):
+    """Get list of available options for the current or specified
+    base. Output is a list of string.
+    By default, no default option used to get data.
+    """
+
+    if dbname == None:
+        dbname=_whom
+    if dbname not in listwhom():
+        raise CoaDbError(dbname+' is not a supported database name. '
+            'See pycoa.listwhom() for the full list.')
+    return _db.get_available_options()
 
 # ----------------------------------------------------------------------
 # --- get(**kwargs) ----------------------------------------------------

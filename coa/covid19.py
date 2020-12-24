@@ -42,6 +42,7 @@ class DataBase(object):
         '''
         verb("Init of covid19.DataBase()")
         self.database_name=['jhu','owid','jhu-usa','spf','opencovid19']
+        self.available_options=['nonneg','fillnan0','fillnanf','smooth7']
         self.pandas_datase = {}
         self.available_keys_words=[]
         self.dates = []
@@ -166,6 +167,12 @@ class DataBase(object):
         ['jhu', 'spf', 'owid', 'opencovid19']
         '''
         return self.database_name
+
+   def get_available_options(self):
+        '''
+        Return available options for the get_stats method
+        '''
+        return self.available_options
 
    def get_available_keys_words(self):
         '''
@@ -464,6 +471,7 @@ class DataBase(object):
             currentout = np.array(currentout, dtype=float)
             for c in range(diffout.shape[0]):
                 if o == 'nonneg':
+                    # modify values in order that diff values is never negative
                     yy = np.array(diffout[c, :], dtype=float)
                     where_nan = np.isnan(yy)
                     yy[where_nan] = 0.
@@ -481,12 +489,14 @@ class DataBase(object):
                     currentout[c, :] = np.cumsum(yy)
                     cumulout[c, :] = np.cumsum(np.cumsum(yy))
                 elif o == 'fillnan0':
+                    # fill nan with zeros
                     yy = np.array(currentout[c, :], dtype=float)
                     yy = np.nan_to_num(yy,nan=0.)
                     currentout[c, :] = yy
                     cumulout[c, :] = np.cumsum(yy)
                     diffout[c, :] = np.diff(yy,0,0)
                 elif o == 'fillnanf':
+                    # fill nan with previous valid value if exists
                     yy = np.array(currentout[c, :], dtype=float)
                     prev_yy=None
                     for k in range(len(yy)):
@@ -506,7 +516,7 @@ class DataBase(object):
                     cumulout[c, :] = np.cumsum(yy)
                     diffout[c, :] = np.diff(yy,0,0)
                 elif o != None:
-                    raise CoaKeyError('The option '+o+' is not recognized in get_stat. Error.')
+                    raise CoaKeyError('The option '+o+' is not recognized in get_stat. See get_available_options() for list. Error.')
 
         datos=self.get_dates()
         i = 0

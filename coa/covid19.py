@@ -138,7 +138,7 @@ class DataBase(object):
                 # columns_keeped = ['total_cases', 'new_cases', 'total_deaths','new_deaths', 'total_cases_per_million',
                 # 'new_cases_per_million', 'total_deaths_per_million','new_deaths_per_million', 'total_tests', 'new_tests',
                 # 'total_tests_per_thousand', 'new_tests_per_thousand', 'new_tests_smoothed', 'new_tests_smoothed_per_thousand','stringency_index']
-                columns_keeped=['total_cases','total_deaths','reproduction_rate','icu_patients','hosp_patients','total_tests','positive_rate','total_vaccinations']
+                columns_keeped=['total_deaths','total_cases','reproduction_rate','icu_patients','hosp_patients','total_tests','positive_rate','total_vaccinations']
                 drop_field = {'location':['International','World']}
                 owid = self.csv_to_pandas_index_location_date("https://raw.githubusercontent.com/owid/covid-19-data/master/public/data/owid-covid-data.csv",
                 separator=',',drop_field=drop_field)

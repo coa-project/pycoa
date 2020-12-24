@@ -497,6 +497,14 @@ class DataBase(object):
                     currentout[c, :] = yy
                     cumulout[c, :] = np.cumsum(yy)
                     diffout[c, :] = np.diff(yy,0,0)
+                elif o == 'smooth7':
+                    yy = np.array(currentout[c, :], dtype=float)
+                    yy = np.convolve(yy,np.ones(7)/7.,mode='valid') # flat window for 7 days, centered (append and prepend nan)
+                    yy = np.append(yy, np.repeat(np.nan, 3)) # add 3 nan at the end
+                    yy = np.concatenate((np.repeat(np.nan, 3),yy)) # add 3 nan at the beg
+                    currentout[c, :] = yy
+                    cumulout[c, :] = np.cumsum(yy)
+                    diffout[c, :] = np.diff(yy,0,0)
                 elif o != None:
                     raise CoaKeyError('The option '+o+' is not recognized in get_stat. Error.')
 

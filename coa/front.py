@@ -82,7 +82,7 @@ def listwhom():
      data in PyCoA.
      The first one is the default one.
     """
-    return _listwhom
+    return _db.get_available_database()
 
 # ----------------------------------------------------------------------
 # --- listwhat() -------------------------------------------------------
@@ -93,6 +93,28 @@ def listwhat():
      The first one is the default one.
     """
     return _listwhat
+
+# ----------------------------------------------------------------------
+# --- listoption() -----------------------------------------------------
+# ----------------------------------------------------------------------
+
+def listoption():
+    """Return the list of currently avalailable option apply to data.
+     Default is no option.
+    """
+    return _db.get_available_options()
+
+# ----------------------------------------------------------------------
+# --- listwhich() ------------------------------------------------------
+# ----------------------------------------------------------------------
+
+def listwhich():
+    """Get which are the available fields for the current base. 
+    Output is a list of string.
+    By default, the listwhich()[0] is the default which field in other
+    functions.
+    """
+    return _db.get_available_keys_words()
 
 # ----------------------------------------------------------------------
 # --- setwhom() --------------------------------------------------------
@@ -114,37 +136,6 @@ def setwhom(base):
         _cocoplot = _db.get_display()
         _whom = base
     return _db.get_available_keys_words()
-
-# ----------------------------------------------------------------------
-# --- listwhich() ------------------------------------------------------
-# ----------------------------------------------------------------------
-
-def listwhich(dbname=None):
-    """Get which are the available fields for the current or specified
-    base. Output is a list of string.
-    By default, the listwhich()[0] is the default which field in other
-    functions.
-    """
-
-    if dbname == None:
-        dbname=_whom
-    if dbname not in listwhom():
-        raise CoaDbError(dbname+' is not a supported database name. '
-            'See pycoa.listwhom() for the full list.')
-    return _db.get_available_keys_words()
-
-def listoption(dbname=None):
-    """Get list of available options for the current or specified
-    base. Output is a list of string.
-    By default, no default option used to get data.
-    """
-
-    if dbname == None:
-        dbname=_whom
-    if dbname not in listwhom():
-        raise CoaDbError(dbname+' is not a supported database name. '
-            'See pycoa.listwhom() for the full list.')
-    return _db.get_available_options()
 
 # ----------------------------------------------------------------------
 # --- get(**kwargs) ----------------------------------------------------

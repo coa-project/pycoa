@@ -127,13 +127,14 @@ class DataBase(object):
                 rename={'maille_code':'location'}
                 cast={'source_url':str,'source_archive':str,'source_type':str}
                 drop_field  = {'granularite':['pays','monde','region']}
-                columns_skipped = ['granularite','maille_nom','source_nom','source_url','source_archive','source_type']
+                #columns_skipped = ['granularite','maille_nom','source_nom','source_url','source_archive','source_type']
+                columns_keeped=['deces','cas_confirmes', 'cas_ehpad', 'cas_confirmes_ehpad', 'cas_possibles_ehpad', 'deces_ehpad', 'reanimation', 'hospitalises', 'nouvelles_hospitalisations', 'nouvelles_reanimations', 'gueris', 'depistes']
                 opencovid19 = self.csv_to_pandas_index_location_date('https://raw.githubusercontent.com/opencovid19-fr/data/master/dist/chiffres-cles.csv',
                             drop_field=drop_field,rename_columns=rename,separator=',',cast=cast)
                 opencovid19 = opencovid19.reset_index()
                 opencovid19['location'] = opencovid19['location'].apply(lambda x: x.replace('COM-','').replace('DEP-',''))
                 opencovid19 = opencovid19.set_index('location','date')
-                self.pandas_datase = self.pandas_index_location_date_to_jhu_format(opencovid19,columns_skipped=columns_skipped)
+                self.pandas_datase = self.pandas_index_location_date_to_jhu_format(opencovid19,columns_keeped=columns_keeped)#columns_skipped=columns_skipped)
             elif self.db == 'owid':
                 info('OWID aka \"Our World in Data\" database selected ...')
                 # columns_keeped = ['total_cases', 'new_cases', 'total_deaths','new_deaths', 'total_cases_per_million',

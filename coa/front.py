@@ -46,6 +46,7 @@ output_notebook(hide_banner=True)
 # --- Needed global private variables ----------------------------------
 _listwhom=['jhu',    # John Hopkins University first base, default
             'owid', # Our World in Data
+            'jhu-usa',
             'spf',   # Sante publique France
             'opencovid19'] #  see data.gouv.fr
 _whom = _listwhom[0] # default base

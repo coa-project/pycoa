@@ -474,14 +474,15 @@ class CocoDisplay():
 
         mypandas = mypandas.loc[(mypandas['date']>=dico['when_beg']) & (mypandas['date']<=dico['when_end'])]
         data  = pd.pivot_table(mypandas,index='date',columns='location',values=input_field)
+
         [data.rename(columns={i:j},inplace=True) for i,j in zip(loc,shorten_loc)]
         data=data.reset_index()
         source = ColumnDataSource(data)
         filter_data1 = data[['date', shorten_loc[0]]].rename(columns={shorten_loc[0]: 'cases'})
         src1 = ColumnDataSource(filter_data1)
+
         filter_data2 = data[['date', shorten_loc[1]]].rename(columns={shorten_loc[1]: 'cases'})
         src2 = ColumnDataSource(filter_data2)
-
         hover_tool = HoverTool(tooltips=[
                         ("Cases", '@cases'),
                         ('date', '@date{%F}')],
@@ -498,21 +499,20 @@ class CocoDisplay():
 
             def add_line(src,options, init,  color):
                 s = Select(options=options, value=init)
-                r = standardfig.line(x='date', y='cases', source=src, line_width=3, line_color=color)
+                r = standardfig.line(x='date', y='cases', source=src,line_width=3, line_color=color)
                 li = LegendItem(label=init, renderers=[r])
-                s.js_on_change('value', CustomJS(args=dict(s0=source, s1=src),
+                s.js_on_change('value', CustomJS(args=dict(s0=source, s1=src,li=li),
                                      code = """
                                             var c = cb_obj.value;
                                             var y = s0.data[c];
                                             s1.data['cases'] = y;
+                                            li.label = {value: cb_obj.value};
                                             s1.change.emit();
-                                            ax=p1.yaxis[0];
                                      """))
-                return s, li
+                return s,li
 
             s1, li1 = add_line(src1,shorten_loc, shorten_loc[0], 'navy')
-            s2, li2 = add_line(src2,shorten_loc, shorten_loc[1], 'firebrick')
-
+            s2, li2= add_line(src2,shorten_loc, shorten_loc[1], 'firebrick')
             standardfig.add_layout(Legend(items=[li1, li2]))
             standardfig.legend.location = 'top_left'
             layout = row(column(row(s1, s2), row(standardfig)))

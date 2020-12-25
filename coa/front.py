@@ -239,7 +239,7 @@ def get(**kwargs):
     else:
         col_name = ''
         if what == 'daily':
-            col_name = 'daily' # prev 'diff'
+            col_name = 'daily' 
         if what == 'cumul' and _whom == 'jhu':
             col_name = which
         if what == 'weekly':

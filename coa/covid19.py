@@ -230,7 +230,7 @@ class DataBase(object):
             extansion =  "_global.csv"
         else:
             extansion = "_US.csv"
-            jhu_files_ext = ['confirmed','deaths']
+            jhu_files_ext = ['deaths','confirmed']
         self.available_keys_words = jhu_files_ext
         for ext in jhu_files_ext:
             fileName = "time_series_covid19_" + ext + extansion

@@ -61,10 +61,10 @@ class DataBase(object):
             self.geo_all='world'
         if self.db =='spf' or self.db == 'opencovid19':
             self.geo = coge.GeoCountry('FRA',True)
-            self.geo_all = self.geo.get_subregion_list()
+            self.geo_all = self.geo.get_subregion_list()['code_subregion'].tolist()
         if self.db =='jhu-usa':
             self.geo = coge.GeoCountry('USA',True)
-            self.geo_all = self.geo.get_subregion_list()
+            self.geo_all = self.geo.get_subregion_list()['code_subregion'].tolist()
 
         if self.db not in self.database_name:
             raise CoaDbError('Unknown ' + self.db + '. Available database so far in PyCoa are : ' + str(self.database_name) ,file=sys.stderr)

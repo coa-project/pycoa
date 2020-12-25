@@ -115,12 +115,13 @@ class DataBase(object):
                 # Rouge : R0 supérieur à 1,5.
                 cast={'departement':'string'}
                 rename={'extract_date':'date','departement':'location'}
-                columns_skipped=['region','libelle_reg','libelle_dep','tx_incid_couleur','R_couleur',\
-                'taux_occupation_sae_couleur','tx_pos_couleur','nb_orange','nb_rouge']
+                # columns_skipped=['region','libelle_reg','libelle_dep','tx_incid_couleur','R_couleur',\
+                # 'taux_occupation_sae_couleur','tx_pos_couleur','nb_orange','nb_rouge']
+                columns_keeped=['dc','hosp', 'rea', 'rad', 'incid_hosp', 'incid_rea', 'incid_dc', 'incid_rad', 'P', 'T', 'tx_incid', 'R', 'taux_occupation_sae', 'tx_pos']
                 spf4=self.csv_to_pandas_index_location_date("https://www.data.gouv.fr/fr/datasets/r/4acad602-d8b1-4516-bc71-7d5574d5f33e",
                             rename_columns=rename, separator=',', encoding = "ISO-8859-1",cast=cast)
                 result = pd.concat([spf1, spf2,spf3,spf4], axis=1, sort=False)
-                self.pandas_datase = self.pandas_index_location_date_to_jhu_format(result,columns_skipped=columns_skipped)
+                self.pandas_datase = self.pandas_index_location_date_to_jhu_format(result,columns_keeped=columns_keeped)#columns_skipped=columns_skipped)
             elif self.db == 'opencovid19':
                 info('OPENCOVID19 selected ...')
                 rename={'maille_code':'location'}

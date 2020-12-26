@@ -464,7 +464,7 @@ class DataBase(object):
         diffout = np.array(tuple(dict(
             (c, self.get_diff_days()[kwargs['which']][c]) for c in clist).values()))
 
-        option = kwargs.get('option', None)
+        option = kwargs.get('option', '')
 
         if not isinstance(option,list):
             option=[option]
@@ -517,7 +517,7 @@ class DataBase(object):
                     currentout[c, :] = yy
                     cumulout[c, :] = np.cumsum(yy)
                     diffout[c, :] = np.diff(yy,0,0)
-                elif o != None:
+                elif o != '':
                     raise CoaKeyError('The option '+o+' is not recognized in get_stats. See get_available_options() for list.')
 
         datos=self.get_dates()

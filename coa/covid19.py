@@ -448,7 +448,8 @@ class DataBase(object):
         pdfiltered = pdfiltered[['location','date',kwargs['which']]]
         pdfiltered['daily'] = pdfiltered.groupby(['location'])[kwargs['which']].diff()
 
-        option = kwargs.get('option', None)
+        option = kwargs.get('option', '')
+
         if not isinstance(option,list):
             option=[option]
         for o in option:

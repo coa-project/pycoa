@@ -530,28 +530,32 @@ class DataBase(object):
 
             if len(currentout[i]):
                 val1,val2,val3 = currentout[i], cumulout[i], diffout[i]
-
+                val7 = np.concatenate((np.nan*np.ones(7),np.diff(cumulout[i],n=7)),axis=None)                # compute weekly
             else:
-                val1 = val2 = val3 = [np.nan]*len(datos)
+                val1 = val2 = val3 = val7 = [np.nan]*len(datos)
+            weekout = val7
             data = {
                 'location':[coun]*len(datos),
                 'date': datos,
                 kwargs['which']:val1,
                 'cumul':val2,
-                'daily': val3 
+                'daily': val3,
+                'weekly': weekout
                 }
             temp.append(pd.DataFrame(data))
             i+=1
 
         pandy = pd.concat(temp)
 
-        pandy['weekly'] = pandy.groupby('location')[kwargs['which']].diff(periods=7).reset_index(level=0,drop=True)
+        #pandy['weekly'] = pandy.groupby('location')[kwargs['which']].diff(periods=7).reset_index(level=0,drop=True)
 
         if output == "array":
             if process_data == 'cumul':
                 out = cumulout
             elif process_data == 'daily':
 	            out = diffout
+            elif process_data == 'weekly':
+                out = weekout
             else:
                 out =  currentout
             if out.shape[0] == 1:

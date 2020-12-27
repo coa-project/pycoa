@@ -632,7 +632,7 @@ class GeoCountry():
     The list of supported countries is given by get_list_countries() function """
 
     # Assuming zip file here
-    _country_info_dict = {'FRA':'https://datanova.laposte.fr/explore/dataset/geoflar-departements-2015/download/?format=shp&timezone=Europe/Berlin&lang=fr',\
+    _country_info_dict = {'FRA':'https://www.data.gouv.fr/fr/datasets/r/eb55dda0-fd99-4f90-bb3e-0223f87c6459',\
                     'USA':'https://alicia.data.socrata.com/api/geospatial/jhnu-yfrj?method=export&format=Original'
                     }
 

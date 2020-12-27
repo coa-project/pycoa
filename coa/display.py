@@ -144,6 +144,9 @@ class CocoDisplay():
         else:
             title_temporal =  ' (' + 'between ' + input_dico['when_beg'].strftime('%d/%m/%Y') +' and ' + input_dico['when_end'].strftime('%d/%m/%Y') + ')'
 
+        if kwargs.get('option', '') != '':
+            title_temporal = ', option '+str(kwargs.get('option'))+title_temporal
+
         input_dico['title_temporal'] = title_temporal
         titlebar = which + title_temporal
 

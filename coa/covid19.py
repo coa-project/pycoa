@@ -57,6 +57,19 @@ class DataBase(object):
         self.geo_all = ''
         self.set_display(self.db)
 
+<<<<<<< HEAD
+=======
+        if self.db == 'jhu' or  self.db == 'owid':
+            self.geo = coge.GeoManager('name')
+            self.geo_all='world'
+        if self.db =='spf' or self.db == 'opencovid19':
+            self.geo = coge.GeoCountry('FRA',True)
+            self.geo_all = self.geo.get_subregion_list()['code_subregion'].tolist()
+        if self.db =='jhu-usa':
+            self.geo = coge.GeoCountry('USA',True)
+            self.geo_all = self.geo.get_subregion_list()['code_subregion'].tolist()
+
+>>>>>>> 0f52e69c4df6163f6decfbfcdd13e051fd49e8f2
         if self.db not in self.database_name:
             raise CoaDbError('Unknown ' + self.db + '. Available database so far in PyCoa are : ' + str(self.database_name) ,file=sys.stderr)
         else:
@@ -112,12 +125,13 @@ class DataBase(object):
                 # Rouge : R0 supérieur à 1,5.
                 cast={'departement':'string'}
                 rename={'extract_date':'date','departement':'location'}
-                columns_skipped=['region','libelle_reg','libelle_dep','tx_incid_couleur','R_couleur',\
-                'taux_occupation_sae_couleur','tx_pos_couleur','nb_orange','nb_rouge']
+                # columns_skipped=['region','libelle_reg','libelle_dep','tx_incid_couleur','R_couleur',\
+                # 'taux_occupation_sae_couleur','tx_pos_couleur','nb_orange','nb_rouge']
+                columns_keeped=['dc','hosp', 'rea', 'rad', 'incid_hosp', 'incid_rea', 'incid_dc', 'incid_rad', 'P', 'T', 'tx_incid', 'R', 'taux_occupation_sae', 'tx_pos']
                 spf4=self.csv_to_pandas_index_location_date("https://www.data.gouv.fr/fr/datasets/r/4acad602-d8b1-4516-bc71-7d5574d5f33e",
                             rename_columns=rename, separator=',', encoding = "ISO-8859-1",cast=cast)
                 result = pd.concat([spf1, spf2,spf3,spf4], axis=1, sort=False)
-                self.pandas_datase = self.pandas_index_location_date_to_jhu_format(result,columns_skipped=columns_skipped)
+                self.pandas_datase = self.pandas_index_location_date_to_jhu_format(result,columns_keeped=columns_keeped)#columns_skipped=columns_skipped)
             elif self.db == 'opencovid19':
                 info('OPENCOVID19 selected ...')
                 self.geo = coge.GeoCountry('FRA',True)
@@ -125,11 +139,22 @@ class DataBase(object):
                 rename={'maille_code':'location'}
                 cast={'source_url':str,'source_archive':str,'source_type':str}
                 drop_field  = {'granularite':['pays','monde','region']}
+<<<<<<< HEAD
                 columns_skipped = ['granularite','maille_nom','source_nom','source_url','source_archive','source_type']
                 opencovid19 = self.csv2pandas('https://raw.githubusercontent.com/opencovid19-fr/data/master/dist/chiffres-cles.csv',
+=======
+                #columns_skipped = ['granularite','maille_nom','source_nom','source_url','source_archive','source_type']
+                columns_keeped=['deces','cas_confirmes', 'cas_ehpad', 'cas_confirmes_ehpad', 'cas_possibles_ehpad', 'deces_ehpad', 'reanimation', 'hospitalises', 'nouvelles_hospitalisations', 'nouvelles_reanimations', 'gueris', 'depistes']
+                opencovid19 = self.csv_to_pandas_index_location_date('https://raw.githubusercontent.com/opencovid19-fr/data/master/dist/chiffres-cles.csv',
+>>>>>>> 0f52e69c4df6163f6decfbfcdd13e051fd49e8f2
                             drop_field=drop_field,rename_columns=rename,separator=',',cast=cast)
                 opencovid19['location'] = opencovid19['location'].apply(lambda x: x.replace('COM-','').replace('DEP-',''))
+<<<<<<< HEAD
                 self.return_structured_pandas(opencovid19,columns_skipped=columns_skipped)
+=======
+                opencovid19 = opencovid19.set_index('location','date')
+                self.pandas_datase = self.pandas_index_location_date_to_jhu_format(opencovid19,columns_keeped=columns_keeped)#columns_skipped=columns_skipped)
+>>>>>>> 0f52e69c4df6163f6decfbfcdd13e051fd49e8f2
             elif self.db == 'owid':
                 info('OWID aka \"Our World in Data\" database selected ...')
                 self.geo = coge.GeoManager('name')
@@ -231,7 +256,7 @@ class DataBase(object):
             extansion =  "_global.csv"
         else:
             extansion = "_US.csv"
-            jhu_files_ext = ['confirmed','deaths']
+            jhu_files_ext = ['deaths','confirmed']
         self.available_keys_words = jhu_files_ext
 
         pandas_list = []
@@ -450,7 +475,12 @@ class DataBase(object):
         pdfiltered = pdfiltered[['location','date',kwargs['which']]]
         pdfiltered['diff'] = pdfiltered.groupby(['location'])[kwargs['which']].diff()
 
+<<<<<<< HEAD
         option = kwargs.get('option', None)
+=======
+        option = kwargs.get('option', '')
+
+>>>>>>> 0f52e69c4df6163f6decfbfcdd13e051fd49e8f2
         if not isinstance(option,list):
             option=[option]
         for o in option:
@@ -473,6 +503,7 @@ class DataBase(object):
                         val_to_repart = val_to_repart + yy[k]
                         s = np.sum(yy[0:k])
                         yy[0:k] = yy[0:k]*(1-float(val_to_repart)/s)
+<<<<<<< HEAD
                     pdfiltered.loc[ind,'diff']=yy
                     pdfiltered.loc[ind,kwargs['which']]=np.cumsum(yy)
             elif o == 'fillnan0':
@@ -488,6 +519,86 @@ class DataBase(object):
                 raise CoaKeyError('The option '+o+' is not recognized in get_stats. See get_available_options() for list.')
         pdfiltered['cumul'] = pdfiltered.groupby(['location'])[kwargs['which']].cumsum()
         return pdfiltered
+=======
+                    diffout[c, :] = yy
+                    currentout[c, :] = np.cumsum(yy)
+                    cumulout[c, :] = np.cumsum(np.cumsum(yy))
+                elif o == 'fillnan0':
+                    # fill nan with zeros
+                    yy = np.array(currentout[c, :], dtype=float)
+                    yy = np.nan_to_num(yy,nan=0.)
+                    currentout[c, :] = yy
+                    cumulout[c, :] = np.cumsum(yy)
+                    diffout[c, :] = np.diff(yy,0,0)
+                elif o == 'fillnanf':
+                    # fill nan with previous valid value if exists
+                    yy = np.array(currentout[c, :], dtype=float)
+                    prev_yy=None
+                    for k in range(len(yy)):
+                        if np.isnan(yy[k]) and prev_yy != None:
+                            yy[k]=prev_yy
+                        else:
+                            prev_yy=yy[k]
+                    currentout[c, :] = yy
+                    cumulout[c, :] = np.cumsum(yy)
+                    diffout[c, :] = np.diff(yy,0,0)
+                elif o == 'smooth7':
+                    yy = np.array(currentout[c, :], dtype=float)
+                    yy = np.convolve(yy,np.ones(7)/7.,mode='valid') # flat window for 7 days, centered (append and prepend nan)
+                    yy = np.append(yy, np.repeat(np.nan, 3)) # add 3 nan at the end
+                    yy = np.concatenate((np.repeat(np.nan, 3),yy)) # add 3 nan at the beg
+                    currentout[c, :] = yy
+                    cumulout[c, :] = np.cumsum(yy)
+                    diffout[c, :] = np.diff(yy,0,0)
+                elif o != '':
+                    raise CoaKeyError('The option '+o+' is not recognized in get_stats. See get_available_options() for list.')
+
+        datos=self.get_dates()
+        i = 0
+        temp=[]
+
+        for coun in clist:
+            if len(coun)==0:
+                continue
+
+            if len(currentout[i]):
+                val1,val2,val3 = currentout[i], cumulout[i], diffout[i]
+                val7 = np.concatenate((np.nan*np.ones(7),np.diff(cumulout[i],n=7)),axis=None)                # compute weekly
+            else:
+                val1 = val2 = val3 = val7 = [np.nan]*len(datos)
+            weekout = val7
+            data = {
+                'location':[coun]*len(datos),
+                'date': datos,
+                kwargs['which']:val1,
+                'cumul':val2,
+                'daily': val3,
+                'weekly': weekout
+                }
+            temp.append(pd.DataFrame(data))
+            i+=1
+
+        pandy = pd.concat(temp)
+
+        #pandy['weekly'] = pandy.groupby('location')[kwargs['which']].diff(periods=7).reset_index(level=0,drop=True)
+
+        if output == "array":
+            if process_data == 'cumul':
+                out = cumulout
+            elif process_data == 'daily':
+	            out = diffout
+            elif process_data == 'weekly':
+                out = weekout
+            else:
+                out =  currentout
+            if out.shape[0] == 1:
+                return out[0]
+            else:
+                return out.T
+
+        #if len(clist) == 1 :
+        #    temp[0] = temp[0].drop(columns=['location'])
+>>>>>>> 0f52e69c4df6163f6decfbfcdd13e051fd49e8f2
 
 
    ## https://www.kaggle.com/freealf/estimation-of-rt-from-cases

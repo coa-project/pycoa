@@ -27,6 +27,7 @@ import coa.display as codisplay
 from coa.error import *
 from scipy import stats as sps
 import random
+from functools import reduce
 
 class DataBase(object):
    '''
@@ -56,26 +57,22 @@ class DataBase(object):
         self.geo_all = ''
         self.set_display(self.db)
 
-        if self.db == 'jhu' or  self.db == 'owid':
-            self.geo = coge.GeoManager('name')
-            self.geo_all='world'
-        if self.db =='spf' or self.db == 'opencovid19':
-            self.geo = coge.GeoCountry('FRA',True)
-            self.geo_all = self.geo.get_subregion_list()
-        if self.db =='jhu-usa':
-            self.geo = coge.GeoCountry('USA',True)
-            self.geo_all = self.geo.get_subregion_list()
-
         if self.db not in self.database_name:
             raise CoaDbError('Unknown ' + self.db + '. Available database so far in PyCoa are : ' + str(self.database_name) ,file=sys.stderr)
         else:
             if self.db == 'jhu':
                 info('JHU aka Johns Hopkins database selected ...')
-                self.pandas_datase = self.parse_convert_jhu()
+                self.geo = coge.GeoManager('name')
+                self.geo_all='world'
+                self.return_jhu_pandas()
             if self.db == 'jhu-usa':
                 info('USA, JHU aka Johns Hopkins database selected ...')
-                self.pandas_datase = self.parse_convert_jhu()
+                self.geo = coge.GeoCountry('USA',True)
+                self.geo_all = self.geo.get_subregion_list()
+                self.return_jhu_pandas()
             elif self.db == 'spf':
+                self.geo = coge.GeoCountry('FRA',True)
+                self.geo_all = self.geo.get_subregion_list()
                 info('SPF aka Sante Publique France database selected ...')
                 info('... tree differents db from SPF will be parsed ...')
                 # https://www.data.gouv.fr/fr/datasets/donnees-hospitalieres-relatives-a-lepidemie-de-covid-19/
@@ -123,27 +120,28 @@ class DataBase(object):
                 self.pandas_datase = self.pandas_index_location_date_to_jhu_format(result,columns_skipped=columns_skipped)
             elif self.db == 'opencovid19':
                 info('OPENCOVID19 selected ...')
+                self.geo = coge.GeoCountry('FRA',True)
+                self.geo_all = self.geo.get_subregion_list()
                 rename={'maille_code':'location'}
                 cast={'source_url':str,'source_archive':str,'source_type':str}
                 drop_field  = {'granularite':['pays','monde','region']}
                 columns_skipped = ['granularite','maille_nom','source_nom','source_url','source_archive','source_type']
-                opencovid19 = self.csv_to_pandas_index_location_date('https://raw.githubusercontent.com/opencovid19-fr/data/master/dist/chiffres-cles.csv',
+                opencovid19 = self.csv2pandas('https://raw.githubusercontent.com/opencovid19-fr/data/master/dist/chiffres-cles.csv',
                             drop_field=drop_field,rename_columns=rename,separator=',',cast=cast)
-                opencovid19 = opencovid19.reset_index()
                 opencovid19['location'] = opencovid19['location'].apply(lambda x: x.replace('COM-','').replace('DEP-',''))
-                opencovid19 = opencovid19.set_index('location','date')
-                self.pandas_datase = self.pandas_index_location_date_to_jhu_format(opencovid19,columns_skipped=columns_skipped)
+                self.return_structured_pandas(opencovid19,columns_skipped=columns_skipped)
             elif self.db == 'owid':
                 info('OWID aka \"Our World in Data\" database selected ...')
+                self.geo = coge.GeoManager('name')
+                self.geo_all='world'
                 # columns_keeped = ['total_cases', 'new_cases', 'total_deaths','new_deaths', 'total_cases_per_million',
                 # 'new_cases_per_million', 'total_deaths_per_million','new_deaths_per_million', 'total_tests', 'new_tests',
                 # 'total_tests_per_thousand', 'new_tests_per_thousand', 'new_tests_smoothed', 'new_tests_smoothed_per_thousand','stringency_index']
                 columns_keeped=['total_deaths','total_cases','reproduction_rate','icu_patients','hosp_patients','total_tests','positive_rate','total_vaccinations']
                 drop_field = {'location':['International','World']}
-                owid = self.csv_to_pandas_index_location_date("https://raw.githubusercontent.com/owid/covid-19-data/master/public/data/owid-covid-data.csv",
+                owid = self.csv2pandas("https://raw.githubusercontent.com/owid/covid-19-data/master/public/data/owid-covid-data.csv",
                 separator=',',drop_field=drop_field)
-                self.pandas_datase = self.pandas_index_location_date_to_jhu_format(owid,columns_keeped=columns_keeped)
-            self.fill_pycoa_field()
+                self.return_structured_pandas(owid,columns_keeped=columns_keeped)
             info('Few information concernant the selected database : ', self.get_db())
             info('Available which key-words for: ',self.get_available_keys_words())
             info('Example of location : ',  ', '.join(random.choices(self.get_locations(), k=5)), ' ...')
@@ -218,10 +216,13 @@ class DataBase(object):
         '''
         return self.pandas_datase
 
-   def parse_convert_jhu(self):
+   def return_jhu_pandas(self):
         ''' For center for Systems Science and Engineering (CSSE) at Johns Hopkins University
-            COVID-19 Data Repository by the see homepage: https://github.com/CSSEGISandData/COVID-19 '''
-
+            COVID-19 Data Repository by the see homepage: https://github.com/CSSEGISandData/COVID-19
+            return a structure : pandas location - date - keywords
+            for jhu location are countries (location uses geo standard)
+            for jhu-usa location are Province_State (location uses geo standard)
+            '''
         self.database_url = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/"+\
                                 "csse_covid_19_data/csse_covid_19_time_series/"
         jhu_files_ext = ['deaths', 'confirmed', 'recovered']
@@ -232,6 +233,8 @@ class DataBase(object):
             extansion = "_US.csv"
             jhu_files_ext = ['confirmed','deaths']
         self.available_keys_words = jhu_files_ext
+
+        pandas_list = []
         for ext in jhu_files_ext:
             fileName = "time_series_covid19_" + ext + extansion
             url = self.database_url + fileName
@@ -239,24 +242,55 @@ class DataBase(object):
             if self.db == 'jhu':
                 pandas_jhu_db = pandas_jhu_db.rename(columns={'Country/Region':'location'})
                 pandas_jhu_db = pandas_jhu_db.drop(columns=['Province/State','Lat','Long'])
-            else:
-                pandas_jhu_db = pandas_jhu_db.rename(columns={'Country_Region':'location'})
+                pandas_jhu_db = pandas_jhu_db.melt(id_vars=["location"],var_name="date",value_name=ext)
+            elif self.db == 'jhu-usa':
+                pandas_jhu_db = pandas_jhu_db.rename(columns={'Province_State':'location'})
                 pandas_jhu_db = pandas_jhu_db.drop(columns=['UID','iso2','iso3','code3','FIPS',
-                                    'Admin2','Province_State','Lat','Long_','Combined_Key'])
-            pandas_jhu_db = pandas_jhu_db.sort_values(by=['location'])
-            pandas_jhu_db = pandas_jhu_db.set_index('location')
-            self.dates    = pandas.to_datetime(pandas_jhu_db.columns,errors='coerce')
-            pandas_jhu[ext] = pandas_jhu_db
-        return pandas_jhu
+                                    'Admin2','Country_Region','Lat','Long_','Combined_Key'])
+                if 'Population' in pandas_jhu_db.columns:
+                    pandas_jhu_db = pandas_jhu_db.melt(id_vars=["location",'Population'],var_name="date",value_name=ext)
+                else:
+                    pandas_jhu_db = pandas_jhu_db.melt(id_vars=["location"],var_name="date",value_name=ext)
+            else:
+                raise CoaTypeError('jhu nor jhu-usa database selected ... ')
 
-   def csv_to_pandas_index_location_date(self,url,**kwargs):
+            pandas_jhu_db=pandas_jhu_db.groupby(['location','date']).sum().reset_index()
+            pandas_list.append(pandas_jhu_db)
+
+        uniqloc = pandas_list[0]['location'].unique()
+        oldloc = uniqloc
+        if self.db == 'jhu':
+            d_loc_s=self.geo.to_standard(list(uniqloc),output='list',db=self.get_db(),interpret_region=True)
+            self.slocation=d_loc_s
+            intersection = set(uniqloc).intersection(d_loc_s)
+            tomodify=(set(uniqloc)-intersection)
+            oldloc = tomodify
+            newloc = list(set(uniqloc) - set(d_loc_s))
+            toremove=['']
+        else:
+            loc_sub=list(self.geo.get_subregion_list()['name_subregion'])
+            toremove=[x for x in uniqloc if x not in loc_sub]
+            loc_code=list(self.geo.get_data().loc[self.geo.get_data().name_subregion.isin(loc_sub)]['code_subregion'])
+            self.slocation=loc_code
+            oldloc = loc_sub
+            newloc = loc_code
+        result = reduce(lambda x, y: pd.merge(x, y, on = ['location','date']), pandas_list)
+        result = result.loc[~result.location.isin(toremove)]
+        result = result.replace(oldloc,newloc)
+        result['date'] = pd.to_datetime(result['date'],errors='coerce')
+        self.dates  = result['date'].values
+        result=result.sort_values(['location','date'])
+        self.mainpandas = result
+
+
+   def csv2pandas(self,url,**kwargs):
         '''
-        Parse and convert CSV file to a pandas with location+date as an index
+        Parse and convert CSV file to a pandas structure
         '''
         self.database_url=url
 
         kwargs_test(kwargs,['cast','separator','encoding','constraints','rename_columns','drop_field'],
-            'Bad args used in the csv_to_pandas_index_location_date() function.')
+            'Bad args used in the csv2pandas() function.')
 
         cast = kwargs.get('cast', None)
         dico_cast = {}
@@ -269,7 +303,8 @@ class DataBase(object):
         encoding = kwargs.get('encoding', None)
         if encoding:
             encoding = encoding
-        pandas_db = pandas.read_csv(get_local_from_url(self.database_url,7200),sep=separator,dtype=dico_cast, encoding = encoding ) # cached for 2 hours
+        #pandas_db = pandas.read_csv(get_local_from_url(self.database_url,7200),sep=separator,dtype=dico_cast, encoding = encoding ) # cached for 2 hours
+        pandas_db = pandas.read_csv(self.database_url,sep=separator,dtype=dico_cast, encoding = encoding )
         constraints = kwargs.get('constraints', None)
         rename_columns = kwargs.get('rename_columns', None)
         drop_field = kwargs.get('drop_field', None)
@@ -278,7 +313,6 @@ class DataBase(object):
             for key,val in constraints.items():
                 pandas_db = pandas_db.loc[pandas_db[key] == val]
                 pandas_db = pandas_db.drop(columns=key)
-
         if drop_field:
             for key,val in drop_field.items():
                 for i in val:
@@ -287,78 +321,45 @@ class DataBase(object):
             for key,val in rename_columns.items():
                 pandas_db = pandas_db.rename(columns={key:val})
         pandas_db['date'] = pandas.to_datetime(pandas_db['date'],errors='coerce')
-        #pandas_db['date'] = pandas_db['date'].dt.strftime("%m/%d/%y")
         pandas_db = pandas_db.sort_values(['location','date'])
-        pandas_db = pandas_db.groupby(['location','date']).first()
+        return pandas_db.reset_index()
 
-        return pandas_db
-
-   def pandas_index_location_date_to_jhu_format(self,mypandas,**kwargs):
+   def return_structured_pandas(self,mypandas,**kwargs):
         '''
         Return a pandas in PyCoA Structure
         '''
         kwargs_test(kwargs,['columns_skipped','columns_keeped'],
             'Bad args used in the pandas_index_location_date_to_jhu_format() function.')
-
         columns_skipped = kwargs.get('columns_skipped', None)
         columns_keeped  = kwargs.get('columns_keeped', None)
-        database_columns_not_computed = ['date','location']
-        available_keys_words_pub = [i for i in mypandas.columns.values.tolist() if i not in database_columns_not_computed]
-        if columns_skipped:
-            for col in columns_skipped:
-                database_columns_not_computed.append(col)
-            available_keys_words_pub = [i for i in mypandas.columns.values.tolist() if i not in database_columns_not_computed]
-        if columns_keeped:
-           available_keys_words_pub = columns_keeped
-        self.available_keys_words = available_keys_words_pub
-        mypandas.reset_index(inplace=True)
-        pandas_dico = {}
-        for w in available_keys_words_pub:
-            pandas_temp   = mypandas[['location','date',w]]
-            pandas_temp.reset_index(inplace=True)
-            pandas_temp   = pandas_temp.pivot_table(index='location',values=w,columns='date',dropna=False)
-            #pandas_temp   = pandas_temp.rename(columns=lambda x: x.strftime('%m/%d/%y'))
-            pandas_dico[w] = pandas_temp
-            self.dates    = pandas.to_datetime(pandas_dico[w].columns,errors='coerce')
-        return pandas_dico
+        absolutlyneeded = ['date','location']
+        mypandas = mypandas[absolutlyneeded+columns_keeped]
+        self.available_keys_words = columns_keeped
+        self.dates  = mypandas['date'].values
+        self.slocation = mypandas['location'].unique()
 
-   def fill_pycoa_field(self):
-        ''' Fill PyCoA variables with database data '''
-        df = self.get_rawdata()
-        #self.dicos_countries = defaultdict(list)
+        uniqloc = self.slocation
+        oldloc = uniqloc
+        if self.db == 'owid':
+            d_loc_s=self.geo.to_standard(list(uniqloc),output='list',db=self.get_db(),interpret_region=True)
+            self.slocation=d_loc_s
+            intersection = set(uniqloc).intersection(d_loc_s)
+            tomodify=(set(uniqloc)-intersection)
+            oldloc = tomodify
+            newloc = list(set(uniqloc) - set(d_loc_s))
+            toremove=['']
+        else:
+            loc_sub=list(self.geo.get_subregion_list()['name_subregion'])
+            toremove=[x for x in uniqloc if x not in loc_sub]
+            loc_code=list(self.geo.get_data().loc[self.geo.get_data().name_subregion.isin(loc_sub)]['code_subregion'])
+            self.slocation=loc_code
+            oldloc = loc_sub
+            newloc = loc_code
+        mypandas = mypandas.replace(oldloc,newloc)
+        self.mainpandas = mypandas
 
-        one_time_enough = False
-        for keys_words in self.available_keys_words:
-                self.dicos_countries[keys_words] = defaultdict(list)
-                self.dict_current_days[keys_words] = defaultdict(list)
-                self.dict_cumul_days[keys_words] = defaultdict(list)
-                self.dict_diff_days[keys_words] = defaultdict(list)
-
-                if self.db != 'jhu' and self.db != 'jhu-usa': # needed since not same nb of rows for deaths,recovered and confirmed
-                    if one_time_enough == False:
-                        d_loc  = df[keys_words].to_dict('split')['index']
-                        if self.db == 'owid' and one_time_enough == False:
-                            d_loc=self.geo.to_standard(list(d_loc),output='list',db=self.get_db(),interpret_region=True)
-
-                        one_time_enough = True
-                else :
-                    d_loc  = df[keys_words].to_dict('split')['index']
-                    if self.db == 'jhu' and one_time_enough == False:
-                        d_loc=self.geo.to_standard(list(d_loc),output='list',db=self.get_db(),interpret_region=True)
-                    if self.db == 'jhu-usa' and one_time_enough == False:
-                        d_loc=self.geo.get_subregion_list()['code_subregion']
-
-                d_data = df[keys_words].to_dict('split')['data']
-                {self.dicos_countries[keys_words][loc].append(data) for loc,data in zip(d_loc,d_data)}
-
-                self.dict_current_days[keys_words] = {loc:list(np.sum(data, 0)) for loc,data in \
-                self.dicos_countries[keys_words].items()}
-
-                self.dict_cumul_days[keys_words] = {loc: np.nancumsum(data) for loc,data in \
-                self.dict_current_days[keys_words].items()}
-
-                self.dict_diff_days[keys_words] = {loc: np.insert(np.diff(data),0,0) for loc,data in \
-                self.dict_current_days[keys_words].items()}
+   def get_mainpandas(self):
+        return self.mainpandas
 
    def flat_list(self, matrix):
         ''' Flatten list function used in covid19 methods'''
@@ -392,11 +393,11 @@ class DataBase(object):
 
    def get_dates(self):
         ''' Return all dates available in the current database'''
-        return self.dates.date
+        return self.dates
 
    def get_locations(self):
         ''' Return available location countries / regions in the current database '''
-        return np.array(tuple(self.get_diff_days()[self.available_keys_words[0]].keys()))
+        return self.slocation
 
    def get_stats(self, **kwargs):
         '''
@@ -445,36 +446,23 @@ class DataBase(object):
             raise CoaKeyError(kwargs['which']+' is not a available for' + self.db + 'database name. '
             'See get_available_keys_words() for the full list.')
 
-        if self.db == 'jhu' or self.db == 'owid' or self.db == 'jhu-usa':
-            if self.db == 'jhu-usa':
-                clist=self.geo.get_subregion_list()['code_subregion']
-            else:
-                self.geo.set_standard('name')
-                clist=self.geo.to_standard(clist,output='list',interpret_region=True)
-            clist=list(set(clist)) # to suppress duplicate countrie
-            diff_locations = list(set(clist) - set(self.get_locations()))
-            clist = [i for i in clist if i not in diff_locations]
-
-        currentout = np.array(tuple(dict(
-            (c, (self.get_current_days()[kwargs['which']][c])) for c in clist).values()))
-        cumulout = np.array(tuple(dict(
-            (c, (self.get_cumul_days()[kwargs['which']][c])) for c in clist).values()))
-        diffout = np.array(tuple(dict(
-            (c, self.get_diff_days()[kwargs['which']][c]) for c in clist).values()))
+        pdfiltered = self.get_mainpandas().loc[self.get_mainpandas().location.isin(clist)]
+        pdfiltered = pdfiltered[['location','date',kwargs['which']]]
+        pdfiltered['diff'] = pdfiltered.groupby(['location'])[kwargs['which']].diff()
 
         option = kwargs.get('option', None)
-
         if not isinstance(option,list):
             option=[option]
         for o in option:
-            diffout = np.array(diffout, dtype=float)
-            currentout = np.array(currentout, dtype=float)
-            for c in range(diffout.shape[0]):
-                if o == 'nonneg':
+            if o == 'nonneg':
+                for loca in clist:
                     # modify values in order that diff values is never negative
-                    yy = np.array(diffout[c, :], dtype=float)
+                    pa = pdfiltered.loc[ pdfiltered.location == loca ]['diff']
+                    yy = pa.values
+                    ind = list(pa.index)
                     where_nan = np.isnan(yy)
                     yy[where_nan] = 0.
+                    indices=np.where(yy < 0)[0]
                     for kk in np.where(yy < 0)[0]:
                         k = int(kk)
                         val_to_repart = -yy[k]
@@ -485,85 +473,22 @@ class DataBase(object):
                         val_to_repart = val_to_repart + yy[k]
                         s = np.sum(yy[0:k])
                         yy[0:k] = yy[0:k]*(1-float(val_to_repart)/s)
-                    diffout[c, :] = yy
-                    currentout[c, :] = np.cumsum(yy)
-                    cumulout[c, :] = np.cumsum(np.cumsum(yy))
-                elif o == 'fillnan0':
-                    # fill nan with zeros
-                    yy = np.array(currentout[c, :], dtype=float)
-                    yy = np.nan_to_num(yy,nan=0.)
-                    currentout[c, :] = yy
-                    cumulout[c, :] = np.cumsum(yy)
-                    diffout[c, :] = np.diff(yy,0,0)
-                elif o == 'fillnanf':
-                    # fill nan with previous valid value if exists
-                    yy = np.array(currentout[c, :], dtype=float)
-                    prev_yy=None
-                    for k in range(len(yy)):
-                        if np.isnan(yy[k]) and prev_yy != None:
-                            yy[k]=prev_yy
-                        else:
-                            prev_yy=yy[k]
-                    currentout[c, :] = yy
-                    cumulout[c, :] = np.cumsum(yy)
-                    diffout[c, :] = np.diff(yy,0,0)
-                elif o == 'smooth7':
-                    yy = np.array(currentout[c, :], dtype=float)
-                    yy = np.convolve(yy,np.ones(7)/7.,mode='valid') # flat window for 7 days, centered (append and prepend nan)
-                    yy = np.append(yy, np.repeat(np.nan, 3)) # add 3 nan at the end
-                    yy = np.concatenate((np.repeat(np.nan, 3),yy)) # add 3 nan at the beg
-                    currentout[c, :] = yy
-                    cumulout[c, :] = np.cumsum(yy)
-                    diffout[c, :] = np.diff(yy,0,0)
-                elif o != None:
-                    raise CoaKeyError('The option '+o+' is not recognized in get_stats. See get_available_options() for list.')
+                    pdfiltered.loc[ind,'diff']=yy
+                    pdfiltered.loc[ind,kwargs['which']]=np.cumsum(yy)
+            elif o == 'fillnan0':
+                # fill nan with zeros
+                pdfiltered = pdfiltered.fillna(0)
+                pdfiltered['diff'] = pdfiltered.groupby(['location'])[kwargs['which']].diff()
+            elif o == 'fillnanf':
+                pdfiltered.fillna(method='ffill', inplace=True)
+                pdfiltered['diff'] = pdfiltered.groupby(['location'])[kwargs['which']].diff()
+            elif o == 'smooth7':
+                pdfiltered['smooth7'] = pdfiltered.groupby('location')[kwargs['which']].rolling(7).mean().reset_index(level=0, drop=True)
+            elif o != None:
+                raise CoaKeyError('The option '+o+' is not recognized in get_stats. See get_available_options() for list.')
+        pdfiltered['cumul'] = pdfiltered.groupby(['location'])[kwargs['which']].cumsum()
+        return pdfiltered
 
-        datos=self.get_dates()
-        i = 0
-        temp=[]
-
-        for coun in clist:
-            if len(coun)==0:
-                continue
-
-            if len(currentout[i]):
-                val1,val2,val3 = currentout[i], cumulout[i], diffout[i]
-
-            else:
-                val1 = val2 = val3 = [np.nan]*len(datos)
-            data = {
-                'location':[coun]*len(datos),
-                'date': datos,
-                kwargs['which']:val1,
-                'cumul':val2,
-                'daily': val3 
-                }
-            temp.append(pd.DataFrame(data))
-            i+=1
-
-        pandy = pd.concat(temp)
-
-        pandy['weekly'] = pandy.groupby('location')[kwargs['which']].diff(periods=7).reset_index(level=0,drop=True)
-
-        if output == "array":
-            if process_data == 'cumul':
-                out = cumulout
-            elif process_data == 'daily':
-	            out = diffout
-            else:
-                out =  currentout
-            if out.shape[0] == 1:
-                return out[0]
-            else:
-                return out.T
-
-        #if len(clist) == 1 :
-        #    temp[0] = temp[0].drop(columns=['location'])
-
-        if temp==[]:
-            raise CoaWhereError('No valid country available')
-        pandy.db_citation = self.get_db()
-        return pandy
 
    ## https://www.kaggle.com/freealf/estimation-of-rt-from-cases
    def smooth_cases(self,cases):

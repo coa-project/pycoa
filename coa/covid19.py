@@ -517,8 +517,8 @@ class DataBase(object):
                     currentout[c, :] = yy
                     cumulout[c, :] = np.cumsum(yy)
                     diffout[c, :] = np.diff(yy,0,0)
-                elif o != '':
-                    raise CoaKeyError('The option '+o+' is not recognized in get_stats. See get_available_options() for list.')
+                elif o != '' and o!= None :
+                    raise CoaKeyError('The option '+str(o)+' is not recognized in get_stats. See get_available_options() for list.')
 
         datos=self.get_dates()
         i = 0

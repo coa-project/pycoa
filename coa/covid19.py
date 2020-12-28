@@ -216,7 +216,7 @@ class DataBase(object):
             extansion =  "_global.csv"
         else:
             extansion = "_US.csv"
-            jhu_files_ext = ['confirmed','deaths']
+            jhu_files_ext = ['deaths','confirmed']
         self.available_keys_words = jhu_files_ext
 
         pandas_list = []

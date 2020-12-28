@@ -698,7 +698,7 @@ class CocoDisplay():
         minx, miny, maxx, maxy=0,0,0,0
         if self.database_name == 'spf' or  self.database_name == 'opencovid19' or self.database_name == 'jhu-usa':
             panda2map = self.pandas_country
-            name_displayed = 'town_subregion'
+            name_displayed = 'name_subregion'
         else:
             panda2map = self.pandas_world
             name_displayed = 'location'

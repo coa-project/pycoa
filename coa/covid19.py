@@ -60,11 +60,11 @@ class DataBase(object):
             if self.db == 'jhu-usa':
                 info('USA, JHU aka Johns Hopkins database selected ...')
                 self.geo = coge.GeoCountry('USA',True)
-                self.geo_all = self.geo.get_subregion_list()
+                self.geo_all = self.geo.get_subregion_list()['code_subregion'].to_list()
                 self.return_jhu_pandas()
             elif self.db == 'spf':
                 self.geo = coge.GeoCountry('FRA',True)
-                self.geo_all = self.geo.get_subregion_list()
+                self.geo_all = self.geo.get_subregion_list()['code_subregion'].to_list()
                 info('SPF aka Sante Publique France database selected ...')
                 info('... tree differents db from SPF will be parsed ...')
                 # https://www.data.gouv.fr/fr/datasets/donnees-hospitalieres-relatives-a-lepidemie-de-covid-19/

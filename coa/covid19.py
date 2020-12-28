@@ -394,13 +394,13 @@ class DataBase(object):
             self.get_available_keys_words()
          - daily  : 'which' daily difference
          - weekly : 'which' weekly difference
-         - 'smooth7d' :  'which' rolling mean value over 7 days
 
          - 'option' :default none
             * 'nonneg' In some cases negatives values can appeared due to a database updated, nonneg option
                 will smooth the curve during all the period considered
             * fillnan0 fill nan by 0
             * fillnanf fill nan by lastested available value
+            * smooth7 moving average, window of 7 days
 
         keys are keyswords from the selected database
                 location        | date      | keywords          |  daily            |  weekly
@@ -484,10 +484,11 @@ class DataBase(object):
             elif o == 'fillnanf':
                 pdfiltered.fillna(method='ffill', inplace=True)
                 pdfiltered['daily'] = pdfiltered.groupby(['location'])[kwargs['which']].diff()
-            elif o != None:
+            elif o == 'smooth7':
+                pdfiltered['daily'] = pdfiltered.groupby('location')[kwargs['which']].rolling(7).mean().reset_index(level=0, drop=True)
+            elif o != None and o != '':
                 raise CoaKeyError('The option '+o+' is not recognized in get_stats. See get_available_options() for list.')
         pdfiltered['cumul'] = pdfiltered.groupby(['location'])[kwargs['which']].cumsum()
-        pdfiltered['smooth7d'] = pdfiltered.groupby('location')[kwargs['which']].rolling(7).mean().reset_index(level=0, drop=True)
         pdfiltered['weekly'] = pdfiltered.groupby(['location'])[kwargs['which']].diff(7)
 
         return pdfiltered

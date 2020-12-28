@@ -126,9 +126,6 @@ class DataBase(object):
                 info('OWID aka \"Our World in Data\" database selected ...')
                 self.geo = coge.GeoManager('name')
                 self.geo_all='world'
-                # columns_keeped = ['total_cases', 'new_cases', 'total_deaths','new_deaths', 'total_cases_per_million',
-                # 'new_cases_per_million', 'total_deaths_per_million','new_deaths_per_million', 'total_tests', 'new_tests',
-                # 'total_tests_per_thousand', 'new_tests_per_thousand', 'new_tests_smoothed', 'new_tests_smoothed_per_thousand','stringency_index']
                 columns_keeped=['total_deaths','total_cases','reproduction_rate','icu_patients','hosp_patients','total_tests','positive_rate','total_vaccinations']
                 drop_field = {'location':['International','World']}
                 owid = self.csv2pandas("https://raw.githubusercontent.com/owid/covid-19-data/master/public/data/owid-covid-data.csv",
@@ -183,11 +180,8 @@ class DataBase(object):
         - jhu : ['deaths','confirmed','recovered']
             * the data are cumulative i.e for a date it represents the total cases
             For more information please have a look to https://github.com/CSSEGISandData/COVID-19/tree/master/csse_covid_19_data
-        - 'owid' : ['total_cases', 'new_cases', 'total_deaths', 'new_deaths',
-                    'total_cases_per_million', 'new_cases_per_million', 'total_deaths_per_million',
-                     'new_deaths_per_million', 'total_tests', 'new_tests', 'total_tests_per_thousand',
-                     'new_tests_per_thousand', 'new_tests_smoothed', 'new_tests_smoothed_per_thousand',
-                      'stringency_index']
+        - 'owid' : ['total_deaths','total_cases','reproduction_rate','icu_patients','hosp_patients','total_tests',
+                    'positive_rate','total_vaccinations']
         For more information please have a look to https://github.com/owid/covid-19-data/tree/master/public/data/
         - 'spf' : ['hosp', 'rea', 'rad', 'dc', 'incid_hosp', 'incid_rea', 'incid_dc',
                     'incid_rad', 'P', 'T', 'tx_incid', 'R', 'taux_occupation_sae', 'tx_pos']

@@ -190,8 +190,7 @@ def get(**kwargs):
 
     if output not in listoutput():
         raise CoaKeyError('Output option '+output+' not supported. See help().')
-    # if not where:
-    #     raise CoaKeyError('No where keyword given')
+
     if not what:
         what=listwhat()[0]
     if not whom:

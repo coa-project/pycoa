@@ -105,7 +105,7 @@ class DataBase(object):
                 rename={'extract_date':'date','departement':'location'}
                 #columns_skipped=['region','libelle_reg','libelle_dep','tx_incid_couleur','R_couleur',\
                 #'taux_occupation_sae_couleur','tx_pos_couleur','nb_orange','nb_rouge']
-                columns_keeped=['dc','hosp', 'rea', 'rad', 'incid_hosp', 'incid_rea', 'incid_dc', 
+                columns_keeped=['dc','hosp', 'rea', 'rad', 'incid_hosp', 'incid_rea', 'incid_dc',
                     'incid_rad', 'P', 'T', 'tx_incid', 'R', 'taux_occupation_sae', 'tx_pos'] # with 'dc' first
                 spf4=self.csv2pandas("https://www.data.gouv.fr/fr/datasets/r/4acad602-d8b1-4516-bc71-7d5574d5f33e",
                             rename_columns=rename, separator=',', encoding = "ISO-8859-1",cast=cast)
@@ -447,7 +447,7 @@ class DataBase(object):
         pdfiltered = pdfiltered[['location','date',kwargs['which']]]
 
         option = kwargs.get('option', '')
-
+        fillnan0 = False
         if not isinstance(option,list):
             option=[option]
         for o in option:
@@ -477,6 +477,7 @@ class DataBase(object):
             elif o == 'fillnan0':
                 # fill nan with zeros
                 pdfiltered = pdfiltered.fillna(0)
+                fillnan0 = True
             elif o == 'fillnanf':
                 pdfiltered[kwargs['which']] = pdfiltered.groupby(['location'])[kwargs['which']].fillna(method='ffill')
             elif o == 'smooth7':
@@ -487,6 +488,9 @@ class DataBase(object):
         pdfiltered['daily'] = pdfiltered.groupby(['location'])[kwargs['which']].diff()
         pdfiltered['cumul'] = pdfiltered.groupby(['location'])[kwargs['which']].cumsum()
         pdfiltered['weekly'] = pdfiltered.groupby(['location'])[kwargs['which']].diff(7)
+
+        if fillnan0:
+            pdfiltered = pdfiltered.fillna(0)
 
         return pdfiltered
 

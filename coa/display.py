@@ -98,6 +98,7 @@ class CocoDisplay():
         if 'where' in mypandas.columns:
             mypandas = mypandas.rename(columns={'where':'location'})
         mypandas = mypandas.fillna(method='ffill')
+
         kwargs_test(kwargs,self.all_available_display_keys,'Bad args used in the display function.')
         plot_width = kwargs.get('plot_width', self.plot_width)
         plot_height = kwargs.get('plot_height', self.plot_height)
@@ -694,8 +695,7 @@ class CocoDisplay():
             if type(input_field) is None.__class__:
                 input_field = dico['var_displayed']
             else:
-                input_field = dico['input_field']
-
+                input_field = dico['input_field'][0]
 
         minx, miny, maxx, maxy=0,0,0,0
         if self.database_name == 'spf' or  self.database_name == 'opencovid19' or self.database_name == 'jhu-usa':
@@ -715,12 +715,10 @@ class CocoDisplay():
         #    dico['titlebar']+=' due to nan I shifted date to '+  dico['when_end'].strftime("%d/%m/%Y")
 
         mypandas_filtered = mypandas_filtered.drop(columns=['date'])
-        my_location = mypandas.location.to_list()
-
-        panda2map = panda2map.rename(columns={'which':dico['which']})
+        my_location = mypandas.location.unique()
+        panda2map = panda2map.rename(columns={'which':input_field})
         panda2map = panda2map[~panda2map.location.isin(my_location)]
         panda2map = panda2map.append(mypandas_filtered)
-
         geopdwd = self.get_geodata(panda2map)
         geopdwd = geopdwd#.to_crs('EPSG:3857')#+proj=wintri')
         geopdwd = geopdwd.reset_index()
@@ -743,7 +741,6 @@ class CocoDisplay():
             standardfig.plot_width  = dico['plot_width'] - 100
 
         min_col,max_col=CocoDisplay.min_max_range(0,np.nanmax(geopdwd[input_field]))
-
         #standardfig.add_tile(esri)
         #Viridis256.reverse()
         color_mapper = LinearColorMapper(palette=Viridis256, low = min_col, high = max_col, nan_color = '#d9d9d9')
@@ -800,12 +797,11 @@ class CocoDisplay():
             if type(input_field) is None.__class__:
                 input_field = dico['var_displayed']
             else:
-                input_field = dico['input_field']
+                input_field = dico['input_field'][0]
 
         #when_end = CocoDisplay.changeto_nonan_date(mypandas, dico['when_end'],input_field)
         #dico['when_end'] = when_end
         mypandas_filtered = mypandas.loc[mypandas.date == dico['when_end']]
-
         #mypandas_filtered = mypandas.loc[(mypandas.date == dico['when_end'])]
         #if CocoDisplay.changeto_nonan_date(mypandas, dico['when_end'],input_field) != dico['when_end']:
         #    when_end = CocoDisplay.changeto_nonan_date(mypandas,dico['when_end'],input_field)
@@ -818,7 +814,7 @@ class CocoDisplay():
             panda2map = panda2map.loc[(panda2map.location != '2A') & (panda2map.location != '2B')]
             panda2map = panda2map.copy()
             name_displayed = 'town_subregion'
-            my_c = mypandas.location.to_list()
+            my_location = mypandas.location.unique()
             zoom = 4
         else:
             panda2map = self.pandas_world

@@ -207,7 +207,7 @@ def get(**kwargs):
         which=listwhich()[0]
     elif which not in setwhom(whom):
         raise CoaKeyError('Which option '+which+' not supported. '
-                            'See listwhich() for list.')                  
+                            'See listwhich() for list.')
     pandy = _db.get_stats(which=which,location=where,option=option).rename(columns={'location': 'where'})
     db_first_date = pandy.date.min()
     db_last_date = pandy.date.max()

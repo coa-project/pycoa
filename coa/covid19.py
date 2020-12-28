@@ -324,7 +324,7 @@ class DataBase(object):
             columns_keeped = [x for x in mypandas.columns.values.tolist() if x not in columns_skipped + absolutlyneeded]
 
         mypandas = mypandas[absolutlyneeded + columns_keeped]
-        self.available_keys_words = columns_keeped + absolutlyneeded
+        self.available_keys_words = columns_keeped #+ absolutlyneeded
 
         uniqloc = mypandas['location'].unique()
         oldloc = uniqloc

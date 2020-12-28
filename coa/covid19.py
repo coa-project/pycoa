@@ -248,13 +248,15 @@ class DataBase(object):
             pandas_jhu_db=pandas_jhu_db.groupby(['location','date']).sum().reset_index()
             pandas_list.append(pandas_jhu_db)
 
-        uniqloc = list(pandas_list[0]['location'].unique())
+        uniqloc = pandas_list[0]['location'].unique()
         oldloc = uniqloc
         if self.db == 'jhu':
-            d_loc_s = self.geo.to_standard(uniqloc,output='list',db=self.get_db(),interpret_region=True)
+            d_loc_s = self.geo.to_standard(list(uniqloc),output='list',db=self.get_db(),interpret_region=True)
             self.slocation = d_loc_s
-            oldloc = uniqloc
-            newloc = d_loc_s
+            intersection = set(uniqloc).intersection(d_loc_s)
+            tomodify = (set(uniqloc)-intersection)
+            oldloc = tomodify
+            newloc = list(set(uniqloc) - set(d_loc_s))
             toremove=['']
         else:
             loc_sub = list(self.geo.get_subregion_list()['name_subregion'])
@@ -445,7 +447,6 @@ class DataBase(object):
 
         pdfiltered = self.get_mainpandas().loc[self.get_mainpandas().location.isin(clist)]
         pdfiltered = pdfiltered[['location','date',kwargs['which']]]
-        pdfiltered['daily'] = pdfiltered.groupby(['location'])[kwargs['which']].diff()
 
         option = kwargs.get('option', '')
 
@@ -455,7 +456,7 @@ class DataBase(object):
             if o == 'nonneg':
                 for loca in clist:
                     # modify values in order that diff values is never negative
-                    pa = pdfiltered.loc[ pdfiltered.location == loca ]['daily']
+                    pa = pdfiltered.loc[ pdfiltered.location == loca ][kwargs['which']].diff()
                     yy = pa.values
                     ind = list(pa.index)
                     where_nan = np.isnan(yy)
@@ -474,19 +475,18 @@ class DataBase(object):
                             yy[0:k] = 0.
                         else:
                             yy[0:k] = yy[0:k]*(1-float(val_to_repart)/s)
-                    pdfiltered.loc[ind,'daily']=yy
                     pdfiltered.loc[ind,kwargs['which']]=np.cumsum(yy)
             elif o == 'fillnan0':
                 # fill nan with zeros
                 pdfiltered = pdfiltered.fillna(0)
-                pdfiltered['daily'] = pdfiltered.groupby(['location'])[kwargs['which']].diff()
             elif o == 'fillnanf':
-                pdfiltered.fillna(method='ffill', inplace=True)
-                pdfiltered['daily'] = pdfiltered.groupby(['location'])[kwargs['which']].diff()
+                pdfiltered[kwargs['which']] = pdfiltered.groupby(['location'])[kwargs['which']].fillna(method='ffill')
             elif o == 'smooth7':
-                pdfiltered['daily'] = pdfiltered.groupby('location')[kwargs['which']].rolling(7).mean().reset_index(level=0, drop=True)
+                pdfiltered[kwargs['which']] = pdfiltered.groupby(['location'])[kwargs['which']].rolling(7,min_periods=7,center=True).mean().reset_index(level=0,drop=True)
             elif o != None and o != '':
                 raise CoaKeyError('The option '+o+' is not recognized in get_stats. See get_available_options() for list.')
+
+        pdfiltered['daily'] = pdfiltered.groupby(['location'])[kwargs['which']].diff()
         pdfiltered['cumul'] = pdfiltered.groupby(['location'])[kwargs['which']].cumsum()
         pdfiltered['weekly'] = pdfiltered.groupby(['location'])[kwargs['which']].diff(7)
 

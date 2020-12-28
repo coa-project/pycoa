@@ -162,6 +162,8 @@ class CocoDisplay():
                     titlebar = which + ', ' + 'week to week difference' + title_temporal
                 elif what == 'cumul':
                     titlebar = which + ', ' + 'cumulative sum ' +  title_temporal
+                elif what == 'smooth7d':
+                    titlebar = which + ', ' + 'mean rolling vlue over 7d ' +  title_temporal
                 else:
                     raise CoaTypeError('what argument is not daily, daily, cumul nor weekly . See help.')
                     #else:
@@ -228,7 +230,7 @@ class CocoDisplay():
                 input_field = [dico['var_displayed']]
             else:
                 input_field = dico['input_field']
-
+       
         if 'location' in mypandas.columns:
             tooltips='Location: @location <br> Date: @date{%F} <br>  $name: @$name'
             loc = mypandas['location'].unique()

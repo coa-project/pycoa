@@ -103,25 +103,29 @@ class DataBase(object):
                 # Rouge : R0 supérieur à 1,5.
                 cast={'departement':'string'}
                 rename={'extract_date':'date','departement':'location'}
-                columns_skipped=['region','libelle_reg','libelle_dep','tx_incid_couleur','R_couleur',\
-                'taux_occupation_sae_couleur','tx_pos_couleur','nb_orange','nb_rouge']
+                #columns_skipped=['region','libelle_reg','libelle_dep','tx_incid_couleur','R_couleur',\
+                #'taux_occupation_sae_couleur','tx_pos_couleur','nb_orange','nb_rouge']
+                columns_keeped=['dc','hosp', 'rea', 'rad', 'incid_hosp', 'incid_rea', 'incid_dc', 
+                    'incid_rad', 'P', 'T', 'tx_incid', 'R', 'taux_occupation_sae', 'tx_pos'] # with 'dc' first
                 spf4=self.csv2pandas("https://www.data.gouv.fr/fr/datasets/r/4acad602-d8b1-4516-bc71-7d5574d5f33e",
                             rename_columns=rename, separator=',', encoding = "ISO-8859-1",cast=cast)
                 #result = pd.concat([spf1, spf2,spf3,spf4], axis=1, sort=False)
                 result = reduce(lambda x, y: pd.merge(x, y, on = ['location','date']), [spf1, spf2,spf3,spf4])
-                self.return_structured_pandas(result,columns_skipped=columns_skipped)
+                self.return_structured_pandas(result,columns_keeped=columns_keeped)
             elif self.db == 'opencovid19':
                 info('OPENCOVID19 selected ...')
                 self.geo = coge.GeoCountry('FRA',True)
-                self.geo_all = self.geo.get_subregion_list()
+                self.geo_all = self.geo.get_subregion_list()['code_subregion'].to_list()
                 rename={'maille_code':'location'}
                 cast={'source_url':str,'source_archive':str,'source_type':str}
                 drop_field  = {'granularite':['pays','monde','region']}
-                columns_skipped = ['granularite','maille_nom','source_nom','source_url','source_archive','source_type']
+                #columns_skipped = ['granularite','maille_nom','source_nom','source_url','source_archive','source_type']
+                columns_keeped = ['deces','cas_confirmes', 'cas_ehpad', 'cas_confirmes_ehpad', 'cas_possibles_ehpad',
+                     'deces_ehpad', 'reanimation', 'hospitalises', 'nouvelles_hospitalisations', 'nouvelles_reanimations', 'gueris', 'depistes']
                 opencovid19 = self.csv2pandas('https://raw.githubusercontent.com/opencovid19-fr/data/master/dist/chiffres-cles.csv',
                             drop_field=drop_field,rename_columns=rename,separator=',',cast=cast)
                 opencovid19['location'] = opencovid19['location'].apply(lambda x: x.replace('COM-','').replace('DEP-',''))
-                self.return_structured_pandas(opencovid19,columns_skipped=columns_skipped)
+                self.return_structured_pandas(opencovid19,columns_keeped=columns_keeped)
             elif self.db == 'owid':
                 info('OWID aka \"Our World in Data\" database selected ...')
                 self.geo = coge.GeoManager('name')

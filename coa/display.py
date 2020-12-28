@@ -97,7 +97,7 @@ class CocoDisplay():
 
         if 'where' in mypandas.columns:
             mypandas = mypandas.rename(columns={'where':'location'})
-        mypandas = mypandas.fillna(method='ffill')    
+        mypandas = mypandas.fillna(method='ffill')
         kwargs_test(kwargs,self.all_available_display_keys,'Bad args used in the display function.')
         plot_width = kwargs.get('plot_width', self.plot_width)
         plot_height = kwargs.get('plot_height', self.plot_height)
@@ -705,14 +705,14 @@ class CocoDisplay():
             panda2map = self.pandas_world
             name_displayed = 'location'
 
-        when_end = CocoDisplay.changeto_nonan_date(mypandas, dico['when_end'],input_field)
-        dico['when_end'] = when_end
+        #when_end = CocoDisplay.changeto_nonan_date(mypandas, dico['when_end'],input_field)
+        #dico['when_end'] = when_end
         mypandas_filtered = mypandas.loc[mypandas.date == dico['when_end']]
 
-        if CocoDisplay.changeto_nonan_date(mypandas, dico['when_end'],input_field) != dico['when_end']:
-            when_end = CocoDisplay.changeto_nonan_date(mypandas,dico['when_end'],input_field)
-            mypandas_filtered = mypandas.loc[(mypandas.date == dico['when_end'])]
-            dico['titlebar']+=' due to nan I shifted date to '+  dico['when_end'].strftime("%d/%m/%Y")
+        #if CocoDisplay.changeto_nonan_date(mypandas, dico['when_end'],input_field) != dico['when_end']:
+        #    when_end = CocoDisplay.changeto_nonan_date(mypandas,dico['when_end'],input_field)
+        #    mypandas_filtered = mypandas.loc[(mypandas.date == dico['when_end'])]
+        #    dico['titlebar']+=' due to nan I shifted date to '+  dico['when_end'].strftime("%d/%m/%Y")
 
         mypandas_filtered = mypandas_filtered.drop(columns=['date'])
         my_location = mypandas.location.to_list()
@@ -817,9 +817,6 @@ class CocoDisplay():
             panda2map = self.pandas_country
             panda2map = panda2map.loc[(panda2map.location != '2A') & (panda2map.location != '2B')]
             panda2map = panda2map.copy()
-            if self.database_name != 'jhu-usa':
-                panda2map['location2']=pd.Series([int(i) for i in panda2map.location])
-                panda2map=panda2map.loc[lambda x: panda2map.location2 <100]
             name_displayed = 'town_subregion'
             my_c = mypandas.location.to_list()
             zoom = 4

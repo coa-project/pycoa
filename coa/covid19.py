@@ -251,10 +251,7 @@ class DataBase(object):
         if self.db == 'jhu':
             d_loc_s = self.geo.to_standard(list(uniqloc),output='list',db=self.get_db(),interpret_region=True)
             self.slocation = d_loc_s
-            intersection = set(uniqloc).intersection(d_loc_s)
-            tomodify = (set(uniqloc)-intersection)
-            oldloc = tomodify
-            newloc = list(set(uniqloc) - set(d_loc_s))
+            newloc = d_loc_s
             toremove=['']
         else:
             loc_sub = list(self.geo.get_subregion_list()['name_subregion'])
@@ -335,10 +332,7 @@ class DataBase(object):
         if self.db == 'owid':
             d_loc_s=self.geo.to_standard(list(uniqloc),output='list',db=self.get_db(),interpret_region=True)
             self.slocation=d_loc_s
-            intersection = set(uniqloc).intersection(d_loc_s)
-            tomodify=(set(uniqloc)-intersection)
-            oldloc = tomodify
-            newloc = list(set(uniqloc) - set(d_loc_s))
+            newloc = d_loc_s
             toremove=['']
         else:
             loc_sub=list(self.geo.get_subregion_list()['name_subregion'])

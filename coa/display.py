@@ -94,8 +94,10 @@ class CocoDisplay():
         Note that method used only the needed variables, some of them are useless
         '''
         input_dico={}
+
         if 'where' in mypandas.columns:
             mypandas = mypandas.rename(columns={'where':'location'})
+        mypandas = mypandas.fillna(method='ffill')    
         kwargs_test(kwargs,self.all_available_display_keys,'Bad args used in the display function.')
         plot_width = kwargs.get('plot_width', self.plot_width)
         plot_height = kwargs.get('plot_height', self.plot_height)
@@ -231,7 +233,7 @@ class CocoDisplay():
                 input_field = [dico['var_displayed']]
             else:
                 input_field = dico['input_field']
-       
+
         if 'location' in mypandas.columns:
             tooltips='Location: @location <br> Date: @date{%F} <br>  $name: @$name'
             loc = mypandas['location'].unique()
@@ -800,15 +802,15 @@ class CocoDisplay():
             else:
                 input_field = dico['input_field']
 
-        when_end = CocoDisplay.changeto_nonan_date(mypandas, dico['when_end'],input_field)
-        dico['when_end'] = when_end
+        #when_end = CocoDisplay.changeto_nonan_date(mypandas, dico['when_end'],input_field)
+        #dico['when_end'] = when_end
         mypandas_filtered = mypandas.loc[mypandas.date == dico['when_end']]
 
-        mypandas_filtered = mypandas.loc[(mypandas.date == dico['when_end'])]
-        if CocoDisplay.changeto_nonan_date(mypandas, dico['when_end'],input_field) != dico['when_end']:
-            when_end = CocoDisplay.changeto_nonan_date(mypandas,dico['when_end'],input_field)
-            mypandas_filtered = mypandas.loc[(mypandas.date == dico['when_end'])]
-            dico['titlebar']+=' due to nan I shifted date to '+  dico['when_end'].strftime("%d/%m/%Y")
+        #mypandas_filtered = mypandas.loc[(mypandas.date == dico['when_end'])]
+        #if CocoDisplay.changeto_nonan_date(mypandas, dico['when_end'],input_field) != dico['when_end']:
+        #    when_end = CocoDisplay.changeto_nonan_date(mypandas,dico['when_end'],input_field)
+        #    mypandas_filtered = mypandas.loc[(mypandas.date == dico['when_end'])]
+        #    dico['titlebar']+=' due to nan I shifted date to '+  dico['when_end'].strftime("%d/%m/%Y")
 
         mypandas_filtered = mypandas_filtered.drop(columns=['date'])
         if self.database_name == 'spf' or  self.database_name == 'opencovid19' or self.database_name == 'jhu-usa':

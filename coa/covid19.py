@@ -248,15 +248,13 @@ class DataBase(object):
             pandas_jhu_db=pandas_jhu_db.groupby(['location','date']).sum().reset_index()
             pandas_list.append(pandas_jhu_db)
 
-        uniqloc = pandas_list[0]['location'].unique()
+        uniqloc = list(pandas_list[0]['location'].unique())
         oldloc = uniqloc
         if self.db == 'jhu':
-            d_loc_s = self.geo.to_standard(list(uniqloc),output='list',db=self.get_db(),interpret_region=True)
+            d_loc_s = self.geo.to_standard(uniqloc,output='list',db=self.get_db(),interpret_region=True)
             self.slocation = d_loc_s
-            intersection = set(uniqloc).intersection(d_loc_s)
-            tomodify = (set(uniqloc)-intersection)
-            oldloc = tomodify
-            newloc = list(set(uniqloc) - set(d_loc_s))
+            oldloc = uniqloc
+            newloc = d_loc_s
             toremove=['']
         else:
             loc_sub = list(self.geo.get_subregion_list()['name_subregion'])
@@ -440,6 +438,7 @@ class DataBase(object):
             else:
                 self.geo.set_standard('name')
                 clist=self.geo.to_standard(clist,output='list',interpret_region=True)
+
             clist=list(set(clist)) # to suppress duplicate countrie
             diff_locations = list(set(clist) - set(self.get_locations()))
             clist = [i for i in clist if i not in diff_locations]

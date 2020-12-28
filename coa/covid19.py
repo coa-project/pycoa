@@ -417,7 +417,7 @@ class DataBase(object):
                     ...
 
         '''
-        kwargs_test(kwargs,['location','output','type','which','option',],
+        kwargs_test(kwargs,['location','which','option',],
             'Bad args used in the get_stats() function.')
 
         if kwargs['location']==None:
@@ -429,9 +429,6 @@ class DataBase(object):
             clist = (kwargs['location']).copy()
         if not all(isinstance(c, str) for c in clist):
             raise CoaWhereError("Location via the where keyword should be given as strings. ")
-
-        output = kwargs.get('output','pandas')
-        process_data = kwargs.get('type', None)
 
         if kwargs['which'] not in self.get_available_keys_words() :
             raise CoaKeyError(kwargs['which']+' is not a available for' + self.db + 'database name. '

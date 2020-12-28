@@ -443,9 +443,7 @@ class DataBase(object):
             diff_locations = list(set(clist) - set(self.get_locations()))
             clist = [i for i in clist if i not in diff_locations]
 
-        print(clist)
         pdfiltered = self.get_mainpandas().loc[self.get_mainpandas().location.isin(clist)]
-        print(pdfiltered)
         pdfiltered = pdfiltered[['location','date',kwargs['which']]]
         pdfiltered['daily'] = pdfiltered.groupby(['location'])[kwargs['which']].diff()
 

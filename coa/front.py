@@ -50,10 +50,8 @@ _listwhom=['jhu',    # John Hopkins University first base, default
             'spf',   # Sante publique France
             'opencovid19'] #  see data.gouv.fr
 _whom = _listwhom[0] # default base
+_db,_cocoplot = coco.DataBase.factory(_whom) # initialization with default
 
-_db = coco.DataBase(_whom) # initialization with default
-#_cocoplot = cd.CocoDisplay(_db)
-_cocoplot = _db.get_display()
 
 _listwhat=['cumul',  # first one is default, nota:  we must avoid uppercases
             'daily',
@@ -109,7 +107,7 @@ def listoption():
 # ----------------------------------------------------------------------
 
 def listwhich():
-    """Get which are the available fields for the current base. 
+    """Get which are the available fields for the current base.
     Output is a list of string.
     By default, the listwhich()[0] is the default which field in other
     functions.
@@ -212,10 +210,9 @@ def get(**kwargs):
         raise CoaKeyError('Which option '+which+' not supported. '
                             'See listwhich() for list.')
 
-    pandy = _db.get_stats(which=which,location=where,option=option,output='pandas').rename(columns={'location': 'where'})
+    pandy = _db.get_stats(which=which,location=where,option=option).rename(columns={'location': 'where'})
     db_first_date = pandy.date.min()
     db_last_date = pandy.date.max()
-
     if when_beg < db_first_date:
         when_beg = db_first_date
     if when_end > db_last_date:
@@ -231,7 +228,7 @@ def get(**kwargs):
     else:
         col_name = ''
         if what == 'daily':
-            col_name = 'daily' 
+            col_name = 'daily'
         if what == 'cumul' and _whom == 'jhu':
             col_name = which
         if what == 'weekly':

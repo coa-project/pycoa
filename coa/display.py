@@ -144,15 +144,16 @@ class CocoDisplay():
         else:
             title_temporal =  ' (' + 'between ' + input_dico['when_beg'].strftime('%d/%m/%Y') +' and ' + input_dico['when_end'].strftime('%d/%m/%Y') + ')'
 
-        if kwargs.get('option', '') != '':
-            title_temporal = ', option '+str(kwargs.get('option'))+title_temporal
-
         input_dico['title_temporal'] = title_temporal
         titlebar = which + title_temporal
 
         if input_field:
-            titlebar = input_field  +  title_temporal
+            if not isinstance(input_field, list):
+                input_field=[input_field]
+            else:
+                input_field=input_field
             input_dico['input_field'] = input_field
+
         else:
             if what:
                 if what == 'daily':
@@ -224,18 +225,10 @@ class CocoDisplay():
            input_field = mypandas.columns[2]
         else:
             if type(input_field) is None.__class__:
-                input_field = dico['var_displayed']
+                input_field = [dico['var_displayed']]
             else:
                 input_field = dico['input_field']
-                if not isinstance(input_field, list):
-                    text_input = input_field
-                else:
-                    text_input = '-'
-                    text_input= text_input.join(input_field)
 
-
-        if not isinstance(input_field, list):
-            input_field=[input_field]
         if 'location' in mypandas.columns:
             tooltips='Location: @location <br> Date: @date{%F} <br>  $name: @$name'
             loc = mypandas['location'].unique()

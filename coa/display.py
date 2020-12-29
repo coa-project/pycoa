@@ -717,6 +717,8 @@ class CocoDisplay():
 
         mypandas_filtered = mypandas_filtered.drop(columns=['date'])
         my_location = mypandas.location.unique()
+        if input_field in panda2map.columns:
+            panda2map = panda2map.drop(columns=input_field)
         panda2map = panda2map.rename(columns={'which':input_field})
         panda2map = panda2map[~panda2map.location.isin(my_location)]
         panda2map = panda2map.append(mypandas_filtered)

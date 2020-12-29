@@ -448,7 +448,9 @@ class DataBase(object):
             if o == 'nonneg':
                 for loca in clist:
                     # modify values in order that diff values is never negative
-                    pa = pdfiltered.loc[ pdfiltered.location == loca ][kwargs['which']].diff()
+                    pdloc=pdfiltered.loc[ pdfiltered.location == loca ][kwargs['which']]
+                    y0=pdloc.values[0] # integrated offset at t=0
+                    pa = pdloc.diff()
                     yy = pa.values
                     ind = list(pa.index)
                     where_nan = np.isnan(yy)
@@ -465,9 +467,11 @@ class DataBase(object):
                         s = np.nansum(yy[0:k])
                         if not any([i !=0 for i in yy[0:k]]) == True and s == 0:
                             yy[0:k] = 0.
+                        elif s == 0:
+                            yy[0:k] = np.nan*np.ones(k)
                         else:
                             yy[0:k] = yy[0:k]*(1-float(val_to_repart)/s)
-                    pdfiltered.loc[ind,kwargs['which']]=np.cumsum(yy)
+                    pdfiltered.loc[ind,kwargs['which']]=np.cumsum(yy)+y0 # do not forget the offset
             elif o == 'fillnan0':
                 # fill nan with zeros
                 pdfiltered = pdfiltered.fillna(0)

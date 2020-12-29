@@ -62,7 +62,7 @@ class CocoDisplay():
     def __init__(self,db=None):
         verb("Init of CocoDisplay() with db="+str(db))
         self.database_name = db
-        self.colors = itertools.cycle(Paired12[:10])
+        self.colors = Paired12[:10]
         self.plot_width =  width_height_default[0]
         self.plot_height =  width_height_default[1]
         self.all_available_display_keys=['where','which','what','when','title_temporal','plot_height','plot_width','title','bins','var_displayed',
@@ -258,7 +258,7 @@ class CocoDisplay():
             standardfig =  self.standardfig(y_axis_type=axis_type, x_axis_type='datetime',title= dico['titlebar'])
             standardfig.yaxis[0].formatter = PrintfTickFormatter(format="%4.2e")
             standardfig.add_tools(hover_tool)
-            colors = self.colors
+            colors = itertools.cycle(self.colors)
             for i in input_field:
                 if len(input_field)>1:
                     p = [standardfig.line(x='date', y=i, source=ColumnDataSource(value),
@@ -417,7 +417,7 @@ class CocoDisplay():
             standardfig.xaxis[0].formatter = PrintfTickFormatter(format="%4.2e")
             #standardfig.title.text = dico['titlebar']
             standardfig.add_tools(hover_tool)
-            colors =self.colors
+            colors = itertools.cycle(self.colors)
 
             if axis_type=="log":
                 bottom=0.0001
@@ -498,7 +498,7 @@ class CocoDisplay():
             if dico['title']:
                 standardfig.title.text = dico['title']
             standardfig.add_tools(hover_tool)
-            colors = self.colors
+            colors = itertools.cycle(self.colors)
 
             def add_line(src,options, init,  color):
                 s = Select(options=options, value=init)

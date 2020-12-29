@@ -218,6 +218,7 @@ def get(**kwargs):
 
     # when cut
     pandy=pandy[(pandy.date>=when_beg) & (pandy.date<=when_end)]
+    pandy.reset_index()
     casted_data = None
     if output == 'pandas':
          pandy = pandy.drop(columns=['cumul'])

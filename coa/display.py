@@ -226,6 +226,8 @@ class CocoDisplay():
         """
         mypandas,dico = self.standard_input(mypandas,input_field,**kwargs)
         dict_filter_data = defaultdict(list)
+        ax_type = ["linear", "log"]
+
         tooltips='Date: @date{%F} <br>  $name: @$name'
 
         if type(input_field) is None.__class__ and dico['which'] is None.__class__ :
@@ -247,20 +249,20 @@ class CocoDisplay():
 
                 for j in range(len(loc)):
                     dict_filter_data[i][shorten_loc[j]] = dict_filter_data[i].pop(loc[j])
+            list_max=[]
+            for i in input_field:
+                [list_max.append(max(value.loc[value.location.isin(loc)][i])) for key,value in dict_filter_data[i].items()]
+            amplitude=(np.nanmax(list_max) - np.nanmin(list_max))
+            if amplitude > 10**4:
+                ax_type.reverse()                
         else:
             for i in input_field:
                 dict_filter_data[i] = {i:mypandas.loc[(mypandas['date']>=dico['when_beg']) & (mypandas['date']<=dico['when_end'])]}
 
         hover_tool = HoverTool(tooltips=tooltips,formatters={'@date': 'datetime'})
 
-        list_max=[]
-        for i in input_field:
-            [list_max.append(max(value.loc[value.location.isin(loc)][i])) for key,value in dict_filter_data[i].items()]
-        amplitude=(np.nanmax(list_max) - np.nanmin(list_max))
+
         panels = []
-        ax_type = ["linear", "log"]
-        if amplitude > 10**4:
-            ax_type.reverse()
         for axis_type in ax_type :
             standardfig =  self.standardfig(y_axis_type=axis_type, x_axis_type='datetime',title= dico['titlebar'])
             standardfig.yaxis[0].formatter = PrintfTickFormatter(format="%4.2e")

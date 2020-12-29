@@ -462,7 +462,7 @@ class DataBase(object):
                         else:
                             yy[k] = yy[k-1]
                         val_to_repart = val_to_repart + yy[k]
-                        s = np.sum(yy[0:k])
+                        s = np.nansum(yy[0:k])
                         if not any([i !=0 for i in yy[0:k]]) == True and s == 0:
                             yy[0:k] = 0.
                         else:

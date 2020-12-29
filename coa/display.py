@@ -253,8 +253,15 @@ class CocoDisplay():
 
         hover_tool = HoverTool(tooltips=tooltips,formatters={'@date': 'datetime'})
 
+        list_max=[]
+        for i in input_field:
+            [list_max.append(max(value.loc[value.location.isin(loc)][i])) for key,value in dict_filter_data[i].items()]
+        amplitude=(np.nanmax(list_max) - np.nanmin(list_max))
         panels = []
-        for axis_type in ["linear", "log"]:
+        ax_type = ["linear", "log"]
+        if amplitude > 10**4:
+            ax_type.reverse()
+        for axis_type in ax_type :
             standardfig =  self.standardfig(y_axis_type=axis_type, x_axis_type='datetime',title= dico['titlebar'])
             standardfig.yaxis[0].formatter = PrintfTickFormatter(format="%4.2e")
             standardfig.add_tools(hover_tool)

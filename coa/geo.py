@@ -27,7 +27,9 @@ import pycountry as pc
 import pycountry_convert as pcc
 import pandas as pd
 import geopandas as gpd
-import shapely
+import shapely.geometry as sg
+import shapely.affinity as sa
+import shapely.ops as so
 import bs4
 
 from coa.tools import verb,kwargs_test,get_local_from_url
@@ -464,11 +466,14 @@ class GeoInfo():
                     self._data_geometry = gpd.read_file('zip://'+get_local_from_url(world_geometry_url_zipfile,0,'.zip'))[['ISO3','geometry']]
                     self._data_geometry.columns=["id_tmp","geometry"]
 
-                    # About Sudan and South Sudan, not properly managed by this database
+                    # About some countries not properly managed by this database
                     self._data_geometry=self._data_geometry.append({'id_tmp':'SSD','geometry':None},ignore_index=True) # adding the SSD row
-                    for newc in ['SSD','SDN']:
+                    for newc in ['SSD','SDN','RUS']:
                         newgeo=gpd.read_file(get_local_from_url('https://github.com/johan/world.geo.json/raw/master/countries/'+newc+'.geo.json'))
-                        self._data_geometry.loc[self._data_geometry.id_tmp==newc,'geometry']=newgeo.loc[newgeo.id==newc,'geometry'][0]
+                        poly=newgeo[newgeo.id==newc].geometry.values[0]
+                        if newc == 'RUS':
+                            poly=sg.MultiPolygon([sg.Polygon([[x,y] if x>=0 else (x+360,y) for x,y in p.exterior.coords]) for p in poly])
+                        self._data_geometry.loc[self._data_geometry.id_tmp==newc,'geometry']=gpd.GeoSeries(poly).values
 
                 p=p.merge(self._data_geometry,how='left',\
                     left_on='iso3_tmp',right_on='id_tmp',\
@@ -722,7 +727,7 @@ class GeoCountry():
                     if w in list_translation.keys():
                         x=list_translation[w][0]
                         y=list_translation[w][1]
-                    g = shapely.affinity.translate(self._country_data.loc[index, 'geometry'], xoff=x, yoff=y)
+                    g = sa.translate(self._country_data.loc[index, 'geometry'], xoff=x, yoff=y)
                     tmp.append(g)
                 self._country_data['geometry']=tmp
 
@@ -734,9 +739,9 @@ class GeoCountry():
                 for index, poi in self._country_data.iterrows():
                     g=self._country_data.loc[index, 'geometry']
                     if self._country_data.loc[index,'code_subregion'] in ['75','92','93','94']:
-                        g2=shapely.affinity.scale(shapely.affinity.translate(g,xoff=idf_translation[0],yoff=idf_translation[1]),\
+                        g2=sa.scale(sa.translate(g,xoff=idf_translation[0],yoff=idf_translation[1]),\
                                                 xfact=idf_scale,yfact=idf_scale,origin=idf_center)
-                        g=shapely.ops.unary_union([g,g2])
+                        g=so.unary_union([g,g2])
                     tmp.append(g)
                 self._country_data['geometry']=tmp
 

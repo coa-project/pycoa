@@ -390,6 +390,7 @@ def map(**kwargs):
     input_arg=kwargs.get('input',None)
     where=kwargs.get('where',None)
     what=kwargs.get('what',None)
+    option = kwargs.get('option',None)
     visu=kwargs.get('visu','bokeh')
     input_field = None
     if isinstance(input_arg,pd.DataFrame):
@@ -401,8 +402,7 @@ def map(**kwargs):
         which=kwargs.get('which',listwhich()[0])
     else:
         raise CoaTypeError('Waiting input as valid pycoa pandas '
-            'dataframe. See help.')
-
+            'dataframe. See help.')       
     if visu == 'bokeh':
         return show(_cocoplot.bokeh_map(t,input_field,**kwargs))
     elif visu == 'folium':

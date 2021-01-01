@@ -440,6 +440,17 @@ class DataBase(object):
         pdfiltered = self.get_mainpandas().loc[self.get_mainpandas().location.isin(clist)]
         pdfiltered = pdfiltered[['location','date',kwargs['which']]]
 
+        # insert dates at the end for each country if necessary
+        maxdate=pdfiltered['date'].max()
+        for loca in clist:
+            lmaxdate=pdfiltered.loc[ pdfiltered.location == loca ]['date'].max()
+            if lmaxdate != maxdate:
+                pdfiltered = pdfiltered.append(pd.DataFrame({'location':loca,
+                    'date':pd.date_range(start=lmaxdate,end=maxdate,closed='right').date,
+                    kwargs['which']:np.nan}) )
+        pdfiltered.reset_index(level=0,drop=True,inplace=True)
+
+        # deal with options now
         option = kwargs.get('option', '')
         fillnan0 = False
         if not isinstance(option,list):

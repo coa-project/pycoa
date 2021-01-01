@@ -472,7 +472,7 @@ class GeoInfo():
                         newgeo=gpd.read_file(get_local_from_url('https://github.com/johan/world.geo.json/raw/master/countries/'+newc+'.geo.json'))
                         poly=newgeo[newgeo.id==newc].geometry.values[0]
                         if newc == 'RUS':
-                            poly=sg.MultiPolygon([sg.Polygon([[x,y] if x>=0 else (x+360,y) for x,y in p.exterior.coords]) for p in poly])
+                            poly=so.unary_union(sg.MultiPolygon([sg.Polygon([[x,y] if x>=0 else (x+360,y) for x,y in p.exterior.coords]) for p in poly]))
                         self._data_geometry.loc[self._data_geometry.id_tmp==newc,'geometry']=gpd.GeoSeries(poly).values
 
                 p=p.merge(self._data_geometry,how='left',\

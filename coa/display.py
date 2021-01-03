@@ -30,11 +30,11 @@ import json
 import io
 from io import BytesIO
 import base64
-
+from datascroller import scroll
 from bokeh.models import ColumnDataSource, TableColumn, DataTable,ColorBar, \
     HoverTool,BasicTicker, GeoJSONDataSource, LinearColorMapper, Label, \
     PrintfTickFormatter, BasicTickFormatter, CustomJS, CustomJSHover, Select, \
-    Range1d, DatetimeTickFormatter, Legend, LegendItem
+    Range1d, DatetimeTickFormatter, Legend, LegendItem,PanTool
 from bokeh.models.widgets import Tabs, Panel
 from bokeh.palettes import Viridis256, Cividis256, Turbo256, Magma256
 from bokeh.plotting import figure
@@ -43,6 +43,8 @@ from bokeh.palettes import Paired12
 from bokeh.palettes import Dark2_5 as palette
 from bokeh.io import export_png
 from bokeh import events
+import shapely.geometry as sg
+from bokeh.tile_providers import get_provider, Vendors
 
 import branca.colormap
 from branca.element import Element, Figure
@@ -66,8 +68,9 @@ class CocoDisplay():
         self.plot_width =  width_height_default[0]
         self.plot_height =  width_height_default[1]
         self.all_available_display_keys=['where','which','what','when','title_temporal','plot_height','plot_width','title','bins','var_displayed',
-        'option','input','input_field','visu','plot_last_date']
-
+        'option','input','input_field','visu','plot_last_date','tile']
+        self.tiles_listing=['CARTODBPOSITRON','CARTODBPOSITRON_RETINA','STAMEN_TERRAIN','STAMEN_TERRAIN_RETINA',
+        'STAMEN_TONER','STAMEN_TONER_BACKGROUND','STAMEN_TONER_LABELS','OSM','WIKIMEDIA','ESRI_IMAGERY']
         if self.database_name == 'jhu' or self.database_name == 'owid':
             g=coge.GeoManager()
             g.set_standard('name')
@@ -131,7 +134,6 @@ class CocoDisplay():
         when = kwargs.get('when', None)
         input_dico['when'] = when
         title_temporal=''
-
         input_dico['when_beg'] = mypandas.date.min()
         input_dico['when_end'] = mypandas.date.max()
 
@@ -160,7 +162,6 @@ class CocoDisplay():
             else:
                 input_field=input_field
             input_dico['input_field'] = input_field
-
         else:
             if what:
                 if what == 'daily':
@@ -175,6 +176,16 @@ class CocoDisplay():
                     #    titlebar = which + ' (' + what +  ' @ ' + when.strftime('%d/%m/%Y') + ')'
                 var_displayed = what
 
+        vendors = kwargs.get('tile', 'CARTODBPOSITRON')
+
+        provider = None
+        if vendors in self.tiles_listing:
+            provider = vendors
+        else:
+            raise CoaTypeError('Don\'t which you want to load ...')
+
+        input_dico['tile']=provider
+
         if title:
             titlebar = title
         input_dico['titlebar']=titlebar
@@ -182,6 +193,10 @@ class CocoDisplay():
         input_dico['data_base'] = self.database_name
 
         return mypandas, input_dico
+
+    def get_tiles(self):
+        ''' Return all the tiles available in Bokeh '''
+        return self.tiles_listing
 
     def standardfig(self,dbname=None,**kwargs):
          """
@@ -254,7 +269,7 @@ class CocoDisplay():
                 [list_max.append(max(value.loc[value.location.isin(loc)][i])) for key,value in dict_filter_data[i].items()]
             amplitude=(np.nanmax(list_max) - np.nanmin(list_max))
             if amplitude > 10**4:
-                ax_type.reverse()                
+                ax_type.reverse()
         else:
             for i in input_field:
                 dict_filter_data[i] = {i:mypandas.loc[(mypandas['date']>=dico['when_beg']) & (mypandas['date']<=dico['when_end'])]}
@@ -680,6 +695,28 @@ class CocoDisplay():
             print("Here the date I will take:", when_end-dt.timedelta(days=j-1))
         return  when_end-dt.timedelta(days=j-1)
 
+    def get_polycoords(self,geopandasrow):
+        """ Take a row of a geopandas as an input (i.e : for index, row in geopdwd.iterrows():...)
+        and returns a tuple (if the geometry is a Polygon) or a list (if the geometry is a multipolygon)
+        of an exterior.coords """
+        geometry = geopandasrow['geometry']
+        if geometry.type=='Polygon':
+            return list( geometry.exterior.coords)
+        if geometry.type=='MultiPolygon':
+            all = []
+            for ea in geometry:
+                all.append(list( ea.exterior.coords))
+            return all
+
+    def wgs84_to_web_mercator(self,tuple_xy):
+        ''' Take a tuple (longitude,latitude) from a coordinate reference system crs=EPSG:4326 '''
+        ''' and converts it to a  longitude/latitude tuple from to Web Mercator format '''
+        k = 6378137
+        x = tuple_xy[0] * (k * np.pi/180.0)
+        y = np.log(np.tan((90 + tuple_xy[1]) * np.pi/360.0)) * k
+        return x,y
+
+
     def bokeh_map(self,mypandas,input_field = None,**kwargs):
         """Create a Bokeh map from a pandas input
         Keyword arguments
@@ -715,46 +752,54 @@ class CocoDisplay():
             panda2map = self.pandas_world
             name_displayed = 'location'
 
-        #when_end = CocoDisplay.changeto_nonan_date(mypandas, dico['when_end'],input_field)
-        #dico['when_end'] = when_end
+
+        my_location = mypandas.location.unique()
         mypandas_filtered = mypandas.loc[mypandas.date == dico['when_end']]
 
-        #if CocoDisplay.changeto_nonan_date(mypandas, dico['when_end'],input_field) != dico['when_end']:
-        #    when_end = CocoDisplay.changeto_nonan_date(mypandas,dico['when_end'],input_field)
-        #    mypandas_filtered = mypandas.loc[(mypandas.date == dico['when_end'])]
-        #    dico['titlebar']+=' due to nan I shifted date to '+  dico['when_end'].strftime("%d/%m/%Y")
-
         mypandas_filtered = mypandas_filtered.drop(columns=['date'])
-        my_location = mypandas.location.unique()
-        if input_field in panda2map.columns:
-            panda2map = panda2map.drop(columns=input_field)
-        panda2map = panda2map.rename(columns={'which':input_field})
-        panda2map = panda2map[~panda2map.location.isin(my_location)]
-        panda2map = panda2map.append(mypandas_filtered)
-        geopdwd = self.get_geodata(panda2map)
-        geopdwd = geopdwd#.to_crs('EPSG:3857')#+proj=wintri')
+        geopdwd = self.get_geodata(mypandas_filtered)
+        new_poly=[]
+        geolistmodified=dict()
+        for index, row in geopdwd.iterrows():
+            split_poly=[]
+            new_poly=[]
+            for pt in self.get_polycoords(row):
+                if type(pt) == tuple:
+                    new_poly.append(self.wgs84_to_web_mercator(pt))
+                elif type(pt) == list:
+                    shifted=[]
+                    for p in pt:
+                        shifted.append(self.wgs84_to_web_mercator(p))
+                    new_poly.append(sg.Polygon(shifted))
+                else:
+                    CoaTypeError("Neither tuple or list don't know what to do with \
+                        your geometry description")
+
+            if type(new_poly[0])==tuple:
+               geolistmodified[row['location']]=sg.Polygon(new_poly)
+            else:
+               geolistmodified[row['location']]=sg.MultiPolygon(new_poly)
+
+        ng = pd.DataFrame(geolistmodified.items(), columns=['location', 'geometry'])
+        geolistmodified=gpd.GeoDataFrame({'location':ng['location'],'geometry':gpd.GeoSeries(ng['geometry'])},crs="epsg:3857")
+
+
         geopdwd = geopdwd.reset_index()
-
-        geopdwd = pd.merge(geopdwd,panda2map,on='location')
+        geopdwd = pd.merge(geopdwd,mypandas_filtered,on='location')
+        geopdwd = geopdwd.drop(columns='geometry')
+        geopdwd = pd.merge(geopdwd,geolistmodified,on='location')
         geopdwd = geopdwd.set_index("geoid")
-
-        merged_json = json.loads(geopdwd.to_json())
-        json_data = json.dumps(merged_json)
+        json_data = json.dumps(json.loads(geopdwd.to_json()))
         geosource = GeoJSONDataSource(geojson = json_data)
 
-        # geobounds = geopdwd.loc[geopdwd.location.isin(my_countries)]
-        # minx, miny, maxx, maxy=unary_union(geobounds.geometry).bounds
-        # high speed version …
+        tile_provider = get_provider(dico['tile'])
         minx, miny, maxx, maxy = (geopdwd.loc[geopdwd.location.isin(my_location)]).total_bounds
+        standardfig = self.standardfig(x_range=(minx,maxx), y_range=(miny,maxy),
+        x_axis_type="mercator", y_axis_type="mercator",title=dico['titlebar'])
 
-        standardfig = self.standardfig(title=dico['titlebar'], x_range=Range1d(minx, maxx), y_range=Range1d(miny, maxy))
-        if self.database_name == 'spf' or  self.database_name == 'opencovid19' or self.database_name == 'jhu-usa':
-            standardfig.plot_height = dico['plot_height'] + 100
-            standardfig.plot_width  = dico['plot_width'] - 100
-
+        standardfig.add_tile(tile_provider)
         min_col,max_col=CocoDisplay.min_max_range(0,np.nanmax(geopdwd[input_field]))
-        #standardfig.add_tile(esri)
-        #Viridis256.reverse()
+
         color_mapper = LinearColorMapper(palette=Viridis256, low = min_col, high = max_col, nan_color = '#d9d9d9')
         color_bar = ColorBar(color_mapper=color_mapper, label_standoff=4,
                             border_line_color=None,location = (0,0), orientation = 'horizontal', ticker=BasicTicker())
@@ -775,8 +820,7 @@ class CocoDisplay():
         standardfig.add_tools(HoverTool(
         tooltips=[(name_displayed,'@'+name_displayed),(input_field,'@'+input_field+'{custom}'),],
         formatters={name_displayed:'printf','@'+input_field:cases_custom,},
-        point_policy="follow_mouse"
-        ))
+        point_policy="follow_mouse"),PanTool())
 
         return standardfig
 

@@ -101,7 +101,6 @@ class CocoDisplay():
 
         if 'where' in mypandas.columns:
             mypandas = mypandas.rename(columns={'where':'location'})
-        mypandas = mypandas.fillna(method='ffill')
 
         kwargs_test(kwargs,self.all_available_display_keys,'Bad args used in the display function.')
         plot_width = kwargs.get('plot_width', self.plot_width)
@@ -150,6 +149,7 @@ class CocoDisplay():
         else:
             title_temporal =  ' (' + 'between ' + input_dico['when_beg'].strftime('%d/%m/%Y') +' and ' + input_dico['when_end'].strftime('%d/%m/%Y') + ')'
 
+
         if kwargs.get('option', '') != '':
             title_temporal = ', option '+str(kwargs.get('option'))+title_temporal
 
@@ -176,8 +176,11 @@ class CocoDisplay():
                     #    titlebar = which + ' (' + what +  ' @ ' + when.strftime('%d/%m/%Y') + ')'
                 var_displayed = what
 
-        vendors = kwargs.get('tile', 'CARTODBPOSITRON')
+        when_end_change=CocoDisplay.changeto_nonan_date(mypandas, input_dico['when_end'],var_displayed)
+        if when_end_change != input_dico['when_end']:
+             input_dico['when_end'] = when_end_change
 
+        vendors = kwargs.get('tile', 'CARTODBPOSITRON')
         provider = None
         if vendors in self.tiles_listing:
             provider = vendors
@@ -384,7 +387,6 @@ class CocoDisplay():
             else:
                 input_field = dico['input_field']
 
-        when_end = CocoDisplay.changeto_nonan_date(mypandas, dico['when_end'],input_field)
         dico['when_end'] = when_end
         if 'location' in mypandas.columns:
             tooltips='Value at around @middle_bin : @val'
@@ -744,7 +746,6 @@ class CocoDisplay():
             else:
                 input_field = dico['input_field'][0]
 
-        minx, miny, maxx, maxy=0,0,0,0
         if self.database_name == 'spf' or  self.database_name == 'opencovid19' or self.database_name == 'jhu-usa':
             panda2map = self.pandas_country
             name_displayed = 'name_subregion'
@@ -783,7 +784,6 @@ class CocoDisplay():
         ng = pd.DataFrame(geolistmodified.items(), columns=['location', 'geometry'])
         geolistmodified=gpd.GeoDataFrame({'location':ng['location'],'geometry':gpd.GeoSeries(ng['geometry'])},crs="epsg:3857")
 
-
         geopdwd = geopdwd.reset_index()
         geopdwd = pd.merge(geopdwd,mypandas_filtered,on='location')
         geopdwd = geopdwd.drop(columns='geometry')
@@ -818,8 +818,8 @@ class CocoDisplay():
 
         """)
         standardfig.add_tools(HoverTool(
-        tooltips=[(name_displayed,'@'+name_displayed),(input_field,'@'+input_field+'{custom}'),],
-        formatters={name_displayed:'printf','@'+input_field:cases_custom,},
+        tooltips=[(name_displayed,'@'+name_displayed),(input_field,'@{'+input_field+'}'+'{custom}'),],
+        formatters={name_displayed:'printf','@{'+input_field+'}':cases_custom,},
         point_policy="follow_mouse"),PanTool())
 
         return standardfig
@@ -855,15 +855,7 @@ class CocoDisplay():
             else:
                 input_field = dico['input_field'][0]
 
-        #when_end = CocoDisplay.changeto_nonan_date(mypandas, dico['when_end'],input_field)
-        #dico['when_end'] = when_end
         mypandas_filtered = mypandas.loc[mypandas.date == dico['when_end']]
-        #mypandas_filtered = mypandas.loc[(mypandas.date == dico['when_end'])]
-        #if CocoDisplay.changeto_nonan_date(mypandas, dico['when_end'],input_field) != dico['when_end']:
-        #    when_end = CocoDisplay.changeto_nonan_date(mypandas,dico['when_end'],input_field)
-        #    mypandas_filtered = mypandas.loc[(mypandas.date == dico['when_end'])]
-        #    dico['titlebar']+=' due to nan I shifted date to '+  dico['when_end'].strftime("%d/%m/%Y")
-
         mypandas_filtered = mypandas_filtered.drop(columns=['date'])
         if self.database_name == 'spf' or  self.database_name == 'opencovid19' or self.database_name == 'jhu-usa':
             panda2map = self.pandas_country

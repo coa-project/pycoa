@@ -232,6 +232,8 @@ def get(**kwargs):
             col_name = which
         if what == 'weekly':
             col_name = 'weekly'
+        else:
+            col_name = 'daily'
 
         casted_data = pd.pivot_table(pandy, index='date',columns='where',values=col_name).to_dict('series')
         if output == 'dict':

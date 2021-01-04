@@ -59,7 +59,7 @@ from PIL import Image, ImageDraw, ImageFont
 
 import matplotlib.pyplot as plt
 import datetime as dt
-width_height_default = [680,330] #337 magical value to avoid scroll menu in bokeh map
+width_height_default = [600,400]
 
 class CocoDisplay():
     def __init__(self,db=None):
@@ -273,7 +273,7 @@ class CocoDisplay():
             for i in input_field:
                 [list_max.append(max(value.loc[value.location.isin(loc)][i])) for key,value in dict_filter_data[i].items()]
 
-            if len([x for x in list_max if not np.isnan(x)])>0:  
+            if len([x for x in list_max if not np.isnan(x)])>0:
                 amplitude=(np.nanmax(list_max) - np.nanmin(list_max))
                 if amplitude > 10**4:
                     ax_type.reverse()
@@ -824,7 +824,7 @@ class CocoDisplay():
         standardfig.add_tools(HoverTool(
         tooltips=[(name_displayed,'@'+name_displayed),(input_field,'@{'+input_field+'}'+'{custom}'),],
         formatters={name_displayed:'printf','@{'+input_field+'}':cases_custom,},
-        point_policy="follow_mouse"),PanTool())
+        point_policy="follow_mouse"))#,PanTool())
 
         return standardfig
 

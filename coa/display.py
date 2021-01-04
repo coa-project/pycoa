@@ -272,9 +272,11 @@ class CocoDisplay():
             list_max=[]
             for i in input_field:
                 [list_max.append(max(value.loc[value.location.isin(loc)][i])) for key,value in dict_filter_data[i].items()]
-            amplitude=(np.nanmax(list_max) - np.nanmin(list_max))
-            if amplitude > 10**4:
-                ax_type.reverse()
+
+            if len([x for x in list_max if not np.isnan(x)])>0:  
+                amplitude=(np.nanmax(list_max) - np.nanmin(list_max))
+                if amplitude > 10**4:
+                    ax_type.reverse()
         else:
             for i in input_field:
                 dict_filter_data[i] = {i:mypandas.loc[(mypandas['date']>=dico['when_beg']) & (mypandas['date']<=dico['when_end'])]}

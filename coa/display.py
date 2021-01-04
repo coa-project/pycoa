@@ -360,112 +360,6 @@ class CocoDisplay():
 
         return (min_r,max_r)
 
-    def pycoa_histo(self,mypandas,input_field = None,**kwargs):
-        """Create a Bokeh histogram from a pandas input
-
-        Keyword arguments
-        -----------------
-        babepandas : pandas consided
-        input_field : variable from pandas data. If pandas is produced from pycoa get_stat method
-        then 'daily','weekly' and 'cumul' can be also used
-        title: title for the figure , no title by default
-        width_height : as a list of width and height of the histo, default [500,400]
-        bins : number of bins of the hitogram default 50
-        when : - default None
-                dates are given under the format dd/mm/yyyy. In the when
-                option, one can give one date which will be the end of
-                the data slice. Or one can give two dates separated with
-                ":", which will define the time cut for the output data
-                btw those two dates.
-
-        Note
-        -----------------
-        HoverTool is available it returns position of the middle of the bin and the value.
-        """
-        mypandas,dico = self.standard_input(mypandas,input_field,**kwargs,plot_last_date=True)
-        dict_histo = defaultdict(list)
-        if type(input_field) is None.__class__ and dico['which'] is None.__class__ :
-           input_field = mypandas.columns[2]
-        else:
-            if type(input_field) is None.__class__:
-                input_field = dico['var_displayed']
-            else:
-                input_field = dico['input_field']
-
-        when_end = dico['when_end']
-        if 'location' in mypandas.columns:
-            tooltips='Value at around @middle_bin : @val'
-            loc = mypandas['location'].unique()
-            shorten_loc = [ i if len(i)<15 else i.replace('-',' ').split()[0]+'...'+i.replace('-',' ').split()[-1] for i in loc]
-
-            for w in loc:
-                histo,edges = np.histogram((mypandas.loc[(mypandas['location'] == w) &
-                                                        (mypandas['date']>=dico['when_beg']) & (mypandas['date']<=dico['when_end'])]
-                                                        [input_field].dropna()),density=False, bins=dico['bins'])
-
-                dict_histo[w] = pd.DataFrame({'location':w,'val': histo,
-                   'left': edges[:-1],
-                   'right': edges[1:],
-                   'middle_bin':np.floor(edges[:-1]+(edges[1:]-edges[:-1])/2)})
-            for j in range(len(loc)):
-                dict_histo[shorten_loc[j]] = dict_histo.pop(loc[j])
-
-            tooltips = 'Contributors : @contributors'
-
-            val_per_country = defaultdict(list)
-            for w in loc:
-               mypandas = mypandas.loc[(mypandas.date == dico['when_end'])]
-               val = mypandas.loc[mypandas['location'] == w][input_field].values
-                   #val_per_country.append(val)
-               val_per_country[w]=val
-
-            l_data=list(val_per_country.values())
-            # good nb of bins
-            l_n=len(l_data)
-            if dico['bins']:
-              bins = dico['bins']
-            else:
-              bins = math.ceil(2*l_n**(1./3))# Rice rule
-              if bins<8:
-                     bins=8
-
-            histo,edges = np.histogram(l_data,density=False, bins=bins,range=CocoDisplay.min_max_range(np.min(l_data),np.max(l_data)))
-            contributors=[]
-            for i,j in zip(edges[:-1],edges[1:]):
-                   res = [key for key, val in filter(lambda sub: int(sub[1]) >= i and int(sub[1]) <= j, val_per_country.items())]
-                   contributors.append(res)
-            frame_histo = pd.DataFrame({'val': histo,'left': edges[:-1],'right': edges[1:],
-              'middle_bin':np.floor(edges[:-1]+(edges[1:]-edges[:-1])/2),
-              'contributors':contributors})
-        x_max=max(edges[1:])
-        y_max=max(histo)
-        hover_tool = HoverTool(tooltips=tooltips)
-        panels = []
-        bottom=0
-
-        for axis_type in ["linear", "log"]:
-            standardfig = self.standardfig(y_axis_type=axis_type)
-            standardfig.xaxis[0].formatter = PrintfTickFormatter(format="%4.2e")
-            #standardfig.title.text = dico['titlebar']
-            standardfig.add_tools(hover_tool)
-            colors = itertools.cycle(self.colors)
-
-            if axis_type=="log":
-                bottom=0.0001
-            else:
-                standardfig.y_range=Range1d(0, y_max)
-            label = dico['titlebar']
-            p=standardfig.quad(source=ColumnDataSource(frame_histo),top='val', bottom=bottom, left='left', right='right',
-            fill_color=next(colors),legend_label=label)
-
-            standardfig.x_range=Range1d(0, x_max)
-            standardfig.legend.label_text_font_size = "12px"
-            panel = Panel(child=standardfig , title=axis_type)
-            panels.append(panel)
-            CocoDisplay.bokeh_legend(standardfig)
-
-        tabs = Tabs(tabs=panels)
-        return tabs
 
     def scrolling_menu(self,mypandas,input_field = None,**kwargs):
         """Create a Bokeh plot with a date axis from pandas input
@@ -618,10 +512,6 @@ class CocoDisplay():
         ''' Retrieve the pandas when CoCoDisplay is called '''
         return self.pycoa_pandas
 
-    def __delete__(self, instance):
-        verb("deleted in descriptor object")
-        del self.value
-
     @staticmethod
     def save_map2png(map=None,pngfile='map.png'):
         '''
@@ -723,113 +613,135 @@ class CocoDisplay():
         y = np.log(np.tan((90 + tuple_xy[1]) * np.pi/360.0)) * k
         return x,y
 
+    def decohistomap(func):
+        def generic_hm(self,mypandas,input_field = None,**kwargs):
+            mypandas,dico = self.standard_input(mypandas,input_field,**kwargs,plot_last_date=True)
+            if type(input_field) is None.__class__ and dico['which'] is None.__class__ :
+               input_field = mypandas.columns[2]
+            else:
+                if type(input_field) is None.__class__:
+                    input_field = dico['var_displayed']
+                else:
+                    input_field = dico['input_field'][0]
+            if self.database_name == 'spf' or  self.database_name == 'opencovid19' or self.database_name == 'jhu-usa':
+                panda2map = self.pandas_country
+                panda2map = panda2map.loc[(panda2map.location != '2A') & (panda2map.location != '2B')]
+                panda2map = panda2map.copy()
+                name_displayed = 'town_subregion'
+            else:
+                panda2map = self.pandas_world
+                name_displayed = 'location'
+            my_location = mypandas.location.unique()
+            mypandas_filtered = mypandas.loc[mypandas.date == dico['when_end']]
+            mypandas_filtered = mypandas_filtered.drop(columns=['date'])
+            zoom = 2
+            geopdwd = self.get_geodata(mypandas_filtered)
+            geopdwd = geopdwd.reset_index()
+            geopdwd = pd.merge(geopdwd,mypandas_filtered,on='location')
+            geopdwd = geopdwd.set_index("geoid")
+            my_location = panda2map.location.to_list()
+            boundary = (geopdwd.loc[geopdwd.location.isin(my_location)]).total_bounds
+            return func(self,input_field,name_displayed,dico,geopdwd,boundary)
+        return generic_hm
 
-    def bokeh_map(self,mypandas,input_field = None,**kwargs):
-        """Create a Bokeh map from a pandas input
+    @decohistomap
+    def pycoa_histo(self,input_field,name_displayed,dico,geopdwd,boundary):
+        """Create a Bokeh histogram from a pandas input
         Keyword arguments
         -----------------
-        babepandas : pandas considered
-        Input parameters:
-          - what (default:None) at precise date: by default get_which() set in get_stats()
-           could be 'daily' or cumul or 'weekly'
-          - when   --   dates are given under the format dd/mm/yyyy. In the when
-                          option, one can give one date which will be the end of
-                          the data slice. Or one can give two dates separated with
-                          ":", which will define the time cut for the output data
-                          btw those two dates.
-                         Only the when_end date is taking into account [:dd/mm/yyyy]
-          - plot_width, plot_height (default [500,400]): bokeh variable for map size
-        Known issue: can not avoid to display value when there are Nan values
+        babepandas : pandas consided
+        input_field : variable from pandas data. If pandas is produced from pycoa get_stat method
+        then 'daily','weekly' and 'cumul' can be also used
+        title: title for the figure , no title by default
+        width_height : as a list of width and height of the histo, default [500,400]
+        bins : number of bins of the hitogram default 50
+        when : - default None
+                dates are given under the format dd/mm/yyyy. In the when
+                option, one can give one date which will be the end of
+                the data slice. Or one can give two dates separated with
+                ":", which will define the time cut for the output data
+                btw those two dates.
+        Note
+        -----------------
+        HoverTool is available it returns position of the middle of the bin and the value.
         """
-        mypandas,dico = self.standard_input(mypandas,input_field,**kwargs,plot_last_date=True)
+        mypandas = geopdwd
+        dict_histo = defaultdict(list)
+        if 'location' in mypandas.columns:
+            tooltips='Value at around @middle_bin : @val'
+            loc = mypandas['location'].unique()
+            shorten_loc = [ i if len(i)<15 else i.replace('-',' ').split()[0]+'...'+i.replace('-',' ').split()[-1] for i in loc]
 
-        if type(input_field) is None.__class__ and dico['which'] is None.__class__ :
-           input_field = mypandas.columns[2]
-        else:
-            if type(input_field) is None.__class__:
-                input_field = dico['var_displayed']
+            for w in loc:
+                histo,edges = np.histogram((mypandas.loc[(mypandas['location'] == w)]
+                                                        [input_field].dropna()),density=False, bins=dico['bins'])
+
+                dict_histo[w] = pd.DataFrame({'location':w,'val': histo,
+                   'left': edges[:-1],
+                   'right': edges[1:],
+                   'middle_bin':np.floor(edges[:-1]+(edges[1:]-edges[:-1])/2)})
+            for j in range(len(loc)):
+                dict_histo[shorten_loc[j]] = dict_histo.pop(loc[j])
+
+            tooltips = 'Contributors : @contributors'
+
+            val_per_country = defaultdict(list)
+            for w in loc:
+               #mypandas = mypandas.loc[(mypandas.date == dico['when_end'])]
+               val = mypandas.loc[mypandas['location'] == w][input_field].values
+                   #val_per_country.append(val)
+               val_per_country[w]=val
+
+            l_data=list(val_per_country.values())
+            # good nb of bins
+            l_n=len(l_data)
+            if dico['bins']:
+              bins = dico['bins']
             else:
-                input_field = dico['input_field'][0]
+              bins = math.ceil(2*l_n**(1./3))# Rice rule
+              if bins<8:
+                     bins=8
 
-        if self.database_name == 'spf' or  self.database_name == 'opencovid19' or self.database_name == 'jhu-usa':
-            panda2map = self.pandas_country
-            name_displayed = 'name_subregion'
-        else:
-            panda2map = self.pandas_world
-            name_displayed = 'location'
+            histo,edges = np.histogram(l_data,density=False, bins=bins,range=CocoDisplay.min_max_range(np.min(l_data),np.max(l_data)))
+            contributors=[]
+            for i,j in zip(edges[:-1],edges[1:]):
+                   res = [key for key, val in filter(lambda sub: int(sub[1]) >= i and int(sub[1]) <= j, val_per_country.items())]
+                   contributors.append(res)
+            frame_histo = pd.DataFrame({'val': histo,'left': edges[:-1],'right': edges[1:],
+              'middle_bin':np.floor(edges[:-1]+(edges[1:]-edges[:-1])/2),
+              'contributors':contributors})
+        x_max=max(edges[1:])
+        y_max=max(histo)
+        hover_tool = HoverTool(tooltips=tooltips)
+        panels = []
+        bottom=0
 
+        for axis_type in ["linear", "log"]:
+            standardfig = self.standardfig(y_axis_type=axis_type)
+            standardfig.xaxis[0].formatter = PrintfTickFormatter(format="%4.2e")
+            #standardfig.title.text = dico['titlebar']
+            standardfig.add_tools(hover_tool)
+            colors = itertools.cycle(self.colors)
 
-        my_location = mypandas.location.unique()
-        mypandas_filtered = mypandas.loc[mypandas.date == dico['when_end']]
-
-        mypandas_filtered = mypandas_filtered.drop(columns=['date'])
-        geopdwd = self.get_geodata(mypandas_filtered)
-        new_poly=[]
-        geolistmodified=dict()
-        for index, row in geopdwd.iterrows():
-            split_poly=[]
-            new_poly=[]
-            for pt in self.get_polycoords(row):
-                if type(pt) == tuple:
-                    new_poly.append(self.wgs84_to_web_mercator(pt))
-                elif type(pt) == list:
-                    shifted=[]
-                    for p in pt:
-                        shifted.append(self.wgs84_to_web_mercator(p))
-                    new_poly.append(sg.Polygon(shifted))
-                else:
-                    CoaTypeError("Neither tuple or list don't know what to do with \
-                        your geometry description")
-
-            if type(new_poly[0])==tuple:
-               geolistmodified[row['location']]=sg.Polygon(new_poly)
+            if axis_type=="log":
+                bottom=0.0001
             else:
-               geolistmodified[row['location']]=sg.MultiPolygon(new_poly)
+                standardfig.y_range=Range1d(0, y_max)
+            label = dico['titlebar']
+            p=standardfig.quad(source=ColumnDataSource(frame_histo),top='val', bottom=bottom, left='left', right='right',
+            fill_color=next(colors),legend_label=label)
 
-        ng = pd.DataFrame(geolistmodified.items(), columns=['location', 'geometry'])
-        geolistmodified=gpd.GeoDataFrame({'location':ng['location'],'geometry':gpd.GeoSeries(ng['geometry'])},crs="epsg:3857")
+            standardfig.x_range=Range1d(0, x_max)
+            standardfig.legend.label_text_font_size = "12px"
+            panel = Panel(child=standardfig , title=axis_type)
+            panels.append(panel)
+            CocoDisplay.bokeh_legend(standardfig)
 
-        geopdwd = geopdwd.reset_index()
-        geopdwd = pd.merge(geopdwd,mypandas_filtered,on='location')
-        geopdwd = geopdwd.drop(columns='geometry')
-        geopdwd = pd.merge(geopdwd,geolistmodified,on='location')
-        geopdwd = geopdwd.set_index("geoid")
-        json_data = json.dumps(json.loads(geopdwd.to_json()))
-        geosource = GeoJSONDataSource(geojson = json_data)
+        tabs = Tabs(tabs=panels)
+        return tabs
 
-        tile_provider = get_provider(dico['tile'])
-        minx, miny, maxx, maxy = (geopdwd.loc[geopdwd.location.isin(my_location)]).total_bounds
-        standardfig = self.standardfig(x_range=(minx,maxx), y_range=(miny,maxy),
-        x_axis_type="mercator", y_axis_type="mercator",title=dico['titlebar'])
-
-        standardfig.add_tile(tile_provider)
-        min_col,max_col=CocoDisplay.min_max_range(0,np.nanmax(geopdwd[input_field]))
-
-        color_mapper = LinearColorMapper(palette=Viridis256, low = min_col, high = max_col, nan_color = '#d9d9d9')
-        color_bar = ColorBar(color_mapper=color_mapper, label_standoff=4,
-                            border_line_color=None,location = (0,0), orientation = 'horizontal', ticker=BasicTicker())
-        color_bar.formatter = BasicTickFormatter(use_scientific=True,precision=1,power_limit_low=int(max_col))
-        standardfig.add_layout(color_bar, 'below')
-        standardfig.xaxis.visible = False
-        standardfig.yaxis.visible = False
-        standardfig.xgrid.grid_line_color = None
-        standardfig.ygrid.grid_line_color = None
-        standardfig.patches('xs','ys', source = geosource,fill_color = {'field':input_field, 'transform' : color_mapper},
-                  line_color = 'black', line_width = 0.25, fill_alpha = 1)
-        cases_custom = CustomJSHover(code="""
-        var value;
-        if(value>0)
-            return value.toExponential(2).toString();
-
-        """)
-        standardfig.add_tools(HoverTool(
-        tooltips=[(name_displayed,'@'+name_displayed),(input_field,'@{'+input_field+'}'+'{custom}'),],
-        formatters={name_displayed:'printf','@{'+input_field+'}':cases_custom,},
-        point_policy="follow_mouse"))#,PanTool())
-
-        return standardfig
-
-    def map_folium(self,mypandas,input_field=None,**kwargs):
+    @decohistomap
+    def map_folium(self,input_field,name_displayed,dico,geopdwd,boundary):
         """Create a Folium map from a pandas input
         Folium limite so far:
             - scale format can not be changed (no way to use scientific notation)
@@ -850,47 +762,15 @@ class CocoDisplay():
         Known issue: format for scale can not be changed. When data value are important
         overlaped display appear
         """
-        mypandas,dico = self.standard_input(mypandas,input_field,**kwargs,plot_last_date=True)
-
-        if type(input_field) is None.__class__ and dico['which'] is None.__class__ :
-           input_field = mypandas.columns[2]
-        else:
-            if type(input_field) is None.__class__:
-                input_field = dico['var_displayed']
-            else:
-                input_field = dico['input_field'][0]
-
-        mypandas_filtered = mypandas.loc[mypandas.date == dico['when_end']]
-        mypandas_filtered = mypandas_filtered.drop(columns=['date'])
-        if self.database_name == 'spf' or  self.database_name == 'opencovid19' or self.database_name == 'jhu-usa':
-            panda2map = self.pandas_country
-            panda2map = panda2map.loc[(panda2map.location != '2A') & (panda2map.location != '2B')]
-            panda2map = panda2map.copy()
-            name_displayed = 'town_subregion'
-            my_location = mypandas.location.unique()
-            zoom = 4
-        else:
-            panda2map = self.pandas_world
-            name_displayed = 'location'
-            zoom = 2
-
-        geopdwd = self.get_geodata(mypandas_filtered)
-        geopdwd = geopdwd.reset_index()
-        geopdwd = pd.merge(geopdwd,mypandas_filtered,on='location')
-        geopdwd = geopdwd.set_index("geoid")
-
-        my_location = panda2map.location.to_list()
-        minx, miny, maxx, maxy = (geopdwd.loc[geopdwd.location.isin(my_location)]).total_bounds
-
+        minx, miny, maxx, maxy = boundary
+        zoom = 2
         mapa = folium.Map(location=[ (maxy+miny)/2., (maxx+minx)/2.], zoom_start=zoom)
         fig = Figure(width=self.plot_width, height=self.plot_height)
         fig.add_child(mapa)
-
         min_col,max_col=CocoDisplay.min_max_range(0,np.nanmax(geopdwd[input_field]))
         colormap = branca.colormap.linear.RdPu_09.scale(min_col,max_col)
         colormin = branca.colormap.linear.RdPu_09.rgb_hex_str(min_col)
         colormax = branca.colormap.linear.RdPu_09.rgb_hex_str(max_col)
-
         colormap.caption = 'Cases : ' + dico['titlebar']
         colormap.add_to(mapa)
         map_id = colormap.get_name()
@@ -954,8 +834,90 @@ class CocoDisplay():
         draw.text((2,0), msg, font=fnt,fill=(0, 0, 0))
         im.crop((0, 0,2*w,2*h)).save("pycoatextlogo.png", "PNG")
         FloatImage("pycoatextlogo.png", bottom=-2, left=1).add_to(mapa)
-
         return mapa
+
+    @decohistomap
+    def bokeh_map(self,input_field,name_displayed,dico,geopdwd,boundary):
+         """Create a Bokeh map from a pandas input
+        Keyword arguments
+        -----------------
+        babepandas : pandas considered
+        Input parameters:
+          - what (default:None) at precise date: by default get_which() set in get_stats()
+           could be 'daily' or cumul or 'weekly'
+          - when   --   dates are given under the format dd/mm/yyyy. In the when
+                          option, one can give one date which will be the end of
+                          the data slice. Or one can give two dates separated with
+                          ":", which will define the time cut for the output data
+                          btw those two dates.
+                         Only the when_end date is taking into account [:dd/mm/yyyy]
+          - plot_width, plot_height (default [500,400]): bokeh variable for map size
+        Known issue: can not avoid to display value when there are Nan values
+        """
+        new_poly=[]
+        geolistmodified=dict()
+        for index, row in geopdwd.iterrows():
+            split_poly=[]
+            new_poly=[]
+            for pt in self.get_polycoords(row):
+                if type(pt) == tuple:
+                    new_poly.append(self.wgs84_to_web_mercator(pt))
+                elif type(pt) == list:
+                    shifted=[]
+                    for p in pt:
+                        shifted.append(self.wgs84_to_web_mercator(p))
+                    new_poly.append(sg.Polygon(shifted))
+                else:
+                    CoaTypeError("Neither tuple or list don't know what to do with \
+                        your geometry description")
+
+            if type(new_poly[0])==tuple:
+               geolistmodified[row['location']]=sg.Polygon(new_poly)
+            else:
+               geolistmodified[row['location']]=sg.MultiPolygon(new_poly)
+
+        ng = pd.DataFrame(geolistmodified.items(), columns=['location', 'geometry'])
+        geolistmodified=gpd.GeoDataFrame({'location':ng['location'],'geometry':gpd.GeoSeries(ng['geometry'])},crs="epsg:3857")
+
+        geopdwd = geopdwd.reset_index()
+        geopdwd = geopdwd.drop(columns='geometry')
+        geopdwd = pd.merge(geopdwd,geolistmodified,on='location')
+        geopdwd = geopdwd.set_index("geoid")
+        json_data = json.dumps(json.loads(geopdwd.to_json()))
+        geosource = GeoJSONDataSource(geojson = json_data)
+
+        tile_provider = get_provider(dico['tile'])
+        minx, miny, maxx, maxy = (geopdwd.loc[geopdwd.location.isin(geopdwd.location.unique())]).total_bounds
+        standardfig = self.standardfig(x_range=(minx,maxx), y_range=(miny,maxy),
+        x_axis_type="mercator", y_axis_type="mercator",title=dico['titlebar'])
+
+        standardfig.add_tile(tile_provider)
+        min_col,max_col=CocoDisplay.min_max_range(0,np.nanmax(geopdwd[input_field]))
+
+        color_mapper = LinearColorMapper(palette=Viridis256, low = min_col, high = max_col, nan_color = '#d9d9d9')
+        color_bar = ColorBar(color_mapper=color_mapper, label_standoff=4,
+                            border_line_color=None,location = (0,0), orientation = 'horizontal', ticker=BasicTicker())
+        color_bar.formatter = BasicTickFormatter(use_scientific=True,precision=1,power_limit_low=int(max_col))
+        standardfig.add_layout(color_bar, 'below')
+        standardfig.xaxis.visible = False
+        standardfig.yaxis.visible = False
+        standardfig.xgrid.grid_line_color = None
+        standardfig.ygrid.grid_line_color = None
+        standardfig.patches('xs','ys', source = geosource,fill_color = {'field':input_field, 'transform' : color_mapper},
+                  line_color = 'black', line_width = 0.25, fill_alpha = 1)
+        cases_custom = CustomJSHover(code="""
+        var value;
+        if(value>0)
+            return value.toExponential(2).toString();
+
+        """)
+        standardfig.add_tools(HoverTool(
+        tooltips=[(name_displayed,'@'+name_displayed),(input_field,'@{'+input_field+'}'+'{custom}'),],
+        formatters={name_displayed:'printf','@{'+input_field+'}':cases_custom,},
+        point_policy="follow_mouse"))#,PanTool())
+
+        return standardfig
+
     @staticmethod
     def sparkline(data, figsize=(2, 0.25), **kwargs):
         """

@@ -258,9 +258,10 @@ class CocoDisplay():
             else:
                 input_field = dico['input_field']
 
+        location_ordered_byvalues=list(mypandas.loc[mypandas.date==dico['when_end']].sort_values(by=input_field,ascending=False)['location'])
         if 'location' in mypandas.columns:
             tooltips='Location: @location <br> Date: @date{%F} <br>  $name: @$name'
-            loc = mypandas['location'].unique()
+            loc = location_ordered_byvalues#mypandas['location'].unique()
             shorten_loc = [ i if len(i)<15 else i.replace('-',' ').split()[0]+'...'+i.replace('-',' ').split()[-1] for i in loc]
             for i in input_field:
                 dict_filter_data[i] =  \
@@ -283,7 +284,6 @@ class CocoDisplay():
 
         hover_tool = HoverTool(tooltips=tooltips,formatters={'@date': 'datetime'})
 
-
         panels = []
         for axis_type in ax_type :
             standardfig =  self.standardfig(y_axis_type=axis_type, x_axis_type='datetime',title= dico['titlebar'])
@@ -299,6 +299,7 @@ class CocoDisplay():
                     p = [standardfig.line(x='date', y=i, source=ColumnDataSource(value),
                     color=next(colors), line_width=3, legend_label=key,
                     name=i,hover_line_width=4) for key,value in dict_filter_data[i].items()]
+
             standardfig.legend.label_text_font_size = "12px"
             panel = Panel(child=standardfig , title=axis_type)
             panels.append(panel)

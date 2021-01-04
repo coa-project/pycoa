@@ -62,6 +62,8 @@ _listwhat=['cumul',  # first one is default, nota:  we must avoid uppercases
 
 _listoutput=['list','dict','array','pandas'] # first one is default for get
 
+_listvisu=['bokeh','folium']
+
 # --- Front end functions ----------------------------------------------
 
 # ----------------------------------------------------------------------
@@ -73,6 +75,16 @@ def listoutput():
     not specified.
     """
     return _listoutput
+
+# ----------------------------------------------------------------------
+# --- listvisu() -------------------------------------------------------
+# ----------------------------------------------------------------------
+def listvisu():
+    """Return the list of currently available visualization for the
+    map() function. The first one is the default output given if
+    not specified.
+    """
+    return _listvisu
 
 # ----------------------------------------------------------------------
 # --- listwhom() -------------------------------------------------------

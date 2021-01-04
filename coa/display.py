@@ -389,7 +389,7 @@ class CocoDisplay():
             else:
                 input_field = dico['input_field']
 
-        dico['when_end'] = when_end
+        when_end = dico['when_end']
         if 'location' in mypandas.columns:
             tooltips='Value at around @middle_bin : @val'
             loc = mypandas['location'].unique()

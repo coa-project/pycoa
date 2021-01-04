@@ -404,37 +404,53 @@ def hist(**kwargs):
     show(fig)
 
 # ----------------------------------------------------------------------
+# --- deco_pycoa_graph(**kwargs) ---------------------------------------
+# ----------------------------------------------------------------------
+
+def deco_pycoa_graph(f):
+    '''Main decorator for graphical output function calls
+    It mainlydeals with arg testings.
+    '''
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        kwargs_test(kwargs,['where','what','which','whom','when','input','visu','input_field','option','tile'],
+                'Bad args used in the pycoa.map() function.')
+        which=''
+        input_arg=kwargs.get('input',None)
+        where=kwargs.get('where',None)
+        what=kwargs.get('what',None)
+        option = kwargs.get('option',None)
+
+        input_field = None
+        if isinstance(input_arg,pd.DataFrame):
+            input_field=kwargs.get('input_field',input_field)
+            kwargs={}
+            kwargs['t']=input_arg
+        elif input_arg==None:
+            kwargs['t']=get(**kwargs,output='pandas')
+        else:
+            raise CoaTypeError('Waiting input as valid pycoa pandas '
+                'dataframe. See help.')
+        kwargs['input_field']=input_field
+        return f(**kwargs)
+    return wrapper
+
+# ----------------------------------------------------------------------
 # --- map(**kwargs) ----------------------------------------------------
 # ----------------------------------------------------------------------
 
+@deco_pycoa_graph
 def map(**kwargs):
     """Create a map according to arguments and options.
     See help(hist).
     """
-    kwargs_test(kwargs,['where','what','which','whom','when','input','visu','input_field','option','tile'],
-            'Bad args used in the pycoa.map() function.')
-    which=''
-    input_arg=kwargs.get('input',None)
-    where=kwargs.get('where',None)
-    what=kwargs.get('what',None)
-    option = kwargs.get('option',None)
-    visu = kwargs.get('visu','bokeh')
-    tile = kwargs.get('visu',None)
-
-    input_field = None
-    if isinstance(input_arg,pd.DataFrame):
-        t=input_arg
-        input_field=kwargs.get('input_field')
-        kwargs={}
-    elif input_arg==None:
-        t=get(**kwargs,output='pandas')
-        which=kwargs.get('which',listwhich()[0])
-    else:
-        raise CoaTypeError('Waiting input as valid pycoa pandas '
-            'dataframe. See help.')
+    visu = kwargs.get('visu',listvisu()[0])
+    t=kwargs.pop('t')
+    input_field=kwargs.pop('input_field')
     if visu == 'bokeh':
         return show(_cocoplot.bokeh_map(t,input_field,**kwargs))
     elif visu == 'folium':
         return _cocoplot.map_folium(t,input_field,**kwargs)
     else:
         raise CoaTypeError('Waiting for a valid visualisation. So far: \'bokeh\' or \'folium\'.See help.')
+

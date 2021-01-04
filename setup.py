@@ -30,8 +30,10 @@ setup(
         'bokeh',\
         'branca',\
         'bs4',\
+        'datascroller',\
         'datetime',\
         'folium',\
+        'functools',\
         'geopandas',\
         'matplotlib',\
         'numpy',\

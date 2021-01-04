@@ -182,12 +182,12 @@ class CocoDisplay():
         if when_end_change != input_dico['when_end']:
              input_dico['when_end'] = when_end_change
 
-        vendors = kwargs.get('tile', 'CARTODBPOSITRON')
+        vendors = kwargs.get('tile', self.tiles_listing[0])
         provider = None
         if vendors in self.tiles_listing:
             provider = vendors
         else:
-            raise CoaTypeError('Don\'t which you want to load ...')
+            raise CoaTypeError('Don\'t know which you want to load ...')
 
         input_dico['tile']=provider
 

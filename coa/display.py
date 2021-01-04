@@ -47,6 +47,7 @@ import shapely.geometry as sg
 from bokeh.tile_providers import get_provider, Vendors
 
 import branca.colormap
+from branca.colormap import LinearColormap
 from branca.element import Element, Figure
 
 import folium
@@ -177,6 +178,7 @@ class CocoDisplay():
                 var_displayed = what
 
         when_end_change=CocoDisplay.changeto_nonan_date(mypandas, input_dico['when_end'],var_displayed)
+
         if when_end_change != input_dico['when_end']:
              input_dico['when_end'] = when_end_change
 
@@ -881,8 +883,11 @@ class CocoDisplay():
         fig = Figure(width=self.plot_width, height=self.plot_height)
         fig.add_child(mapa)
 
-        min_col,max_col=CocoDisplay.min_max_range(0,max(geopdwd[input_field]))
+        min_col,max_col=CocoDisplay.min_max_range(0,np.nanmax(geopdwd[input_field]))
         colormap = branca.colormap.linear.RdPu_09.scale(min_col,max_col)
+        colormin = branca.colormap.linear.RdPu_09.rgb_hex_str(min_col)
+        colormax = branca.colormap.linear.RdPu_09.rgb_hex_str(max_col)
+
         colormap.caption = 'Cases : ' + dico['titlebar']
         colormap.add_to(mapa)
         map_id = colormap.get_name()
@@ -901,24 +906,28 @@ class CocoDisplay():
         html = colormap.get_root()
         html.script.get_root().render()
         html.script._children[e.get_name()] = e
-
-        W, H = (300,200)
-        im = Image.new("RGBA",(W,H))
-        draw = ImageDraw.Draw(im)
-        msg = "©pycoa.fr (data from: {})".format(self.database_name)
-        w, h = draw.textsize(msg)
-        fnt = ImageFont.truetype('/Library/Fonts/Arial.ttf', 12)
-        draw.text((2,0), msg, font=fnt,fill=(0, 0, 0))
-        im.crop((0, 0,2*w,2*h)).save("pycoatextlogo.png", "PNG")
-        FloatImage("pycoatextlogo.png", bottom=-2, left=1).add_to(mapa)
         geopdwd[input_field+'scientific_format']=(['{:.3g}'.format(i) for i in geopdwd[input_field]])
+        #
+        map_dict =geopdwd.dropna(subset=[input_field]).set_index('location')[input_field].to_dict()
+        if np.nanmin(geopdwd[input_field]) == np.nanmax(geopdwd[input_field]):
+            map_dict['FakeCountry']=0.
+
+        color_scale = LinearColormap([colormin,colormax], vmin = min(map_dict.values()), vmax = max(map_dict.values()))
+
+        def get_color(feature):
+            value = map_dict.get(feature['properties']['location'])
+            if value is None:
+                return '#8c8c8c' # MISSING -> gray
+            else:
+                return color_scale(value)
+
         folium.GeoJson(
             geopdwd,
             style_function=lambda x:
             {
-                'fillColor':colormap(x['properties'][input_field]),
+                'fillColor': get_color(x),
                 'fillOpacity': 0.8,
-                'color' : None,
+                'color' : None
             },
             highlight_function=lambda x: {'weight':2, 'color':'green'},
             tooltip=folium.features.GeoJsonTooltip(fields=[name_displayed,input_field+'scientific_format'],
@@ -932,6 +941,16 @@ class CocoDisplay():
                         """),
                 #'<div style="background-color: royalblue 0.2; color: black; padding: 2px; border: 1px solid black; border-radius: 2px;">'+input_field+'</div>'])
         ).add_to(mapa)
+
+        W, H = (300,200)
+        im = Image.new("RGBA",(W,H))
+        draw = ImageDraw.Draw(im)
+        msg = "©pycoa.fr (data from: {})".format(self.database_name)
+        w, h = draw.textsize(msg)
+        fnt = ImageFont.truetype('/Library/Fonts/Arial.ttf', 12)
+        draw.text((2,0), msg, font=fnt,fill=(0, 0, 0))
+        im.crop((0, 0,2*w,2*h)).save("pycoatextlogo.png", "PNG")
+        FloatImage("pycoatextlogo.png", bottom=-2, left=1).add_to(mapa)
 
         return mapa
     @staticmethod

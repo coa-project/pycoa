@@ -36,6 +36,7 @@ from bokeh.models import ColumnDataSource, TableColumn, DataTable,ColorBar, \
     PrintfTickFormatter, BasicTickFormatter, CustomJS, CustomJSHover, Select, \
     Range1d, DatetimeTickFormatter, Legend, LegendItem,PanTool
 from bokeh.models.widgets import Tabs, Panel
+from bokeh.models.tickers import FixedTicker
 from bokeh.palettes import Viridis256, Cividis256, Turbo256, Magma256
 from bokeh.plotting import figure
 from bokeh.layouts import row, column, gridplot
@@ -80,7 +81,7 @@ class CocoDisplay():
             self.infoword = coge.GeoInfo()
 
         if self.database_name == 'spf' or self.database_name == 'opencovid19':
-            c=coge.GeoCountry('FRA',True)
+            c=coge.GeoCountry('FRA')
             self.pandas_country = pd.DataFrame({'location':c.get_data()['code_subregion'],
                                                    'which':np.nan,'cumul':np.nan,'daily':np.nan,'weekly':np.nan})
             self.infocountry = c
@@ -360,7 +361,6 @@ class CocoDisplay():
 
         return (min_r,max_r)
 
-
     def scrolling_menu(self,mypandas,input_field = None,**kwargs):
         """Create a Bokeh plot with a date axis from pandas input
 
@@ -540,45 +540,7 @@ class CocoDisplay():
             height_policy="auto",width_policy="auto",index_position=None)
         export_png(data_table, filename = pngfile)
 
-    def get_geodata(self,mypandas):
-        '''
-         return a GeoDataFrame used in map display (see map_bokeh and map_folium)
-         Argument : mypandas, the pandas to be analysed. Only location or where columns
-         name is mandatory.
-         The output format is the following :
-         geoid | location |  geometry (POLYGON or MULTIPOLYGON)
-         Example :  get_geodata(d)
-        '''
 
-        if not isinstance(mypandas, pd.DataFrame):
-                raise CoaTypeError('Waiting for pandas input.See help.')
-        else:
-            if not any(elem in mypandas.columns.tolist() for elem in ['location','where']):
-                raise CoaTypeError('location nor where columns is presents in your pandas.'
-                                'One of them is mandatory. See help.')
-            if 'where' in mypandas.columns:
-                mypandas = mypandas.rename(columns={'where':'location'})
-
-        columns_keeped=''
-        if not 'geometry' in mypandas.columns:
-            if self.database_name == 'spf' or self.database_name == 'opencovid19' or self.database_name == 'jhu-usa':
-                data = gpd.GeoDataFrame(self.infocountry.add_field(input=mypandas,input_key='location',
-                field=['geometry','town_subregion','name_subregion']),crs="EPSG:4326")
-                columns_keeped = ['geoid','location','geometry','town_subregion','name_subregion']
-                meta_data = 'country'
-            else:
-                a = self.infoword.add_field(field=['geometry'],input=mypandas ,geofield='location')
-                data=gpd.GeoDataFrame(self.infoword.add_field(input=a,geofield='location',field=['country_name']),
-                crs="EPSG:4326")
-                columns_keeped = ['geoid','location','geometry']
-                meta_data = 'world'
-
-        data = data.loc[data.geometry != None]
-        data['geoid'] = data.index.astype(str)
-        data=data[columns_keeped]
-        data = data.set_index('geoid')
-        data.meta_geoinfo = meta_data
-        return data
 
     @staticmethod
     def changeto_nonan_date(df=None,when_end=None,field=None):
@@ -591,27 +553,6 @@ class CocoDisplay():
             info(str(when_end)+'all the value seems to be nan! I will find an other previous date.\n'+
                 'Here the date I will take: '+str(when_end-dt.timedelta(days=j-1)))
         return  when_end-dt.timedelta(days=j-1)
-
-    def get_polycoords(self,geopandasrow):
-        """ Take a row of a geopandas as an input (i.e : for index, row in geopdwd.iterrows():...)
-        and returns a tuple (if the geometry is a Polygon) or a list (if the geometry is a multipolygon)
-        of an exterior.coords """
-        geometry = geopandasrow['geometry']
-        if geometry.type=='Polygon':
-            return list( geometry.exterior.coords)
-        if geometry.type=='MultiPolygon':
-            all = []
-            for ea in geometry:
-                all.append(list( ea.exterior.coords))
-            return all
-
-    def wgs84_to_web_mercator(self,tuple_xy):
-        ''' Take a tuple (longitude,latitude) from a coordinate reference system crs=EPSG:4326 '''
-        ''' and converts it to a  longitude/latitude tuple from to Web Mercator format '''
-        k = 6378137
-        x = tuple_xy[0] * (k * np.pi/180.0)
-        y = np.log(np.tan((90 + tuple_xy[1]) * np.pi/360.0)) * k
-        return x,y
 
     def decohistomap(func):
         def generic_hm(self,mypandas,input_field = None,**kwargs):
@@ -639,8 +580,11 @@ class CocoDisplay():
             geopdwd = geopdwd.reset_index()
             geopdwd = pd.merge(geopdwd,mypandas_filtered,on='location')
             geopdwd = geopdwd.set_index("geoid")
+            geopdwd = geopdwd.sort_values(by=input_field,ascending=False).reset_index()
             my_location = panda2map.location.to_list()
             boundary = (geopdwd.loc[geopdwd.location.isin(my_location)]).total_bounds
+            location_ordered_byvalues=list(mypandas.sort_values(by=input_field,ascending=False)['location'])
+
             return func(self,input_field,name_displayed,dico,geopdwd,boundary)
         return generic_hm
 
@@ -730,8 +674,8 @@ class CocoDisplay():
             label = dico['titlebar']
             p=standardfig.quad(source=ColumnDataSource(frame_histo),top='val', bottom=bottom, left='left', right='right',
             fill_color=next(colors),legend_label=label)
-
-            standardfig.x_range=Range1d(0, x_max)
+            #p=standardfig.hbar(y='index', right='val', source=ColumnDataSource(frame_histo), height=0.95,
+            # line_color='white', color =next(colors),legend_label=label)
             standardfig.legend.label_text_font_size = "12px"
             panel = Panel(child=standardfig , title=axis_type)
             panels.append(panel)
@@ -739,6 +683,115 @@ class CocoDisplay():
 
         tabs = Tabs(tabs=panels)
         return tabs
+
+    @decohistomap
+    def pycoa_horizonhisto(self,input_field,name_displayed,dico,geopdwd,boundary):
+        mypandas = geopdwd.drop(columns=['geometry'])
+        colors = itertools.cycle(self.colors)
+        mypandas['colors']=[next(colors) for i in range(len(mypandas.index)) ]
+        mypandas['bottom']=mypandas.index
+        mypandas['left']=[0]*len(mypandas.index)
+        bthick=0.95
+        mypandas['top']=[len(mypandas.index)+bthick/2-i for i in mypandas.index.to_list()]
+        mypandas['bottom']=[len(mypandas.index)-bthick/2-i for i in mypandas.index.to_list()]
+
+        max_value = mypandas[input_field].max()
+        tooltips = [('Location','@location'),('Cases','@'+input_field)]
+        hover_tool = HoverTool(tooltips=tooltips)
+        panels = []
+
+        for axis_type in ["linear", "log"]:
+            label = dico['titlebar']
+            standardfig = self.standardfig(x_axis_type=axis_type,x_range = (0.01,1.05*max_value),title=dico['titlebar'])
+            #standardfig.y_range=Range1d(0.01, mypandas['top'].iloc[-1])
+            if axis_type=="log":
+                standardfig.x_range=Range1d(0.01, 1.05*max_value)
+                mypandas['left']=[0.001]*len(mypandas.index)
+
+            standardfig.quad(source=ColumnDataSource(mypandas),top='top',
+            bottom='bottom',left='left', right=input_field,color='colors')
+            #[i+bthick for i in range(0,len(mypandas.index))]
+            #standardfig.quad(bottom=0, top=[10**5, 10**8, 10**3], left=[0, 2, 4], right=[1,3,5])
+            #standardfig.hbar(y='index', right=input_field, source=ColumnDataSource(mypandas), height=0.95,
+            #line_color='white', color ='colors')
+            standardfig.add_tools(hover_tool)
+            label_dict={len(mypandas.index)-k:v for k,v in zip(mypandas.index.to_list(),mypandas['location'].to_list())}
+            label_dict[len(mypandas.index)+1]=''
+            standardfig.yaxis.major_label_overrides = label_dict
+            if len(mypandas.index) > 25:
+                 standardfig.yaxis.major_label_text_font_size='1pt'
+            standardfig.yaxis[0].ticker.desired_num_ticks = len(label_dict)
+            standardfig.yaxis.major_label_overrides[-1] = ''
+            standardfig.yaxis.minor_tick_line_color = None
+            #standardfig.legend.label_text_font_size = "12px"
+            panel = Panel(child=standardfig,title=axis_type)
+            panels.append(panel)
+            #CocoDisplay.bokeh_legend(standardfig)
+        tabs = Tabs(tabs=panels)
+        return tabs
+
+    @staticmethod
+    def get_polycoords(geopandasrow):
+        """ Take a row of a geopandas as an input (i.e : for index, row in geopdwd.iterrows():...)
+        and returns a tuple (if the geometry is a Polygon) or a list (if the geometry is a multipolygon)
+        of an exterior.coords """
+        geometry = geopandasrow['geometry']
+        if geometry.type=='Polygon':
+            return list( geometry.exterior.coords)
+        if geometry.type=='MultiPolygon':
+            all = []
+            for ea in geometry:
+                all.append(list( ea.exterior.coords))
+            return all
+
+    @staticmethod
+    def wgs84_to_web_mercator(tuple_xy):
+        ''' Take a tuple (longitude,latitude) from a coordinate reference system crs=EPSG:4326 '''
+        ''' and converts it to a  longitude/latitude tuple from to Web Mercator format '''
+        k = 6378137
+        x = tuple_xy[0] * (k * np.pi/180.0)
+        y = np.log(np.tan((90 + tuple_xy[1]) * np.pi/360.0)) * k
+        return x,y
+
+    def get_geodata(self,mypandas):
+        '''
+         return a GeoDataFrame used in map display (see map_bokeh and map_folium)
+         Argument : mypandas, the pandas to be analysed. Only location or where columns
+         name is mandatory.
+         The output format is the following :
+         geoid | location |  geometry (POLYGON or MULTIPOLYGON)
+         Example :  get_geodata(d)
+        '''
+
+        if not isinstance(mypandas, pd.DataFrame):
+                raise CoaTypeError('Waiting for pandas input.See help.')
+        else:
+            if not any(elem in mypandas.columns.tolist() for elem in ['location','where']):
+                raise CoaTypeError('location nor where columns is presents in your pandas.'
+                                'One of them is mandatory. See help.')
+            if 'where' in mypandas.columns:
+                mypandas = mypandas.rename(columns={'where':'location'})
+
+        columns_keeped=''
+        if not 'geometry' in mypandas.columns:
+            if self.database_name == 'spf' or self.database_name == 'opencovid19' or self.database_name == 'jhu-usa':
+                data = gpd.GeoDataFrame(self.infocountry.add_field(input=mypandas,input_key='location',
+                field=['geometry','town_subregion','name_subregion']),crs="EPSG:4326")
+                columns_keeped = ['geoid','location','geometry','town_subregion','name_subregion']
+                meta_data = 'country'
+            else:
+                a = self.infoword.add_field(field=['geometry'],input=mypandas ,geofield='location')
+                data=gpd.GeoDataFrame(self.infoword.add_field(input=a,geofield='location',field=['country_name']),
+                crs="EPSG:4326")
+                columns_keeped = ['geoid','location','geometry']
+                meta_data = 'world'
+
+        data = data.loc[data.geometry != None]
+        data['geoid'] = data.index.astype(str)
+        data=data[columns_keeped]
+        data = data.set_index('geoid')
+        data.meta_geoinfo = meta_data
+        return data
 
     @decohistomap
     def map_folium(self,input_field,name_displayed,dico,geopdwd,boundary):
@@ -838,7 +891,7 @@ class CocoDisplay():
 
     @decohistomap
     def bokeh_map(self,input_field,name_displayed,dico,geopdwd,boundary):
-         """Create a Bokeh map from a pandas input
+        """Create a Bokeh map from a pandas input
         Keyword arguments
         -----------------
         babepandas : pandas considered
@@ -861,11 +914,11 @@ class CocoDisplay():
             new_poly=[]
             for pt in self.get_polycoords(row):
                 if type(pt) == tuple:
-                    new_poly.append(self.wgs84_to_web_mercator(pt))
+                    new_poly.append(CocoDisplay.wgs84_to_web_mercator(pt))
                 elif type(pt) == list:
                     shifted=[]
                     for p in pt:
-                        shifted.append(self.wgs84_to_web_mercator(p))
+                        shifted.append(CocoDisplay.wgs84_to_web_mercator(p))
                     new_poly.append(sg.Polygon(shifted))
                 else:
                     CoaTypeError("Neither tuple or list don't know what to do with \

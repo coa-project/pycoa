@@ -697,6 +697,8 @@ class CocoDisplay():
         mypandas['bottom']=[len(mypandas.index)-bthick/2-i for i in mypandas.index.to_list()]
 
         max_value = mypandas[input_field].max()
+        min_value = mypandas[input_field].min()
+        min_value_gt0 = mypandas[mypandas[input_field]>0][input_field].min()
         tooltips = [('Location','@location'),('Cases','@'+input_field)]
         hover_tool = HoverTool(tooltips=tooltips)
         panels = []
@@ -706,7 +708,10 @@ class CocoDisplay():
             standardfig = self.standardfig(x_axis_type=axis_type,x_range = (0.01,1.05*max_value),title=dico['titlebar'])
             #standardfig.y_range=Range1d(0.01, mypandas['top'].iloc[-1])
             if axis_type=="log":
-                standardfig.x_range=Range1d(0.01, 1.05*max_value)
+                min_range_val=0.01
+                if min_value>=0:
+                    min_range_val=10**np.floor(np.log10(min_value_gt0))
+                standardfig.x_range=Range1d(min_range_val, 1.05*max_value)
                 mypandas['left']=[0.001]*len(mypandas.index)
 
             standardfig.quad(source=ColumnDataSource(mypandas),top='top',

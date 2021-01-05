@@ -720,7 +720,7 @@ class CocoDisplay():
             label_dict={len(mypandas.index)-k:v for k,v in zip(mypandas.index.to_list(),mypandas['location'].to_list())}
             label_dict[len(label_dict)+1] = ''
             standardfig.yaxis.major_label_overrides = label_dict
-            standardfig.yaxis.ticker.desired_num_ticks = len(mypandas.dropna().index)
+            standardfig.yaxis.ticker.desired_num_ticks = len(mypandas[input_field].dropna().index)
             standardfig.yaxis.major_label_overrides[0] = ''
             standardfig.yaxis.minor_tick_line_color = None
             #standardfig.legend.label_text_font_size = "12px"

@@ -63,7 +63,7 @@ class DataBase(object):
                 self.geo_all = self.geo.get_subregion_list()['code_subregion'].to_list()
                 self.return_jhu_pandas()
             elif self.db == 'spf':
-                self.geo = coge.GeoCountry('FRA') # not using dense geometry 
+                self.geo = coge.GeoCountry('FRA') # not using dense geometry
                 self.geo_all = self.geo.get_subregion_list()['code_subregion'].to_list()
                 info('SPF aka Sante Publique France database selected ...')
                 info('... tree differents db from SPF will be parsed ...')
@@ -412,7 +412,7 @@ class DataBase(object):
         kwargs_test(kwargs,['location','which','option',],
             'Bad args used in the get_stats() function.')
 
-        if kwargs['location']==None:
+        if not 'location' in kwargs.keys():
             kwargs['location']=self.geo_all
 
         if not isinstance(kwargs['location'], list):

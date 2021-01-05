@@ -210,7 +210,7 @@ class CocoDisplay():
          """
          fig=figure(**kwargs,plot_width=self.plot_width,plot_height=self.plot_height,
          tools=['save','box_zoom,reset'],toolbar_location="right")
-         logo_db_citation = Label(x=0.005*self.plot_width, y=0.01*self.plot_height, x_units='screen',
+         logo_db_citation = Label(x=0.58*self.plot_width, y=0.01*self.plot_height, x_units='screen',
           y_units='screen',text_font_size='1.5vh',background_fill_color='white', background_fill_alpha=.75,
           text='©pycoa.fr (data from: {})'.format(self.database_name))
          fig.add_layout(logo_db_citation)
@@ -686,6 +686,7 @@ class CocoDisplay():
 
     @decohistomap
     def pycoa_horizonhisto(self,input_field,name_displayed,dico,geopdwd,boundary):
+        ''' Horizontal histogram  '''
         mypandas = geopdwd.drop(columns=['geometry'])
         colors = itertools.cycle(self.colors)
         mypandas['colors']=[next(colors) for i in range(len(mypandas.index)) ]
@@ -718,10 +719,10 @@ class CocoDisplay():
             label_dict={len(mypandas.index)-k:v for k,v in zip(mypandas.index.to_list(),mypandas['location'].to_list())}
             label_dict[len(mypandas.index)+1]=''
             standardfig.yaxis.major_label_overrides = label_dict
-            if len(mypandas.index) > 25:
-                 standardfig.yaxis.major_label_text_font_size='1pt'
+            #if len(mypandas.index) > 25:
+            #     standardfig.yaxis.major_label_text_font_size='1pt'
             standardfig.yaxis[0].ticker.desired_num_ticks = len(label_dict)
-            standardfig.yaxis.major_label_overrides[-1] = ''
+            standardfig.yaxis.major_label_overrides[0] = ''
             standardfig.yaxis.minor_tick_line_color = None
             #standardfig.legend.label_text_font_size = "12px"
             panel = Panel(child=standardfig,title=axis_type)

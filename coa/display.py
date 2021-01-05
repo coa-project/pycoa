@@ -86,7 +86,7 @@ class CocoDisplay():
                                                    'which':np.nan,'cumul':np.nan,'daily':np.nan,'weekly':np.nan})
             self.infocountry = c
         if self.database_name == 'jhu-usa':
-            c=coge.GeoCountry('USA',True)
+            c=coge.GeoCountry('USA')
             self.pandas_country = pd.DataFrame({'location':c.get_data()['code_subregion'],
                                                    'which':np.nan,'cumul':np.nan,'daily':np.nan,'weekly':np.nan})
             self.infocountry = c

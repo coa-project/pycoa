@@ -59,7 +59,7 @@ class DataBase(object):
                 self.return_jhu_pandas()
             if self.db == 'jhu-usa':
                 info('USA, JHU aka Johns Hopkins database selected ...')
-                self.geo = coge.GeoCountry('USA',True)
+                self.geo = coge.GeoCountry('USA')
                 self.geo_all = self.geo.get_subregion_list()['code_subregion'].to_list()
                 self.return_jhu_pandas()
             elif self.db == 'spf':
@@ -114,7 +114,7 @@ class DataBase(object):
                 self.return_structured_pandas(result,columns_keeped=columns_keeped)
             elif self.db == 'opencovid19':
                 info('OPENCOVID19 selected ...')
-                self.geo = coge.GeoCountry('FRA',True)
+                self.geo = coge.GeoCountry('FRA')
                 self.geo_all = self.geo.get_subregion_list()['code_subregion'].to_list()
                 rename={'maille_code':'location'}
                 cast={'source_url':str,'source_archive':str,'source_type':str}

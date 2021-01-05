@@ -648,12 +648,17 @@ class GeoCountry():
                     'Subregion informations':'https://en.wikipedia.org/wiki/List_of_states_and_territories_of_the_United_States'}
                     }
 
-    def __init__(self,country=None,dense_geometry=False):
+    def __init__(self,country=None,**kwargs):
+
         """ __init__ member function.
         Must give as arg the country to deal with, as a valid ISO3 string.
 
-        If extended_geometry==True is set, the geometry of subregions and region is changed in order to have dense
-        overall geometry.
+        Various args :
+         - dense_geometry (boolean). If True , the geometry of subregions and 
+           region is changed in order to have dense overall geometry.
+           Default False.
+         - main_area (boolean). If True, only the geometry of the main area of 
+           the country is taken into account.
         """
         self._country=country
         if country == None:
@@ -661,6 +666,14 @@ class GeoCountry():
 
         if not country in self.get_list_countries():
             raise CoaKeyError("Country "+str(country)+" not supported. Please see get_list_countries() and help. ")
+
+        kwargs_test(kwargs,['dense_geometry','main_area'],'Vad args used in this init of GeoCountry object. See help.')
+
+        dense_geometry=kwargs.get("dense_geometry",False)
+        main_area=kwargs.get("main_area",False)
+
+        if not isinstance(dense_geometry,bool) or not isinstance(main_area,bool):
+            raise CoaKeyError("GeoCountry kwargs are boolean. See help.")
 
         self._country_data_region=None
         self._country_data_subregion=None
@@ -711,14 +724,15 @@ class GeoCountry():
                 },inplace=True)
 
             self._country_data.drop(['id_geofla','code_reg','nom_reg','x_chf_lieu','y_chf_lieu','x_centroid','y_centroid'],axis=1,inplace=True) # removing some column without interest
-
-            if dense_geometry == True :
-                # Moving DROM-COM near hexagon
-                list_translation={"GUADELOUPE":(63,23),
+                
+            list_translation={"GUADELOUPE":(63,23),
                                  "MARTINIQUE":(63,23),
                                  "GUYANE":(50,35),
                                  "REUNION":(-51,60),
                                  "MAYOTTE":(-38,51.5)}
+
+            if dense_geometry == True :
+                # Moving DROM-COM near hexagon
                 tmp = []
                 for index, poi in self._country_data.iterrows():
                     x=0
@@ -744,6 +758,9 @@ class GeoCountry():
                         g=so.unary_union([g,g2])
                     tmp.append(g)
                 self._country_data['geometry']=tmp
+
+            if main_area == True:
+                self._country_data = self._country_data[~self._country_data['name_subregion'].isin(list_translation.keys())]
 
         # --- 'USA' case ---------------------------------------------------------------------------------------
         elif self._country == 'USA':
@@ -771,6 +788,32 @@ class GeoCountry():
             h_us.columns=['flag_subregion','code_subregion','town_subregion','population_subregion','area_subregion']
             h_us['flag_subregion'] = [ h.split('\xa0')[0] for h in h_us['flag_subregion'] ]
             self._country_data=self._country_data.merge(h_us,how='left',on='code_subregion')
+
+            list_translation={"AK":(40,-40),"HI":(60,0)}
+            list_scale={"AK":0.4,"HI":1}
+            list_center={"AK":(-120,25),"HI":(-130,25)}
+
+            if dense_geometry == True:
+                tmp = []
+                for index, poi in self._country_data.iterrows():
+                    x=0
+                    y=0
+                    w=self._country_data.loc[index,"code_subregion"]
+                    if w in list_translation.keys():
+                        x=list_translation[w][0]
+                        y=list_translation[w][1]
+                        g=sa.scale(sa.translate(self._country_data.loc[index, 'geometry'],xoff=x,yoff=y),\
+                                                xfact=list_scale[w],yfact=list_scale[w],origin=list_center[w])
+                    else:
+                        g=self._country_data.loc[index, 'geometry']
+
+                    tmp.append(g)  
+                self._country_data['geometry']=tmp
+
+
+
+            if main_area == True:
+                self._country_data=self._country_data[~self._country_data['code_subregion'].isin(list_translation.keys())]
 
     def get_source(self):
         """ Return informations about URL sources

@@ -689,6 +689,7 @@ class CocoDisplay():
         ''' Horizontal histogram  '''
         mypandas = geopdwd.drop(columns=['geometry'])
         colors = itertools.cycle(self.colors)
+
         mypandas['colors']=[next(colors) for i in range(len(mypandas.index)) ]
         mypandas['bottom']=mypandas.index
         mypandas['left']=[0]*len(mypandas.index)
@@ -702,7 +703,6 @@ class CocoDisplay():
         tooltips = [('Location','@location'),('Cases','@'+input_field)]
         hover_tool = HoverTool(tooltips=tooltips)
         panels = []
-
         for axis_type in ["linear", "log"]:
             label = dico['titlebar']
             standardfig = self.standardfig(x_axis_type=axis_type,x_range = (0.01,1.05*max_value),title=dico['titlebar'])
@@ -716,17 +716,11 @@ class CocoDisplay():
 
             standardfig.quad(source=ColumnDataSource(mypandas),top='top',
             bottom='bottom',left='left', right=input_field,color='colors')
-            #[i+bthick for i in range(0,len(mypandas.index))]
-            #standardfig.quad(bottom=0, top=[10**5, 10**8, 10**3], left=[0, 2, 4], right=[1,3,5])
-            #standardfig.hbar(y='index', right=input_field, source=ColumnDataSource(mypandas), height=0.95,
-            #line_color='white', color ='colors')
             standardfig.add_tools(hover_tool)
             label_dict={len(mypandas.index)-k:v for k,v in zip(mypandas.index.to_list(),mypandas['location'].to_list())}
-            label_dict[len(mypandas.index)+1]=''
+            label_dict[len(label_dict)+1] = ''
             standardfig.yaxis.major_label_overrides = label_dict
-            #if len(mypandas.index) > 25:
-            #     standardfig.yaxis.major_label_text_font_size='1pt'
-            standardfig.yaxis[0].ticker.desired_num_ticks = len(label_dict)
+            standardfig.yaxis.ticker.desired_num_ticks = len(mypandas.dropna().index)
             standardfig.yaxis.major_label_overrides[0] = ''
             standardfig.yaxis.minor_tick_line_color = None
             #standardfig.legend.label_text_font_size = "12px"

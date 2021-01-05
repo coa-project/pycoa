@@ -412,8 +412,10 @@ class DataBase(object):
         kwargs_test(kwargs,['location','which','option',],
             'Bad args used in the get_stats() function.')
 
-        if not 'location' in kwargs.keys():
+        if not 'location' in kwargs or kwargs['location'] is None.__class__ or kwargs['location']==None:
             kwargs['location']=self.geo_all
+        else:
+            kwargs['location']=kwargs['location']
 
         if not isinstance(kwargs['location'], list):
             clist = ([kwargs['location']]).copy()

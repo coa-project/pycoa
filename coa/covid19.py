@@ -48,7 +48,7 @@ class DataBase(object):
         self.db =  db_name
         self.geo_all = ''
         self.set_display(self.db)
-
+        self.database_url=[]
         if self.db not in self.database_name:
             raise CoaDbError('Unknown ' + self.db + '. Available database so far in PyCoa are : ' + str(self.database_name) ,file=sys.stderr)
         else:
@@ -198,7 +198,7 @@ class DataBase(object):
         '''
         return self.available_keys_words
 
-   def get_database_url(self):
+   def get_source(self):
         '''
         Return the current url used to fill the mainpandas
         (csv file)
@@ -212,7 +212,7 @@ class DataBase(object):
             for jhu location are countries (location uses geo standard)
             for jhu-usa location are Province_State (location uses geo standard)
             '''
-        self.database_url = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/"+\
+        base_url = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/"+\
                                 "csse_covid_19_data/csse_covid_19_time_series/"
         jhu_files_ext = ['deaths', 'confirmed', 'recovered']
         pandas_jhu = {}
@@ -226,7 +226,8 @@ class DataBase(object):
         pandas_list = []
         for ext in jhu_files_ext:
             fileName = "time_series_covid19_" + ext + extansion
-            url = self.database_url + fileName
+            url = base_url + fileName
+            self.database_url.append(url)
             pandas_jhu_db = pandas.read_csv(get_local_from_url(url,7200), sep = ',') # cached for 2 hours
             if self.db == 'jhu':
                 pandas_jhu_db = pandas_jhu_db.rename(columns={'Country/Region':'location'})
@@ -273,7 +274,7 @@ class DataBase(object):
         '''
         Parse and convert the database cvs file to a pandas structure
         '''
-        self.database_url=url
+        self.database_url.append(url)
         kwargs_test(kwargs,['cast','separator','encoding','constraints','rename_columns','drop_field'],
             'Bad args used in the csv2pandas() function.')
 
@@ -288,7 +289,7 @@ class DataBase(object):
         encoding = kwargs.get('encoding', None)
         if encoding:
             encoding = encoding
-        pandas_db = pandas.read_csv(get_local_from_url(self.database_url,7200),sep=separator,dtype=dico_cast, encoding = encoding ) # cached for 2 hours
+        pandas_db = pandas.read_csv(get_local_from_url(url,7200),sep=separator,dtype=dico_cast, encoding = encoding ) # cached for 2 hours
         #pandas_db = pandas.read_csv(self.database_url,sep=separator,dtype=dico_cast, encoding = encoding )
         constraints = kwargs.get('constraints', None)
         rename_columns = kwargs.get('rename_columns', None)
@@ -412,8 +413,10 @@ class DataBase(object):
         kwargs_test(kwargs,['location','which','option',],
             'Bad args used in the get_stats() function.')
 
-        if not 'location' in kwargs.keys():
+        if not 'location' in kwargs or kwargs['location'] is None.__class__ or kwargs['location']==None:
             kwargs['location']=self.geo_all
+        else:
+            kwargs['location']=kwargs['location']
 
         if not isinstance(kwargs['location'], list):
             clist = ([kwargs['location']]).copy()

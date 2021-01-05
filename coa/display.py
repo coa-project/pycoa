@@ -259,8 +259,8 @@ class CocoDisplay():
             else:
                 input_field = dico['input_field']
 
-        location_ordered_byvalues=list(mypandas.loc[mypandas.date==dico['when_end']].sort_values(by=input_field,ascending=False)['location'])
         if 'location' in mypandas.columns:
+            location_ordered_byvalues=list(mypandas.loc[mypandas.date==dico['when_end']].sort_values(by=input_field,ascending=False)['location'])
             tooltips='Location: @location <br> Date: @date{%F} <br>  $name: @$name'
             loc = location_ordered_byvalues#mypandas['location'].unique()
             shorten_loc = [ i if len(i)<15 else i.replace('-',' ').split()[0]+'...'+i.replace('-',' ').split()[-1] for i in loc]
@@ -688,7 +688,9 @@ class CocoDisplay():
     def pycoa_horizonhisto(self,input_field,name_displayed,dico,geopdwd,boundary):
         ''' Horizontal histogram  '''
         mypandas = geopdwd.drop(columns=['geometry'])
+        mypandas=mypandas.dropna(subset=[input_field])
         colors = itertools.cycle(self.colors)
+
         mypandas['colors']=[next(colors) for i in range(len(mypandas.index)) ]
         mypandas['bottom']=mypandas.index
         mypandas['left']=[0]*len(mypandas.index)
@@ -702,7 +704,6 @@ class CocoDisplay():
         tooltips = [('Location','@location'),('Cases','@'+input_field)]
         hover_tool = HoverTool(tooltips=tooltips)
         panels = []
-
         for axis_type in ["linear", "log"]:
             label = dico['titlebar']
             standardfig = self.standardfig(x_axis_type=axis_type,x_range = (0.01,1.05*max_value),title=dico['titlebar'])
@@ -713,26 +714,22 @@ class CocoDisplay():
                     min_range_val=10**np.floor(np.log10(min_value_gt0))
                 standardfig.x_range=Range1d(min_range_val, 1.05*max_value)
                 mypandas['left']=[0.001]*len(mypandas.index)
-
             standardfig.quad(source=ColumnDataSource(mypandas),top='top',
             bottom='bottom',left='left', right=input_field,color='colors')
-            #[i+bthick for i in range(0,len(mypandas.index))]
-            #standardfig.quad(bottom=0, top=[10**5, 10**8, 10**3], left=[0, 2, 4], right=[1,3,5])
-            #standardfig.hbar(y='index', right=input_field, source=ColumnDataSource(mypandas), height=0.95,
-            #line_color='white', color ='colors')
+
+            for xi,yi,ti in zip(mypandas[input_field].to_list(), mypandas['top'].to_list(),mypandas['location'].to_list()):
+                customed_histobar = Label(x=xi, y=yi,text=ti)
+                standardfig.add_layout(customed_histobar)
+
             standardfig.add_tools(hover_tool)
             label_dict={len(mypandas.index)-k:v for k,v in zip(mypandas.index.to_list(),mypandas['location'].to_list())}
-            label_dict[len(mypandas.index)+1]=''
+            label_dict[len(label_dict)+1] = ''
             standardfig.yaxis.major_label_overrides = label_dict
-            #if len(mypandas.index) > 25:
-            #     standardfig.yaxis.major_label_text_font_size='1pt'
-            standardfig.yaxis[0].ticker.desired_num_ticks = len(label_dict)
+            standardfig.yaxis.ticker.desired_num_ticks = len(mypandas[input_field].index)
             standardfig.yaxis.major_label_overrides[0] = ''
             standardfig.yaxis.minor_tick_line_color = None
-            #standardfig.legend.label_text_font_size = "12px"
             panel = Panel(child=standardfig,title=axis_type)
             panels.append(panel)
-            #CocoDisplay.bokeh_legend(standardfig)
         tabs = Tabs(tabs=panels)
         return tabs
 

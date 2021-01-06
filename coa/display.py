@@ -835,13 +835,12 @@ class CocoDisplay():
         overlaped display appear
         """
         minx, miny, maxx, maxy = boundary
-        #(minx, miny) = CocoDisplay.wgs84_to_web_mercator((minx,miny))
-        #(maxx, maxy) = CocoDisplay.wgs84_to_web_mercator((maxx,maxy))
         zoom = 4
         mapa = folium.Map(location=[ (maxy+miny)/2., (maxx+minx)/2.], zoom_start=zoom)
         fig = Figure(width=self.plot_width, height=self.plot_height)
         fig.add_child(mapa)
-        min_col,max_col=CocoDisplay.min_max_range(0,np.nanmax(geopdwd[input_field]))
+        min_col,max_col=CocoDisplay.min_max_range(np.nanmin(geopdwd[input_field]),np.nanmax(geopdwd[input_field]))
+        print(min_col,max_col)
         colormap = branca.colormap.linear.RdPu_09.scale(min_col,max_col)
         colormin = branca.colormap.linear.RdPu_09.rgb_hex_str(min_col)
         colormax = branca.colormap.linear.RdPu_09.rgb_hex_str(max_col)
@@ -968,7 +967,7 @@ class CocoDisplay():
         x_axis_type="mercator", y_axis_type="mercator",title=dico['titlebar'],copyrightposition='left')
 
         standardfig.add_tile(tile_provider)
-        min_col,max_col=CocoDisplay.min_max_range(0,np.nanmax(geopdwd[input_field]))
+        min_col,max_col=CocoDisplay.min_max_range(np.nanmin(geopdwd[input_field]),np.nanmax(geopdwd[input_field]))
 
         color_mapper = LinearColorMapper(palette=Viridis256, low = min_col, high = max_col, nan_color = '#d9d9d9')
         color_bar = ColorBar(color_mapper=color_mapper, label_standoff=4,

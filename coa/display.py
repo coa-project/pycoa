@@ -661,7 +661,6 @@ class CocoDisplay():
                    contributors.append(res)
             frame_histo = pd.DataFrame({'val': histo,'left': edges[:-1],'right': edges[1:],
               'middle_bin':np.floor(edges[:-1]+(edges[1:]-edges[:-1])/2),'contributors':contributors})
-
         hover_tool = HoverTool(tooltips=tooltips)
         panels = []
         bottom=0
@@ -680,9 +679,9 @@ class CocoDisplay():
             standardfig.x_range=Range1d(0, 1.05*max(edges))
             standardfig.y_range=Range1d(0, 1.05*max(frame_histo['val']))
             if x_axis_type=="log":
-                left=0.1
-                if min(edges)>0:
-                    left=min(edges)
+                left=0.8
+                if min(frame_histo['left'])>0:
+                    left=min(frame_histo['left'])
                 standardfig.x_range=Range1d(left, 1.05*max(edges))
             if y_axis_type=="log":
                 bottom=0.0001

@@ -509,7 +509,9 @@ class GeoRegion():
         "G8":"https://en.wikipedia.org/wiki/Group_of_Eight",
         "G20":"https://en.wikipedia.org/wiki/G20",
         "G77":"https://www.g77.org/doc/members.html",
-        "OECD":"https://en.wikipedia.org/wiki/OECD"}
+        "OECD":"https://en.wikipedia.org/wiki/OECD",
+        "Commonwealth":"https://en.wikipedia.org/wiki/Member_states_of_the_Commonwealth_of_Nations",
+        }
 
     _region_dict={}
     _p_gs = pd.DataFrame()
@@ -538,8 +540,12 @@ class GeoRegion():
                                     "G20":"G20",
                                     "OECD":"Oecd",
                                     "G77":"G77",
+                                    "CW":"Commonwealth"
                                     })  # add UE for other analysis
 
+        # --- filling cw information
+        p_cw=pd.read_html(get_local_from_url('https://en.wikipedia.org/wiki/Member_states_of_the_Commonwealth_of_Nations'))
+        self._cw=[w.split('[')[0] for w in p_cw[0]['Country'].to_list()]   # removing wikipedia notes
 
         # --- get the UnitedNation GeoScheme and organize the data
         p_gs=pd.read_html(get_local_from_url(self._source_dict["GeoScheme"],0))[0]
@@ -616,6 +622,8 @@ class GeoRegion():
                 'SSD','LKA','PSE','SDN','SUR','SYR','TJK','THA','TLS','TGO','TON',
                 'TTO','TUN','TKM','UGA','ARE','TZA','URY','VUT','VEN','VNM','YEM',
                 'ZMB','ZWE']
+        elif region=='Commonwealth':
+            clist=self._cw
         else:
             clist=self._p_gs[self._p_gs['region_name']==region]['iso3'].to_list()
 
@@ -634,7 +642,7 @@ class GeoCountry():
     This class provides functions for specific countries and their states / departments / regions,
     and their geo properties (geometry, population if available, etc.)
 
-    The list of supported countries is given by get_list_countries() function """
+    The list of supported countries is given by get_list_countries() function. """
 
     # Assuming zip file here
     _country_info_dict = {'FRA':'https://www.data.gouv.fr/fr/datasets/r/eb55dda0-fd99-4f90-bb3e-0223f87c6459',\

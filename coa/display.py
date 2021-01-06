@@ -69,27 +69,48 @@ class CocoDisplay():
         self.colors = Paired12[:10]
         self.plot_width =  width_height_default[0]
         self.plot_height =  width_height_default[1]
+        self.geom = []
         self.all_available_display_keys=['where','which','what','when','title_temporal','plot_height','plot_width','title','bins','var_displayed',
         'option','input','input_field','visu','plot_last_date','tile']
         self.tiles_listing=['CARTODBPOSITRON','CARTODBPOSITRON_RETINA','STAMEN_TERRAIN','STAMEN_TERRAIN_RETINA',
         'STAMEN_TONER','STAMEN_TONER_BACKGROUND','STAMEN_TONER_LABELS','OSM','WIKIMEDIA','ESRI_IMAGERY']
         if self.database_name == 'jhu' or self.database_name == 'owid':
-            g=coge.GeoManager()
-            g.set_standard('name')
-            self.pandas_world = pd.DataFrame({'location':g.to_standard(['world'],interpret_region=True),
-                                    'which':np.nan,'cumul':np.nan,'daily':np.nan,'weekly':np.nan})
-            self.infoword = coge.GeoInfo()
+            self.geom=coge.GeoManager('name')
+            infolocation = coge.GeoInfo()
+        elif self.database_name == 'spf' or self.database_name == 'opencovid19':
+            infolocation=coge.GeoCountry('FRA')
+        elif self.database_name == 'jhu-usa':
+            infolocation=coge.GeoCountry('USA')
+        else:
+            raise CoaTypeError('What data base are you looking for ?')
 
-        if self.database_name == 'spf' or self.database_name == 'opencovid19':
-            c=coge.GeoCountry('FRA')
-            self.pandas_country = pd.DataFrame({'location':c.get_data()['code_subregion'],
-                                                   'which':np.nan,'cumul':np.nan,'daily':np.nan,'weekly':np.nan})
-            self.infocountry = c
-        if self.database_name == 'jhu-usa':
-            c=coge.GeoCountry('USA')
-            self.pandas_country = pd.DataFrame({'location':c.get_data()['code_subregion'],
-                                                   'which':np.nan,'cumul':np.nan,'daily':np.nan,'weekly':np.nan})
-            self.infocountry = c
+        self.location_geometry=self.get_geodata(database=self.database_name,info=infolocation)
+
+    def get_geodata(self,database='jhu',info=None):
+        '''
+         return a GeoDataFrame used in map display (see map_bokeh and map_folium)
+         Argument : database name
+         The output format is the following :
+         geoid | location |  geometry (POLYGON or MULTIPOLYGON)
+        '''
+        if info == None:
+            raise CoaTypeError('What geometry do you want to retrieve local or world ?')
+        geopan=pd.DataFrame()
+        if self.database_name == 'spf' or self.database_name == 'opencovid19' or self.database_name == 'jhu-usa':
+            f = coge.GeoCountry('FRA')
+            if self.database_name == 'jhu-usa':
+                f = coge.GeoCountry('USA')
+            geopan = f.get_data()[['code_subregion','town_subregion','geometry']]
+            geopan = geopan.rename(columns={'code_subregion':'location'})
+        elif self.database_name == 'jhu' or self.database_name == 'owid':
+            allcountries = coge.GeoRegion().get_countries_from_region('world')
+            geopan['location'] = [self.geom.to_standard(c)[0] for c in allcountries]
+            geopan = info.add_field(field=['geometry'],input=geopan ,geofield='location')
+        else:
+            raise CoaTypeError('What data base are you looking for ?')
+
+        data = gpd.GeoDataFrame(geopan,crs="EPSG:4326")
+        return data
 
     def standard_input(self,mypandas,input_field=None,**kwargs):
         '''
@@ -233,7 +254,6 @@ class CocoDisplay():
                             }
                             """)
         bkfigure.js_on_event(events.DoubleTap, toggle_legend_js)
-
 
     def pycoa_date_plot(self,mypandas, input_field = None, **kwargs):
         """Create a Bokeh date chart from pandas input (x axis is a date format)
@@ -546,8 +566,6 @@ class CocoDisplay():
             height_policy="auto",width_policy="auto",index_position=None)
         export_png(data_table, filename = pngfile)
 
-
-
     @staticmethod
     def changeto_nonan_date(df=None,when_end=None,field=None):
         boolval=True
@@ -571,30 +589,22 @@ class CocoDisplay():
                 else:
                     input_field = dico['input_field'][0]
             if self.database_name == 'spf' or  self.database_name == 'opencovid19' or self.database_name == 'jhu-usa':
-                panda2map = self.pandas_country
-                panda2map = panda2map.loc[(panda2map.location != '2A') & (panda2map.location != '2B')]
-                panda2map = panda2map.copy()
                 name_displayed = 'town_subregion'
             else:
-                panda2map = self.pandas_world
                 name_displayed = 'location'
-            my_location = mypandas.location.unique()
+
             mypandas_filtered = mypandas.loc[mypandas.date == dico['when_end']]
             mypandas_filtered = mypandas_filtered.drop(columns=['date'])
-            zoom = 2
-            geopdwd = self.get_geodata(mypandas_filtered)
-            geopdwd = geopdwd.reset_index()
+            my_location = mypandas_filtered.location.unique()
+            geopdwd = self.location_geometry
             geopdwd = pd.merge(geopdwd,mypandas_filtered,on='location')
-            geopdwd = geopdwd.set_index("geoid")
             geopdwd = geopdwd.sort_values(by=input_field,ascending=False).reset_index()
-            my_location = panda2map.location.to_list()
-
             if self.database_name == 'spf' or  self.database_name == 'opencovid19':
                 outremer=['971', '972', '973', '974', '976']
                 metropole=[i for i in my_location if i not in outremer]
                 my_location=metropole
-
             geopdwd=geopdwd.dropna(subset=[input_field])
+
             boundary = (geopdwd.loc[geopdwd.location.isin(my_location)]).total_bounds
             location_ordered_byvalues=list(mypandas.sort_values(by=input_field,ascending=False)['location'])
 
@@ -772,46 +782,6 @@ class CocoDisplay():
         y = np.log(np.tan((90 + tuple_xy[1]) * np.pi/360.0)) * k
         return x,y
 
-    def get_geodata(self,mypandas):
-        '''
-         return a GeoDataFrame used in map display (see map_bokeh and map_folium)
-         Argument : mypandas, the pandas to be analysed. Only location or where columns
-         name is mandatory.
-         The output format is the following :
-         geoid | location |  geometry (POLYGON or MULTIPOLYGON)
-         Example :  get_geodata(d)
-        '''
-
-        if not isinstance(mypandas, pd.DataFrame):
-                raise CoaTypeError('Waiting for pandas input.See help.')
-        else:
-            if not any(elem in mypandas.columns.tolist() for elem in ['location','where']):
-                raise CoaTypeError('location nor where columns is presents in your pandas.'
-                                'One of them is mandatory. See help.')
-            if 'where' in mypandas.columns:
-                mypandas = mypandas.rename(columns={'where':'location'})
-
-        columns_keeped=''
-        if not 'geometry' in mypandas.columns:
-            if self.database_name == 'spf' or self.database_name == 'opencovid19' or self.database_name == 'jhu-usa':
-                data = gpd.GeoDataFrame(self.infocountry.add_field(input=mypandas,input_key='location',
-                field=['geometry','town_subregion','name_subregion']),crs="EPSG:4326")
-                columns_keeped = ['geoid','location','geometry','town_subregion','name_subregion']
-                meta_data = 'country'
-            else:
-                a = self.infoword.add_field(field=['geometry'],input=mypandas ,geofield='location')
-                data=gpd.GeoDataFrame(self.infoword.add_field(input=a,geofield='location',field=['country_name']),
-                crs="EPSG:4326")
-                columns_keeped = ['geoid','location','geometry']
-                meta_data = 'world'
-
-        data = data.loc[data.geometry != None]
-        data['geoid'] = data.index.astype(str)
-        data=data[columns_keeped]
-        data = data.set_index('geoid')
-        data.meta_geoinfo = meta_data
-        return data
-
     @decohistomap
     def map_folium(self,input_field,name_displayed,dico,geopdwd,boundary):
         """Create a Folium map from a pandas input
@@ -835,13 +805,12 @@ class CocoDisplay():
         overlaped display appear
         """
         minx, miny, maxx, maxy = boundary
-        zoom = 4
+        zoom = 2
         mapa = folium.Map(location=[ (maxy+miny)/2., (maxx+minx)/2.], zoom_start=zoom)
         fig = Figure(width=self.plot_width, height=self.plot_height)
         fig.add_child(mapa)
         min_col,max_col=CocoDisplay.min_max_range(np.nanmin(geopdwd[input_field]),np.nanmax(geopdwd[input_field]))
-
-        color_mapper = LinearColorMapper(palette=Viridis256, low = min_col, high = max_col, nan_color = '#d9d9d9')
+        color_mapper = LinearColorMapper(palette=Viridis256, low = min_col, high = max_col,nan_color = '#d9d9d9')
         colormap = branca.colormap.LinearColormap(color_mapper.palette).scale(min_col,max_col)
         colormap.caption = 'Cases : ' + dico['titlebar']
         colormap.add_to(mapa)
@@ -852,7 +821,7 @@ class CocoDisplay():
         var ticks = document.getElementsByClassName('tick')
         for(var i = 0; i < ticks.length; i++){
         var values = ticks[i].textContent.replace(',','')
-        val = parseFloat(values).toExponential(2).toString()
+        val = parseFloat(values).toExponential(1).toString().replace("+", "")
         if(parseFloat(ticks[i].textContent) == 0) val = 0.
         div.innerHTML = div.innerHTML.replace(ticks[i].textContent,val);
         }
@@ -866,7 +835,6 @@ class CocoDisplay():
         map_dict = geopdwd.set_index('location')[input_field].to_dict()
         if np.nanmin(geopdwd[input_field]) == np.nanmax(geopdwd[input_field]):
             map_dict['FakeCountry']=0.
-
         color_scale = LinearColormap(color_mapper.palette, vmin = min(map_dict.values()), vmax = max(map_dict.values()))
 
         def get_color(feature):
@@ -875,7 +843,6 @@ class CocoDisplay():
                 return '#8c8c8c' # MISSING -> gray
             else:
                 return color_scale(value)
-
         folium.GeoJson(
             geopdwd,
             style_function=lambda x:
@@ -951,10 +918,9 @@ class CocoDisplay():
         ng = pd.DataFrame(geolistmodified.items(), columns=['location', 'geometry'])
         geolistmodified=gpd.GeoDataFrame({'location':ng['location'],'geometry':gpd.GeoSeries(ng['geometry'])},crs="epsg:3857")
 
-        geopdwd = geopdwd.reset_index()
+
         geopdwd = geopdwd.drop(columns='geometry')
         geopdwd = pd.merge(geopdwd,geolistmodified,on='location')
-        geopdwd = geopdwd.set_index("geoid")
         json_data = json.dumps(json.loads(geopdwd.to_json()))
         geosource = GeoJSONDataSource(geojson = json_data)
 

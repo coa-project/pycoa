@@ -204,13 +204,19 @@ class CocoDisplay():
         ''' Return all the tiles available in Bokeh '''
         return self.tiles_listing
 
-    def standardfig(self,dbname=None,**kwargs):
+    def standardfig(self,dbname=None,copyrightposition='right',**kwargs):
          """
          Create a standard Bokeh figure, with pycoa.frlabel,used in all the bokeh charts
          """
          fig=figure(**kwargs,plot_width=self.plot_width,plot_height=self.plot_height,
          tools=['save','box_zoom,reset'],toolbar_location="right")
-         logo_db_citation = Label(x=0.58*self.plot_width, y=0.01*self.plot_height, x_units='screen',
+         if copyrightposition == 'right':
+             xpos=0.58
+         elif  copyrightposition == 'left':
+            xpos=0.02
+         else:
+            CoaKeyError('copyrightposition argument not yet implemented ...')
+         logo_db_citation = Label(x=xpos*self.plot_width, y=0.01*self.plot_height, x_units='screen',
           y_units='screen',text_font_size='1.5vh',background_fill_color='white', background_fill_alpha=.75,
           text='©pycoa.fr (data from: {})'.format(self.database_name))
          fig.add_layout(logo_db_citation)
@@ -582,6 +588,12 @@ class CocoDisplay():
             geopdwd = geopdwd.set_index("geoid")
             geopdwd = geopdwd.sort_values(by=input_field,ascending=False).reset_index()
             my_location = panda2map.location.to_list()
+
+            if self.database_name == 'spf' or  self.database_name == 'opencovid19':
+                outremer=['971', '972', '973', '974', '976']
+                metropole=[i for i in my_location if i not in outremer]
+                my_location=metropole
+
             boundary = (geopdwd.loc[geopdwd.location.isin(my_location)]).total_bounds
             location_ordered_byvalues=list(mypandas.sort_values(by=input_field,ascending=False)['location'])
 
@@ -819,7 +831,9 @@ class CocoDisplay():
         overlaped display appear
         """
         minx, miny, maxx, maxy = boundary
-        zoom = 2
+        #(minx, miny) = CocoDisplay.wgs84_to_web_mercator((minx,miny))
+        #(maxx, maxy) = CocoDisplay.wgs84_to_web_mercator((maxx,maxy))
+        zoom = 4
         mapa = folium.Map(location=[ (maxy+miny)/2., (maxx+minx)/2.], zoom_start=zoom)
         fig = Figure(width=self.plot_width, height=self.plot_height)
         fig.add_child(mapa)
@@ -943,9 +957,11 @@ class CocoDisplay():
         geosource = GeoJSONDataSource(geojson = json_data)
 
         tile_provider = get_provider(dico['tile'])
-        minx, miny, maxx, maxy = (geopdwd.loc[geopdwd.location.isin(geopdwd.location.unique())]).total_bounds
+        minx, miny, maxx, maxy = boundary
+        (minx, miny) = CocoDisplay.wgs84_to_web_mercator((minx,miny))
+        (maxx, maxy) = CocoDisplay.wgs84_to_web_mercator((maxx,maxy))
         standardfig = self.standardfig(x_range=(minx,maxx), y_range=(miny,maxy),
-        x_axis_type="mercator", y_axis_type="mercator",title=dico['titlebar'])
+        x_axis_type="mercator", y_axis_type="mercator",title=dico['titlebar'],copyrightposition='left')
 
         standardfig.add_tile(tile_provider)
         min_col,max_col=CocoDisplay.min_max_range(0,np.nanmax(geopdwd[input_field]))

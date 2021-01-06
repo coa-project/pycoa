@@ -466,13 +466,17 @@ class GeoInfo():
                     self._data_geometry = gpd.read_file('zip://'+get_local_from_url(world_geometry_url_zipfile,0,'.zip'))[['ISO3','geometry']]
                     self._data_geometry.columns=["id_tmp","geometry"]
 
-                    # About some countries not properly managed by this database
+                    # About some countries not properly managed by this database (south and north soudan)
                     self._data_geometry=self._data_geometry.append({'id_tmp':'SSD','geometry':None},ignore_index=True) # adding the SSD row
-                    for newc in ['SSD','SDN','RUS']:
+                    for newc in ['SSD','SDN']:
                         newgeo=gpd.read_file(get_local_from_url('https://github.com/johan/world.geo.json/raw/master/countries/'+newc+'.geo.json'))
                         poly=newgeo[newgeo.id==newc].geometry.values[0]
-                        if newc == 'RUS':
-                            poly=so.unary_union(sg.MultiPolygon([sg.Polygon([[x,y] if x>=0 else (x+360,y) for x,y in p.exterior.coords]) for p in poly]))
+                        self._data_geometry.loc[self._data_geometry.id_tmp==newc,'geometry']=gpd.GeoSeries(poly).values
+
+                    # About countries that we artificially put on the east of the map
+                    for newc in ['RUS','FJI','NZL','WSM']:
+                        poly=self._data_geometry[self._data_geometry.id_tmp==newc].geometry.values[0]
+                        poly=so.unary_union(sg.MultiPolygon([sg.Polygon([[x,y] if x>=0 else (x+360,y) for x,y in p.exterior.coords]) for p in poly]))
                         self._data_geometry.loc[self._data_geometry.id_tmp==newc,'geometry']=gpd.GeoSeries(poly).values
 
                 p=p.merge(self._data_geometry,how='left',\

@@ -840,10 +840,9 @@ class CocoDisplay():
         fig = Figure(width=self.plot_width, height=self.plot_height)
         fig.add_child(mapa)
         min_col,max_col=CocoDisplay.min_max_range(np.nanmin(geopdwd[input_field]),np.nanmax(geopdwd[input_field]))
-        print(min_col,max_col)
-        colormap = branca.colormap.linear.RdPu_09.scale(min_col,max_col)
-        colormin = branca.colormap.linear.RdPu_09.rgb_hex_str(min_col)
-        colormax = branca.colormap.linear.RdPu_09.rgb_hex_str(max_col)
+
+        color_mapper = LinearColorMapper(palette=Viridis256, low = min_col, high = max_col, nan_color = '#d9d9d9')
+        colormap = branca.colormap.LinearColormap(color_mapper.palette).scale(min_col,max_col)
         colormap.caption = 'Cases : ' + dico['titlebar']
         colormap.add_to(mapa)
         map_id = colormap.get_name()
@@ -863,12 +862,12 @@ class CocoDisplay():
         html.script.get_root().render()
         html.script._children[e.get_name()] = e
         geopdwd[input_field+'scientific_format']=(['{:.3g}'.format(i) for i in geopdwd[input_field]])
-        #
-        map_dict =geopdwd.dropna(subset=[input_field]).set_index('location')[input_field].to_dict()
+
+        map_dict = geopdwd.set_index('location')[input_field].to_dict()
         if np.nanmin(geopdwd[input_field]) == np.nanmax(geopdwd[input_field]):
             map_dict['FakeCountry']=0.
 
-        color_scale = LinearColormap([colormin,colormax], vmin = min(map_dict.values()), vmax = max(map_dict.values()))
+        color_scale = LinearColormap(color_mapper.palette, vmin = min(map_dict.values()), vmax = max(map_dict.values()))
 
         def get_color(feature):
             value = map_dict.get(feature['properties']['location'])

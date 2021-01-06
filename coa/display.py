@@ -594,6 +594,7 @@ class CocoDisplay():
                 metropole=[i for i in my_location if i not in outremer]
                 my_location=metropole
 
+            geopdwd=geopdwd.dropna(subset=[input_field])
             boundary = (geopdwd.loc[geopdwd.location.isin(my_location)]).total_bounds
             location_ordered_byvalues=list(mypandas.sort_values(by=input_field,ascending=False)['location'])
 
@@ -622,32 +623,27 @@ class CocoDisplay():
         HoverTool is available it returns position of the middle of the bin and the value.
         """
         mypandas = geopdwd
+
         dict_histo = defaultdict(list)
         if 'location' in mypandas.columns:
             tooltips='Value at around @middle_bin : @val'
             loc = mypandas['location'].unique()
             shorten_loc = [ i if len(i)<15 else i.replace('-',' ').split()[0]+'...'+i.replace('-',' ').split()[-1] for i in loc]
+            val_per_country = defaultdict(list)
 
             for w in loc:
-                histo,edges = np.histogram((mypandas.loc[(mypandas['location'] == w)]
-                                                        [input_field].dropna()),density=False, bins=dico['bins'])
-
+                val=mypandas.loc[mypandas.location == w][input_field]
+                histo,edges = np.histogram(val,density=False, bins=dico['bins'])
+                val_per_country[w]=val.values
                 dict_histo[w] = pd.DataFrame({'location':w,'val': histo,
                    'left': edges[:-1],
                    'right': edges[1:],
                    'middle_bin':np.floor(edges[:-1]+(edges[1:]-edges[:-1])/2)})
+
             for j in range(len(loc)):
                 dict_histo[shorten_loc[j]] = dict_histo.pop(loc[j])
 
             tooltips = 'Contributors : @contributors'
-
-            val_per_country = defaultdict(list)
-            for w in loc:
-               #mypandas = mypandas.loc[(mypandas.date == dico['when_end'])]
-               val = mypandas.loc[mypandas['location'] == w][input_field].values
-                   #val_per_country.append(val)
-               val_per_country[w]=val
-
             l_data=list(val_per_country.values())
             # good nb of bins
             l_n=len(l_data)
@@ -664,32 +660,42 @@ class CocoDisplay():
                    res = [key for key, val in filter(lambda sub: int(sub[1]) >= i and int(sub[1]) <= j, val_per_country.items())]
                    contributors.append(res)
             frame_histo = pd.DataFrame({'val': histo,'left': edges[:-1],'right': edges[1:],
-              'middle_bin':np.floor(edges[:-1]+(edges[1:]-edges[:-1])/2),
-              'contributors':contributors})
-        x_max=max(edges[1:])
-        y_max=max(histo)
+              'middle_bin':np.floor(edges[:-1]+(edges[1:]-edges[:-1])/2),'contributors':contributors})
+
         hover_tool = HoverTool(tooltips=tooltips)
         panels = []
         bottom=0
-
-        for axis_type in ["linear", "log"]:
-            standardfig = self.standardfig(y_axis_type=axis_type)
+        for axis_type in ["linear", "linlog", "loglog"]:
+            x_axis_type,y_axis_type,axis_type_title=3*['linear']
+            if axis_type == 'linlog':
+                y_axis_type,axis_type_title = 'log','log'
+            if axis_type == 'loglog':
+                x_axis_type,y_axis_type = 'log','log'
+                axis_type_title = 'loglog'
+            standardfig = self.standardfig(x_axis_type=x_axis_type,y_axis_type=y_axis_type)
             standardfig.xaxis[0].formatter = PrintfTickFormatter(format="%4.2e")
             #standardfig.title.text = dico['titlebar']
             standardfig.add_tools(hover_tool)
             colors = itertools.cycle(self.colors)
-
-            if axis_type=="log":
+            standardfig.x_range=Range1d(0, 1.05*max(edges))
+            standardfig.y_range=Range1d(0, 1.05*max(frame_histo['val']))
+            if x_axis_type=="log":
+                left=0.1
+                if min(edges)>0:
+                    left=min(edges)
+                standardfig.x_range=Range1d(left, 1.05*max(edges))
+            if y_axis_type=="log":
                 bottom=0.0001
-            else:
-                standardfig.y_range=Range1d(0, y_max)
+                standardfig.y_range=Range1d(0.001, 1.05*max(frame_histo['val']))
+                #standardfig.y_range=Range1d(min_range_val, 1.05*max_value)
+
             label = dico['titlebar']
             p=standardfig.quad(source=ColumnDataSource(frame_histo),top='val', bottom=bottom, left='left', right='right',
             fill_color=next(colors),legend_label=label)
             #p=standardfig.hbar(y='index', right='val', source=ColumnDataSource(frame_histo), height=0.95,
             # line_color='white', color =next(colors),legend_label=label)
             standardfig.legend.label_text_font_size = "12px"
-            panel = Panel(child=standardfig , title=axis_type)
+            panel = Panel(child=standardfig , title=axis_type_title)
             panels.append(panel)
             CocoDisplay.bokeh_legend(standardfig)
 
@@ -700,7 +706,6 @@ class CocoDisplay():
     def pycoa_horizonhisto(self,input_field,name_displayed,dico,geopdwd,boundary):
         ''' Horizontal histogram  '''
         mypandas = geopdwd.drop(columns=['geometry'])
-        mypandas=mypandas.dropna(subset=[input_field])
         colors = itertools.cycle(self.colors)
 
         mypandas['colors']=[next(colors) for i in range(len(mypandas.index)) ]
@@ -938,7 +943,7 @@ class CocoDisplay():
                         shifted.append(CocoDisplay.wgs84_to_web_mercator(p))
                     new_poly.append(sg.Polygon(shifted))
                 else:
-                    CoaTypeError("Neither tuple or list don't know what to do with \
+                    raise CoaTypeError("Neither tuple or list don't know what to do with \
                         your geometry description")
 
             if type(new_poly[0])==tuple:

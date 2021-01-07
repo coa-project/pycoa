@@ -80,6 +80,7 @@ class DataBase(object):
                 spf1=self.csv2pandas("https://www.data.gouv.fr/fr/datasets/r/63352e38-d353-4b54-bfd1-f1b3ee1cabd7",
                               rename_columns=rename,constraints=constraints,cast=cast)
                 # https://www.data.gouv.fr/fr/datasets/donnees-hospitalieres-relatives-a-lepidemie-de-covid-19/
+                # All data are incidence. → integrated later in the code
                 # incid_hosp	string 	Nombre quotidien de personnes nouvellement hospitalisées
                 # incid_rea	integer	Nombre quotidien de nouvelles admissions en réanimation
                 # incid_dc	integer	Nombre quotidien de personnes nouvellement décédées
@@ -87,13 +88,17 @@ class DataBase(object):
                 spf2=self.csv2pandas("https://www.data.gouv.fr/fr/datasets/r/6fadff46-9efd-4c53-942a-54aca783c30c",
                               rename_columns=rename,cast=cast)
                 # https://www.data.gouv.fr/fr/datasets/donnees-relatives-aux-resultats-des-tests-virologiques-covid-19/
-                # T       Number of tests performed
-                # P       Number of positive tests
+                # T       Number of tests performed daily → integrated later
+                # P       Number of positive tests daily → integrated later
                 constraints={'cl_age90':0}
                 spf3=self.csv2pandas("https://www.data.gouv.fr/fr/datasets/r/406c6a23-e283-4300-9484-54e78c8ae675",
                               rename_columns=rename,constraints=constraints,cast=cast)
                 #https://www.data.gouv.fr/fr/datasets/indicateurs-de-suivi-de-lepidemie-de-covid-19/#_
                 # tension hospitaliere
+                #'date', 'location', 'region', 'libelle_reg', 'libelle_dep', 'tx_incid',
+                # 'R', 'taux_occupation_sae', 'tx_pos', 'tx_incid_couleur', 'R_couleur',
+                # 'taux_occupation_sae_couleur', 'tx_pos_couleur', 'nb_orange',
+                # 'nb_rouge']
                 # Vert : taux d’occupation compris entre 0 et 40% ;
                 # Orange : taux d’occupation compris entre 40 et 60% ;
                 # Rouge : taux d'occupation supérieur à 60%.
@@ -105,13 +110,41 @@ class DataBase(object):
                 rename={'extract_date':'date','departement':'location'}
                 #columns_skipped=['region','libelle_reg','libelle_dep','tx_incid_couleur','R_couleur',\
                 #'taux_occupation_sae_couleur','tx_pos_couleur','nb_orange','nb_rouge']
-                columns_keeped=['dc','hosp', 'rea', 'rad', 'incid_hosp', 'incid_rea', 'incid_dc',
-                    'incid_rad', 'P', 'T', 'tx_incid', 'R', 'taux_occupation_sae', 'tx_pos'] # with 'dc' first
                 spf4=self.csv2pandas("https://www.data.gouv.fr/fr/datasets/r/4acad602-d8b1-4516-bc71-7d5574d5f33e",
                             rename_columns=rename, separator=',', encoding = "ISO-8859-1",cast=cast)
                 #result = pd.concat([spf1, spf2,spf3,spf4], axis=1, sort=False)
                 result = reduce(lambda x, y: pd.merge(x, y, on = ['location','date']), [spf1, spf2,spf3,spf4])
-                self.return_structured_pandas(result,columns_keeped=columns_keeped)
+
+                # ['location', 'date', 'hosp', 'rea', 'rad', 'dc', 'incid_hosp',
+                   # 'incid_rea', 'incid_dc', 'incid_rad', 'P', 'T', 'pop', 'region',
+                   # 'libelle_reg', 'libelle_dep', 'tx_incid', 'R', 'taux_occupation_sae',
+                   # 'tx_pos', 'tx_incid_couleur', 'R_couleur',
+                   # 'taux_occupation_sae_couleur', 'tx_pos_couleur', 'nb_orange',
+                   # 'nb_rouge']
+                min_date=result['date'].min()
+                for w in ['incid_hosp','incid_rea','incid_rad','incid_dc','P','T']:
+                    if w.startswith('incid_'):
+                        ww=w[6:]
+                        result['offset_'+w] = result[result.date==min_date][ww]-result[result.date==min_date]['incid_'+ww]
+                        result['offset_'+w] = result.groupby('location')['offset_'+w].fillna(method='ffill')
+                    else:
+                        result['offset_'+w] = 0
+                    result['tot_'+w]=result.groupby(['location'])[w].cumsum()+result['offset_'+w]
+                print(result.columns)
+                #
+                rename_dict={
+                    'dc':'tot_dc',
+                    'hosp':'cur_hosp',
+                    'rad':'tot_rad',
+                    'rea':'cur_rea',
+                    'tx_incid':'cur_tx_incid',
+                    'R':'cur_R',
+                    'taux_occupation_sae':'cur_taux_occupation_sae',
+                    'tx_pos':'cur_tx_pos'
+                    }
+                result=result.rename(columns=rename_dict)
+                columns_keeped=list(rename_dict.values())+['tot_incid_hosp','tot_incid_rea','tot_incid_rad','tot_incid_dc','tot_P','tot_T']
+                self.return_structured_pandas(result,columns_keeped=columns_keeped) # with 'tot_dc' first
             elif self.db == 'opencovid19':
                 info('OPENCOVID19 selected ...')
                 self.geo = coge.GeoCountry('FRA')

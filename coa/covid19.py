@@ -66,7 +66,7 @@ class DataBase(object):
                 self.geo = coge.GeoCountry('FRA') # not using dense geometry
                 self.geo_all = self.geo.get_subregion_list()['code_subregion'].to_list()
                 info('SPF aka Sante Publique France database selected ...')
-                info('... tree differents db from SPF will be parsed ...')
+                info('... Four differents db from SPF will be parsed ...')
                 # https://www.data.gouv.fr/fr/datasets/donnees-hospitalieres-relatives-a-lepidemie-de-covid-19/
                 # Parse and convert spf data structure to JHU one for historical raison
                 # hosp Number of people currently hospitalized

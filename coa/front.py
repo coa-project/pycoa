@@ -43,7 +43,6 @@ import coa.covid19 as coco
 from coa.error import *
 import coa.display as cd
 
-
 output_notebook(hide_banner=True)
 
 # --- Needed global private variables ----------------------------------
@@ -52,7 +51,14 @@ _listwhom=['jhu',    # John Hopkins University first base, default
             'jhu-usa',
             'spf',   # Sante publique France
             'opencovid19'] #  see data.gouv.fr
-_whom = _listwhom[0] # default base
+
+if 'coa_db' in __builtins__.keys():
+    if not  __builtins__['coa_db'] in _listwhom:
+        raise CoaDbError("The variable __builtin__.coa_db set to "+str(__builtins__['coa_db'])+" which is an invalid db. Error.")
+    _whom = __builtins__['coa_db']
+else:
+    _whom = _listwhom[0] # default base
+
 _db,_cocoplot = coco.DataBase.factory(_whom) # initialization with default
 
 

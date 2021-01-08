@@ -451,9 +451,8 @@ class DataBase(object):
          - 'option' :default none
             * 'nonneg' In some cases negatives values can appeared due to a database updated, nonneg option
                 will smooth the curve during all the period considered
-            * fillnan0 fill nan by 0
-            * fillnanf fill nan by lastested available value
-            * smooth7 moving average, window of 7 days
+            * 'nofillnan' if you do not want that NaN values are filled, which is the default behaviour
+            * 'smooth7' moving average, window of 7 days
 
         keys are keyswords from the selected database
                 location        | date      | keywords          |  daily            |  weekly

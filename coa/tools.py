@@ -180,3 +180,10 @@ def get_local_from_url(url,expiration_time=0,suffix=''):
         raise CoaNotManagedError(type(e2).__name__+" : "+str(e2))
 
     return local_filename
+
+class dotdict(dict):
+    """dot.notation access to dictionary attributes"""
+    __getattr__ = dict.get
+    __setattr__ = dict.__setitem__
+    __delattr__ = dict.__delitem__
+    

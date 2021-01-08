@@ -884,16 +884,16 @@ class GeoCountry():
 
         if name != None:
             if not isinstance(name,str):
-                raise CoaKeyError("Name should be given as string.")
+                raise CoaTypeError("Name should be given as string.")
             if not name in self.get_region_list()['name_region'].to_list():
-                raise CoaKeyError("The region "+name+" does not exist for country "+self.get_country()+". See get_region_list().")
+                raise CoaWhereError ("The region "+name+" does not exist for country "+self.get_country()+". See get_region_list().")
             cut=(self.get_data()['name_region']==name)
 
         if code != None:
             if not isinstance(code,str):
-                raise CoaKeyError("Name should be given as string.")
+                raise CoaTypeError("Name should be given as string.")
             if not code in self.get_region_list()['code_region'].to_list():
-                raise CoaKeyError("The region "+code+" does not exist for country "+self.get_country()+". See get_region_list().")
+                raise CoaWhereError("The region "+code+" does not exist for country "+self.get_country()+". See get_region_list().")
             cut=(self.get_data()['code_region']==code)
 
         return self.get_data()[cut]['code_subregion'].to_list()

@@ -519,11 +519,13 @@ class DataBase(object):
 
         # deal with options now
         option = kwargs.get('option', '')
-        fillnan0 = False
+        fillnan = True
         if not isinstance(option,list):
             option=[option]
         for o in option:
             if o == 'nonneg':
+                if kwargs['which'].startswith('cur_'):
+                    raise CoaKeyError('The option nonneg cannot be used with instantaneous data, such as cur_ which variables.')
                 for loca in clist:
                     # modify values in order that diff values is never negative
                     pdloc=pdfiltered.loc[ pdfiltered.location == loca ][kwargs['which']]
@@ -550,24 +552,26 @@ class DataBase(object):
                         else:
                             yy[0:k] = yy[0:k]*(1-float(val_to_repart)/s)
                     pdfiltered.loc[ind,kwargs['which']]=np.cumsum(yy)+y0 # do not forget the offset
-            elif o == 'fillnan0':
-                # fill nan with zeros
-                pdfiltered = pdfiltered.fillna(0)
-                fillnan0 = True
-            elif o == 'fillnanf':
-                pdfiltered[kwargs['which']] = pdfiltered.groupby(['location'])[kwargs['which']].fillna(method='ffill')
+            elif o == 'nofillnan':
+                fillnan=False
             elif o == 'smooth7':
                 pdfiltered[kwargs['which']] = pdfiltered.groupby(['location'])[kwargs['which']].rolling(7,min_periods=7,center=True).mean().reset_index(level=0,drop=True)
                 pdfiltered[kwargs['which']] = pdfiltered[kwargs['which']].fillna(0)
             elif o != None and o != '':
                 raise CoaKeyError('The option '+o+' is not recognized in get_stats. See get_available_options() for list.')
 
+        if fillnan: # which is the default. Use nofillnan option instead.
+            # fill with previous value
+            pdfiltered[kwargs['which']] = pdfiltered.groupby(['location'])[kwargs['which']].fillna(method='ffill')
+            # fill remaining nan with zeros
+            pdfiltered = pdfiltered.fillna(0)
+
         pdfiltered['daily'] = pdfiltered.groupby(['location'])[kwargs['which']].diff()
         pdfiltered['cumul'] = pdfiltered.groupby(['location'])[kwargs['which']].cumsum()
         pdfiltered['weekly'] = pdfiltered.groupby(['location'])[kwargs['which']].diff(7)
 
-        if fillnan0:
-            pdfiltered = pdfiltered.fillna(0)
+        if fillnan:
+            pdfiltered = pdfiltered.fillna(0) # for diff if needed
 
         return pdfiltered
 

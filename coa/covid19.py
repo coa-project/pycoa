@@ -184,12 +184,18 @@ class DataBase(object):
                 info('OWID aka \"Our World in Data\" database selected ...')
                 self.geo = coge.GeoManager('name')
                 self.geo_all='world'
-                columns_keeped=['total_deaths','total_cases','reproduction_rate','icu_patients','hosp_patients','total_tests','positive_rate','total_vaccinations']
+                
                 drop_field = {'location':['International','World']}
                 owid = self.csv2pandas("https://raw.githubusercontent.com/owid/covid-19-data/master/public/data/owid-covid-data.csv",
                 separator=',',drop_field=drop_field)
-                #print(owid.columns)
-                self.return_structured_pandas(owid,columns_keeped=columns_keeped)
+
+                # renaming some columns
+                col_to_rename=['reproduction_rate','icu_patients','hosp_patients','positive_rate']
+                renamed_cols=['cur_'+c for c in col_to_rename]
+                columns_keeped=['total_deaths','total_cases','total_tests','total_vaccinations']
+
+                self.return_structured_pandas(owid.rename(columns=dict(zip(col_to_rename,renamed_cols))),columns_keeped=columns_keeped+renamed_cols)
+
             info('Few information concernant the selected database : ', self.get_db())
             info('Available which key-words for: ',self.get_available_keys_words())
             info('Example of location : ',  ', '.join(random.choices(self.get_locations(), k=5)), ' ...')

@@ -134,7 +134,6 @@ class DataBase(object):
                     else:
                         result['offset_'+w] = 0
                     result['tot_'+w]=result.groupby(['location'])[w].cumsum()+result['offset_'+w]
-                print(result.columns)
                 #
                 rename_dict={
                     'dc':'tot_dc',

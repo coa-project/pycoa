@@ -157,14 +157,28 @@ class DataBase(object):
                 rename={'maille_code':'location'}
                 cast={'source_url':str,'source_archive':str,'source_type':str}
                 drop_field  = {'granularite':['pays','monde','region']}
-                #columns_skipped = ['granularite','maille_nom','source_nom','source_url','source_archive','source_type']
-                columns_keeped = ['deces','cas_confirmes', 'cas_ehpad', 'cas_confirmes_ehpad', 'cas_possibles_ehpad',
-                     'deces_ehpad', 'reanimation', 'hospitalises', 'nouvelles_hospitalisations', 'nouvelles_reanimations', 'gueris', 'depistes']
                 opencovid19 = self.csv2pandas('https://raw.githubusercontent.com/opencovid19-fr/data/master/dist/chiffres-cles.csv',
                             drop_field=drop_field,rename_columns=rename,separator=',',cast=cast)
                 opencovid19['location'] = opencovid19['location'].apply(lambda x: x.replace('COM-','').replace('DEP-',''))
-                #print(opencovid19.columns)
-                self.return_structured_pandas(opencovid19,columns_keeped=columns_keeped)
+
+                # integrating needed fields
+                column_to_integrate=['nouvelles_hospitalisations', 'nouvelles_reanimations', 'depistes']
+                for w in ['nouvelles_hospitalisations', 'nouvelles_reanimations', 'depistes']:
+                    opencovid19['tot_'+w]=opencovid19.groupby(['location'])[w].cumsum()
+
+                #columns_skipped = ['granularite','maille_nom','source_nom','source_url','source_archive','source_type']
+                dict_columns_keeped = {
+                    'deces':'tot_deces',
+                    'cas_confirmes':'tot_cas_confirmes',
+                    'cas_ehpad':'tot_cas_ehpad',
+                    'cas_confirmes_ehpad':'tot_cas_confirmes_ehpad', 
+                    'cas_possibles_ehpad':'tot_cas_possibles_ehpad',
+                    'deces_ehpad':'tot_deces_ehpad',
+                    'reanimation':'cur_reanimation',
+                    'hospitalises':'cur_hospitalises',
+                    'gueris':'tot_gueris'
+                    }
+                self.return_structured_pandas(opencovid19.rename(columns=dict_columns_keeped),columns_keeped=list(dict_columns_keeped.values())+['tot_'+c for c in column_to_integrate])
             elif self.db == 'owid':
                 self.db_world=True
                 info('OWID aka \"Our World in Data\" database selected ...')

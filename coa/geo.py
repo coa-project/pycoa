@@ -872,6 +872,32 @@ class GeoCountry():
         cols.append('geometry')
         return self.get_data()[cols]
 
+    def get_subregions_from_region(self,**kwargs):
+        """ Return the list of subregions within a specified region.
+        Should give either the code or the name of the region as strings in kwarg : code=# or name=#
+        """
+        kwargs_test(kwargs,['name','code'],'Should give either name or code of region.')
+        code=kwargs.get("code",None)
+        name=kwargs.get("name",None)
+        if not (code == None) ^ (name == None):
+            raise CoaKeyError("Should give either code or name of region, not both.")
+
+        if name != None:
+            if not isinstance(name,str):
+                raise CoaKeyError("Name should be given as string.")
+            if not name in self.get_region_list()['name_region'].to_list():
+                raise CoaKeyError("The region "+name+" does not exist for country "+self.get_country()+". See get_region_list().")
+            cut=(self.get_data()['name_region']==name)
+
+        if code != None:
+            if not isinstance(code,str):
+                raise CoaKeyError("Name should be given as string.")
+            if not code in self.get_region_list()['code_region'].to_list():
+                raise CoaKeyError("The region "+code+" does not exist for country "+self.get_country()+". See get_region_list().")
+            cut=(self.get_data()['code_region']==code)
+
+        return self.get_data()[cut]['code_subregion'].to_list()
+
     def get_list_properties(self):
         """Return the list of available properties for the current country
         """

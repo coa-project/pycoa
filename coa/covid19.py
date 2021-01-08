@@ -470,16 +470,19 @@ class DataBase(object):
             raise CoaKeyError(kwargs['which']+' is not a available for' + self.db + 'database name. '
             'See get_available_keys_words() for the full list.')
 
-        if self.db == 'jhu' or self.db == 'owid' or self.db == 'jhu-usa':
-            if self.db == 'jhu-usa':
-                clist=self.geo.get_subregion_list()['code_subregion']
-            else:
-                self.geo.set_standard('name')
-                clist=self.geo.to_standard(clist,output='list',interpret_region=True)
+        if self.db_world: 
+            self.geo.set_standard('name')
+            clist=self.geo.to_standard(clist,output='list',interpret_region=True)
+        else:
+            clist=clist+self.geo.get_subregions_from_list_of_region_names(clist)
+            pass #clist=self.geo.get_subregion_list()['code_subregion']
+        
+        clist=list(set(clist)) # to suppress duplicate countries
+        diff_locations = list(set(clist) - set(self.get_locations()))
+        clist = [i for i in clist if i not in diff_locations]
 
-            clist=list(set(clist)) # to suppress duplicate countrie
-            diff_locations = list(set(clist) - set(self.get_locations()))
-            clist = [i for i in clist if i not in diff_locations]
+        if len(clist) == 0:
+            raise CoaWhereError('No correct subregion found according to the where option given.')
 
         pdfiltered = self.get_mainpandas().loc[self.get_mainpandas().location.isin(clist)]
         pdfiltered = pdfiltered[['location','date',kwargs['which']]]

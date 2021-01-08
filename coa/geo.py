@@ -898,6 +898,19 @@ class GeoCountry():
 
         return self.get_data()[cut]['code_subregion'].to_list()
 
+    def get_subregions_from_list_of_region_names(self,l):
+        """ Return the list of subregions according to list of region names given
+        """
+        if not isinstance(l,list):
+            CoaTypeError("Should provide list as argument")
+        s=[]
+        for r in l:
+            try:
+                s=s+self.get_subregions_from_region(name=r)
+            except CoaWhereError:
+                pass
+        return s
+
     def get_list_properties(self):
         """Return the list of available properties for the current country
         """

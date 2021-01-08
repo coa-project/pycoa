@@ -268,7 +268,7 @@ def get(**kwargs):
 
         casted_data = pd.pivot_table(pandy, index='date',columns='where',values=col_name).to_dict('series')
         if output == 'dict':
-            casted_data = pandy
+            casted_data = pandy.to_dict('split')
         if output == 'list' or output == 'array':
             my_list = []
             for keys,values in pandy.items():

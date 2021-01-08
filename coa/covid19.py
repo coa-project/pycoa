@@ -528,6 +528,8 @@ class DataBase(object):
                     # modify values in order that diff values is never negative
                     pdloc=pdfiltered.loc[ pdfiltered.location == loca ][kwargs['which']]
                     y0=pdloc.values[0] # integrated offset at t=0
+                    if np.isnan(y0):
+                        y0=0
                     pa = pdloc.diff()
                     yy = pa.values
                     ind = list(pa.index)

@@ -41,7 +41,7 @@ class DataBase(object):
         '''
         verb("Init of covid19.DataBase()")
         self.database_name = ['jhu','owid','jhu-usa','spf','opencovid19']
-        self.available_options = ['nonneg','fillnan0','fillnanf','smooth7']
+        self.available_options = ['nonneg','nofillnan','smooth7']
         self.available_keys_words = []
         self.dates = []
         self.database_columns_not_computed = {}

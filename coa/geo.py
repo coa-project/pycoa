@@ -483,6 +483,13 @@ class GeoInfo():
                         poly=so.unary_union(sg.MultiPolygon([sg.Polygon([[x,y] if x>=0 else (x+360,y) for x,y in p.exterior.coords]) for p in poly]))
                         self._data_geometry.loc[self._data_geometry.id_tmp==newc,'geometry']=gpd.GeoSeries(poly).values
 
+                    # Merging geometry for whole world. But takes too muche time…
+                    # self._data_geometry['tmp'] = 0
+                    # geo_ww=self._data_geometry.dissolve(by='tmp').reset_index()
+                    # geo_ww['id_tmp']='WWW'
+                    # geo_ww.drop('tmp',axis=1)
+                    # self._data_geometry=self._data_geometry.append(geo_ww)
+
                 p=p.merge(self._data_geometry,how='left',\
                     left_on='iso3_tmp',right_on='id_tmp',\
                     suffixes=('','_tmp')).drop(['id_tmp'],axis=1)

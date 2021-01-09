@@ -402,14 +402,14 @@ class GeoInfo():
                 p=p.drop(f,axis=1)
             # ----------------------------------------------------------
             if f == 'continent_code':
-                p[f] = [pcc.country_alpha2_to_continent_code(k) for k in countries_iso2]
+                p[f] = [pcc.country_alpha2_to_continent_code(k) if k != 'WW' else 'WW' for k in countries_iso2]
             # ----------------------------------------------------------
             elif f == 'continent_name':
                 p[f] = [pcc.convert_continent_code_to_continent_name( \
-                    pcc.country_alpha2_to_continent_code(k) ) for k in countries_iso2 ]
+                    pcc.country_alpha2_to_continent_code(k) ) if k != 'WW' else 'World' for k in countries_iso2 ]
             # ----------------------------------------------------------
             elif f == 'country_name':
-                p[f] = [pcc.country_alpha2_to_country_name(k) for k in countries_iso2]
+                p[f] = [pcc.country_alpha2_to_country_name(k) if k != 'WW' else 'Whole World' for k in countries_iso2]
             # ----------------------------------------------------------
             elif f in ['population','area','fertility','median_age','urban_rate']:
                 if self._data_population.empty:

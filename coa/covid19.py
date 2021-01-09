@@ -507,8 +507,7 @@ class DataBase(object):
             clist=self.geo.to_standard(clist,output='list',interpret_region=True)
         else:
             clist=clist+self.geo.get_subregions_from_list_of_region_names(clist)
-            pass #clist=self.geo.get_subregion_list()['code_subregion']
-        
+            
         clist=list(set(clist)) # to suppress duplicate countries
         diff_locations = list(set(clist) - set(self.get_locations()))
         clist = [i for i in clist if i not in diff_locations]

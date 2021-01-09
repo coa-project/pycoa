@@ -197,15 +197,22 @@ class DataBase(object):
 
             # Adding information for all locations
             ntot=len(self.mainpandas['location'].unique())
-            ptot=self.mainpandas.groupby(['date']).sum().reset_index()   # summing for all locations
+            
+
+            ptot=self.mainpandas.groupby(['location']).fillna(method='ffill').groupby(['date']).sum().reset_index()   # summing for all locations
             # mean for some columns, about index and not sum of values.
             for col in ptot.columns:
                 if col.startswith('cur_idx_'):
                     ptot[col]=ptot[col]/ntot
+
             if self.db_world:
-                ptot['location']='WW'
+                loc_whole='Whole World'
             else:
-                ptot['location']=coge.get_country()
+                loc_whole=self.geo.get_country()
+
+            # adding whole location to the slocation list
+            ptot['location']=loc_whole
+            self.slocation = self.slocation+[loc_whole]
             self.mainpandas=self.mainpandas.append(ptot)
 
             # some info

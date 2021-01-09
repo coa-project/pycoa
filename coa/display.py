@@ -550,7 +550,7 @@ class CocoDisplay():
         img = Image.open(io.BytesIO(img_data))
         img.thumbnail(size, Image.ANTIALIAS)
         img.save(pngfile)
-        print(pngfile, ' is now save ...')
+        info(pngfile, ' is now save ...')
 
     @staticmethod
     def save_pandas_as_png(df=None, pngfile='pandas.png'):

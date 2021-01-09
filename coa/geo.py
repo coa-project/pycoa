@@ -173,8 +173,12 @@ class GeoManager():
                 if len(c)==0:
                     n1='' #None
                 else:
+                    dict_whole={'alpha_2':'WW','alpha_3':'WWW','numeric':'000','name':'Whole World','alt':'Whole'}
                     try:
-                        n0=pc.countries.lookup(c)
+                        if c in [d.title() for d in list(dict_whole.values())]: # managing whole world if asked
+                            n0=dotdict(dict_whole)
+                        else:
+                            n0=pc.countries.lookup(c)
                     except LookupError:
                         try:
                             nf=pc.countries.search_fuzzy(c)

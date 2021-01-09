@@ -826,8 +826,6 @@ class GeoCountry():
                     tmp.append(g)  
                 self._country_data['geometry']=tmp
 
-
-
             if main_area == True:
                 self._country_data=self._country_data[~self._country_data['code_subregion'].isin(list_translation.keys())]
 

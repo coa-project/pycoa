@@ -190,11 +190,25 @@ class DataBase(object):
 
                 # renaming some columns
                 col_to_rename=['reproduction_rate','icu_patients','hosp_patients','positive_rate']
-                renamed_cols=['cur_'+c for c in col_to_rename]
+                renamed_cols=['cur_'+c if c != 'positive_rate' else 'cur_idx_'+c for c in col_to_rename]
                 columns_keeped=['total_deaths','total_cases','total_tests','total_vaccinations']
 
                 self.return_structured_pandas(owid.rename(columns=dict(zip(col_to_rename,renamed_cols))),columns_keeped=columns_keeped+renamed_cols)
 
+            # Adding information for all locations
+            ntot=len(self.mainpandas['location'].unique())
+            ptot=self.mainpandas.groupby(['date']).sum().reset_index()   # summing for all locations
+            # mean for some columns, about index and not sum of values.
+            for col in ptot.columns:
+                if col.startswith('cur_idx_'):
+                    ptot[col]=ptot[col]/ntot
+            if self.db_world:
+                ptot['location']='WW'
+            else:
+                ptot['location']=coge.get_country()
+            self.mainpandas=self.mainpandas.append(ptot)
+
+            # some info
             info('Few information concernant the selected database : ', self.get_db())
             info('Available which key-words for: ',self.get_available_keys_words())
             info('Example of location : ',  ', '.join(random.choices(self.get_locations(), k=5)), ' ...')

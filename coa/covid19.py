@@ -323,7 +323,7 @@ class DataBase(object):
 
         uniqloc = pandas_list[0]['location'].unique()
         oldloc = uniqloc
-        if self.db == 'jhu':
+        if self.db_world:
             d_loc_s = self.geo.to_standard(list(uniqloc),output='list',db=self.get_db(),interpret_region=True)
             self.slocation = d_loc_s
             newloc = d_loc_s
@@ -404,7 +404,7 @@ class DataBase(object):
 
         uniqloc = mypandas['location'].unique()
         oldloc = uniqloc
-        if self.db == 'owid':
+        if self.db_world:
             d_loc_s=self.geo.to_standard(list(uniqloc),output='list',db=self.get_db(),interpret_region=True)
             self.slocation=d_loc_s
             newloc = d_loc_s

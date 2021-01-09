@@ -386,14 +386,18 @@ def hist(**kwargs):
     width_height : width and height of the picture .
                 If specified should be a list of width and height.
                 For instance width_height=[400,500]
+
+    typeofhist  --  'bylocation' (default) or 'byvalue' 
     """
-    kwargs_test(kwargs,['where','what','which','whom','when','input','input_field','bins','title'],
+    kwargs_test(kwargs,['where','what','which','whom','when','input','input_field','bins','title','typeofhist'],
             'Bad args used in the pycoa.hist() function.')
 
     bins=kwargs.get('bins',None)
     when=kwargs.get('when',None)
     input_field=None
     input_arg=kwargs.get('input',None)
+    typeofhist=kwargs.pop('typeofhist','bylocation')
+
     if isinstance(input_arg,pd.DataFrame):
         t=input_arg
         input_field=kwargs.get('input_field')
@@ -406,7 +410,13 @@ def hist(**kwargs):
         raise CoaTypeError('Waiting input as valid pycoa pandas '
             'dataframe. See help.')
 
-    fig=_cocoplot.pycoa_histo(t,input_field,**kwargs)
+    if typeofhist == 'bylocation':
+        fig=_cocoplot.pycoa_horizonhisto(t,input_field,**kwargs)
+    elif typeofhist == 'byvalue':
+        fig=_cocoplot.pycoa_histo(t,input_field,**kwargs)
+    else:
+        raise CoaKeyError('Unknown typeofhist value. Should be bylocation or byvalue.')
+
     show(fig)
 
 # ----------------------------------------------------------------------

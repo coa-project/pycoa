@@ -140,10 +140,10 @@ class DataBase(object):
                     'hosp':'cur_hosp',
                     'rad':'tot_rad',
                     'rea':'cur_rea',
-                    'tx_incid':'cur_tx_incid',
-                    'R':'cur_R',
-                    'taux_occupation_sae':'cur_taux_occupation_sae',
-                    'tx_pos':'cur_tx_pos'
+                    'tx_incid':'cur_idx_tx_incid',
+                    'R':'cur_idx_R',
+                    'taux_occupation_sae':'cur_idx_taux_occupation_sae',
+                    'tx_pos':'cur_idx_tx_pos'
                     }
                 result=result.rename(columns=rename_dict)
                 columns_keeped=list(rename_dict.values())+['tot_incid_hosp','tot_incid_rea','tot_incid_rad','tot_incid_dc','tot_P','tot_T']

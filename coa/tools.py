@@ -158,7 +158,7 @@ def get_local_from_url(url,expiration_time=0,suffix=''):
 
     if expiration_time >=0 and local_file_exists:
         if expiration_time==0 or time.time()-os.path.getmtime(local_filename)<expiration_time:
-            verb('Using locally stored data for '+url)
+            verb('Using locally stored data for '+url+' stored as '+local_filename)
             return local_filename
 
     # if not : download the file
@@ -186,4 +186,3 @@ class dotdict(dict):
     __getattr__ = dict.get
     __setattr__ = dict.__setitem__
     __delattr__ = dict.__delitem__
-    

@@ -18,6 +18,8 @@ An interface module to easily plot pycoa data with bokeh
 
 from coa.tools import kwargs_test,check_valid_date,extract_dates,info,verb
 import coa.geo as coge
+from coa.geo import GeoManager as gm
+
 from coa.error import *
 
 import math
@@ -44,6 +46,7 @@ from bokeh.palettes import Paired12
 from bokeh.palettes import Dark2_5 as palette
 from bokeh.io import export_png
 from bokeh import events
+from bokeh.models.widgets import DateSlider, Slider
 import shapely.geometry as sg
 from bokeh.tile_providers import get_provider, Vendors
 
@@ -60,7 +63,7 @@ from PIL import Image, ImageDraw, ImageFont
 
 import matplotlib.pyplot as plt
 import datetime as dt
-width_height_default = [600,400]
+width_height_default = [500,380]
 
 class CocoDisplay():
     def __init__(self,db=None):
@@ -70,46 +73,46 @@ class CocoDisplay():
         self.plot_width =  width_height_default[0]
         self.plot_height =  width_height_default[1]
         self.geom = []
+        self.this_done = False
         self.all_available_display_keys=['where','which','what','when','title_temporal','plot_height','plot_width','title','bins','var_displayed',
-        'option','input','input_field','visu','plot_last_date','tile']
+        'option','input','input_field','visu','plot_last_date','tile','orientation']
         self.tiles_listing=['CARTODBPOSITRON','CARTODBPOSITRON_RETINA','STAMEN_TERRAIN','STAMEN_TERRAIN_RETINA',
         'STAMEN_TONER','STAMEN_TONER_BACKGROUND','STAMEN_TONER_LABELS','OSM','WIKIMEDIA','ESRI_IMAGERY']
-        if self.database_name == 'jhu' or self.database_name == 'owid':
-            self.geom=coge.GeoManager('name')
-            infolocation = coge.GeoInfo()
-        elif self.database_name == 'spf' or self.database_name == 'opencovid19':
-            infolocation=coge.GeoCountry('FRA')
-        elif self.database_name == 'jhu-usa':
-            infolocation=coge.GeoCountry('USA')
-        else:
-            raise CoaTypeError('What data base are you looking for ?')
 
-        self.location_geometry=self.get_geodata(database=self.database_name,info=infolocation)
+        self.location_geometry=self.get_geodata(database=self.database_name,)
 
-    def get_geodata(self,database='jhu',info=None):
+    def get_geodata(self,database='jhu'):
         '''
          return a GeoDataFrame used in map display (see map_bokeh and map_folium)
          Argument : database name
          The output format is the following :
          geoid | location |  geometry (POLYGON or MULTIPOLYGON)
         '''
-        if info == None:
-            raise CoaTypeError('What geometry do you want to retrieve local or world ?')
         geopan=pd.DataFrame()
         if self.database_name == 'spf' or self.database_name == 'opencovid19' or self.database_name == 'jhu-usa':
-            f = coge.GeoCountry('FRA')
             if self.database_name == 'jhu-usa':
-                f = coge.GeoCountry('USA')
-            geopan = f.get_data()[['code_subregion','town_subregion','geometry']]
+                country = 'USA'
+            else:
+                country = 'FRA'
+            f = coge.GeoCountry(country,dense_geometry=True)
+            info=coge.GeoCountry('FRA',dense_geometry=True)
+
+            geopan = f.get_subregion_list()[['code_subregion','geometry']]
             geopan = geopan.rename(columns={'code_subregion':'location'})
         elif self.database_name == 'jhu' or self.database_name == 'owid':
+            geom=coge.GeoManager('name')
+            info = coge.GeoInfo()
             allcountries = coge.GeoRegion().get_countries_from_region('world')
-            geopan['location'] = [self.geom.to_standard(c)[0] for c in allcountries]
+            geopan['location'] = [geom.to_standard(c)[0] for c in allcountries]
             geopan = info.add_field(field=['geometry'],input=geopan ,geofield='location')
+            geopan = geopan[geopan.location != 'Antarctica']
         else:
             raise CoaTypeError('What data base are you looking for ?')
 
+        geopan = geopan.dropna().reset_index(drop=True)
         data = gpd.GeoDataFrame(geopan,crs="EPSG:4326")
+        self.boundary = data['geometry'].total_bounds
+
         return data
 
     def standard_input(self,mypandas,input_field=None,**kwargs):
@@ -229,19 +232,42 @@ class CocoDisplay():
          """
          Create a standard Bokeh figure, with pycoa.frlabel,used in all the bokeh charts
          """
-         fig=figure(**kwargs,plot_width=self.plot_width,plot_height=self.plot_height,
+         fig=figure(**kwargs, plot_width=self.plot_width,plot_height=self.plot_height,
          tools=['save','box_zoom,reset'],toolbar_location="right")
          if copyrightposition == 'right':
-             xpos=0.58
+             xpos=0.6
          elif  copyrightposition == 'left':
-            xpos=0.02
+            xpos=0.03
          else:
             CoaKeyError('copyrightposition argument not yet implemented ...')
-         logo_db_citation = Label(x=xpos*self.plot_width, y=0.01*self.plot_height, x_units='screen',
-          y_units='screen',text_font_size='1.5vh',background_fill_color='white', background_fill_alpha=.75,
-          text='©pycoa.fr (data from: {})'.format(self.database_name))
-         fig.add_layout(logo_db_citation)
+         textcopyright='©pycoa.fr (data from: {})'.format(self.database_name)
+         self.logo_db_citation = Label(x=xpos*self.plot_width-len(textcopyright), y=0.01*self.plot_height,
+         x_units='screen', y_units='screen',text_font_size='1.5vh',background_fill_color='white', background_fill_alpha=.75,
+          text=textcopyright)
+         fig.add_layout(self.logo_db_citation)
          return fig
+
+    @staticmethod
+    def dict_shorten_loc(location):
+        '''
+        return a shorten name location
+        if location add , then location is the string before ,
+        else: return 10 caracters name with ...
+        '''
+        a={}
+        if type(location) == str:
+            location=[location]
+        for i in location:
+            if len(i)<10:
+                a[i]=i
+            else:
+                if i.find(',') != -1:
+                   a[i]=i.split(',')[0]
+                else:
+                   tmp=i.replace('(','').replace(')','')
+                   tmp=tmp[0:4]+'...'+tmp[-3:]
+                   a[i]=tmp
+        return a
 
     @staticmethod
     def bokeh_legend(bkfigure):
@@ -289,7 +315,7 @@ class CocoDisplay():
             location_ordered_byvalues=list(mypandas.loc[mypandas.date==dico['when_end']].sort_values(by=input_field,ascending=False)['location'])
             tooltips='Location: @location <br> Date: @date{%F} <br>  $name: @$name'
             loc = location_ordered_byvalues#mypandas['location'].unique()
-            shorten_loc = [ i if len(i)<15 else i.replace('-',' ').split()[0]+'...'+i.replace('-',' ').split()[-1] for i in loc]
+            shorten_loc = list(CocoDisplay.dict_shorten_loc(loc).values())
             for i in input_field:
                 dict_filter_data[i] =  \
                     dict(mypandas.loc[(mypandas['location'].isin(loc)) &
@@ -424,7 +450,8 @@ class CocoDisplay():
             if len(loc) < 2:
                 raise CoaTypeError('What do you want me to do ? You have selected, only one country.'
                                     'There is no sens to use this method. See help.')
-            shorten_loc = [ i if len(i)<15 else i.replace('-',' ').split()[0]+'...'+i.replace('-',' ').split()[-1] for i in loc]
+            shorten_loc = list(CocoDisplay.dict_shorten_loc(loc).values())
+
 
         mypandas = mypandas.loc[(mypandas['date']>=dico['when_beg']) & (mypandas['date']<=dico['when_end'])]
         data  = pd.pivot_table(mypandas,index='date',columns='location',values=input_field)
@@ -550,7 +577,7 @@ class CocoDisplay():
         img = Image.open(io.BytesIO(img_data))
         img.thumbnail(size, Image.ANTIALIAS)
         img.save(pngfile)
-        info(pngfile, ' is now save ...')
+        print(pngfile, ' is now save ...')
 
     @staticmethod
     def save_pandas_as_png(df=None, pngfile='pandas.png'):
@@ -574,13 +601,18 @@ class CocoDisplay():
                 boolval = df.loc[df.date == (when_end-dt.timedelta(days=j))][field].dropna().empty
                 j+=1
         if j>1:
-            info(str(when_end)+' all the value seems to be nan! I will find an other previous date.\n'+
+            info(str(when_end)+'all the value seems to be nan! I will find an other previous date.\n'+
                 'Here the date I will take: '+str(when_end-dt.timedelta(days=j-1)))
         return  when_end-dt.timedelta(days=j-1)
 
+    @staticmethod
+    def get_utcdate(date):
+        return (date-dt.date(1970, 1, 1)).total_seconds()*1000.
+
     def decohistomap(func):
-        def generic_hm(self,mypandas,input_field = None,**kwargs):
+        def generic_hm(self,mypandas,input_field = None,cursor_date = None, **kwargs):
             mypandas,dico = self.standard_input(mypandas,input_field,**kwargs,plot_last_date=True)
+
             if type(input_field) is None.__class__ and dico['which'] is None.__class__ :
                input_field = mypandas.columns[2]
             else:
@@ -589,30 +621,58 @@ class CocoDisplay():
                 else:
                     input_field = dico['input_field'][0]
             if self.database_name == 'spf' or  self.database_name == 'opencovid19' or self.database_name == 'jhu-usa':
-                name_displayed = 'town_subregion'
+                name_location_displayed = 'town_subregion'
             else:
-                name_displayed = 'location'
+                name_location_displayed = 'location'
+                #loc = mypandas['location'].unique()
+                #shorten_loc =  {i if len(i)<10 else i.replace('-',' ').split()[0]+'...'+i.replace('-',' ').split()[-1]:i for i in loc}
+                #g=gm('iso3')
+                #shorten_loc =  {i:i if len(i)<10 else  g.to_standard(i)[0] for i in loc}
+                #mypandas['location'] = mypandas['location'].apply(lambda x: shorten_loc[x])
+            my_date = mypandas.date.unique()
+            my_location = mypandas.location.unique()
+            dshort_loc=CocoDisplay.dict_shorten_loc(my_location)
+            colors = itertools.cycle(self.colors)
+            dico_colors = {i:next(colors) for i in my_location}
+            mypandas['colors']=[dico_colors[i] for i in mypandas.location ]
 
-            mypandas_filtered = mypandas.loc[mypandas.date == dico['when_end']]
-            mypandas_filtered = mypandas_filtered.drop(columns=['date'])
-            my_location = mypandas_filtered.location.unique()
+
             geopdwd = self.location_geometry
-            geopdwd = pd.merge(geopdwd,mypandas_filtered,on='location')
-            geopdwd = geopdwd.sort_values(by=input_field,ascending=False).reset_index()
+            geopdwd = pd.merge(geopdwd,mypandas,on='location')
+            geopdwd =  geopdwd.loc[geopdwd.date >= dt.date(2020,3,15)] # before makes pb in horizohisto
+            geopdwd = geopdwd.sort_values(by=input_field,ascending=False)
             if self.database_name == 'spf' or  self.database_name == 'opencovid19':
-                outremer=['971', '972', '973', '974', '976']
-                metropole=[i for i in my_location if i not in outremer]
-                my_location=metropole
+                outremer = ['971', '972', '973', '974', '976']
+                metropole = [i for i in my_location if i not in outremer]
+                my_location = metropole
             geopdwd=geopdwd.dropna(subset=[input_field])
+            geopdwd=geopdwd.reset_index(drop=True)
 
-            boundary = (geopdwd.loc[geopdwd.location.isin(my_location)]).total_bounds
-            location_ordered_byvalues=list(mypandas.sort_values(by=input_field,ascending=False)['location'])
+            geopdwd = geopdwd.rename(columns={input_field:'cases'})
+            orientation = kwargs.get('orientation', 'horizontal')
+            date_slider = DateSlider(title="Date: ", start=geopdwd.date.min(), end=dico['when_end'],
+            value=dico['when_end'], step=24*60*60*1000,orientation=orientation)
+            geopdwd_filter = geopdwd.copy()
+            wanted_date = date_slider.value_as_datetime.date()
+            geopdwd_filter = geopdwd_filter.loc[geopdwd_filter.date == wanted_date]
+            geopdwd_filter = geopdwd_filter.drop(columns=['date'])
+            geopdwd_filter = geopdwd_filter.reset_index(drop=True)
+            geopdwd_filter['bottom']=geopdwd_filter.index
+            geopdwd_filter['left']=[0]*len(geopdwd_filter.index)
+            bthick=0.95
+            geopdwd_filter['top']=[len(geopdwd_filter.index)+bthick/2-i for i in geopdwd_filter.index.to_list()]
+            geopdwd_filter['bottom']=[len(geopdwd_filter.index)-bthick/2-i for i in geopdwd_filter.index.to_list()]
+            if cursor_date == None:
+                  date_slider = None
 
-            return func(self,input_field,name_displayed,dico,geopdwd,boundary)
+            geopdwd['location']=[dshort_loc[i] for i in geopdwd.location.to_list() ]
+            geopdwd_filter['location']=[dshort_loc[i] for i in geopdwd_filter.location.to_list() ]
+
+            return func(self,input_field,date_slider,name_location_displayed,dico,geopdwd,geopdwd_filter)
         return generic_hm
 
     @decohistomap
-    def pycoa_histo(self,input_field,name_displayed,dico,geopdwd,boundary):
+    def pycoa_histo(self,input_field,date_slider,name_location_displayed,dico,geopdwd,geopdwd_filter):
         """Create a Bokeh histogram from a pandas input
         Keyword arguments
         -----------------
@@ -632,13 +692,13 @@ class CocoDisplay():
         -----------------
         HoverTool is available it returns position of the middle of the bin and the value.
         """
-        mypandas = geopdwd
+        mypandas = geopdwd_filter.rename(columns={'cases':input_field})
 
         dict_histo = defaultdict(list)
         if 'location' in mypandas.columns:
             tooltips='Value at around @middle_bin : @val'
             loc = mypandas['location'].unique()
-            shorten_loc = [ i if len(i)<15 else i.replace('-',' ').split()[0]+'...'+i.replace('-',' ').split()[-1] for i in loc]
+            shorten_loc = list(CocoDisplay.dict_shorten_loc(loc).values())
             val_per_country = defaultdict(list)
 
             for w in loc:
@@ -696,13 +756,10 @@ class CocoDisplay():
             if y_axis_type=="log":
                 bottom=0.0001
                 standardfig.y_range=Range1d(0.001, 1.05*max(frame_histo['val']))
-                #standardfig.y_range=Range1d(min_range_val, 1.05*max_value)
 
             label = dico['titlebar']
             p=standardfig.quad(source=ColumnDataSource(frame_histo),top='val', bottom=bottom, left='left', right='right',
             fill_color=next(colors),legend_label=label)
-            #p=standardfig.hbar(y='index', right='val', source=ColumnDataSource(frame_histo), height=0.95,
-            # line_color='white', color =next(colors),legend_label=label)
             standardfig.legend.label_text_font_size = "12px"
             panel = Panel(child=standardfig , title=axis_type_title)
             panels.append(panel)
@@ -712,51 +769,85 @@ class CocoDisplay():
         return tabs
 
     @decohistomap
-    def pycoa_horizonhisto(self,input_field,name_displayed,dico,geopdwd,boundary):
+    def pycoa_horizonhisto(self,input_field,date_slider,name_location_displayed,dico,geopdwd,geopdwd_filter):
         ''' Horizontal histogram  '''
-        mypandas = geopdwd.drop(columns=['geometry'])
-        colors = itertools.cycle(self.colors)
+        if date_slider:
+            title = input_field
+            input_field = 'cases'
+        else:
+            geopdwd = geopdwd.rename(columns={'cases':input_field})
+            geopdwd_filter = geopdwd_filter.rename(columns={'cases':input_field})
+        geopdwd = geopdwd.drop(columns=['geometry'])
+        my_date = geopdwd.date.unique()
+        dico_utc={i:DateSlider(value=i).value for i in my_date}
+        geopdwd['date_utc']=[dico_utc[i] for i in geopdwd.date]
+        source = ColumnDataSource(data=geopdwd)
 
-        mypandas['colors']=[next(colors) for i in range(len(mypandas.index)) ]
-        mypandas['bottom']=mypandas.index
-        mypandas['left']=[0]*len(mypandas.index)
-        bthick=0.95
-        mypandas['top']=[len(mypandas.index)+bthick/2-i for i in mypandas.index.to_list()]
-        mypandas['bottom']=[len(mypandas.index)-bthick/2-i for i in mypandas.index.to_list()]
+        mypandas_filter = geopdwd_filter.drop(columns=['geometry'])
+        mypandas_filter = mypandas_filter.sort_values(by=input_field,ascending=False)
+        srcfiltered = ColumnDataSource(data=mypandas_filter)
 
-        max_value = mypandas[input_field].max()
-        min_value = mypandas[input_field].min()
-        min_value_gt0 = mypandas[mypandas[input_field]>0][input_field].min()
+        max_value = mypandas_filter[input_field].max()
+        min_value = mypandas_filter[input_field].min()
+        min_value_gt0 = mypandas_filter[mypandas_filter[input_field]>0][input_field].min()
+
         tooltips = [('Location','@location'),('Cases','@'+input_field)]
         hover_tool = HoverTool(tooltips=tooltips)
         panels = []
         for axis_type in ["linear", "log"]:
             label = dico['titlebar']
-            standardfig = self.standardfig(x_axis_type=axis_type,x_range = (0.01,1.05*max_value),title=dico['titlebar'])
-            #standardfig.y_range=Range1d(0.01, mypandas['top'].iloc[-1])
+            title = input_field
+            standardfig = self.standardfig(x_axis_type=axis_type,x_range = (0.01,1.05*max_value), title=title)
+
             if axis_type=="log":
                 min_range_val=0.01
                 if min_value>=0:
                     min_range_val=10**np.floor(np.log10(min_value_gt0))
                 standardfig.x_range=Range1d(min_range_val, 1.05*max_value)
-                mypandas['left']=[0.001]*len(mypandas.index)
-            standardfig.quad(source=ColumnDataSource(mypandas),top='top',
-            bottom='bottom',left='left', right=input_field,color='colors')
+                mypandas_filter['left']=[0.001]*len(mypandas_filter.index)
+                srcfiltered = ColumnDataSource(data=mypandas_filter)
 
-            for xi,yi,ti in zip(mypandas[input_field].to_list(), mypandas['top'].to_list(),mypandas['location'].to_list()):
-                customed_histobar = Label(x=xi, y=yi,text=ti)
-                standardfig.add_layout(customed_histobar)
+            standardfig.quad(source=srcfiltered,
+            top='top', bottom='bottom',left='left', right=input_field,color='colors')
 
+            if False:
+                for xi,yi,ti in zip(mypandas[input_field].to_list(), mypandas['top'].to_list(),customed):
+                    customed_histobar = Label(x=xi, y=yi,text=ti)
+                    standardfig.add_layout(customed_histobar)
+
+            if date_slider :
+                date_slider.orientation='vertical'
+                date_slider.height=int(0.8*self.plot_height)
+                callback = CustomJS(args=dict(source=source,
+                                                  source_filter=srcfiltered,
+                                                  date_slider=date_slider),
+                        code="""
+                        var date_slide = date_slider.value;
+                        var dates = source.data['date_utc'];
+                        var val = source.data['cases'];
+                        var newval = [];
+                        for (var i = 0; i <= dates.length; i++){
+                        if (dates[i] == date_slide)
+                            newval.push(val[i]);
+                        }
+                        source_filter.data['cases'] = newval;
+                        console.log(newval);
+                        source_filter.change.emit();
+                    """)
+                date_slider.js_on_change('value', callback)
+
+            loc=mypandas_filter['location'].to_list()
+            self.logo_db_citation.x_offset -= len(max(loc, key=len))
             standardfig.add_tools(hover_tool)
-            label_dict={len(mypandas.index)-k:v for k,v in zip(mypandas.index.to_list(),mypandas['location'].to_list())}
-            label_dict[len(label_dict)+1] = ''
+            label_dict={len(mypandas_filter.index)-k:v for k,v in zip(mypandas_filter.index.to_list(),loc)}
             standardfig.yaxis.major_label_overrides = label_dict
-            standardfig.yaxis.ticker.desired_num_ticks = len(mypandas[input_field].index)
-            standardfig.yaxis.major_label_overrides[0] = ''
+            standardfig.yaxis.ticker.desired_num_ticks = len(mypandas_filter[input_field].index)
             standardfig.yaxis.minor_tick_line_color = None
             panel = Panel(child=standardfig,title=axis_type)
             panels.append(panel)
         tabs = Tabs(tabs=panels)
+        if date_slider:
+            tabs = row(tabs,date_slider)
         return tabs
 
     @staticmethod
@@ -779,11 +870,15 @@ class CocoDisplay():
         ''' and converts it to a  longitude/latitude tuple from to Web Mercator format '''
         k = 6378137
         x = tuple_xy[0] * (k * np.pi/180.0)
-        y = np.log(np.tan((90 + tuple_xy[1]) * np.pi/360.0)) * k
+        if tuple_xy[1] == -90:
+            lat = -89
+        else:
+            lat  = tuple_xy[1]
+        y = np.log(np.tan((90 + lat) * np.pi/360.0)) * k
         return x,y
 
     @decohistomap
-    def map_folium(self,input_field,name_displayed,dico,geopdwd,boundary):
+    def map_folium(self,input_field,date_slider,name_location_displayed,dico,geopdwd,geopdwd_filter):
         """Create a Folium map from a pandas input
         Folium limite so far:
             - scale format can not be changed (no way to use scientific notation)
@@ -804,8 +899,18 @@ class CocoDisplay():
         Known issue: format for scale can not be changed. When data value are important
         overlaped display appear
         """
-        minx, miny, maxx, maxy = boundary
+        if date_slider:
+            input_field = 'cases'
+        else:
+            geopdwd = geopdwd.rename(columns={'cases':input_field})
+            geopdwd_filter = geopdwd_filter.rename(columns={'cases':input_field})
         zoom = 2
+        if self.database_name == 'spf' or  self.database_name == 'opencovid19' or self.database_name == 'jhu-usa':
+            self.boundary = geopdwd_filter['geometry'].total_bounds
+            zoom = 5
+
+        minx, miny, maxx, maxy = self.boundary
+
         mapa = folium.Map(location=[ (maxy+miny)/2., (maxx+minx)/2.], zoom_start=zoom)
         fig = Figure(width=self.plot_width, height=self.plot_height)
         fig.add_child(mapa)
@@ -830,10 +935,10 @@ class CocoDisplay():
         html = colormap.get_root()
         html.script.get_root().render()
         html.script._children[e.get_name()] = e
-        geopdwd[input_field+'scientific_format']=(['{:.3g}'.format(i) for i in geopdwd[input_field]])
+        geopdwd_filter[input_field+'scientific_format']=(['{:.3g}'.format(i) for i in geopdwd_filter[input_field]])
 
-        map_dict = geopdwd.set_index('location')[input_field].to_dict()
-        if np.nanmin(geopdwd[input_field]) == np.nanmax(geopdwd[input_field]):
+        map_dict = geopdwd_filter.set_index('location')[input_field].to_dict()
+        if np.nanmin(geopdwd_filter[input_field]) == np.nanmax(geopdwd_filter[input_field]):
             map_dict['FakeCountry']=0.
         color_scale = LinearColormap(color_mapper.palette, vmin = min(map_dict.values()), vmax = max(map_dict.values()))
 
@@ -844,7 +949,7 @@ class CocoDisplay():
             else:
                 return color_scale(value)
         folium.GeoJson(
-            geopdwd,
+            geopdwd_filter,
             style_function=lambda x:
             {
                 'fillColor': get_color(x),
@@ -852,8 +957,8 @@ class CocoDisplay():
                 'color' : None
             },
             highlight_function=lambda x: {'weight':2, 'color':'green'},
-            tooltip=folium.features.GeoJsonTooltip(fields=[name_displayed,input_field+'scientific_format'],
-                aliases=[name_displayed+':',input_field+":"],
+            tooltip=folium.features.GeoJsonTooltip(fields=[name_location_displayed,input_field+'scientific_format'],
+                aliases=[name_location_displayed+':',input_field+":"],
                 style="""
                         background-color: #F0EFEF;
                         border: 2px solid black;
@@ -863,6 +968,7 @@ class CocoDisplay():
                         """),
                 #'<div style="background-color: royalblue 0.2; color: black; padding: 2px; border: 1px solid black; border-radius: 2px;">'+input_field+'</div>'])
         ).add_to(mapa)
+
 
         W, H = (300,200)
         im = Image.new("RGBA",(W,H))
@@ -876,7 +982,7 @@ class CocoDisplay():
         return mapa
 
     @decohistomap
-    def bokeh_map(self,input_field,name_displayed,dico,geopdwd,boundary):
+    def bokeh_map(self,input_field,date_slider,name_location_displayed,dico,geopdwd,geopdwd_filter):
         """Create a Bokeh map from a pandas input
         Keyword arguments
         -----------------
@@ -893,9 +999,16 @@ class CocoDisplay():
           - plot_width, plot_height (default [500,400]): bokeh variable for map size
         Known issue: can not avoid to display value when there are Nan values
         """
+        if date_slider:
+            input_field = 'cases'
+        else:
+            geopdwd = geopdwd.rename(columns={'cases':input_field})
+            geopdwd_filter = geopdwd_filter.rename(columns={'cases':input_field})
+        geopdwd =   geopdwd[['location','geometry',input_field]]
+        geopdwd_filter =   geopdwd_filter[['location','geometry',input_field]]
         new_poly=[]
         geolistmodified=dict()
-        for index, row in geopdwd.iterrows():
+        for index, row in geopdwd_filter.iterrows():
             split_poly=[]
             new_poly=[]
             for pt in self.get_polycoords(row):
@@ -914,22 +1027,51 @@ class CocoDisplay():
                geolistmodified[row['location']]=sg.Polygon(new_poly)
             else:
                geolistmodified[row['location']]=sg.MultiPolygon(new_poly)
-
         ng = pd.DataFrame(geolistmodified.items(), columns=['location', 'geometry'])
         geolistmodified=gpd.GeoDataFrame({'location':ng['location'],'geometry':gpd.GeoSeries(ng['geometry'])},crs="epsg:3857")
+        geopdwd_filter = geopdwd_filter.drop(columns='geometry')
+        geopdwd_filter = pd.merge(geopdwd_filter,geolistmodified,on='location')
+        if self.database_name == 'spf' or  self.database_name == 'opencovid19' or self.database_name == 'jhu-usa':
+            geopdwd_filter = geopdwd_filter.rename(columns={'location':name_location_displayed})
+            minx, miny, maxx, maxy = geopdwd_filter['geometry'].total_bounds
+        else:
+            minx, miny, maxx, maxy = self.boundary
+            (minx, miny) = CocoDisplay.wgs84_to_web_mercator((minx,miny))
+            (maxx, maxy) = CocoDisplay.wgs84_to_web_mercator((maxx,maxy))
 
+        json_data = json.dumps(json.loads(geopdwd_filter.to_json()))
+        geopdwd_filter = GeoJSONDataSource(geojson = json_data)
 
-        geopdwd = geopdwd.drop(columns='geometry')
-        geopdwd = pd.merge(geopdwd,geolistmodified,on='location')
-        json_data = json.dumps(json.loads(geopdwd.to_json()))
-        geosource = GeoJSONDataSource(geojson = json_data)
+        if date_slider :
+            allcases_countries, allcases_dates=pd.DataFrame(),pd.DataFrame()
+            allcountries_cases = (geopdwd.groupby('location')['cases'].apply(list))
+            geopdwd_tmp = geopdwd.drop_duplicates(subset=['geometry'])
+            geopdwd_tmp = geopdwd_tmp.drop(columns='cases')
+            geopdwd_tmp = pd.merge(geopdwd_tmp,allcountries_cases,on='location')
+            json_data = json.dumps(json.loads(geopdwd_tmp.to_json()))
+            geopdwd_tmp = GeoJSONDataSource(geojson = json_data)
+
+            callback = CustomJS(args=dict(source=geopdwd_tmp,
+                                          source_filter=geopdwd_filter,
+                                          date_slider=date_slider),
+                        code="""
+                        var index_max = (date_slider.end-date_slider.start)/(24*3600*1000);
+                        var index = (date_slider.value-date_slider.start)/(24*3600*1000);
+                        console.log(index_max);
+                        var val_date = [];
+                        for (var i = 0; i < source.get_length(); i++)
+                        {
+                            val_date.push(source.data['cases'][i][index_max-index]);
+                        }
+                        source_filter.data['cases'] = val_date;
+                        source_filter.change.emit();
+                    """)
+            date_slider.js_on_change('value', callback)
 
         tile_provider = get_provider(dico['tile'])
-        minx, miny, maxx, maxy = boundary
-        (minx, miny) = CocoDisplay.wgs84_to_web_mercator((minx,miny))
-        (maxx, maxy) = CocoDisplay.wgs84_to_web_mercator((maxx,maxy))
+
         standardfig = self.standardfig(x_range=(minx,maxx), y_range=(miny,maxy),
-        x_axis_type="mercator", y_axis_type="mercator",title=dico['titlebar'],copyrightposition='left')
+        x_axis_type="mercator", y_axis_type="mercator",title=input_field,copyrightposition='left')
 
         standardfig.add_tile(tile_provider)
         min_col,max_col=CocoDisplay.min_max_range(np.nanmin(geopdwd[input_field]),np.nanmax(geopdwd[input_field]))
@@ -943,7 +1085,7 @@ class CocoDisplay():
         standardfig.yaxis.visible = False
         standardfig.xgrid.grid_line_color = None
         standardfig.ygrid.grid_line_color = None
-        standardfig.patches('xs','ys', source = geosource,fill_color = {'field':input_field, 'transform' : color_mapper},
+        standardfig.patches('xs','ys', source = geopdwd_filter,fill_color = {'field':input_field, 'transform' : color_mapper},
                   line_color = 'black', line_width = 0.25, fill_alpha = 1)
         cases_custom = CustomJSHover(code="""
         var value;
@@ -951,10 +1093,13 @@ class CocoDisplay():
             return value.toExponential(2).toString();
 
         """)
+
         standardfig.add_tools(HoverTool(
-        tooltips=[(name_displayed,'@'+name_displayed),(input_field,'@{'+input_field+'}'+'{custom}'),],
-        formatters={name_displayed:'printf','@{'+input_field+'}':cases_custom,},
+        tooltips=[(name_location_displayed,'@'+name_location_displayed),(input_field,'@{'+input_field+'}'+'{custom}'),],
+        formatters={name_location_displayed:'printf','@{'+input_field+'}':cases_custom,},
         point_policy="follow_mouse"))#,PanTool())
+        if date_slider:
+            standardfig = column(date_slider,standardfig)
 
         return standardfig
 

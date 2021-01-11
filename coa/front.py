@@ -161,9 +161,9 @@ def setwhom(base):
         raise CoaDbError(base+' is not a supported database. '
             'See pycoa.listbase() for the full list.')
     if _whom != base:
-        _db = coco.DataBase(base)
-        _cocoplot = _db.get_display()
+        _db,_cocoplot = coco.DataBase.factory(base) 
         _whom = base
+
     return _db.get_available_keys_words()
 
 # ----------------------------------------------------------------------

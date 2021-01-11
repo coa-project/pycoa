@@ -170,7 +170,7 @@ class DataBase(object):
                     'deces':'tot_deces',
                     'cas_confirmes':'tot_cas_confirmes',
                     'cas_ehpad':'tot_cas_ehpad',
-                    'cas_confirmes_ehpad':'tot_cas_confirmes_ehpad', 
+                    'cas_confirmes_ehpad':'tot_cas_confirmes_ehpad',
                     'cas_possibles_ehpad':'tot_cas_possibles_ehpad',
                     'deces_ehpad':'tot_deces_ehpad',
                     'reanimation':'cur_reanimation',
@@ -183,7 +183,7 @@ class DataBase(object):
                 info('OWID aka \"Our World in Data\" database selected ...')
                 self.geo = coge.GeoManager('name')
                 self.geo_all='world'
-                
+
                 drop_field = {'location':['International','World']}
                 owid = self.csv2pandas("https://raw.githubusercontent.com/owid/covid-19-data/master/public/data/owid-covid-data.csv",
                 separator=',',drop_field=drop_field)
@@ -197,7 +197,7 @@ class DataBase(object):
 
             # Adding information for all locations
             ntot=len(self.mainpandas['location'].unique())
-            
+
 
             ptot=self.mainpandas.groupby(['location']).fillna(method='ffill').groupby(['date']).sum().reset_index()   # summing for all locations
             # mean for some columns, about index and not sum of values.
@@ -509,12 +509,12 @@ class DataBase(object):
             raise CoaKeyError(kwargs['which']+' is not a available for' + self.db + 'database name. '
             'See get_available_keys_words() for the full list.')
 
-        if self.db_world: 
+        if self.db_world:
             self.geo.set_standard('name')
             clist=self.geo.to_standard(clist,output='list',interpret_region=True)
         else:
             clist=clist+self.geo.get_subregions_from_list_of_region_names(clist)
-            
+
         clist=list(set(clist)) # to suppress duplicate countries
         diff_locations = list(set(clist) - set(self.get_locations()))
         clist = [i for i in clist if i not in diff_locations]

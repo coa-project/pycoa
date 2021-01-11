@@ -206,7 +206,7 @@ def get(**kwargs):
                 monotonous increasing.
                 is available. By default : no option.
     """
-    kwargs_test(kwargs,['where','what','which','whom','when','output','option','bins','title','visu','tile'],
+    kwargs_test(kwargs,['where','what','which','whom','when','output','option','bins','title','visu','tile','cursor_date'],
             'Bad args used in the pycoa.get() function.')
 
     global _db,_whom
@@ -387,9 +387,9 @@ def hist(**kwargs):
                 If specified should be a list of width and height.
                 For instance width_height=[400,500]
 
-    typeofhist  --  'bylocation' (default) or 'byvalue' 
+    typeofhist  --  'bylocation' (default) or 'byvalue'
     """
-    kwargs_test(kwargs,['where','what','which','whom','when','input','input_field','bins','title','typeofhist'],
+    kwargs_test(kwargs,['where','what','which','whom','when','input','input_field','bins','title','typeofhist','cursor_date'],
             'Bad args used in the pycoa.hist() function.')
 
     bins=kwargs.get('bins',None)
@@ -397,6 +397,7 @@ def hist(**kwargs):
     input_field=None
     input_arg=kwargs.get('input',None)
     typeofhist=kwargs.pop('typeofhist','bylocation')
+    cursor_date=kwargs.get('cursor_date',None)
 
     if isinstance(input_arg,pd.DataFrame):
         t=input_arg
@@ -411,7 +412,7 @@ def hist(**kwargs):
             'dataframe. See help.')
 
     if typeofhist == 'bylocation':
-        fig=_cocoplot.pycoa_horizonhisto(t,input_field,**kwargs)
+            fig=_cocoplot.pycoa_horizonhisto(t,input_field,**kwargs)
     elif typeofhist == 'byvalue':
         fig=_cocoplot.pycoa_histo(t,input_field,**kwargs)
     else:
@@ -429,7 +430,7 @@ def deco_pycoa_graph(f):
     '''
     @wraps(f)
     def wrapper(*args, **kwargs):
-        kwargs_test(kwargs,['where','what','which','whom','when','input','visu','input_field','option','tile'],
+        kwargs_test(kwargs,['where','what','which','whom','when','input','visu','input_field','option','tile','cursor_date'],
                 'Bad args used in the pycoa.map() function.')
         which=''
         input_arg=kwargs.get('input',None)
@@ -463,10 +464,11 @@ def map(**kwargs):
     visu = kwargs.get('visu',listvisu()[0])
     t=kwargs.pop('t')
     input_field=kwargs.pop('input_field')
+    cursor_date=kwargs.get('cursor_date',None)
+
     if visu == 'bokeh':
         return show(_cocoplot.bokeh_map(t,input_field,**kwargs))
     elif visu == 'folium':
         return _cocoplot.map_folium(t,input_field,**kwargs)
     else:
         raise CoaTypeError('Waiting for a valid visualisation. So far: \'bokeh\' or \'folium\'.See help.')
-

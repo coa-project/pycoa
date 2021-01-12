@@ -782,7 +782,6 @@ class CocoDisplay():
         dico_utc={i:DateSlider(value=i).value for i in my_date}
         geopdwd['date_utc']=[dico_utc[i] for i in geopdwd.date]
         source = ColumnDataSource(data=geopdwd)
-
         mypandas_filter = geopdwd_filter.drop(columns=['geometry'])
         mypandas_filter = mypandas_filter.sort_values(by=input_field,ascending=False)
         srcfiltered = ColumnDataSource(data=mypandas_filter)
@@ -820,22 +819,51 @@ class CocoDisplay():
                 date_slider.height=int(0.8*self.plot_height)
                 callback = CustomJS(args=dict(source=source,
                                                   source_filter=srcfiltered,
-                                                  date_slider=date_slider),
+                                                  date_slider=date_slider,
+                                                  ylabel=standardfig.yaxis[0]),
                         code="""
                         var date_slide = date_slider.value;
                         var dates = source.data['date_utc'];
                         var val = source.data['cases'];
+                        var loc = source.data['location'];
+                        var colors = source.data['colors'];
                         var newval = [];
+                        var newloc = [];
+                        var newcol = [];
+
+                        var labeldic = {};
                         for (var i = 0; i <= dates.length; i++){
-                        if (dates[i] == date_slide)
-                            newval.push(val[i]);
+                        if (dates[i] == date_slide){
+                            newval.push(parseFloat(val[i]));
+                            newloc.push(loc[i]);
+                            newcol.push(colors[i]);
+                            }
                         }
-                        source_filter.data['cases'] = newval;
-                        console.log(newval);
+                        var len = newval.length;
+                        var indices = new Array(len);
+                        for (var i = 0; i < len; ++i) indices[i] = i;
+                        indices.sort(function (a, b) { return newval[a] > newval[b] ? -1 : newval[a] < newval[b] ? 1 : 0; });
+                        var orderval = [];
+                        var orderloc = [];
+                        var ordercol = [];
+                        for (var i = 0; i < len; ++i)
+                        {
+                            orderval.push(newval[indices[i]]);
+                            orderloc.push(newloc[indices[i]]);
+                            ordercol.push(newcol[indices[i]]);
+                            labeldic[len-indices[i]] = newloc[indices[i]];
+                        }
+                        console.log('Begin');
+                        console.log(labeldic);
+                        console.log('END');
+
+                        source_filter.data['cases'] = orderval;
+                        source_filter.data['location'] = orderloc;
+                        source_filter.data['colors'] = ordercol;
+                        ylabel.major_label_overrides = labeldic
                         source_filter.change.emit();
                     """)
                 date_slider.js_on_change('value', callback)
-
             loc=mypandas_filter['location'].to_list()
             self.logo_db_citation.x_offset -= len(max(loc, key=len))
             standardfig.add_tools(hover_tool)

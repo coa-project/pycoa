@@ -787,9 +787,9 @@ class CocoDisplay():
         mypandas_filter = mypandas_filter.sort_values(by=input_field,ascending=False)
         srcfiltered = ColumnDataSource(data=mypandas_filter)
 
-        max_value = mypandas_filter[input_field].max()
-        min_value = mypandas_filter[input_field].min()
-        min_value_gt0 = mypandas_filter[mypandas_filter[input_field]>0][input_field].min()
+        max_value = geopdwd[input_field].max()
+        min_value = geopdwd[input_field].min()
+        min_value_gt0 = geopdwd[geopdwd[input_field]>0][input_field].min()
 
         tooltips = [('Location','@location'),('Cases','@'+input_field)]
         hover_tool = HoverTool(tooltips=tooltips)
@@ -839,9 +839,9 @@ class CocoDisplay():
             loc=mypandas_filter['location'].to_list()
             self.logo_db_citation.x_offset -= len(max(loc, key=len))
             standardfig.add_tools(hover_tool)
-            label_dict={len(mypandas_filter.index)-k:v for k,v in zip(mypandas_filter.index.to_list(),loc)}
+            standardfig.yaxis.ticker.desired_num_ticks = len(loc)
+            label_dict={len(mypandas_filter)-k:v for k,v in enumerate(loc)}
             standardfig.yaxis.major_label_overrides = label_dict
-            standardfig.yaxis.ticker.desired_num_ticks = len(mypandas_filter[input_field].index)
             standardfig.yaxis.minor_tick_line_color = None
             panel = Panel(child=standardfig,title=axis_type)
             panels.append(panel)

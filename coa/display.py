@@ -97,7 +97,7 @@ class CocoDisplay():
             f = coge.GeoCountry(country,dense_geometry=True)
             info=coge.GeoCountry('FRA',dense_geometry=True)
 
-            geopan = f.get_subregion_list()[['code_subregion','geometry']]
+            geopan = f.get_subregion_list()[['code_subregion','town_subregion','geometry']]
             geopan = geopan.rename(columns={'code_subregion':'location'})
         elif self.database_name == 'jhu' or self.database_name == 'owid':
             geom=coge.GeoManager('name')

@@ -31,6 +31,7 @@ import io
 from io import BytesIO
 import base64
 from datascroller import scroll
+
 from bokeh.models import ColumnDataSource, TableColumn, DataTable,ColorBar, \
     HoverTool,BasicTicker, GeoJSONDataSource, LinearColorMapper, Label, \
     PrintfTickFormatter, BasicTickFormatter, CustomJS, CustomJSHover, Select, \
@@ -44,8 +45,9 @@ from bokeh.palettes import Paired12
 from bokeh.palettes import Dark2_5 as palette
 from bokeh.io import export_png
 from bokeh import events
-import shapely.geometry as sg
 from bokeh.tile_providers import get_provider, Vendors
+
+import shapely.geometry as sg
 
 import branca.colormap
 from branca.colormap import LinearColormap
@@ -53,8 +55,6 @@ from branca.element import Element, Figure
 
 import folium
 from folium.plugins import FloatImage
-
-from shapely.ops import unary_union
 
 from PIL import Image, ImageDraw, ImageFont
 

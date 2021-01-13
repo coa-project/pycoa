@@ -79,7 +79,8 @@ class CocoDisplay():
         self.tiles_listing=['CARTODBPOSITRON','CARTODBPOSITRON_RETINA','STAMEN_TERRAIN','STAMEN_TERRAIN_RETINA',
         'STAMEN_TONER','STAMEN_TONER_BACKGROUND','STAMEN_TONER_LABELS','OSM','WIKIMEDIA','ESRI_IMAGERY']
 
-        self.location_geometry=self.get_geodata(database=self.database_name,)
+        self.location_geometry = self.get_geodata(database=self.database_name,)
+        self.all_location_indb = self.location_geometry.location.unique()
 
     def get_geodata(self,database='jhu'):
         '''
@@ -88,7 +89,7 @@ class CocoDisplay():
          The output format is the following :
          geoid | location |  geometry (POLYGON or MULTIPOLYGON)
         '''
-        geopan=pd.DataFrame()
+        geopan = pd.DataFrame()
         if self.database_name == 'spf' or self.database_name == 'opencovid19' or self.database_name == 'jhu-usa':
             if self.database_name == 'jhu-usa':
                 country = 'USA'
@@ -636,15 +637,16 @@ class CocoDisplay():
             dico_colors = {i:next(colors) for i in my_location}
             mypandas['colors']=[dico_colors[i] for i in mypandas.location ]
 
-
             geopdwd = self.location_geometry
             geopdwd = pd.merge(geopdwd,mypandas,on='location')
             geopdwd =  geopdwd.loc[geopdwd.date >= dt.date(2020,3,15)] # before makes pb in horizohisto
             geopdwd = geopdwd.sort_values(by=input_field,ascending=False)
-            if self.database_name == 'spf' or  self.database_name == 'opencovid19':
-                outremer = ['971', '972', '973', '974', '976']
-                metropole = [i for i in my_location if i not in outremer]
-                my_location = metropole
+            def all_val_null(s):
+                    a = s.to_numpy()
+                    return ( a == 0).all()
+            loc_null=[i for i in self.all_location_indb if all_val_null(geopdwd.loc[geopdwd.location == i][input_field])==True]
+            geopdwd = geopdwd.loc[~geopdwd.location.isin(loc_null)]
+
             geopdwd=geopdwd.dropna(subset=[input_field])
             geopdwd=geopdwd.reset_index(drop=True)
 
@@ -665,9 +667,8 @@ class CocoDisplay():
             if cursor_date == None:
                   date_slider = None
 
-            geopdwd['location']=[dshort_loc[i] for i in geopdwd.location.to_list() ]
-            geopdwd_filter['location']=[dshort_loc[i] for i in geopdwd_filter.location.to_list() ]
-
+            #geopdwd['location_shorten']=[dshort_loc[i] for i in geopdwd.location.to_list() ]
+            #geopdwd_filter['location_shorten']=[dshort_loc[i] for i in geopdwd_filter.location.to_list() ]
             return func(self,input_field,date_slider,name_location_displayed,dico,geopdwd,geopdwd_filter)
         return generic_hm
 
@@ -777,6 +778,12 @@ class CocoDisplay():
         else:
             geopdwd = geopdwd.rename(columns={'cases':input_field})
             geopdwd_filter = geopdwd_filter.rename(columns={'cases':input_field})
+
+        dshort_loc=CocoDisplay.dict_shorten_loc(geopdwd.location.unique())
+
+        geopdwd['location']=[dshort_loc[i] for i in geopdwd.location.to_list()]
+        geopdwd_filter['location']=[dshort_loc[i] for i in geopdwd_filter.location.to_list()]
+
         geopdwd = geopdwd.drop(columns=['geometry'])
         my_date = geopdwd.date.unique()
         dico_utc={i:DateSlider(value=i).value for i in my_date}
@@ -785,6 +792,7 @@ class CocoDisplay():
         mypandas_filter = geopdwd_filter.drop(columns=['geometry'])
         mypandas_filter = mypandas_filter.sort_values(by=input_field,ascending=False)
         srcfiltered = ColumnDataSource(data=mypandas_filter)
+
 
         max_value = geopdwd[input_field].max()
         min_value = geopdwd[input_field].min()
@@ -853,9 +861,9 @@ class CocoDisplay():
                             ordercol.push(newcol[indices[i]]);
                             labeldic[len-indices[i]] = newloc[indices[i]];
                         }
-                        console.log('Begin');
-                        console.log(labeldic);
-                        console.log('END');
+                        //console.log('Begin');
+                        //console.log(labeldic);
+                        //console.log('END');
 
                         source_filter.data['cases'] = orderval;
                         source_filter.data['location'] = orderloc;
@@ -1007,6 +1015,7 @@ class CocoDisplay():
         draw.text((2,0), msg, font=fnt,fill=(0, 0, 0))
         im.crop((0, 0,2*w,2*h)).save("pycoatextlogo.png", "PNG")
         FloatImage("pycoatextlogo.png", bottom=-2, left=1).add_to(mapa)
+
         return mapa
 
     @decohistomap
@@ -1034,6 +1043,7 @@ class CocoDisplay():
             geopdwd_filter = geopdwd_filter.rename(columns={'cases':input_field})
         geopdwd =   geopdwd[['location','geometry',input_field]]
         geopdwd_filter =   geopdwd_filter[['location','geometry',input_field]]
+
         new_poly=[]
         geolistmodified=dict()
         for index, row in geopdwd_filter.iterrows():
@@ -1055,6 +1065,7 @@ class CocoDisplay():
                geolistmodified[row['location']]=sg.Polygon(new_poly)
             else:
                geolistmodified[row['location']]=sg.MultiPolygon(new_poly)
+
         ng = pd.DataFrame(geolistmodified.items(), columns=['location', 'geometry'])
         geolistmodified=gpd.GeoDataFrame({'location':ng['location'],'geometry':gpd.GeoSeries(ng['geometry'])},crs="epsg:3857")
         geopdwd_filter = geopdwd_filter.drop(columns='geometry')
@@ -1069,32 +1080,6 @@ class CocoDisplay():
 
         json_data = json.dumps(json.loads(geopdwd_filter.to_json()))
         geopdwd_filter = GeoJSONDataSource(geojson = json_data)
-
-        if date_slider :
-            allcases_countries, allcases_dates=pd.DataFrame(),pd.DataFrame()
-            allcountries_cases = (geopdwd.groupby('location')['cases'].apply(list))
-            geopdwd_tmp = geopdwd.drop_duplicates(subset=['geometry'])
-            geopdwd_tmp = geopdwd_tmp.drop(columns='cases')
-            geopdwd_tmp = pd.merge(geopdwd_tmp,allcountries_cases,on='location')
-            json_data = json.dumps(json.loads(geopdwd_tmp.to_json()))
-            geopdwd_tmp = GeoJSONDataSource(geojson = json_data)
-
-            callback = CustomJS(args=dict(source=geopdwd_tmp,
-                                          source_filter=geopdwd_filter,
-                                          date_slider=date_slider),
-                        code="""
-                        var index_max = (date_slider.end-date_slider.start)/(24*3600*1000);
-                        var index = (date_slider.value-date_slider.start)/(24*3600*1000);
-                        console.log(index_max);
-                        var val_date = [];
-                        for (var i = 0; i < source.get_length(); i++)
-                        {
-                            val_date.push(source.data['cases'][i][index_max-index]);
-                        }
-                        source_filter.data['cases'] = val_date;
-                        source_filter.change.emit();
-                    """)
-            date_slider.js_on_change('value', callback)
 
         tile_provider = get_provider(dico['tile'])
 
@@ -1115,6 +1100,36 @@ class CocoDisplay():
         standardfig.ygrid.grid_line_color = None
         standardfig.patches('xs','ys', source = geopdwd_filter,fill_color = {'field':input_field, 'transform' : color_mapper},
                   line_color = 'black', line_width = 0.25, fill_alpha = 1)
+
+        if date_slider :
+            print("0 LEVEL")
+            allcases_countries, allcases_dates=pd.DataFrame(),pd.DataFrame()
+            allcountries_cases = (geopdwd.groupby('location')['cases'].apply(list))
+
+            geopdwd_tmp = geopdwd.drop_duplicates(subset=['geometry'])
+            geopdwd_tmp = geopdwd_tmp.drop(columns='cases')
+            geopdwd_tmp = pd.merge(geopdwd_tmp,allcountries_cases,on='location')
+            json_data = json.dumps(json.loads(geopdwd_tmp.to_json()))
+            geopdwd_tmp = GeoJSONDataSource(geojson = json_data)
+
+
+            callback = CustomJS(args=dict(source=geopdwd_tmp,
+                                          #source_filter=geopdwd_filter,
+                                          date_slider=date_slider),
+                        code="""
+                        var index_max = (date_slider.end-date_slider.start)/(24*3600*1000);
+                        var index = (date_slider.value-date_slider.start)/(24*3600*1000);
+                        console.log(index_max);
+                        var val_date = [];
+                        for (var i = 0; i < source.get_length(); i++)
+                        {
+                            val_date.push(source.data['cases'][i][index_max-index]);
+                        }
+                        source_filter.data['cases'] = val_date;
+                        source_filter.change.emit();
+                    """)
+            date_slider.js_on_change('value', callback)
+
         cases_custom = CustomJSHover(code="""
         var value;
         if(value>0)

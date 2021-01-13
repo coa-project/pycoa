@@ -29,7 +29,19 @@ from urllib.parse import urlparse
 
 from coa.error import CoaKeyError,CoaTypeError,CoaConnectionError,CoaNotManagedError
 
+# testing if coadata is available
+import importlib
+_coacache_folder=''
+_coacache_module_info = importlib.util.find_spec("coacache")
+if _coacache_module_info != None:
+    _coacache_folder = _coacache_module_info.submodule_search_locations[0]
+
+# Verbosity of pycoa
 _verbose_mode = 1 # default
+
+# ----------------------------------------------------
+# --- Usefull functions for pycoa --------------------
+# ----------------------------------------------------
 
 def get_verbose_mode():
     """Return the verbose mode
@@ -152,16 +164,25 @@ def get_local_from_url(url,expiration_time=0,suffix=''):
     if not os.path.exists(tmpdir):
         os.makedirs(tmpdir)
 
-    local_filename=os.path.join(tmpdir,urlparse(url).netloc+"_"+str(crc32(bytes(url,'utf-8')))+suffix)
+    local_base_filename=urlparse(url).netloc+"_"+str(crc32(bytes(url,'utf-8')))+suffix
+    local_tmp_filename=os.path.join(tmpdir,local_base_filename)
 
-    local_file_exists=os.path.exists(local_filename)
+    if _coacache_folder != '':
+        local_cached_filename=os.path.join(_coacache_folder,local_base_filename)
+        local_file_exists=os.path.exists(local_cached_filename)
+        local_filename=local_cached_filename
+    else:
+        local_file_exists=os.path.exists(local_tmp_filename)
+        local_filename=local_tmp_filename
 
     if expiration_time >=0 and local_file_exists:
         if expiration_time==0 or time.time()-os.path.getmtime(local_filename)<expiration_time:
             verb('Using locally stored data for '+url+' stored as '+local_filename)
             return local_filename
 
-    # if not : download the file
+
+    # if not : download the file in tmp area
+    local_filename=local_tmp_filename
     try:
         headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36'}
         urlfile = requests.get(url, allow_redirects=True,headers=headers) # adding headers for server which does not accept no browser presentation

@@ -637,8 +637,11 @@ class CocoDisplay():
             dico_colors = {i:next(colors) for i in my_location}
             mypandas['colors']=[dico_colors[i] for i in mypandas.location ]
 
-            geopdwd = self.location_geometry
-            geopdwd = pd.merge(geopdwd,mypandas,on='location')
+            if func.__name__ == 'map_folium' or func.__name__ == 'bokeh_map':
+                geopdwd = self.location_geometry
+                geopdwd = pd.merge(geopdwd,mypandas,on='location')
+            else:
+                geopdwd = mypandas
             geopdwd =  geopdwd.loc[geopdwd.date >= dt.date(2020,3,15)] # before makes pb in horizohisto
             geopdwd = geopdwd.sort_values(by=input_field,ascending=False)
             def all_val_null(s):
@@ -664,11 +667,12 @@ class CocoDisplay():
                 geopdwd_filter = geopdwd_filter.iloc[0:30].reset_index(drop=True)
                 geopdwd = geopdwd.loc[geopdwd.location.isin(geopdwd_filter.location.unique())]
 
-            geopdwd_filter['bottom']=geopdwd_filter.index
-            geopdwd_filter['left']=[0]*len(geopdwd_filter.index)
-            bthick=0.95
-            geopdwd_filter['top']=[len(geopdwd_filter.index)+bthick/2-i for i in geopdwd_filter.index.to_list()]
-            geopdwd_filter['bottom']=[len(geopdwd_filter.index)-bthick/2-i for i in geopdwd_filter.index.to_list()]
+            if func.__name__ == 'pycoa_horizonhisto':
+                geopdwd_filter['bottom']=geopdwd_filter.index
+                geopdwd_filter['left']=[0]*len(geopdwd_filter.index)
+                bthick=0.95
+                geopdwd_filter['top']=[len(geopdwd_filter.index)+bthick/2-i for i in geopdwd_filter.index.to_list()]
+                geopdwd_filter['bottom']=[len(geopdwd_filter.index)-bthick/2-i for i in geopdwd_filter.index.to_list()]
             if cursor_date == None:
                   date_slider = None
 
@@ -788,12 +792,12 @@ class CocoDisplay():
         geopdwd['location']=[dshort_loc[i] for i in geopdwd.location.to_list()]
         geopdwd_filter['location']=[dshort_loc[i] for i in geopdwd_filter.location.to_list()]
 
-        geopdwd = geopdwd.drop(columns=['geometry'])
         my_date = geopdwd.date.unique()
         dico_utc={i:DateSlider(value=i).value for i in my_date}
         geopdwd['date_utc']=[dico_utc[i] for i in geopdwd.date]
         source = ColumnDataSource(data=geopdwd)
-        mypandas_filter = geopdwd_filter.drop(columns=['geometry'])
+
+        mypandas_filter = geopdwd_filter
         mypandas_filter = mypandas_filter.sort_values(by=input_field,ascending=False)
 
         srcfiltered = ColumnDataSource(data=mypandas_filter)
@@ -1097,7 +1101,7 @@ class CocoDisplay():
         standardfig.add_layout(color_bar, 'below')
         json_data = json.dumps(json.loads(geopdwd_filter.to_json()))
         geopdwd_filter = GeoJSONDataSource(geojson = json_data)
-
+        print(geopdwd)
         if date_slider :
             allcases_countries, allcases_dates=pd.DataFrame(),pd.DataFrame()
             allcountries_cases = (geopdwd.groupby('location')['cases'].apply(list))

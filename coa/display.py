@@ -79,8 +79,7 @@ class CocoDisplay():
         self.tiles_listing=['CARTODBPOSITRON','CARTODBPOSITRON_RETINA','STAMEN_TERRAIN','STAMEN_TERRAIN_RETINA',
         'STAMEN_TONER','STAMEN_TONER_BACKGROUND','STAMEN_TONER_LABELS','OSM','WIKIMEDIA','ESRI_IMAGERY']
 
-        self.location_geometry = self.get_geodata(database=self.database_name,)
-        self.all_location_indb = self.location_geometry.location.unique()
+
 
     def get_geodata(self,database='jhu'):
         '''
@@ -625,11 +624,7 @@ class CocoDisplay():
                 name_location_displayed = 'town_subregion'
             else:
                 name_location_displayed = 'location'
-                #loc = mypandas['location'].unique()
-                #shorten_loc =  {i if len(i)<10 else i.replace('-',' ').split()[0]+'...'+i.replace('-',' ').split()[-1]:i for i in loc}
-                #g=gm('iso3')
-                #shorten_loc =  {i:i if len(i)<10 else  g.to_standard(i)[0] for i in loc}
-                #mypandas['location'] = mypandas['location'].apply(lambda x: shorten_loc[x])
+
             my_date = mypandas.date.unique()
             my_location = mypandas.location.unique()
             dshort_loc=CocoDisplay.dict_shorten_loc(my_location)
@@ -638,6 +633,8 @@ class CocoDisplay():
             mypandas['colors']=[dico_colors[i] for i in mypandas.location ]
 
             if func.__name__ == 'map_folium' or func.__name__ == 'bokeh_map':
+                self.location_geometry = self.get_geodata(database=self.database_name,)
+                self.all_location_indb = self.location_geometry.location.unique()
                 geopdwd = self.location_geometry
                 geopdwd = pd.merge(geopdwd,mypandas,on='location')
             else:
@@ -647,8 +644,8 @@ class CocoDisplay():
             def all_val_null(s):
                     a = s.to_numpy()
                     return ( a == 0).all()
-            loc_null=[i for i in self.all_location_indb if all_val_null(geopdwd.loc[geopdwd.location == i][input_field])==True]
-            geopdwd = geopdwd.loc[~geopdwd.location.isin(loc_null)]
+            #loc_null=[i for i in self.all_location_indb if all_val_null(geopdwd.loc[geopdwd.location == i][input_field])==True]
+            #geopdwd = geopdwd.loc[~geopdwd.location.isin(loc_null)]
 
             geopdwd=geopdwd.dropna(subset=[input_field])
             geopdwd=geopdwd.reset_index(drop=True)
@@ -1088,7 +1085,6 @@ class CocoDisplay():
             (maxx, maxy) = CocoDisplay.wgs84_to_web_mercator((maxx,maxy))
 
         tile_provider = get_provider(dico['tile'])
-
         standardfig = self.standardfig(x_range=(minx,maxx), y_range=(miny,maxy),
         x_axis_type="mercator", y_axis_type="mercator",title=input_field,copyrightposition='left')
         standardfig.add_tile(tile_provider)
@@ -1101,7 +1097,7 @@ class CocoDisplay():
         standardfig.add_layout(color_bar, 'below')
         json_data = json.dumps(json.loads(geopdwd_filter.to_json()))
         geopdwd_filter = GeoJSONDataSource(geojson = json_data)
-        print(geopdwd)
+
         if date_slider :
             allcases_countries, allcases_dates=pd.DataFrame(),pd.DataFrame()
             allcountries_cases = (geopdwd.groupby('location')['cases'].apply(list))
@@ -1111,7 +1107,6 @@ class CocoDisplay():
             geopdwd_tmp = pd.merge(geopdwd_tmp,allcountries_cases,on='location')
             json_data = json.dumps(json.loads(geopdwd_tmp.to_json()))
             geopdwd_tmp = GeoJSONDataSource(geojson = json_data)
-
 
             callback = CustomJS(args=dict(source=geopdwd_tmp,
                                           source_filter=geopdwd_filter,

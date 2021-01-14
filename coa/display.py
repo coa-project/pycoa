@@ -659,6 +659,11 @@ class CocoDisplay():
             geopdwd_filter = geopdwd_filter.loc[geopdwd_filter.date == wanted_date]
             geopdwd_filter = geopdwd_filter.drop(columns=['date'])
             geopdwd_filter = geopdwd_filter.reset_index(drop=True)
+
+            if len(geopdwd_filter.location.unique())>30:
+                geopdwd_filter = geopdwd_filter.iloc[0:30].reset_index(drop=True)
+                geopdwd = geopdwd.loc[geopdwd.location.isin(geopdwd_filter.location.unique())]
+
             geopdwd_filter['bottom']=geopdwd_filter.index
             geopdwd_filter['left']=[0]*len(geopdwd_filter.index)
             bthick=0.95
@@ -780,7 +785,6 @@ class CocoDisplay():
             geopdwd_filter = geopdwd_filter.rename(columns={'cases':input_field})
 
         dshort_loc=CocoDisplay.dict_shorten_loc(geopdwd.location.unique())
-
         geopdwd['location']=[dshort_loc[i] for i in geopdwd.location.to_list()]
         geopdwd_filter['location']=[dshort_loc[i] for i in geopdwd_filter.location.to_list()]
 
@@ -791,9 +795,8 @@ class CocoDisplay():
         source = ColumnDataSource(data=geopdwd)
         mypandas_filter = geopdwd_filter.drop(columns=['geometry'])
         mypandas_filter = mypandas_filter.sort_values(by=input_field,ascending=False)
+
         srcfiltered = ColumnDataSource(data=mypandas_filter)
-
-
         max_value = geopdwd[input_field].max()
         min_value = geopdwd[input_field].min()
         min_value_gt0 = geopdwd[geopdwd[input_field]>0][input_field].min()
@@ -826,7 +829,7 @@ class CocoDisplay():
                 date_slider.orientation='vertical'
                 date_slider.height=int(0.8*self.plot_height)
                 callback = CustomJS(args=dict(source=source,
-                                                  source_filter=srcfiltered,
+                                              source_filter=srcfiltered,
                                                   date_slider=date_slider,
                                                   ylabel=standardfig.yaxis[0]),
                         code="""
@@ -838,8 +841,8 @@ class CocoDisplay():
                         var newval = [];
                         var newloc = [];
                         var newcol = [];
-
                         var labeldic = {};
+
                         for (var i = 0; i <= dates.length; i++){
                         if (dates[i] == date_slide){
                             newval.push(parseFloat(val[i]));
@@ -861,9 +864,9 @@ class CocoDisplay():
                             ordercol.push(newcol[indices[i]]);
                             labeldic[len-indices[i]] = newloc[indices[i]];
                         }
-                        //console.log('Begin');
-                        //console.log(labeldic);
-                        //console.log('END');
+                        console.log('Begin');
+                        console.log(labeldic);
+                        console.log('END');
 
                         source_filter.data['cases'] = orderval;
                         source_filter.data['location'] = orderloc;
@@ -876,6 +879,7 @@ class CocoDisplay():
             self.logo_db_citation.x_offset -= len(max(loc, key=len))
             standardfig.add_tools(hover_tool)
             standardfig.yaxis.ticker.desired_num_ticks = len(loc)
+
             label_dict={len(mypandas_filter)-k:v for k,v in enumerate(loc)}
             standardfig.yaxis.major_label_overrides = label_dict
             standardfig.yaxis.minor_tick_line_color = None
@@ -1070,6 +1074,7 @@ class CocoDisplay():
         geolistmodified=gpd.GeoDataFrame({'location':ng['location'],'geometry':gpd.GeoSeries(ng['geometry'])},crs="epsg:3857")
         geopdwd_filter = geopdwd_filter.drop(columns='geometry')
         geopdwd_filter = pd.merge(geopdwd_filter,geolistmodified,on='location')
+
         if self.database_name == 'spf' or  self.database_name == 'opencovid19' or self.database_name == 'jhu-usa':
             geopdwd_filter = geopdwd_filter.rename(columns={'location':name_location_displayed})
             minx, miny, maxx, maxy = geopdwd_filter['geometry'].total_bounds
@@ -1078,31 +1083,22 @@ class CocoDisplay():
             (minx, miny) = CocoDisplay.wgs84_to_web_mercator((minx,miny))
             (maxx, maxy) = CocoDisplay.wgs84_to_web_mercator((maxx,maxy))
 
-        json_data = json.dumps(json.loads(geopdwd_filter.to_json()))
-        geopdwd_filter = GeoJSONDataSource(geojson = json_data)
-
         tile_provider = get_provider(dico['tile'])
 
         standardfig = self.standardfig(x_range=(minx,maxx), y_range=(miny,maxy),
         x_axis_type="mercator", y_axis_type="mercator",title=input_field,copyrightposition='left')
-
         standardfig.add_tile(tile_provider)
-        min_col,max_col=CocoDisplay.min_max_range(np.nanmin(geopdwd[input_field]),np.nanmax(geopdwd[input_field]))
-
+        min_col,max_col=CocoDisplay.min_max_range(np.nanmin(geopdwd_filter[input_field]),np.nanmax(geopdwd_filter[input_field]))
         color_mapper = LinearColorMapper(palette=Viridis256, low = min_col, high = max_col, nan_color = '#d9d9d9')
         color_bar = ColorBar(color_mapper=color_mapper, label_standoff=4,
                             border_line_color=None,location = (0,0), orientation = 'horizontal', ticker=BasicTicker())
         color_bar.formatter = BasicTickFormatter(use_scientific=True,precision=1,power_limit_low=int(max_col))
+
         standardfig.add_layout(color_bar, 'below')
-        standardfig.xaxis.visible = False
-        standardfig.yaxis.visible = False
-        standardfig.xgrid.grid_line_color = None
-        standardfig.ygrid.grid_line_color = None
-        standardfig.patches('xs','ys', source = geopdwd_filter,fill_color = {'field':input_field, 'transform' : color_mapper},
-                  line_color = 'black', line_width = 0.25, fill_alpha = 1)
+        json_data = json.dumps(json.loads(geopdwd_filter.to_json()))
+        geopdwd_filter = GeoJSONDataSource(geojson = json_data)
 
         if date_slider :
-            print("0 LEVEL")
             allcases_countries, allcases_dates=pd.DataFrame(),pd.DataFrame()
             allcountries_cases = (geopdwd.groupby('location')['cases'].apply(list))
 
@@ -1114,7 +1110,7 @@ class CocoDisplay():
 
 
             callback = CustomJS(args=dict(source=geopdwd_tmp,
-                                          #source_filter=geopdwd_filter,
+                                          source_filter=geopdwd_filter,
                                           date_slider=date_slider),
                         code="""
                         var index_max = (date_slider.end-date_slider.start)/(24*3600*1000);
@@ -1130,6 +1126,12 @@ class CocoDisplay():
                     """)
             date_slider.js_on_change('value', callback)
 
+        standardfig.xaxis.visible = False
+        standardfig.yaxis.visible = False
+        standardfig.xgrid.grid_line_color = None
+        standardfig.ygrid.grid_line_color = None
+        standardfig.patches('xs','ys', source = geopdwd_filter,fill_color = {'field':input_field, 'transform' : color_mapper},
+                  line_color = 'black', line_width = 0.25, fill_alpha = 1)
         cases_custom = CustomJSHover(code="""
         var value;
         if(value>0)

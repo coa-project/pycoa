@@ -641,13 +641,15 @@ class CocoDisplay():
             if func.__name__ == 'map_folium' or func.__name__ == 'bokeh_map':
                 self.location_geometry = self.get_geodata(database=self.database_name,)
                 self.all_location_indb = self.location_geometry.location.unique()
+                geopdwd = self.location_geometry
+                geopdwd = pd.merge(geopdwd,mypandas,on='location')
 
                 if self.database_name == 'spf' or self.database_name == 'opencovid19':
                     domtom=["971","972","973","974","975","976","977","978","984","986","987","988","989"]
                     self.boundary = geopdwd.loc[~geopdwd.location.isin(domtom)]['geometry'].total_bounds
+                else:
+                    self.boundary = geopdwd.loc[geopdwd.location.isin(geopdwd.location.unique())].total_bounds    
 
-                geopdwd = self.location_geometry
-                geopdwd = pd.merge(geopdwd,mypandas,on='location')
             else:
                 geopdwd = mypandas
 

@@ -635,19 +635,22 @@ class CocoDisplay():
 
             if self.database_name == 'jhu' or self.database_name == 'owid':
                 if len(mypandas.location.unique())>30:
-                    mypandas = mypandas.iloc[0:30].reset_index(drop=True)
-                    mypandas = mypandas.loc[mypandas.location.isin(mypandas.location.unique())]
+                    new_loc = mypandas.location.unique()[:30]
+                    mypandas = mypandas.loc[mypandas.location.isin(new_loc)]
 
             if func.__name__ == 'map_folium' or func.__name__ == 'bokeh_map':
                 self.location_geometry = self.get_geodata(database=self.database_name,)
                 self.all_location_indb = self.location_geometry.location.unique()
-                geopdwd = self.location_geometry
-                geopdwd = pd.merge(geopdwd,mypandas,on='location')
+
                 if self.database_name == 'spf' or self.database_name == 'opencovid19':
                     domtom=["971","972","973","974","975","976","977","978","984","986","987","988","989"]
                     self.boundary = geopdwd.loc[~geopdwd.location.isin(domtom)]['geometry'].total_bounds
+
+                geopdwd = self.location_geometry
+                geopdwd = pd.merge(geopdwd,mypandas,on='location')
             else:
                 geopdwd = mypandas
+
             geopdwd =  geopdwd.loc[geopdwd.date >= dt.date(2020,3,15)] # before makes pb in horizohisto
             geopdwd = geopdwd.sort_values(by=input_field,ascending=False)
 
@@ -1050,7 +1053,6 @@ class CocoDisplay():
             geopdwd_filter = geopdwd_filter.rename(columns={'cases':input_field})
         geopdwd =   geopdwd[['location','geometry',input_field]]
         geopdwd_filter =   geopdwd_filter[['location','geometry',input_field]]
-
         new_poly=[]
         geolistmodified=dict()
         for index, row in geopdwd_filter.iterrows():

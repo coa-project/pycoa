@@ -648,7 +648,7 @@ class CocoDisplay():
                     domtom=["971","972","973","974","975","976","977","978","984","986","987","988","989"]
                     self.boundary = geopdwd.loc[~geopdwd.location.isin(domtom)]['geometry'].total_bounds
                 else:
-                    self.boundary = geopdwd.loc[geopdwd.location.isin(geopdwd.location.unique())].total_bounds    
+                    self.boundary = geopdwd.loc[geopdwd.location.isin(geopdwd.location.unique())].total_bounds
 
             else:
                 geopdwd = mypandas
@@ -1147,7 +1147,7 @@ class CocoDisplay():
         """)
 
         standardfig.add_tools(HoverTool(
-        tooltips=[('Name subregion','@'+name_location_displayed),(input_field,'@{'+input_field+'}'+'{custom}'),],
+        tooltips=[('Location','@'+name_location_displayed),(input_field,'@{'+input_field+'}'+'{custom}'),],
         formatters={name_location_displayed:'printf','@{'+input_field+'}':cases_custom,},
         point_policy="follow_mouse"))#,PanTool())
         if date_slider:

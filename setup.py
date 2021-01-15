@@ -28,12 +28,11 @@ setup(
     # Needed for dependencies
     install_requires=[ \
         'bokeh',\
-        'branca',\
+i       'branca',\
         'bs4',\
         'datascroller',\
         'datetime',\
         'folium',\
-        'functools',\
         'geopandas',\
         'matplotlib',\
         'numpy',\

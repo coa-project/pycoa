@@ -14,7 +14,7 @@ This small tool is for internal use in order to properly maintain the updated li
 
 import os
 
-stdlist=['base64','collections','getpass','inspect','io','itertools',\
+stdlist=['base64','collections','functools','getpass','inspect','io','itertools','importlib',\
         'json','math','os','PIL','random','sys','tempfile','time','urllib',\
         'warnings','zlib',\
         'coa']

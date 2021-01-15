@@ -28,7 +28,7 @@ setup(
     # Needed for dependencies
     install_requires=[ \
         'bokeh',\
-i       'branca',\
+        'branca',\
         'bs4',\
         'datascroller',\
         'datetime',\

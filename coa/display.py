@@ -110,7 +110,6 @@ class CocoDisplay():
         geopan = geopan.dropna().reset_index(drop=True)
         data = gpd.GeoDataFrame(geopan,crs="EPSG:4326")
         self.boundary = data['geometry'].total_bounds
-
         return data
 
     def standard_input(self,mypandas,input_field=None,**kwargs):
@@ -615,7 +614,6 @@ class CocoDisplay():
     def decohistomap(func):
         def generic_hm(self,mypandas,input_field = None,cursor_date = None, **kwargs):
             mypandas,dico = self.standard_input(mypandas,input_field,**kwargs,plot_last_date=True)
-
             if type(input_field) is None.__class__ and dico['which'] is None.__class__ :
                input_field = mypandas.columns[2]
             else:
@@ -636,9 +634,9 @@ class CocoDisplay():
             mypandas['colors']=[dico_colors[i] for i in mypandas.location ]
 
             if self.database_name == 'jhu' or self.database_name == 'owid':
-                if len(geopdwd_filter.location.unique())>30:
-                    geopdwd_filter = geopdwd_filter.iloc[0:30].reset_index(drop=True)
-                    geopdwd = geopdwd.loc[geopdwd.location.isin(geopdwd_filter.location.unique())]
+                if len(mypandas.location.unique())>30:
+                    mypandas = mypandas.iloc[0:30].reset_index(drop=True)
+                    mypandas = mypandas.loc[mypandas.location.isin(mypandas.location.unique())]
 
             if func.__name__ == 'map_folium' or func.__name__ == 'bokeh_map':
                 self.location_geometry = self.get_geodata(database=self.database_name,)
@@ -1145,7 +1143,7 @@ class CocoDisplay():
         """)
 
         standardfig.add_tools(HoverTool(
-        tooltips=[(name_location_displayed,'@'+name_location_displayed),(input_field,'@{'+input_field+'}'+'{custom}'),],
+        tooltips=[('Name subregion','@'+name_location_displayed),(input_field,'@{'+input_field+'}'+'{custom}'),],
         formatters={name_location_displayed:'printf','@{'+input_field+'}':cases_custom,},
         point_policy="follow_mouse"))#,PanTool())
         if date_slider:

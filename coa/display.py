@@ -1079,6 +1079,7 @@ class CocoDisplay():
         geolistmodified=gpd.GeoDataFrame({'location':ng['location'],'geometry':gpd.GeoSeries(ng['geometry'])},crs="epsg:3857")
         geopdwd_filter = geopdwd_filter.drop(columns='geometry')
         geopdwd_filter = pd.merge(geopdwd_filter,geolistmodified,on='location')
+        geopdwd_filter = geopdwd_filter.rename(columns={'location':name_location_displayed})
 
         #if self.database_name == 'spf' or  self.database_name == 'opencovid19' or self.database_name == 'jhu-usa':
         #    geopdwd_filter = geopdwd_filter.rename(columns={'location':name_location_displayed})

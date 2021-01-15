@@ -633,11 +633,6 @@ class CocoDisplay():
             dico_colors = {i:next(colors) for i in my_location}
             mypandas['colors']=[dico_colors[i] for i in mypandas.location ]
 
-            if self.database_name == 'jhu' or self.database_name == 'owid':
-                if len(mypandas.location.unique())>30:
-                    new_loc = mypandas.location.unique()[:30]
-                    mypandas = mypandas.loc[mypandas.location.isin(new_loc)]
-
             if func.__name__ == 'map_folium' or func.__name__ == 'bokeh_map':
                 self.location_geometry = self.get_geodata(database=self.database_name,)
                 self.all_location_indb = self.location_geometry.location.unique()
@@ -656,6 +651,10 @@ class CocoDisplay():
             geopdwd =  geopdwd.loc[geopdwd.date >= dt.date(2020,3,15)] # before makes pb in horizohisto
             geopdwd = geopdwd.sort_values(by=input_field,ascending=False)
 
+            if self.database_name == 'jhu' or self.database_name == 'owid':
+                if len(mypandas.location.unique())>30:
+                    new_loc = geopdwd.location.unique()[:30]
+                    geopdwd = geopdwd.loc[geopdwd.location.isin(new_loc)]
 
             geopdwd=geopdwd.dropna(subset=[input_field])
             geopdwd=geopdwd.reset_index(drop=True)
@@ -890,6 +889,7 @@ class CocoDisplay():
 
             label_dict={len(mypandas_filter)-k:v for k,v in enumerate(loc)}
             standardfig.yaxis.major_label_overrides = label_dict
+            
             standardfig.yaxis.minor_tick_line_color = None
             panel = Panel(child=standardfig,title=axis_type)
             panels.append(panel)
@@ -963,7 +963,7 @@ class CocoDisplay():
         fig = Figure(width=self.plot_width, height=self.plot_height)
         fig.add_child(mapa)
         min_col,max_col=CocoDisplay.min_max_range(np.nanmin(geopdwd[input_field]),np.nanmax(geopdwd[input_field]))
-        color_mapper = LinearColorMapper(palette=Viridis256, low = min_col, high = max_col,nan_color = '#d9d9d9')
+        color_mapper = LinearColorMapper(palette=Turbo256, low = min_col, high = max_col,nan_color = '#d9d9d9')
         colormap = branca.colormap.LinearColormap(color_mapper.palette).scale(min_col,max_col)
         colormap.caption = 'Cases : ' + dico['titlebar']
         colormap.add_to(mapa)
@@ -1097,7 +1097,7 @@ class CocoDisplay():
         x_axis_type="mercator", y_axis_type="mercator",title=input_field,copyrightposition='left')
         standardfig.add_tile(tile_provider)
         min_col,max_col=CocoDisplay.min_max_range(np.nanmin(geopdwd_filter[input_field]),np.nanmax(geopdwd_filter[input_field]))
-        color_mapper = LinearColorMapper(palette=Viridis256, low = min_col, high = max_col, nan_color = '#d9d9d9')
+        color_mapper = LinearColorMapper(palette=Turbo256, low = min_col, high = max_col, nan_color = '#d9d9d9')
         color_bar = ColorBar(color_mapper=color_mapper, label_standoff=4,
                             border_line_color=None,location = (0,0), orientation = 'horizontal', ticker=BasicTicker())
         color_bar.formatter = BasicTickFormatter(use_scientific=True,precision=1,power_limit_low=int(max_col))

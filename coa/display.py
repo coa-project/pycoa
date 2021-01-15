@@ -80,7 +80,6 @@ class CocoDisplay():
         'STAMEN_TONER','STAMEN_TONER_BACKGROUND','STAMEN_TONER_LABELS','OSM','WIKIMEDIA','ESRI_IMAGERY']
 
 
-
     def get_geodata(self,database='jhu'):
         '''
          return a GeoDataFrame used in map display (see map_bokeh and map_folium)
@@ -94,10 +93,9 @@ class CocoDisplay():
                 country = 'USA'
             else:
                 country = 'FRA'
-            f = coge.GeoCountry(country,dense_geometry=True)
-            info=coge.GeoCountry('FRA',dense_geometry=True)
+            info = coge.GeoCountry(country,dense_geometry=False)
 
-            geopan = f.get_subregion_list()[['code_subregion','town_subregion','geometry']]
+            geopan = info.get_subregion_list()[['code_subregion','town_subregion','geometry']]
             geopan = geopan.rename(columns={'code_subregion':'location'})
         elif self.database_name == 'jhu' or self.database_name == 'owid':
             geom=coge.GeoManager('name')
@@ -609,6 +607,11 @@ class CocoDisplay():
     def get_utcdate(date):
         return (date-dt.date(1970, 1, 1)).total_seconds()*1000.
 
+    @staticmethod
+    def test_all_val_null(s):
+            a = s.to_numpy()
+            return ( a == 0).all()
+
     def decohistomap(func):
         def generic_hm(self,mypandas,input_field = None,cursor_date = None, **kwargs):
             mypandas,dico = self.standard_input(mypandas,input_field,**kwargs,plot_last_date=True)
@@ -632,20 +635,24 @@ class CocoDisplay():
             dico_colors = {i:next(colors) for i in my_location}
             mypandas['colors']=[dico_colors[i] for i in mypandas.location ]
 
+            if self.database_name == 'jhu' or self.database_name == 'owid':
+                if len(geopdwd_filter.location.unique())>30:
+                    geopdwd_filter = geopdwd_filter.iloc[0:30].reset_index(drop=True)
+                    geopdwd = geopdwd.loc[geopdwd.location.isin(geopdwd_filter.location.unique())]
+
             if func.__name__ == 'map_folium' or func.__name__ == 'bokeh_map':
                 self.location_geometry = self.get_geodata(database=self.database_name,)
                 self.all_location_indb = self.location_geometry.location.unique()
                 geopdwd = self.location_geometry
                 geopdwd = pd.merge(geopdwd,mypandas,on='location')
+                if self.database_name == 'spf' or self.database_name == 'opencovid19':
+                    domtom=["971","972","973","974","975","976","977","978","984","986","987","988","989"]
+                    self.boundary = geopdwd.loc[~geopdwd.location.isin(domtom)]['geometry'].total_bounds
             else:
                 geopdwd = mypandas
             geopdwd =  geopdwd.loc[geopdwd.date >= dt.date(2020,3,15)] # before makes pb in horizohisto
             geopdwd = geopdwd.sort_values(by=input_field,ascending=False)
-            def all_val_null(s):
-                    a = s.to_numpy()
-                    return ( a == 0).all()
-            #loc_null=[i for i in self.all_location_indb if all_val_null(geopdwd.loc[geopdwd.location == i][input_field])==True]
-            #geopdwd = geopdwd.loc[~geopdwd.location.isin(loc_null)]
+
 
             geopdwd=geopdwd.dropna(subset=[input_field])
             geopdwd=geopdwd.reset_index(drop=True)
@@ -660,9 +667,6 @@ class CocoDisplay():
             geopdwd_filter = geopdwd_filter.drop(columns=['date'])
             geopdwd_filter = geopdwd_filter.reset_index(drop=True)
 
-            if len(geopdwd_filter.location.unique())>30:
-                geopdwd_filter = geopdwd_filter.iloc[0:30].reset_index(drop=True)
-                geopdwd = geopdwd.loc[geopdwd.location.isin(geopdwd_filter.location.unique())]
 
             if func.__name__ == 'pycoa_horizonhisto':
                 geopdwd_filter['bottom']=geopdwd_filter.index
@@ -671,7 +675,7 @@ class CocoDisplay():
                 geopdwd_filter['top']=[len(geopdwd_filter.index)+bthick/2-i for i in geopdwd_filter.index.to_list()]
                 geopdwd_filter['bottom']=[len(geopdwd_filter.index)-bthick/2-i for i in geopdwd_filter.index.to_list()]
             if cursor_date == None:
-                  date_slider = None
+                date_slider = None
 
             #geopdwd['location_shorten']=[dshort_loc[i] for i in geopdwd.location.to_list() ]
             #geopdwd_filter['location_shorten']=[dshort_loc[i] for i in geopdwd_filter.location.to_list() ]
@@ -1076,13 +1080,14 @@ class CocoDisplay():
         geopdwd_filter = geopdwd_filter.drop(columns='geometry')
         geopdwd_filter = pd.merge(geopdwd_filter,geolistmodified,on='location')
 
-        if self.database_name == 'spf' or  self.database_name == 'opencovid19' or self.database_name == 'jhu-usa':
-            geopdwd_filter = geopdwd_filter.rename(columns={'location':name_location_displayed})
-            minx, miny, maxx, maxy = geopdwd_filter['geometry'].total_bounds
-        else:
-            minx, miny, maxx, maxy = self.boundary
-            (minx, miny) = CocoDisplay.wgs84_to_web_mercator((minx,miny))
-            (maxx, maxy) = CocoDisplay.wgs84_to_web_mercator((maxx,maxy))
+        #if self.database_name == 'spf' or  self.database_name == 'opencovid19' or self.database_name == 'jhu-usa':
+        #    geopdwd_filter = geopdwd_filter.rename(columns={'location':name_location_displayed})
+
+        #    minx, miny, maxx, maxy = geopdwd_filter['geometry'].total_bounds
+        #else:
+        minx, miny, maxx, maxy = self.boundary
+        (minx, miny) = CocoDisplay.wgs84_to_web_mercator((minx,miny))
+        (maxx, maxy) = CocoDisplay.wgs84_to_web_mercator((maxx,maxy))
 
         tile_provider = get_provider(dico['tile'])
         standardfig = self.standardfig(x_range=(minx,maxx), y_range=(miny,maxy),

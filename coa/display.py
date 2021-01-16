@@ -796,8 +796,8 @@ class CocoDisplay():
             geopdwd_filter = geopdwd_filter.rename(columns={'cases':input_field})
 
         dshort_loc=CocoDisplay.dict_shorten_loc(geopdwd.location.unique())
-        geopdwd['location']=[dshort_loc[i] for i in geopdwd.location.to_list()]
-        geopdwd_filter['location']=[dshort_loc[i] for i in geopdwd_filter.location.to_list()]
+        geopdwd['shortenlocation']=[dshort_loc[i] for i in geopdwd.location.to_list()]
+        geopdwd_filter['shortenlocation']=[dshort_loc[i] for i in geopdwd_filter.location.to_list()]
 
         my_date = geopdwd.date.unique()
         dico_utc={i:DateSlider(value=i).value for i in my_date}
@@ -886,7 +886,7 @@ class CocoDisplay():
                         source_filter.change.emit();
                     """)
                 date_slider.js_on_change('value', callback)
-            loc=mypandas_filter['location'].to_list()
+            loc=mypandas_filter['shortenlocation'].to_list()
             self.logo_db_citation.x_offset -= len(max(loc, key=len))
             standardfig.add_tools(hover_tool)
 

@@ -790,7 +790,6 @@ class CocoDisplay():
         ''' Horizontal histogram  '''
         if date_slider:
             title = input_field
-            input_field = 'cases'
         else:
             geopdwd = geopdwd.rename(columns={'cases':input_field})
             geopdwd_filter = geopdwd_filter.rename(columns={'cases':input_field})
@@ -812,8 +811,6 @@ class CocoDisplay():
         min_value = geopdwd[input_field].min()
         min_value_gt0 = geopdwd[geopdwd[input_field]>0][input_field].min()
 
-        tooltips = [('Location','@location'),('Cases','@'+input_field)]
-        hover_tool = HoverTool(tooltips=tooltips)
         panels = []
         for axis_type in ["linear", "log"]:
             label = dico['titlebar']
@@ -888,9 +885,20 @@ class CocoDisplay():
                 date_slider.js_on_change('value', callback)
             loc=mypandas_filter['shortenlocation'].to_list()
             self.logo_db_citation.x_offset -= len(max(loc, key=len))
-            standardfig.add_tools(hover_tool)
 
 
+            cases_custom = CustomJSHover(code="""
+                    var value;
+                    if(value>0)
+                        return value.toExponential(2).toString();
+
+                    """)
+
+            standardfig.add_tools(HoverTool(
+            tooltips=[('Location','@location'),(input_field,'@{'+input_field+'}'+'{custom}'),],
+            formatters={'location':'printf','@{'+input_field+'}':cases_custom,},
+            point_policy="follow_mouse"))#,PanTool())
+            
             label_dict={len(mypandas_filter)-k:v for k,v in enumerate(loc)}
             standardfig.yaxis.major_label_overrides = label_dict
             standardfig.yaxis.ticker = list(range(1,len(loc)+1))

@@ -671,6 +671,9 @@ class CocoDisplay():
 
 
             if func.__name__ == 'pycoa_horizonhisto':
+                if len(geopdwd_filter.location.unique())>30:
+                        new_loc = geopdwd_filter.location.unique()[:30]
+                        geopdwd_filter = geopdwd_filter.loc[geopdwd_filter.location.isin(new_loc)]
                 geopdwd_filter['bottom']=geopdwd_filter.index
                 geopdwd_filter['left']=[0]*len(geopdwd_filter.index)
                 bthick=0.95

@@ -40,7 +40,7 @@ from bokeh.models import ColumnDataSource, TableColumn, DataTable,ColorBar, \
     Range1d, DatetimeTickFormatter, Legend, LegendItem,PanTool
 from bokeh.models.widgets import Tabs, Panel
 from bokeh.models.tickers import FixedTicker
-from bokeh.palettes import Viridis256, Cividis256, Turbo256, Magma256
+from bokeh.palettes import Viridis256, Cividis256, Turbo256, Magma256,Inferno256,YlOrRd,Reds9
 from bokeh.plotting import figure
 from bokeh.layouts import row, column, gridplot
 from bokeh.palettes import Paired12
@@ -634,24 +634,28 @@ class CocoDisplay():
             dico_colors = {i:next(colors) for i in my_location}
             mypandas['colors']=[dico_colors[i] for i in mypandas.location ]
 
-            if self.database_name == 'jhu' or self.database_name == 'owid':
-                if len(mypandas.location.unique())>30:
-                    mypandas = mypandas.iloc[0:30].reset_index(drop=True)
-                    mypandas = mypandas.loc[mypandas.location.isin(mypandas.location.unique())]
-
             if func.__name__ == 'map_folium' or func.__name__ == 'bokeh_map':
                 self.location_geometry = self.get_geodata()
                 self.all_location_indb = self.location_geometry.location.unique()
                 geopdwd = self.location_geometry
                 geopdwd = pd.merge(geopdwd,mypandas,on='location')
+
                 if self.database_name == 'spf' or self.database_name == 'opencovid19':
                     domtom=["971","972","973","974","975","976","977","978","984","986","987","988","989"]
                     self.boundary = geopdwd.loc[~geopdwd.location.isin(domtom)]['geometry'].total_bounds
+                else:
+                    self.boundary = geopdwd.loc[geopdwd.location.isin(geopdwd.location.unique())].total_bounds
+
             else:
                 geopdwd = mypandas
+
             geopdwd =  geopdwd.loc[geopdwd.date >= dt.date(2020,3,15)] # before makes pb in horizohisto
             geopdwd = geopdwd.sort_values(by=input_field,ascending=False)
 
+            #if self.database_name == 'jhu' or self.database_name == 'owid':
+            #    if len(mypandas.location.unique())>30:
+            #        new_loc = geopdwd.location.unique()[:30]
+            #        geopdwd = geopdwd.loc[geopdwd.location.isin(new_loc)]
 
             geopdwd=geopdwd.dropna(subset=[input_field])
             geopdwd=geopdwd.reset_index(drop=True)
@@ -668,6 +672,9 @@ class CocoDisplay():
 
 
             if func.__name__ == 'pycoa_horizonhisto':
+                if len(geopdwd_filter.location.unique())>30:
+                        new_loc = geopdwd_filter.location.unique()[:30]
+                        geopdwd_filter = geopdwd_filter.loc[geopdwd_filter.location.isin(new_loc)]
                 geopdwd_filter['bottom']=geopdwd_filter.index
                 geopdwd_filter['left']=[0]*len(geopdwd_filter.index)
                 bthick=0.95
@@ -886,6 +893,7 @@ class CocoDisplay():
 
             label_dict={len(mypandas_filter)-k:v for k,v in enumerate(loc)}
             standardfig.yaxis.major_label_overrides = label_dict
+
             standardfig.yaxis.minor_tick_line_color = None
             panel = Panel(child=standardfig,title=axis_type)
             panels.append(panel)
@@ -959,6 +967,12 @@ class CocoDisplay():
         fig = Figure(width=self.plot_width, height=self.plot_height)
         fig.add_child(mapa)
         min_col,max_col=CocoDisplay.min_max_range(np.nanmin(geopdwd[input_field]),np.nanmax(geopdwd[input_field]))
+        #Reds9.reverse()
+        #myREDS = [
+        #'#00cc00',
+        # '#ffff00',
+        # '#ff0000',]
+
         color_mapper = LinearColorMapper(palette=Viridis256, low = min_col, high = max_col,nan_color = '#d9d9d9')
         colormap = branca.colormap.LinearColormap(color_mapper.palette).scale(min_col,max_col)
         colormap.caption = 'Cases : ' + dico['titlebar']
@@ -1051,7 +1065,6 @@ class CocoDisplay():
             geopdwd_filter = geopdwd_filter.rename(columns={'cases':input_field})
         geopdwd =   geopdwd[['location','geometry',input_field]]
         geopdwd_filter =   geopdwd_filter[['location','geometry',input_field]]
-
         new_poly=[]
         geolistmodified=dict()
         for index, row in geopdwd_filter.iterrows():
@@ -1144,7 +1157,7 @@ class CocoDisplay():
         """)
 
         standardfig.add_tools(HoverTool(
-        tooltips=[('Name subregion','@'+name_location_displayed),(input_field,'@{'+input_field+'}'+'{custom}'),],
+        tooltips=[('Location','@'+name_location_displayed),(input_field,'@{'+input_field+'}'+'{custom}'),],
         formatters={name_location_displayed:'printf','@{'+input_field+'}':cases_custom,},
         point_policy="follow_mouse"))#,PanTool())
         if date_slider:

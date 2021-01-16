@@ -888,12 +888,11 @@ class CocoDisplay():
             loc=mypandas_filter['location'].to_list()
             self.logo_db_citation.x_offset -= len(max(loc, key=len))
             standardfig.add_tools(hover_tool)
-            standardfig.yaxis.ticker.desired_num_ticks = len(loc)
+
 
             label_dict={len(mypandas_filter)-k:v for k,v in enumerate(loc)}
             standardfig.yaxis.major_label_overrides = label_dict
-
-            standardfig.yaxis.minor_tick_line_color = None
+            standardfig.yaxis.ticker = list(range(1,len(loc)+1))
             panel = Panel(child=standardfig,title=axis_type)
             panels.append(panel)
         tabs = Tabs(tabs=panels)

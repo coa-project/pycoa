@@ -69,6 +69,7 @@ class CocoDisplay():
     def __init__(self,db=None):
         verb("Init of CocoDisplay() with db="+str(db))
         self.database_name = db
+        self.geopan = pd.DataFrame()
         self.colors = Paired12[:10]
         self.plot_width =  width_height_default[0]
         self.plot_height =  width_height_default[1]
@@ -80,37 +81,37 @@ class CocoDisplay():
         'STAMEN_TONER','STAMEN_TONER_BACKGROUND','STAMEN_TONER_LABELS','OSM','WIKIMEDIA','ESRI_IMAGERY']
 
 
-    def get_geodata(self,database='jhu'):
+    def get_geodata(self):
         '''
          return a GeoDataFrame used in map display (see map_bokeh and map_folium)
-         Argument : database name
          The output format is the following :
          geoid | location |  geometry (POLYGON or MULTIPOLYGON)
         '''
-        geopan = pd.DataFrame()
-        if self.database_name == 'spf' or self.database_name == 'opencovid19' or self.database_name == 'jhu-usa':
-            if self.database_name == 'jhu-usa':
-                country = 'USA'
+        if self.geopan.empty:
+            if self.database_name == 'spf' or self.database_name == 'opencovid19' or self.database_name == 'jhu-usa':
+                if self.database_name == 'jhu-usa':
+                    country = 'USA'
+                else:
+                    country = 'FRA'
+                info = coge.GeoCountry(country,dense_geometry=False)
+
+                self.geopan = info.get_subregion_list()[['code_subregion','town_subregion','geometry']]
+                self.geopan = self.geopan.rename(columns={'code_subregion':'location'})
+            elif self.database_name == 'jhu' or self.database_name == 'owid':
+                geom=coge.GeoManager('name')
+                info = coge.GeoInfo()
+                allcountries = coge.GeoRegion().get_countries_from_region('world')
+                self.geopan['location'] = [geom.to_standard(c)[0] for c in allcountries]
+                self.geopan = info.add_field(field=['geometry'],input=self.geopan ,geofield='location')
+                self.geopan = self.geopan[self.geopan.location != 'Antarctica']
             else:
-                country = 'FRA'
-            info = coge.GeoCountry(country,dense_geometry=False)
+                raise CoaTypeError('What data base are you looking for ?')
 
-            geopan = info.get_subregion_list()[['code_subregion','town_subregion','geometry']]
-            geopan = geopan.rename(columns={'code_subregion':'location'})
-        elif self.database_name == 'jhu' or self.database_name == 'owid':
-            geom=coge.GeoManager('name')
-            info = coge.GeoInfo()
-            allcountries = coge.GeoRegion().get_countries_from_region('world')
-            geopan['location'] = [geom.to_standard(c)[0] for c in allcountries]
-            geopan = info.add_field(field=['geometry'],input=geopan ,geofield='location')
-            geopan = geopan[geopan.location != 'Antarctica']
-        else:
-            raise CoaTypeError('What data base are you looking for ?')
+            self.geopan = self.geopan.dropna().reset_index(drop=True)
+            self.data = gpd.GeoDataFrame(self.geopan,crs="EPSG:4326")
+            self.boundary = self.data['geometry'].total_bounds
 
-        geopan = geopan.dropna().reset_index(drop=True)
-        data = gpd.GeoDataFrame(geopan,crs="EPSG:4326")
-        self.boundary = data['geometry'].total_bounds
-        return data
+        return self.data
 
     def standard_input(self,mypandas,input_field=None,**kwargs):
         '''
@@ -639,7 +640,7 @@ class CocoDisplay():
                     mypandas = mypandas.loc[mypandas.location.isin(mypandas.location.unique())]
 
             if func.__name__ == 'map_folium' or func.__name__ == 'bokeh_map':
-                self.location_geometry = self.get_geodata(database=self.database_name,)
+                self.location_geometry = self.get_geodata()
                 self.all_location_indb = self.location_geometry.location.unique()
                 geopdwd = self.location_geometry
                 geopdwd = pd.merge(geopdwd,mypandas,on='location')

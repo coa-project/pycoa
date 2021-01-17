@@ -713,6 +713,7 @@ class CocoDisplay():
         -----------------
         HoverTool is available it returns position of the middle of the bin and the value.
         """
+
         mypandas = geopdwd_filter.rename(columns={'cases':input_field})
 
         dict_histo = defaultdict(list)
@@ -725,7 +726,7 @@ class CocoDisplay():
             for w in loc:
                 val=mypandas.loc[mypandas.location == w][input_field]
                 histo,edges = np.histogram(val,density=False, bins=dico['bins'])
-                val_per_country[w]=val.values
+                val_per_country[w]=val.values[0]
                 dict_histo[w] = pd.DataFrame({'location':w,'val': histo,
                    'left': edges[:-1],
                    'right': edges[1:],
@@ -744,7 +745,6 @@ class CocoDisplay():
               bins = math.ceil(2*l_n**(1./3))# Rice rule
               if bins<8:
                      bins=8
-
             histo,edges = np.histogram(l_data,density=False, bins=bins,range=CocoDisplay.min_max_range(np.min(l_data),np.max(l_data)))
             contributors=[]
             for i,j in zip(edges[:-1],edges[1:]):

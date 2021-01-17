@@ -40,10 +40,10 @@ from bokeh.models import ColumnDataSource, TableColumn, DataTable,ColorBar, \
     Range1d, DatetimeTickFormatter, Legend, LegendItem,PanTool
 from bokeh.models.widgets import Tabs, Panel
 from bokeh.models.tickers import FixedTicker
-from bokeh.palettes import Viridis256, Cividis256, Turbo256, Magma256,Inferno256,YlOrRd,Reds9
+from bokeh.palettes import  Viridis256, Cividis256, Viridis,Turbo256, Magma256,Inferno256,Plasma256
 from bokeh.plotting import figure
 from bokeh.layouts import row, column, gridplot
-from bokeh.palettes import Paired12
+from bokeh.palettes import Set1,Set2,Set3,Spectral
 from bokeh.palettes import Dark2_5 as palette
 from bokeh.io import export_png
 from bokeh import events
@@ -55,7 +55,7 @@ import shapely.geometry as sg
 import branca.colormap
 from branca.colormap import LinearColormap
 from branca.element import Element, Figure
-
+import random
 import folium
 from folium.plugins import FloatImage
 
@@ -64,13 +64,17 @@ from PIL import Image, ImageDraw, ImageFont
 import matplotlib.pyplot as plt
 import datetime as dt
 width_height_default = [500,380]
-
 class CocoDisplay():
     def __init__(self,db=None):
         verb("Init of CocoDisplay() with db="+str(db))
         self.database_name = db
         self.geopan = pd.DataFrame()
-        self.colors = Paired12[:10]
+
+        a=map(list, zip(Paired[10], Set2[8],Set3[12]))
+        chain = itertools.chain(*a)
+        #self.colors=[Viridis256[i] for i in random.sample(range(256),30)]
+        self.colors = list(chain)
+
         self.plot_width =  width_height_default[0]
         self.plot_height =  width_height_default[1]
         self.geom = []
@@ -826,7 +830,7 @@ class CocoDisplay():
                 srcfiltered = ColumnDataSource(data=mypandas_filter)
 
             standardfig.quad(source=srcfiltered,
-            top='top', bottom='bottom',left='left', right=input_field,color='colors')
+            top='top', bottom='bottom',left='left', right=input_field,color='colors',line_color='black')
 
             if False:
                 for xi,yi,ti in zip(mypandas[input_field].to_list(), mypandas['top'].to_list(),customed):
@@ -898,7 +902,7 @@ class CocoDisplay():
             tooltips=[('Location','@location'),(input_field,'@{'+input_field+'}'+'{custom}'),],
             formatters={'location':'printf','@{'+input_field+'}':cases_custom,},
             point_policy="follow_mouse"))#,PanTool())
-            
+
             label_dict={len(mypandas_filter)-k:v for k,v in enumerate(loc)}
             standardfig.yaxis.major_label_overrides = label_dict
             standardfig.yaxis.ticker = list(range(1,len(loc)+1))

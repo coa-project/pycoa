@@ -43,7 +43,7 @@ from bokeh.models.tickers import FixedTicker
 from bokeh.palettes import  Viridis256, Cividis256, Viridis,Turbo256, Magma256,Inferno256,Plasma256
 from bokeh.plotting import figure
 from bokeh.layouts import row, column, gridplot
-from bokeh.palettes import Set1,Set2,Set3,Spectral
+from bokeh.palettes import Set1,Set2,Set3,Spectral,Paired
 from bokeh.palettes import Dark2_5 as palette
 from bokeh.io import export_png
 from bokeh import events
@@ -674,7 +674,6 @@ class CocoDisplay():
             geopdwd_filter = geopdwd_filter.drop(columns=['date'])
             geopdwd_filter = geopdwd_filter.reset_index(drop=True)
 
-
             if func.__name__ == 'pycoa_horizonhisto':
                 if len(geopdwd_filter.location.unique())>30:
                         new_loc = geopdwd_filter.location.unique()[:30]
@@ -1074,8 +1073,12 @@ class CocoDisplay():
         else:
             geopdwd = geopdwd.rename(columns={'cases':input_field})
             geopdwd_filter = geopdwd_filter.rename(columns={'cases':input_field})
-        geopdwd =   geopdwd[['location','geometry',input_field]]
+        geopdwd =   geopdwd[['location','geometry','date',input_field]]
+        geopdwd = geopdwd.sort_values(by=['location','date'],ascending=False)
+        geopdwd = geopdwd.drop(columns=['date'])
         geopdwd_filter =   geopdwd_filter[['location','geometry',input_field]]
+
+
         new_poly=[]
         geolistmodified=dict()
         for index, row in geopdwd_filter.iterrows():
@@ -1102,7 +1105,7 @@ class CocoDisplay():
         geolistmodified=gpd.GeoDataFrame({'location':ng['location'],'geometry':gpd.GeoSeries(ng['geometry'])},crs="epsg:3857")
         geopdwd_filter = geopdwd_filter.drop(columns='geometry')
         geopdwd_filter = pd.merge(geopdwd_filter,geolistmodified,on='location')
-        geopdwd_filter = geopdwd_filter.rename(columns={'location':name_location_displayed})
+        #geopdwd_filter = geopdwd_filter.rename(columns={'location':name_location_displayed})
 
         #if self.database_name == 'spf' or  self.database_name == 'opencovid19' or self.database_name == 'jhu-usa':
         #    geopdwd_filter = geopdwd_filter.rename(columns={'location':name_location_displayed})
@@ -1126,14 +1129,12 @@ class CocoDisplay():
         standardfig.add_layout(color_bar, 'below')
         json_data = json.dumps(json.loads(geopdwd_filter.to_json()))
         geopdwd_filter = GeoJSONDataSource(geojson = json_data)
-
         if date_slider :
-            allcases_countries, allcases_dates=pd.DataFrame(),pd.DataFrame()
-            allcountries_cases = (geopdwd.groupby('location')['cases'].apply(list))
-
+            allcases_location, allcases_dates=pd.DataFrame(),pd.DataFrame()
+            allcases_location = (geopdwd.groupby('location')['cases'].apply(list))
             geopdwd_tmp = geopdwd.drop_duplicates(subset=['geometry'])
             geopdwd_tmp = geopdwd_tmp.drop(columns='cases')
-            geopdwd_tmp = pd.merge(geopdwd_tmp,allcountries_cases,on='location')
+            geopdwd_tmp = pd.merge(geopdwd_tmp,allcases_location,on='location')
             json_data = json.dumps(json.loads(geopdwd_tmp.to_json()))
             geopdwd_tmp = GeoJSONDataSource(geojson = json_data)
 
@@ -1141,15 +1142,31 @@ class CocoDisplay():
                                           source_filter=geopdwd_filter,
                                           date_slider=date_slider),
                         code="""
-                        var index_max = (date_slider.end-date_slider.start)/(24*3600*1000);
-                        var index = (date_slider.value-date_slider.start)/(24*3600*1000);
-                        console.log(index_max);
-                        var val_date = [];
+                        var ind_date_max = (date_slider.end-date_slider.start)/(24*3600*1000);
+                        var ind_date = (date_slider.value-date_slider.start)/(24*3600*1000);
+                        var val_cases = [];
+                        var val_loc = [];
+                        var val_ind = [];
+                        var dict = {};
+
+                        console.log('BEGIN');
                         for (var i = 0; i < source.get_length(); i++)
                         {
-                            val_date.push(source.data['cases'][i][index_max-index]);
+                            dict[source.data['location'][i]]=source.data['cases'][i][ind_date_max-ind_date];
                         }
-                        source_filter.data['cases'] = val_date;
+                        var val_cases = [];
+                        for(var i = 0; i < source_filter.get_length();i++)
+                        {
+                            for(var key in dict) {
+                                if(source_filter.data['location'][i] == key)
+                                {
+                                val_cases.push(dict[key]);
+                                break;
+                                }
+                            }
+                        }
+                        source_filter.data['cases']=val_cases;
+                        console.log(val_cases)
                         source_filter.change.emit();
                     """)
             date_slider.js_on_change('value', callback)
@@ -1168,7 +1185,7 @@ class CocoDisplay():
         """)
 
         standardfig.add_tools(HoverTool(
-        tooltips=[('Location','@'+name_location_displayed),(input_field,'@{'+input_field+'}'+'{custom}'),],
+        tooltips=[(name_location_displayed,'@location'),(input_field,'@{'+input_field+'}'+'{custom}'),],
         formatters={name_location_displayed:'printf','@{'+input_field+'}':cases_custom,},
         point_policy="follow_mouse"))#,PanTool())
         if date_slider:

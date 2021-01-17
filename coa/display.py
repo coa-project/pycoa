@@ -239,7 +239,7 @@ class CocoDisplay():
          if copyrightposition == 'right':
              xpos=0.6
          elif  copyrightposition == 'left':
-            xpos=0.03
+            xpos=0.08
          else:
             CoaKeyError('copyrightposition argument not yet implemented ...')
          textcopyright='©pycoa.fr (data from: {})'.format(self.database_name)

@@ -43,7 +43,7 @@ from bokeh.models.tickers import FixedTicker
 from bokeh.palettes import  Viridis256, Cividis256, Viridis,Turbo256, Magma256,Inferno256,Plasma256
 from bokeh.plotting import figure
 from bokeh.layouts import row, column, gridplot
-from bokeh.palettes import Set1,Set2,Set3,Spectral,Paired
+from bokeh.palettes import Set1,Set2,Set3,Spectral,Paired,Category20
 from bokeh.palettes import Dark2_5 as palette
 from bokeh.io import export_png
 from bokeh import events
@@ -344,7 +344,7 @@ class CocoDisplay():
             standardfig =  self.standardfig(y_axis_type=axis_type, x_axis_type='datetime',title= dico['titlebar'])
             standardfig.yaxis[0].formatter = PrintfTickFormatter(format="%4.2e")
             standardfig.add_tools(hover_tool)
-            colors = itertools.cycle(self.colors)
+            colors = itertools.cycle(Category20[20])
             for i in input_field:
                 if len(input_field)>1:
                     p = [standardfig.line(x='date', y=i, source=ColumnDataSource(value),

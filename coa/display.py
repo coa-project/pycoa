@@ -793,6 +793,7 @@ class CocoDisplay():
         ''' Horizontal histogram  '''
         if date_slider:
             title = input_field
+            input_field = 'cases'
         else:
             geopdwd = geopdwd.rename(columns={'cases':input_field})
             geopdwd_filter = geopdwd_filter.rename(columns={'cases':input_field})

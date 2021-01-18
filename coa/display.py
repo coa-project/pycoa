@@ -679,7 +679,12 @@ class CocoDisplay():
                         new_loc = geopdwd_filter.location.unique()[:30]
                         geopdwd_filter = geopdwd_filter.loc[geopdwd_filter.location.isin(new_loc)]
                 geopdwd_filter['bottom']=geopdwd_filter.index
-                geopdwd_filter['left']=[0]*len(geopdwd_filter.index)
+                #geopdwd_filter['left']=[0]*len(geopdwd_filter.index)
+                #geopdwd_filter['right']=geopdwd_filter['cases']
+                geopdwd_filter['left']=geopdwd_filter['cases']
+                geopdwd_filter['right']=geopdwd_filter['cases']
+                geopdwd_filter['left'] = geopdwd_filter['left'].apply(lambda x : 0 if x > 0 else x)
+                geopdwd_filter['right'] = geopdwd_filter['right'].apply(lambda x : 0 if x < 0 else x)
                 bthick=0.95
                 geopdwd_filter['top']=[len(geopdwd_filter.index)+bthick/2-i for i in geopdwd_filter.index.to_list()]
                 geopdwd_filter['bottom']=[len(geopdwd_filter.index)-bthick/2-i for i in geopdwd_filter.index.to_list()]
@@ -819,25 +824,24 @@ class CocoDisplay():
         for axis_type in ["linear", "log"]:
             label = dico['titlebar']
             title = input_field
-            standardfig = self.standardfig(x_axis_type=axis_type,x_range = (0.01,1.05*max_value), title=title)
+            if mypandas_filter[mypandas_filter[input_field]<0].empty:
+                standardfig = self.standardfig(x_axis_type=axis_type,x_range = (0.01,1.05*max_value), title=title)
+                if axis_type=="log":
+                    min_range_val=0.01
+                    if min_value>=0:
+                        min_range_val=10**np.floor(np.log10(min_value_gt0))
+                    standardfig.x_range=Range1d(min_range_val, 1.05*max_value)
+                    mypandas_filter['left']=[0.001]*len(mypandas_filter.index)
+                    srcfiltered = ColumnDataSource(data=mypandas_filter)
 
-            if axis_type=="log":
-                min_range_val=0.01
-                if min_value>=0:
-                    min_range_val=10**np.floor(np.log10(min_value_gt0))
-                standardfig.x_range=Range1d(min_range_val, 1.05*max_value)
-                mypandas_filter['left']=[0.001]*len(mypandas_filter.index)
-                srcfiltered = ColumnDataSource(data=mypandas_filter)
+            else:
+                max_value = max(np.abs(mypandas_filter['left']).max(),mypandas_filter['right'].max())
+                standardfig = self.standardfig(x_axis_type=axis_type,x_range = (-max_value,max_value), title=title)
 
             standardfig.quad(source=srcfiltered,
-            top='top', bottom='bottom',left='left', right=input_field,color='colors',line_color='black')
+                top='top', bottom='bottom',left='left', right='right',color='colors',line_color='black')
 
-            if False:
-                for xi,yi,ti in zip(mypandas[input_field].to_list(), mypandas['top'].to_list(),customed):
-                    customed_histobar = Label(x=xi, y=yi,text=ti)
-                    standardfig.add_layout(customed_histobar)
-
-            if date_slider :
+            if date_slider and mypandas_filter[mypandas_filter[input_field]<0].empty:
                 date_slider.orientation='vertical'
                 date_slider.height=int(0.8*self.plot_height)
                 callback = CustomJS(args=dict(source=source,
@@ -881,21 +885,21 @@ class CocoDisplay():
                         console.log('END');
 
                         source_filter.data['cases'] = orderval;
+                        source_filter.data['right'] = orderval;
                         source_filter.data['location'] = orderloc;
                         source_filter.data['colors'] = ordercol;
                         ylabel.major_label_overrides = labeldic
                         source_filter.change.emit();
                     """)
                 date_slider.js_on_change('value', callback)
+
             loc=mypandas_filter['shortenlocation'].to_list()
             self.logo_db_citation.x_offset -= len(max(loc, key=len))
 
-
             cases_custom = CustomJSHover(code="""
                     var value;
-                    if(value>0)
+                    //if(value>0)
                         return value.toExponential(2).toString();
-
                     """)
 
             standardfig.add_tools(HoverTool(
@@ -908,9 +912,13 @@ class CocoDisplay():
             standardfig.yaxis.ticker = list(range(1,len(loc)+1))
             panel = Panel(child=standardfig,title=axis_type)
             panels.append(panel)
+
         tabs = Tabs(tabs=panels)
         if date_slider:
-            tabs = row(tabs,date_slider)
+            if mypandas_filter[mypandas_filter[input_field]<0].empty:
+                tabs = row(tabs,date_slider)
+            else:
+                print('Cursor date not implemented for negative value, sorry about that ...')
         return tabs
 
     @staticmethod

@@ -795,8 +795,8 @@ class CocoDisplay():
     @decohistomap
     def pycoa_horizonhisto(self,input_field,date_slider,name_location_displayed,dico,geopdwd,geopdwd_filter):
         ''' Horizontal histogram  '''
+        title_fig = input_field
         if date_slider:
-            title = input_field
             input_field = 'cases'
         else:
             geopdwd = geopdwd.rename(columns={'cases':input_field})
@@ -821,8 +821,9 @@ class CocoDisplay():
 
         panels = []
         for axis_type in ["linear", "log"]:
-            label = dico['titlebar']
-            title = input_field
+            title = dico['titlebar']
+            if title_fig != title.split()[0]:
+                title =  title_fig + ' ' + title
             if mypandas_filter[mypandas_filter[input_field]<0].empty:
                 standardfig = self.standardfig(x_axis_type=axis_type,x_range = (0.01,1.05*max_value), title=title)
                 if axis_type=="log":

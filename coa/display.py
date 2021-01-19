@@ -1056,8 +1056,8 @@ class CocoDisplay():
         draw = ImageDraw.Draw(im)
         msg = "©pycoa.fr (data from: {})".format(self.database_name)
         w, h = draw.textsize(msg)
-        #fnt = ImageFont.truetype('Arial.ttf',12)
-        #draw.text((2,0), msg, font=fnt,fill=(0, 0, 0))
+        fnt = ImageFont.truetype('arial.ttf',12)
+        draw.text((2,0), msg, font=fnt,fill=(0, 0, 0))
         draw.text((2,0), msg, fill=(0, 0, 0))
 
         im.crop((0, 0,2*w,2*h)).save("pycoatextlogo.png", "PNG")

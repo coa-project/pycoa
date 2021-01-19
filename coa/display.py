@@ -1047,7 +1047,7 @@ class CocoDisplay():
                         box-shadow: 3px;
                         opacity: 0.2;
                         """),
-                #'<div style="background-color: royalblue 0.2; color: black; padding: 2px; border: 1px solid black; border-radius: 2px;">'+input_field+'</div>'])
+                #'<div style="barialckground-color: royalblue 0.2; color: black; padding: 2px; border: 1px solid black; border-radius: 2px;">'+input_field+'</div>'])
         ).add_to(mapa)
 
 
@@ -1060,8 +1060,8 @@ class CocoDisplay():
         draw.text((2,0), msg, font=fnt,fill=(0, 0, 0))
         draw.text((2,0), msg, fill=(0, 0, 0))
 
-        im.crop((0, 0,2*w,2*h)).save("pycoatextlogo.png", "PNG")
-        FloatImage("pycoatextlogo.png", bottom=-2, left=1).add_to(mapa)
+        #im.crop((0, 0,2*w,2*h)).save("pycoatextlogo.png", "PNG")
+        #FloatImage("pycoatextlogo.png", bottom=-2, left=1).add_to(mapa)
 
         return mapa
 

@@ -83,7 +83,7 @@ class CocoDisplay():
         'option','input','input_field','visu','plot_last_date','tile','orientation']
         self.tiles_listing=['CARTODBPOSITRON','CARTODBPOSITRON_RETINA','STAMEN_TERRAIN','STAMEN_TERRAIN_RETINA',
         'STAMEN_TONER','STAMEN_TONER_BACKGROUND','STAMEN_TONER_LABELS','OSM','WIKIMEDIA','ESRI_IMAGERY']
-
+        self.location_geometry = self.get_geodata()
 
     def get_geodata(self):
         '''
@@ -237,14 +237,15 @@ class CocoDisplay():
          fig=figure(**kwargs, plot_width=self.plot_width,plot_height=self.plot_height,
          tools=['save','box_zoom,reset'],toolbar_location="right")
          if copyrightposition == 'right':
-             xpos=0.6
+             xpos=0.5
          elif  copyrightposition == 'left':
             xpos=0.08
          else:
             CoaKeyError('copyrightposition argument not yet implemented ...')
          textcopyright='©pycoa.fr (data from: {})'.format(self.database_name)
          self.logo_db_citation = Label(x=xpos*self.plot_width-len(textcopyright), y=0.01*self.plot_height,
-         x_units='screen', y_units='screen',text_font_size='1.5vh',background_fill_color='white', background_fill_alpha=.75,
+         x_units='screen', y_units='screen',
+         text_font_size='1.5vh',background_fill_color='white', background_fill_alpha=.75,
           text=textcopyright)
          fig.add_layout(self.logo_db_citation)
          return fig
@@ -638,8 +639,8 @@ class CocoDisplay():
             dico_colors = {i:next(colors) for i in my_location}
             mypandas['colors']=[dico_colors[i] for i in mypandas.location ]
 
+            geopdwd = mypandas
             if func.__name__ == 'map_folium' or func.__name__ == 'bokeh_map':
-                self.location_geometry = self.get_geodata()
                 self.all_location_indb = self.location_geometry.location.unique()
                 geopdwd = self.location_geometry
                 geopdwd = pd.merge(geopdwd,mypandas,on='location')
@@ -650,12 +651,9 @@ class CocoDisplay():
                 else:
                     self.boundary = geopdwd.loc[geopdwd.location.isin(geopdwd.location.unique())].total_bounds
 
-            else:
-                geopdwd = mypandas
 
             geopdwd =  geopdwd.loc[geopdwd.date >= dt.date(2020,3,15)] # before makes pb in horizohisto
             geopdwd = geopdwd.sort_values(by=input_field,ascending=False)
-
             #if self.database_name == 'jhu' or self.database_name == 'owid':
             #    if len(mypandas.location.unique())>30:
             #        new_loc = geopdwd.location.unique()[:30]
@@ -854,17 +852,21 @@ class CocoDisplay():
                         var dates = source.data['date_utc'];
                         var val = source.data['cases'];
                         var loc = source.data['location'];
+                        var shortloc = source.data['shortenlocation'];
                         var colors = source.data['colors'];
                         var newval = [];
                         var newloc = [];
                         var newcol = [];
+                        var newshortenloc = [];
                         var labeldic = {};
 
                         for (var i = 0; i <= dates.length; i++){
                         if (dates[i] == date_slide){
                             newval.push(parseFloat(val[i]));
                             newloc.push(loc[i]);
+                            newshortenloc.push(shortloc[i]);
                             newcol.push(colors[i]);
+
                             }
                         }
                         var len = newval.length;
@@ -879,7 +881,7 @@ class CocoDisplay():
                             orderval.push(newval[indices[i]]);
                             orderloc.push(newloc[indices[i]]);
                             ordercol.push(newcol[indices[i]]);
-                            labeldic[len-indices[i]] = newloc[indices[i]];
+                            labeldic[len-indices[i]] = newshortenloc[indices[i]];
                         }
                         console.log('Begin');
                         console.log(labeldic);
@@ -889,7 +891,7 @@ class CocoDisplay():
                         source_filter.data['right'] = orderval;
                         source_filter.data['location'] = orderloc;
                         source_filter.data['colors'] = ordercol;
-                        ylabel.major_label_overrides = labeldic
+                        ylabel.major_label_overrides = labeldic;
                         source_filter.change.emit();
                     """)
                 date_slider.js_on_change('value', callback)
@@ -1083,10 +1085,11 @@ class CocoDisplay():
         else:
             geopdwd = geopdwd.rename(columns={'cases':input_field})
             geopdwd_filter = geopdwd_filter.rename(columns={'cases':input_field})
-        geopdwd =   geopdwd[['location','geometry','date',input_field]]
+
+        geopdwd = geopdwd[['location','geometry','date',input_field]]
+        geopdwd_filter =   geopdwd_filter[['location','geometry',input_field]]
         geopdwd = geopdwd.sort_values(by=['location','date'],ascending=False)
         geopdwd = geopdwd.drop(columns=['date'])
-        geopdwd_filter =   geopdwd_filter[['location','geometry',input_field]]
 
 
         new_poly=[]

@@ -1060,8 +1060,8 @@ class CocoDisplay():
         draw.text((2,0), msg, font=fnt,fill=(0, 0, 0))
         draw.text((2,0), msg, fill=(0, 0, 0))
 
-        #im.crop((0, 0,2*w,2*h)).save("pycoatextlogo.png", "PNG")
-        #FloatImage("pycoatextlogo.png", bottom=-2, left=1).add_to(mapa)
+        im.crop((0, 0,2*w,2*h)).save("pycoatextlogo.png", "PNG")
+        FloatImage("pycoatextlogo.png", bottom=-2, left=1).add_to(mapa)
 
         return mapa
 

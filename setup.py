@@ -32,7 +32,7 @@ setup(
         'bs4',\
         'datascroller',\
         'datetime',\
-        'folium',\
+        'folium ~=0.12.1',\
         'geopandas',\
         'matplotlib',\
         'numpy',\

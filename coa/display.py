@@ -190,6 +190,7 @@ class CocoDisplay():
             else:
                 input_field=input_field
             input_dico['input_field'] = input_field
+            titlebar = str(input_field).replace('[\'','').replace('\']','') + title_temporal
         else:
             if what:
                 if what == 'daily':

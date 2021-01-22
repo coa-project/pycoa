@@ -190,7 +190,7 @@ class CocoDisplay():
             else:
                 input_field=input_field
             input_dico['input_field'] = input_field
-            titlebar = str(input_field).replace('[\'','').replace('\']','') + title_temporal
+            titlebar = str(input_field).replace('[','').replace(']','').replace('\'','') + title_temporal
         else:
             if what:
                 if what == 'daily':
@@ -231,7 +231,7 @@ class CocoDisplay():
         ''' Return all the tiles available in Bokeh '''
         return self.tiles_listing
 
-    def standardfig(self,dbname=None,copyrightposition='right',**kwargs):
+    def standardfig(self,dbname=None,copyrightposition='left',**kwargs):
          """
          Create a standard Bokeh figure, with pycoa.frlabel,used in all the bokeh charts
          """
@@ -250,7 +250,7 @@ class CocoDisplay():
           text=textcopyright)
          fig.add_layout(self.logo_db_citation)
          return fig
-
+###################### BEGIN Static Methods ##################
     @staticmethod
     def dict_shorten_loc(location):
         '''
@@ -285,7 +285,317 @@ class CocoDisplay():
                             """)
         bkfigure.js_on_event(events.DoubleTap, toggle_legend_js)
 
-    def pycoa_date_plot(self,mypandas, input_field = None, **kwargs):
+    @staticmethod
+    def min_max_range(a_min,a_max):
+        """Return a cleverly rounded min and max giving raw min and raw max of data.
+        Usefull for hist range and colormap
+        """
+        min_p=0
+        max_p=0
+        if a_min!=0:
+            min_p=math.floor(math.log10(math.fabs(a_min)))   # power
+        if a_max!=0:
+            max_p=math.floor(math.log10(math.fabs(a_max)))
+
+        if a_min==0:
+            if a_max==0:
+                p=0
+            else:
+                p=max_p
+        else:
+            if a_max==0:
+                p=min_p
+            else:
+                p=max(min_p,max_p)
+
+        if a_min!=0:
+            min_r=math.floor(a_min/10**(p-1))*10**(p-1) # min range rounded
+        else:
+            min_r=0
+
+        if a_max!=0:
+            max_r=math.ceil(a_max/10**(p-1))*10**(p-1)
+        else:
+            max_r=0
+
+        if min_r==max_r:
+            if min_r==0:
+                min_r=-1
+                max_r=1
+                k=0
+            elif max_r>0:
+                k=0.1
+            else:
+                k=-0.1
+            max_r=(1+k)*max_r
+            min_r=(1-k)*min_r
+
+        return (min_r,max_r)
+    @staticmethod
+    def save_map2png(map=None,pngfile='map.png'):
+        '''
+        Save map as png geckodriver and PIL packages are needed
+        '''
+        size = width_height_default[0],width_height_default[1]
+        if pngfile:
+            pngfile=pngfile
+        img_data = map._to_png(5)
+        img = Image.open(io.BytesIO(img_data))
+        img.thumbnail(size, Image.ANTIALIAS)
+        img.save(pngfile)
+        print(pngfile, ' is now save ...')
+
+    @staticmethod
+    def save_pandas_as_png(df=None, pngfile='pandas.png'):
+        source = ColumnDataSource(df)
+        df_columns = [df.index.name]
+        df_columns.extend(df.columns.values)
+        columns_for_table=[]
+        for column in df_columns:
+            if column != None:
+                columns_for_table.append(TableColumn(field=column, title=column))
+                #width_height_default
+        data_table = DataTable(source=source, columns=columns_for_table,
+            height_policy="auto",width_policy="auto",index_position=None)
+        export_png(data_table, filename = pngfile)
+
+    @staticmethod
+    def changeto_nonan_date(df=None,when_end=None,field=None):
+        boolval=True
+        j=0
+        while(boolval == True):
+                boolval = df.loc[df.date == (when_end-dt.timedelta(days=j))][field].dropna().empty
+                j+=1
+        if j>1:
+            info(str(when_end)+'all the value seems to be nan! I will find an other previous date.\n'+
+                'Here the date I will take: '+str(when_end-dt.timedelta(days=j-1)))
+        return  when_end-dt.timedelta(days=j-1)
+
+    @staticmethod
+    def get_utcdate(date):
+        return (date-dt.date(1970, 1, 1)).total_seconds()*1000.
+
+    @staticmethod
+    def test_all_val_null(s):
+            a = s.to_numpy()
+            return ( a == 0).all()
+
+    @staticmethod
+    def get_polycoords(geopandasrow):
+            """ Take a row of a geopandas as an input (i.e : for index, row in geopdwd.iterrows():...)
+            and returns a tuple (if the geometry is a Polygon) or a list (if the geometry is a multipolygon)
+            of an exterior.coords """
+            geometry = geopandasrow['geometry']
+            if geometry.type=='Polygon':
+                return list( geometry.exterior.coords)
+            if geometry.type=='MultiPolygon':
+                all = []
+                for ea in geometry:
+                    all.append(list( ea.exterior.coords))
+                return all
+
+    @staticmethod
+    def wgs84_to_web_mercator(tuple_xy):
+            ''' Take a tuple (longitude,latitude) from a coordinate reference system crs=EPSG:4326 '''
+            ''' and converts it to a  longitude/latitude tuple from to Web Mercator format '''
+            k = 6378137
+            x = tuple_xy[0] * (k * np.pi/180.0)
+            if tuple_xy[1] == -90:
+                lat = -89
+            else:
+                lat  = tuple_xy[1]
+            y = np.log(np.tan((90 + lat) * np.pi/360.0)) * k
+            return x,y
+###################### END Static Methods ##################
+
+###################### BEGIN Plots ##################
+    def decoplot(func):
+        ''' decorator for plot purpose'''
+        def generic_plot(self,mypandas,input_field = None,cursor_date = None, **kwargs):
+            mypandas,dico = self.standard_input(mypandas,input_field,**kwargs)
+            if type(input_field) is None.__class__ and dico['which'] is None.__class__ :
+               input_field = mypandas.columns[2]
+            else:
+                if type(input_field) is None.__class__:
+                    input_field = [dico['var_displayed']]
+                else:
+                    input_field = [dico['input_field']][0]
+
+            dict_filter_data = defaultdict(list)
+            ax_type = ['linear','log']
+            tooltips='Date: @date{%F} <br>  $name: @$name'
+
+            if 'location' in mypandas.columns:
+                location_ordered_byvalues=list(mypandas.loc[mypandas.date==dico['when_end']].sort_values(by=input_field,ascending=False)['location'])
+                tooltips='Location: @location <br> Date: @date{%F} <br>  $name: @$name'
+                loc = location_ordered_byvalues#mypandas['location'].unique()
+                shorten_loc = list(CocoDisplay.dict_shorten_loc(loc).values())
+                for i in input_field:
+                    dict_filter_data[i] =  \
+                        dict(mypandas.loc[(mypandas['location'].isin(loc)) &
+                                         (mypandas['date']>=dico['when_beg']) & (mypandas['date']<=dico['when_end']) ].groupby('location').__iter__())
+
+                    for j in range(len(loc)):
+                        dict_filter_data[i][shorten_loc[j]] = dict_filter_data[i].pop(loc[j])
+                list_max=[]
+                for i in input_field:
+                    [list_max.append(max(value.loc[value.location.isin(loc)][i])) for key,value in dict_filter_data[i].items()]
+
+                if len([x for x in list_max if not np.isnan(x)])>0:
+                    amplitude=(np.nanmax(list_max) - np.nanmin(list_max))
+                    if amplitude > 10**4:
+                        ax_type.reverse()
+            else:
+                for i in input_field:
+                    dict_filter_data[i] = {i:mypandas.loc[(mypandas['date']>=dico['when_beg']) & (mypandas['date']<=dico['when_end'])]}
+
+            hover_tool = HoverTool(tooltips=tooltips,formatters={'@date': 'datetime'})
+            return func(self,mypandas, dico, input_field, dict_filter_data, hover_tool,ax_type, **kwargs)
+        return generic_plot
+    @decoplot
+    def pycoa_plot(self,mypandas,dico,input_field,dict_filter_data, hover_tool, ax_type,**kwargs):
+        panels = []
+        hover_tool = None
+        for axis_type in ax_type :
+            standardfig =  self.standardfig(x_axis_label=input_field[0],
+            y_axis_label=input_field[1], y_axis_type=axis_type ,title= dico['titlebar'])
+            #tooltips='Location: @location <br>'+ input_field[0] +': @casesx <br>  '+\
+            #input_field[1]+': @casesy <br>' + 'date: @date{%F}'
+            #hover_tool = HoverTool(tooltips=tooltips,formatters={'@date': 'datetime'})
+
+            cases_custom = CustomJSHover(code="""
+                    var value;
+                    //if(value>0)
+                        return value.toExponential(2).toString();
+                    """)
+
+            standardfig.add_tools(HoverTool(
+            tooltips=[('Location','@location'),('date', '@date{%F}'),(input_field[0],'@{casesx}'+'{custom}'),
+            (input_field[1],'@{casesy}'+'{custom}')],
+            formatters={'location':'printf','@{casesx}':cases_custom,'@{casesy}':cases_custom ,'@date': 'datetime'},
+            point_policy="follow_mouse"))#,PanTool())
+
+            #tooltips=[('Location','@location'),(input_field,'@{'+input_field+'}'+'{custom}'),],
+            #formatters={'location':'printf','@{'+input_field+'}':cases_custom,},
+            #standardfig.add_tools(hover_tool)
+            colors = itertools.cycle(Category20[20])
+            if len(input_field)!=2:
+                raise CoaTypeError('Two variables are needed to be plotted ... ')
+
+            for loc in mypandas.location.unique():
+                pandaloc=mypandas.loc[mypandas.location==loc].sort_values(by='date',ascending='True')
+                pandaloc.rename(columns={input_field[0]:'casesx',input_field[1]:'casesy'},inplace=True)
+                standardfig.line(x='casesx', y='casesy',
+                source=ColumnDataSource(pandaloc), legend_label=loc,color=next(colors), line_width=3,hover_line_width=4)
+
+            standardfig.legend.label_text_font_size = "12px"
+            panel = Panel(child=standardfig , title=axis_type)
+            panels.append(panel)
+            standardfig.legend.background_fill_alpha = 0.6
+
+            standardfig.legend.location = "top_left"
+            CocoDisplay.bokeh_legend(standardfig)
+        tabs = Tabs(tabs=panels)
+        return tabs
+    @decoplot
+    def pycoa_date_plot(self,mypandas,dico,input_field,dict_filter_data, hover_tool, ax_type,**kwargs):
+        panels = []
+        for axis_type in ax_type :
+            standardfig =  self.standardfig(y_axis_type=axis_type, x_axis_type='datetime',title= dico['titlebar'])
+            standardfig.yaxis[0].formatter = PrintfTickFormatter(format="%4.2e")
+            standardfig.add_tools(hover_tool)
+            colors = itertools.cycle(Category20[20])
+            for i in input_field:
+                if len(input_field)>1:
+                    p = [standardfig.line(x='date', y=i, source=ColumnDataSource(value),
+                    color=next(colors), line_width=3, legend_label=key+' ('+i+')',
+                    name=i,hover_line_width=4) for key,value in dict_filter_data[i].items()]
+                else:
+                    p = [standardfig.line(x='date', y=i, source=ColumnDataSource(value),
+                    color=next(colors), line_width=3, legend_label=key,
+                    name=i,hover_line_width=4) for key,value in dict_filter_data[i].items()]
+
+            standardfig.legend.label_text_font_size = "12px"
+            panel = Panel(child=standardfig , title=axis_type)
+            panels.append(panel)
+            standardfig.legend.background_fill_alpha = 0.6
+
+            standardfig.legend.location = "top_left"
+
+            standardfig.xaxis.formatter = DatetimeTickFormatter(
+                days=["%d/%m/%y"], months=["%d/%m/%y"], years=["%b %Y"])
+            CocoDisplay.bokeh_legend(standardfig)
+        tabs = Tabs(tabs=panels)
+        return tabs
+    @decoplot
+    def scrolling_menu(self,mypandas,dico,input_field,dict_filter_data, hover_tool, ax_type,**kwargs):
+        tooltips='Date: @date{%F} <br>  $name: @$name'
+        hover_tool = HoverTool(tooltips=tooltips,formatters={'@date': 'datetime'})
+
+        if 'location' in mypandas.columns:
+            tooltips='Location: @location <br> Date: @date{%F} <br>  $name: @$name'
+            loc = list(mypandas['location'].unique())
+            loc = sorted(loc)
+            if len(loc) < 2:
+                raise CoaTypeError('What do you want me to do ? You have selected, only one country.'
+                                    'There is no sens to use this method. See help.')
+            shorten_loc = list(CocoDisplay.dict_shorten_loc(loc).values())
+
+
+        mypandas = mypandas.loc[(mypandas['date']>=dico['when_beg']) & (mypandas['date']<=dico['when_end'])]
+        data  = pd.pivot_table(mypandas,index='date',columns='location',values=input_field[0])
+
+        [data.rename(columns={i:j},inplace=True) for i,j in zip(loc,shorten_loc)]
+        data=data.reset_index()
+        source = ColumnDataSource(data)
+
+        filter_data1 = data[['date', shorten_loc[0]]].rename(columns={shorten_loc[0]: 'cases'})
+        src1 = ColumnDataSource(filter_data1)
+
+        filter_data2 = data[['date', shorten_loc[1]]].rename(columns={shorten_loc[1]: 'cases'})
+        src2 = ColumnDataSource(filter_data2)
+        hover_tool = HoverTool(tooltips=[
+                        ("Cases", '@cases'),
+                        ('date', '@date{%F}')],
+                        formatters={'@date': 'datetime'})
+        panels = []
+        for axis_type in ["linear", "log"]:
+            standardfig = self.standardfig(y_axis_type=axis_type,
+            x_axis_type='datetime',title= dico['titlebar'])
+            standardfig.yaxis[0].formatter = PrintfTickFormatter(format="%4.2e")
+            if dico['title']:
+                standardfig.title.text = dico['title']
+            standardfig.add_tools(hover_tool)
+            colors = itertools.cycle(self.colors)
+
+            def add_line(src,options, init,  color):
+                s = Select(options=options, value=init)
+                r = standardfig.line(x='date', y='cases', source=src,line_width=3, line_color=color)
+                li = LegendItem(label=init, renderers=[r])
+                s.js_on_change('value', CustomJS(args=dict(s0=source, s1=src,li=li),
+                                     code = """
+                                            var c = cb_obj.value;
+                                            var y = s0.data[c];
+                                            s1.data['cases'] = y;
+                                            li.label = {value: cb_obj.value};
+                                            s1.change.emit();
+                                     """))
+                return s,li
+
+            s1, li1 = add_line(src1,shorten_loc, shorten_loc[0], 'navy')
+            s2, li2= add_line(src2,shorten_loc, shorten_loc[1], 'firebrick')
+            standardfig.add_layout(Legend(items=[li1, li2]))
+            standardfig.legend.location = 'top_left'
+            layout = row(column(row(s1, s2), row(standardfig)))
+            panel = Panel(child=layout, title=axis_type)
+            panels.append(panel)
+
+        tabs = Tabs(tabs=panels)
+        label = dico['titlebar']
+        return tabs
+###################### END Plots ##################
+##################### BEGIN TO REMOVE ##################
+    def pycoa_date_plot_old(self,mypandas, input_field = None, **kwargs):
         """Create a Bokeh date chart from pandas input (x axis is a date format)
 
         Keyword arguments
@@ -369,55 +679,7 @@ class CocoDisplay():
             CocoDisplay.bokeh_legend(standardfig)
         tabs = Tabs(tabs=panels)
         return tabs
-
-    @staticmethod
-    def min_max_range(a_min,a_max):
-        """Return a cleverly rounded min and max giving raw min and raw max of data.
-        Usefull for hist range and colormap
-        """
-        min_p=0
-        max_p=0
-        if a_min!=0:
-            min_p=math.floor(math.log10(math.fabs(a_min)))   # power
-        if a_max!=0:
-            max_p=math.floor(math.log10(math.fabs(a_max)))
-
-        if a_min==0:
-            if a_max==0:
-                p=0
-            else:
-                p=max_p
-        else:
-            if a_max==0:
-                p=min_p
-            else:
-                p=max(min_p,max_p)
-
-        if a_min!=0:
-            min_r=math.floor(a_min/10**(p-1))*10**(p-1) # min range rounded
-        else:
-            min_r=0
-
-        if a_max!=0:
-            max_r=math.ceil(a_max/10**(p-1))*10**(p-1)
-        else:
-            max_r=0
-
-        if min_r==max_r:
-            if min_r==0:
-                min_r=-1
-                max_r=1
-                k=0
-            elif max_r>0:
-                k=0.1
-            else:
-                k=-0.1
-            max_r=(1+k)*max_r
-            min_r=(1-k)*min_r
-
-        return (min_r,max_r)
-
-    def scrolling_menu(self,mypandas,input_field = None,**kwargs):
+    def scrolling_menu_old(self,mypandas,input_field = None,**kwargs):
         """Create a Bokeh plot with a date axis from pandas input
 
         Keyword arguments
@@ -507,118 +769,10 @@ class CocoDisplay():
         tabs = Tabs(tabs=panels)
         label = dico['titlebar']
         return tabs
-
-    def crystal_fig(self, crys, err_y):
-        sline = []
-        scolumn = []
-        i = 1
-        list_fits_fig = crys.GetListFits()
-        for dct in list_fits_fig:
-            for key, value in dct.items():
-                location = key
-                if math.nan not in value[0] and math.nan not in value[1]:
-                    maxy = crys.GetFitsParameters()[location][1]
-                    if math.isnan(maxy) == False:
-                        maxy = int(maxy)
-                    leg = 'From fit : tmax:' + \
-                        str(crys.GetFitsParameters()[location][0])
-                    leg += '   Tot deaths:' + str(maxy)
-                    fig = figure(plot_width=300, plot_height=200,
-                                 tools=['box_zoom,box_select,crosshair,reset'], title=leg, x_axis_type="datetime")
-
-                    date = [extract_dates(i)
-                            for i in self.p.getDates()]
-                    if err_y:
-                        fig.circle(
-                            date, value[0], color=self.colors[i % 10], legend_label=location)
-                        y_err_x = []
-                        y_err_y = []
-                        for px, py in zip(date, value[0]):
-                            err = np.sqrt(np.abs(py))
-                            y_err_x.append((px, px))
-                            y_err_y.append((py - err, py + err))
-                        fig.multi_line(y_err_x, y_err_y,
-                                       color=self.colors[i % 10])
-                    else:
-                        fig.line(
-                            date, value[0], line_color=self.colors[i % 10], legend_label=location)
-
-                    fig.line(date[:crys.GetTotalDaysConsidered(
-                    )], value[1][:crys.GetTotalDaysConsidered()], line_color='red', line_width=4)
-
-                    fig.xaxis.formatter = DatetimeTickFormatter(
-                        days=["%d %b %y"], months=["%d %b %y"], years=["%d %b %y"])
-                    fig.xaxis.major_label_orientation = math.pi/4
-                    fig.xaxis.ticker.desired_num_ticks = 10
-
-                    # tot_type_country=self.p.get_stats(country=country,type='Cumul',which='deaths')[-1]
-
-                    fig.legend.location = "bottom_left"
-                    fig.legend.title_text_font_style = "bold"
-                    fig.legend.title_text_font_size = "5px"
-
-                    scolumn.append(fig)
-                    if i % 2 == 0:
-                        sline.append(scolumn)
-                        scolumn = []
-                    i += 1
-        fig = gridplot(sline)
-        return fig
-
-    def get_pandas(self):
-        ''' Retrieve the pandas when CoCoDisplay is called '''
-        return self.pycoa_pandas
-
-    @staticmethod
-    def save_map2png(map=None,pngfile='map.png'):
-        '''
-        Save map as png geckodriver and PIL packages are needed
-        '''
-        size = width_height_default[0],width_height_default[1]
-        if pngfile:
-            pngfile=pngfile
-        img_data = map._to_png(5)
-        img = Image.open(io.BytesIO(img_data))
-        img.thumbnail(size, Image.ANTIALIAS)
-        img.save(pngfile)
-        print(pngfile, ' is now save ...')
-
-    @staticmethod
-    def save_pandas_as_png(df=None, pngfile='pandas.png'):
-        source = ColumnDataSource(df)
-        df_columns = [df.index.name]
-        df_columns.extend(df.columns.values)
-        columns_for_table=[]
-        for column in df_columns:
-            if column != None:
-                columns_for_table.append(TableColumn(field=column, title=column))
-                #width_height_default
-        data_table = DataTable(source=source, columns=columns_for_table,
-            height_policy="auto",width_policy="auto",index_position=None)
-        export_png(data_table, filename = pngfile)
-
-    @staticmethod
-    def changeto_nonan_date(df=None,when_end=None,field=None):
-        boolval=True
-        j=0
-        while(boolval == True):
-                boolval = df.loc[df.date == (when_end-dt.timedelta(days=j))][field].dropna().empty
-                j+=1
-        if j>1:
-            info(str(when_end)+'all the value seems to be nan! I will find an other previous date.\n'+
-                'Here the date I will take: '+str(when_end-dt.timedelta(days=j-1)))
-        return  when_end-dt.timedelta(days=j-1)
-
-    @staticmethod
-    def get_utcdate(date):
-        return (date-dt.date(1970, 1, 1)).total_seconds()*1000.
-
-    @staticmethod
-    def test_all_val_null(s):
-            a = s.to_numpy()
-            return ( a == 0).all()
-
+##################### END TO REMOVE ##################
+##################### BEGIN HISTOS/MAPS##################
     def decohistomap(func):
+        ''' Decorator function used for histogram and map '''
         def generic_hm(self,mypandas,input_field = None,cursor_date = None, **kwargs):
             mypandas,dico = self.standard_input(mypandas,input_field,**kwargs,plot_last_date=True)
             if type(input_field) is None.__class__ and dico['which'] is None.__class__ :
@@ -695,7 +849,6 @@ class CocoDisplay():
             #geopdwd_filter['location_shorten']=[dshort_loc[i] for i in geopdwd_filter.location.to_list() ]
             return func(self,input_field,date_slider,name_location_displayed,dico,geopdwd,geopdwd_filter)
         return generic_hm
-
     @decohistomap
     def pycoa_histo(self,input_field,date_slider,name_location_displayed,dico,geopdwd,geopdwd_filter):
         """Create a Bokeh histogram from a pandas input
@@ -925,33 +1078,6 @@ class CocoDisplay():
             else:
                 print('Cursor date not implemented for negative value, sorry about that ...')
         return tabs
-
-    @staticmethod
-    def get_polycoords(geopandasrow):
-        """ Take a row of a geopandas as an input (i.e : for index, row in geopdwd.iterrows():...)
-        and returns a tuple (if the geometry is a Polygon) or a list (if the geometry is a multipolygon)
-        of an exterior.coords """
-        geometry = geopandasrow['geometry']
-        if geometry.type=='Polygon':
-            return list( geometry.exterior.coords)
-        if geometry.type=='MultiPolygon':
-            all = []
-            for ea in geometry:
-                all.append(list( ea.exterior.coords))
-            return all
-
-    @staticmethod
-    def wgs84_to_web_mercator(tuple_xy):
-        ''' Take a tuple (longitude,latitude) from a coordinate reference system crs=EPSG:4326 '''
-        ''' and converts it to a  longitude/latitude tuple from to Web Mercator format '''
-        k = 6378137
-        x = tuple_xy[0] * (k * np.pi/180.0)
-        if tuple_xy[1] == -90:
-            lat = -89
-        else:
-            lat  = tuple_xy[1]
-        y = np.log(np.tan((90 + lat) * np.pi/360.0)) * k
-        return x,y
 
     @decohistomap
     def map_folium(self,input_field,date_slider,name_location_displayed,dico,geopdwd,geopdwd_filter):
@@ -1209,7 +1335,9 @@ class CocoDisplay():
             standardfig = column(date_slider,standardfig)
 
         return standardfig
+##################### END HISTOS/MAPS##################
 
+#### NOT YET IMPLEMENTED WITH THIS CURRENT VERSION ... TO DO ...
     @staticmethod
     def sparkline(data, figsize=(2, 0.25), **kwargs):
         """
@@ -1225,7 +1353,6 @@ class CocoDisplay():
         plt.savefig(img)
         plt.close()
         return '<img src="data:image/png;base64, {}" />'.format(base64.b64encode(img.getvalue()).decode())
-
     def spark_pandas(self,pandy,which_data):
         '''
         Return pandas : location as index andwhich_data as sparkline (latest 30 values)
@@ -1238,3 +1365,59 @@ class CocoDisplay():
                 [CocoDisplay.sparkline(pandy.groupby('location')[which_data].apply(list)[i][-30:])
                 for i in loc]})
         return resume.set_index('location')
+    def crystal_fig(self, crys, err_y):
+        sline = []
+        scolumn = []
+        i = 1
+        list_fits_fig = crys.GetListFits()
+        for dct in list_fits_fig:
+            for key, value in dct.items():
+                location = key
+                if math.nan not in value[0] and math.nan not in value[1]:
+                    maxy = crys.GetFitsParameters()[location][1]
+                    if math.isnan(maxy) == False:
+                        maxy = int(maxy)
+                    leg = 'From fit : tmax:' + \
+                        str(crys.GetFitsParameters()[location][0])
+                    leg += '   Tot deaths:' + str(maxy)
+                    fig = figure(plot_width=300, plot_height=200,
+                                 tools=['box_zoom,box_select,crosshair,reset'], title=leg, x_axis_type="datetime")
+
+                    date = [extract_dates(i)
+                            for i in self.p.getDates()]
+                    if err_y:
+                        fig.circle(
+                            date, value[0], color=self.colors[i % 10], legend_label=location)
+                        y_err_x = []
+                        y_err_y = []
+                        for px, py in zip(date, value[0]):
+                            err = np.sqrt(np.abs(py))
+                            y_err_x.append((px, px))
+                            y_err_y.append((py - err, py + err))
+                        fig.multi_line(y_err_x, y_err_y,
+                                       color=self.colors[i % 10])
+                    else:
+                        fig.line(
+                            date, value[0], line_color=self.colors[i % 10], legend_label=location)
+
+                    fig.line(date[:crys.GetTotalDaysConsidered(
+                    )], value[1][:crys.GetTotalDaysConsidered()], line_color='red', line_width=4)
+
+                    fig.xaxis.formatter = DatetimeTickFormatter(
+                        days=["%d %b %y"], months=["%d %b %y"], years=["%d %b %y"])
+                    fig.xaxis.major_label_orientation = math.pi/4
+                    fig.xaxis.ticker.desired_num_ticks = 10
+
+                    # tot_type_country=self.p.get_stats(country=country,type='Cumul',which='deaths')[-1]
+
+                    fig.legend.location = "bottom_left"
+                    fig.legend.title_text_font_style = "bold"
+                    fig.legend.title_text_font_size = "5px"
+
+                    scolumn.append(fig)
+                    if i % 2 == 0:
+                        sline.append(scolumn)
+                        scolumn = []
+                    i += 1
+        fig = gridplot(sline)
+        return fig

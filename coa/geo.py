@@ -239,6 +239,7 @@ class GeoManager():
                 "Iran":"IRN",\
                 "Diamond Princess":"",\
                 "Ms Zaandam":"",\
+                "Micronesia":"",\
                     })  # last two are names of boats
         elif db=='worldometers':
             translation_dict.update({\
@@ -271,6 +272,7 @@ class GeoManager():
                     "Swaziland":"SWZ",\
                     "United States Virgin Islands":"VIR",\
                     "Iran":"IRN",\
+                    "Micronesia (Country)":"",\
                 })
         return [translation_dict.get(k,k) for k in w]
 
@@ -677,10 +679,10 @@ class GeoCountry():
         Must give as arg the country to deal with, as a valid ISO3 string.
 
         Various args :
-         - dense_geometry (boolean). If True , the geometry of subregions and 
+         - dense_geometry (boolean). If True , the geometry of subregions and
            region is changed in order to have dense overall geometry.
            Default False.
-         - main_area (boolean). If True, only the geometry of the main area of 
+         - main_area (boolean). If True, only the geometry of the main area of
            the country is taken into account.
         """
         self._country=country
@@ -747,7 +749,7 @@ class GeoCountry():
                 },inplace=True)
 
             self._country_data.drop(['id_geofla','code_reg','nom_reg','x_chf_lieu','y_chf_lieu','x_centroid','y_centroid'],axis=1,inplace=True) # removing some column without interest
-                
+
             list_translation={"GUADELOUPE":(63,23),
                                  "MARTINIQUE":(63,23),
                                  "GUYANE":(50,35),
@@ -830,7 +832,7 @@ class GeoCountry():
                     else:
                         g=self._country_data.loc[index, 'geometry']
 
-                    tmp.append(g)  
+                    tmp.append(g)
                 self._country_data['geometry']=tmp
 
             if main_area == True:

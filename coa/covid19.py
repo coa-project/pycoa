@@ -198,7 +198,6 @@ class DataBase(object):
             # Adding information for all locations
             ntot=len(self.mainpandas['location'].unique())
 
-
             ptot=self.mainpandas.groupby(['location']).fillna(method='ffill').groupby(['date']).sum().reset_index()   # summing for all locations
             # mean for some columns, about index and not sum of values.
             for col in ptot.columns:
@@ -334,14 +333,15 @@ class DataBase(object):
             d_loc_s = self.geo.to_standard(list(uniqloc),output='list',db=self.get_db(),interpret_region=True)
             self.slocation = d_loc_s
             newloc = d_loc_s
-            toremove=['']
+            toremove = ['']
         else:
-            loc_sub = list(self.geo.get_subregion_list()['name_subregion'])
-            loc_code = list(self.geo.get_data().loc[self.geo.get_data().name_subregion.isin(loc_sub)]['code_subregion'])
-            self.slocation = loc_code
-            oldloc = loc_sub
-            newloc = loc_code
-            toremove = [x for x in uniqloc if x not in loc_sub]
+            loc_sub_name  = list(self.geo.get_subregion_list()['name_subregion'])
+            loc_sub_code = list(self.geo.get_subregion_list()['code_subregion'])
+            #loc_code = list(self.geo.get_data().loc[self.geo.get_data().name_subregion.isin(loc_sub)]['code_subregion'])
+            self.slocation = loc_sub_code
+            oldloc = loc_sub_name
+            newloc = loc_sub_code
+            toremove = [x for x in uniqloc if x not in loc_sub_name]
 
         result = reduce(lambda x, y: pd.merge(x, y, on = ['location','date']), pandas_list)
         result = result.loc[~result.location.isin(toremove)]
@@ -419,7 +419,8 @@ class DataBase(object):
         else:
             loc_sub=list(self.geo.get_subregion_list()['name_subregion'])
             toremove=[x for x in uniqloc if x not in loc_sub]
-            loc_code=list(self.geo.get_data().loc[self.geo.get_data().name_subregion.isin(loc_sub)]['code_subregion'])
+            loc_code = list(self.geo.get_subregion_list()['code_subregion'])
+            #loc_code=list(self.geo.get_data().loc[self.geo.get_data().name_subregion.isin(loc_sub)]['code_subregion'])
             self.slocation=loc_code
             oldloc = loc_sub
             newloc = loc_code

@@ -1183,7 +1183,7 @@ class CocoDisplay():
         draw = ImageDraw.Draw(im)
         msg = "©pycoa.fr (data from: {})".format(self.database_name)
         w, h = draw.textsize(msg)
-        fnt = ImageFont.truetype('arial.ttf',12)
+        fnt = ImageFont.truetype('Arial.ttf',12)
         draw.text((2,0), msg, font=fnt,fill=(0, 0, 0))
         draw.text((2,0), msg, fill=(0, 0, 0))
 

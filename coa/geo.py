@@ -239,7 +239,7 @@ class GeoManager():
                 "Iran":"IRN",\
                 "Diamond Princess":"",\
                 "Ms Zaandam":"",\
-                "Micronesia":"",\
+                "Micronesia":"FSM",\
                     })  # last two are names of boats
         elif db=='worldometers':
             translation_dict.update({\
@@ -272,7 +272,7 @@ class GeoManager():
                     "Swaziland":"SWZ",\
                     "United States Virgin Islands":"VIR",\
                     "Iran":"IRN",\
-                    "Micronesia (Country)":"",\
+                    "Micronesia (Country)":"FSM",\
                 })
         return [translation_dict.get(k,k) for k in w]
 

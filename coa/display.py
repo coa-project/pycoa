@@ -993,7 +993,8 @@ class CocoDisplay():
                 standardfig = self.standardfig(x_axis_type=axis_type,x_range = (-max_value,max_value), title=title)
 
             standardfig.quad(source=srcfiltered,
-                top='top', bottom='bottom',left='left', right='right',color='colors',line_color='black')
+                top='top', bottom='bottom',left='left', right='right',color='colors',line_color='black',
+                line_width=1,hover_line_width=2)
 
             if date_slider and mypandas_filter[mypandas_filter[input_field]<0].empty:
                 date_slider.orientation='vertical'

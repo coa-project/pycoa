@@ -161,7 +161,7 @@ def setwhom(base):
         raise CoaDbError(base+' is not a supported database. '
             'See pycoa.listbase() for the full list.')
     if _whom != base:
-        _db,_cocoplot = coco.DataBase.factory(base) 
+        _db,_cocoplot = coco.DataBase.factory(base)
         _whom = base
 
     return _db.get_available_keys_words()
@@ -354,7 +354,12 @@ def decoplot(func):
 
 @decoplot
 def plot(t,**kwargs):
-    fig = _cocoplot.pycoa_date_plot(t,**kwargs)
+    input_arg=kwargs.get('input',None)
+    input_fied=kwargs.get('input_field')
+    if isinstance(input_arg,pd.DataFrame) and len(input_fied)==2:
+        fig = _cocoplot.pycoa_plot(t,[input_fied[0],input_fied[1]])
+    else:
+        fig = _cocoplot.pycoa_date_plot(t,**kwargs)
     show(fig)
 
 @decoplot

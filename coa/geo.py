@@ -65,6 +65,11 @@ class GeoManager():
         self.set_standard(standard)
         self._gr=GeoRegion()
 
+    def get_region_list(self):
+        """ return the list of region via the GeoRegion instance
+        """
+        return self._gr.get_region_list()
+
     def get_list_standard(self):
         """ return the list of supported standard name of countries.
         First one is default for the class

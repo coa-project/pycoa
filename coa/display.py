@@ -983,6 +983,7 @@ class CocoDisplay():
                 title =  title_fig + ' ' + title
             if mypandas_filter[mypandas_filter[input_field]<0].empty:
                 standardfig = self.standardfig(x_axis_type=axis_type,x_range = (0.01,1.05*max_value), title=title)
+                standardfig.xaxis[0].formatter = PrintfTickFormatter(format="%4.2e")
                 if axis_type=="log":
                     min_range_val=0.01
                     if min_value>=0:

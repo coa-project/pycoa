@@ -832,6 +832,8 @@ class CocoDisplay():
                         new_loc = geopdwd_filter.location.unique()[:30]
                         geopdwd_filter = geopdwd_filter.loc[geopdwd_filter.location.isin(new_loc)]
                         geopdwd = geopdwd.loc[geopdwd.location.isin(new_loc)]
+                        geopdwd = geopdwd[:-1]
+                        geopdwd_filter = geopdwd_filter[:-1]
                 geopdwd_filter['bottom']=geopdwd_filter.index
                 #geopdwd_filter['left']=[0]*len(geopdwd_filter.index)
                 #geopdwd_filter['right']=geopdwd_filter['cases']
@@ -974,6 +976,7 @@ class CocoDisplay():
         min_value_gt0 = geopdwd[geopdwd[input_field]>0][input_field].min()
 
         panels = []
+
         for axis_type in ["linear", "log"]:
             title = dico['titlebar']
             if title_fig != title.split()[0]:
@@ -985,9 +988,9 @@ class CocoDisplay():
                     if min_value>=0:
                         min_range_val=10**np.floor(np.log10(min_value_gt0))
                     standardfig.x_range=Range1d(min_range_val, 1.05*max_value)
+                    standardfig.y_range=Range1d(min(mypandas_filter['bottom']), max(mypandas_filter['top']))
                     mypandas_filter['left']=[0.001]*len(mypandas_filter.index)
                     srcfiltered = ColumnDataSource(data=mypandas_filter)
-
             else:
                 max_value = max(np.abs(mypandas_filter['left']).max(),mypandas_filter['right'].max())
                 standardfig = self.standardfig(x_axis_type=axis_type,x_range = (-max_value,max_value), title=title)

@@ -167,10 +167,16 @@ def get_local_from_url(url,expiration_time=0,suffix=''):
     local_base_filename=urlparse(url).netloc+"_"+str(crc32(bytes(url,'utf-8')))+suffix
     local_tmp_filename=os.path.join(tmpdir,local_base_filename)
 
+    local_file_exists=False
+
     if _coacache_folder != '':
         local_cached_filename=os.path.join(_coacache_folder,local_base_filename)
         local_file_exists=os.path.exists(local_cached_filename)
         local_filename=local_cached_filename
+
+    if os.path.exists(local_tmp_filename) and local_file_exists: # prefering the file in tmp if more recent
+        if os.path.getmtime(local_tmp_filename) > os.path.getmtime(local_filename):
+            local_filename = local_tmp_filename
     else:
         local_file_exists=os.path.exists(local_tmp_filename)
         local_filename=local_tmp_filename
@@ -179,7 +185,6 @@ def get_local_from_url(url,expiration_time=0,suffix=''):
         if expiration_time==0 or time.time()-os.path.getmtime(local_filename)<expiration_time:
             verb('Using locally stored data for '+url+' stored as '+local_filename)
             return local_filename
-
 
     # if not : download the file in tmp area
     local_filename=local_tmp_filename

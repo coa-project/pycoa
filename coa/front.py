@@ -177,7 +177,7 @@ def setwhom(base):
         _db,_cocoplot = coco.DataBase.factory(base)
         _whom = base
 
-    return _db.get_available_keys_words()
+    return listwhich()
 
 # ----------------------------------------------------------------------
 # --- getwhom() --------------------------------------------------------
@@ -245,7 +245,8 @@ def get(**kwargs):
 
     if not what:
         what=listwhat()[0]
-    if not whom:
+
+    if whom == None:
         whom=_whom
     if whom != _whom:
         setwhom(whom)
@@ -257,7 +258,7 @@ def get(**kwargs):
 
     if not which:
         which=listwhich()[0]
-    elif which not in setwhom(whom):
+    elif which not in listwhich():
         raise CoaKeyError('Which option '+which+' not supported. '
                             'See listwhich() for list.')
     pandy = _db.get_stats(which=which,location=where,option=option).rename(columns={'location': 'where'})

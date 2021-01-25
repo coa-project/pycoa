@@ -197,7 +197,8 @@ class DataBase(object):
             # Adding information for all locations
             ntot=len(self.mainpandas['location'].unique())
 
-            ptot=self.mainpandas.groupby(['location']).fillna(0).groupby(['date']).sum().reset_index()   # summing for all locations
+            ptot=self.mainpandas.groupby(['location']).fillna(method='ffill').groupby(['date']).sum().reset_index()   # summing for all locations
+
             # mean for some columns, about index and not sum of values.
             for col in ptot.columns:
                 if col.startswith('cur_idx_'):

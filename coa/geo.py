@@ -745,7 +745,6 @@ class GeoCountry():
 
             self._country_data=self._country_data.merge(p_reg_flag,how='left',\
                     left_on='code_reg',right_on='code_region') # merging with flag and correct names
-
             # standardize name for region, subregion
             self._country_data.rename(columns={\
                 'code_dept':'code_subregion',\

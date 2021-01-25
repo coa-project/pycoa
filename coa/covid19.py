@@ -159,12 +159,11 @@ class DataBase(object):
                 opencovid19 = self.csv2pandas('https://raw.githubusercontent.com/opencovid19-fr/data/master/dist/chiffres-cles.csv',
                             drop_field=drop_field,rename_columns=rename,separator=',',cast=cast)
                 opencovid19['location'] = opencovid19['location'].apply(lambda x: x.replace('COM-','').replace('DEP-',''))
-
                 # integrating needed fields
+
                 column_to_integrate=['nouvelles_hospitalisations', 'nouvelles_reanimations', 'depistes']
                 for w in ['nouvelles_hospitalisations', 'nouvelles_reanimations', 'depistes']:
                     opencovid19['tot_'+w]=opencovid19.groupby(['location'])[w].cumsum()
-
                 #columns_skipped = ['granularite','maille_nom','source_nom','source_url','source_archive','source_type']
                 dict_columns_keeped = {
                     'deces':'tot_deces',
@@ -199,6 +198,7 @@ class DataBase(object):
             ntot=len(self.mainpandas['location'].unique())
 
             ptot=self.mainpandas.groupby(['location']).fillna(method='ffill').groupby(['date']).sum().reset_index()   # summing for all locations
+
             # mean for some columns, about index and not sum of values.
             for col in ptot.columns:
                 if col.startswith('cur_idx_'):

@@ -173,7 +173,7 @@ def setwhom(base):
     if base not in listwhom():
         raise CoaDbError(base+' is not a supported database. '
             'See pycoa.listbase() for the full list.')
-    if _whom != base:
+    if True: #force the init #_whom != base:
         _db,_cocoplot = coco.DataBase.factory(base)
         _whom = base
 

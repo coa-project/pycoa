@@ -439,6 +439,7 @@ class DataBase(object):
             p     |       locationp       |    1      |   lp-val1-1     |  lp-val2-1    | ...| lp-valn-1
             ...
         '''
+       self.mainpandas = self.mainpandas.reset_index(drop=True)
        return self.mainpandas
 
    def flat_list(self, matrix):

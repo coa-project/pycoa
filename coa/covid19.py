@@ -445,11 +445,8 @@ class DataBase(object):
         Return the pandas pandas_datase
          - index: only an incremental value
          - location: list of location used in the database selected (using geo standardization)
-         - date : from min date to max date used by the database selected
          - 'which' :  return the keyword values selected from the avalailable keywords keepted seems
             self.get_available_keys_words()
-         - daily  : 'which' daily difference
-         - weekly : 'which' weekly difference
 
          - 'option' :default none
             * 'nonneg' In some cases negatives values can appeared due to a database updated, nonneg option

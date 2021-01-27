@@ -581,7 +581,11 @@ class DataBase(object):
                     ptot[col]=ptot[col]/ntot
 
             # adding the location name
-            ptot['location']='sumall '+str(kwargs['location'])
+            all_loc_string=str(kwargs['location'])
+            if isinstance(kwargs['location'],list):
+                if len(kwargs['location'])>2:
+                    all_loc_string="["+str(kwargs['location'][0])+"..."+str(kwargs['location'][-1])+"]"
+            ptot['location']="SumAll "+all_loc_string
             pdfiltered=ptot
 
         # computing daily, cumul and weekly

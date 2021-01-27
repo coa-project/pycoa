@@ -469,7 +469,7 @@ class DataBase(object):
                     ...
 
         '''
-        kwargs_test(kwargs,['location','which','option',],
+        kwargs_test(kwargs,['location','which','option'],
             'Bad args used in the get_stats() function.')
 
         if not 'location' in kwargs or kwargs['location'] is None.__class__ or kwargs['location']==None:

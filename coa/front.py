@@ -221,10 +221,13 @@ def get(**kwargs):
                 dict or pandas)
 
     option --   pre-computing option.
-                Currently, only the nonneg option is available, meaning
-                that negative daily balance is pushed back to previous
-                days in order to have a cumulative function which is
+                * nonneg means that negative daily balance is pushed back 
+                to previousdays in order to have a cumulative function which is
                 monotonous increasing.
+                * nofillnan means that nan value won't be filled. 
+                * smooth7 will perform a 7 day window average of data
+                * global will return integrated over locations given via the 
+                where keyword, the data
                 is available. By default : no option.
     """
     kwargs_test(kwargs,['where','what','which','whom','when','output','option','bins','title','visu','tile','cursor_date'],

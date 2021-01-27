@@ -516,7 +516,9 @@ class DataBase(object):
 
         # deal with options now
         option = kwargs.get('option', '')
-        fillnan = True
+        fillnan = True # default
+        global_bool = False # default
+
         if not isinstance(option,list):
             option=[option]
         for o in option:

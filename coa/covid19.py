@@ -517,7 +517,7 @@ class DataBase(object):
         # deal with options now
         option = kwargs.get('option', '')
         fillnan = True # default
-        global_bool = False # default
+        sumall = False # default
 
         if not isinstance(option,list):
             option=[option]
@@ -559,8 +559,8 @@ class DataBase(object):
                 pdfiltered[kwargs['which']] = pdfiltered.groupby(['location'])[kwargs['which']].rolling(7,min_periods=7,center=True).mean().reset_index(level=0,drop=True)
                 #pdfiltered[kwargs['which']] = pdfiltered[kwargs['which']].fillna(0) # causes bug with fillnan procedure below
                 pdfiltered = pdfiltered.iloc[3:-3] # remove out of bound dates.
-            elif o == 'global':
-                global_bool = True
+            elif o == 'sumall':
+                sumall = True
             elif o != None and o != '':
                 raise CoaKeyError('The option '+o+' is not recognized in get_stats. See get_available_options() for list.')
 
@@ -570,8 +570,8 @@ class DataBase(object):
             # fill remaining nan with zeros
             pdfiltered = pdfiltered.fillna(0)
 
-        # if global set, return only integrate val
-        if global_bool:
+        # if sumall set, return only integrate val
+        if sumall:
             ntot=len(pdfiltered['location'].unique())
             ptot=pdfiltered.groupby(['location']).fillna(method='ffill').groupby(['date']).sum().reset_index()   # summing for all locations
 
@@ -581,7 +581,7 @@ class DataBase(object):
                     ptot[col]=ptot[col]/ntot
 
             # adding the location name
-            ptot['location']='global'
+            ptot['location']='sumall '+str(kwargs['location'])
             pdfiltered=ptot
 
         # computing daily, cumul and weekly

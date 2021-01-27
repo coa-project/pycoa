@@ -226,7 +226,7 @@ def get(**kwargs):
                 monotonous increasing.
                 * nofillnan means that nan value won't be filled. 
                 * smooth7 will perform a 7 day window average of data
-                * global will return integrated over locations given via the 
+                * sumall will return integrated over locations given via the 
                 where keyword, the data
                 is available. By default : no option.
     """

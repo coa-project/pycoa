@@ -570,6 +570,21 @@ class DataBase(object):
             # fill remaining nan with zeros
             pdfiltered = pdfiltered.fillna(0)
 
+        # if global set, return only integrate val
+        if global_bool:
+            ntot=len(pdfiltered['location'].unique())
+            ptot=pdfiltered.groupby(['location']).fillna(method='ffill').groupby(['date']).sum().reset_index()   # summing for all locations
+
+            # mean for some columns, about index and not sum of values.
+            for col in ptot.columns:
+                if col.startswith('cur_idx_'):
+                    ptot[col]=ptot[col]/ntot
+
+            # adding the location name
+            ptot['location']='global'
+            pdfiltered=ptot
+
+        # computing daily, cumul and weekly
         pdfiltered['daily'] = pdfiltered.groupby(['location'])[kwargs['which']].diff()
         pdfiltered['cumul'] = pdfiltered.groupby(['location'])[kwargs['which']].cumsum()
         pdfiltered['weekly'] = pdfiltered.groupby(['location'])[kwargs['which']].diff(7)

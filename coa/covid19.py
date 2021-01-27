@@ -194,26 +194,6 @@ class DataBase(object):
                 columns_keeped+=['total_cases_per_million','total_deaths_per_million','total_vaccinations_per_hundred']
                 self.return_structured_pandas(owid.rename(columns=dict(zip(col_to_rename,renamed_cols))),columns_keeped=columns_keeped+renamed_cols)
 
-            # Adding information for all locations
-            ntot=len(self.mainpandas['location'].unique())
-
-            ptot=self.mainpandas.groupby(['location']).fillna(method='ffill').groupby(['date']).sum().reset_index()   # summing for all locations
-
-            # mean for some columns, about index and not sum of values.
-            for col in ptot.columns:
-                if col.startswith('cur_idx_'):
-                    ptot[col]=ptot[col]/ntot
-
-            if self.db_world:
-                loc_whole='Whole World'
-            else:
-                loc_whole=self.geo.get_country()
-
-            # adding whole location to the slocation list
-            ptot['location']=loc_whole
-            self.slocation = self.slocation+[loc_whole]
-            self.mainpandas=self.mainpandas.append(ptot)
-
             # some info
             info('Few information concernant the selected database : ', self.get_db())
             info('Available which key-words for: ',self.get_available_keys_words())

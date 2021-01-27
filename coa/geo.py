@@ -178,12 +178,8 @@ class GeoManager():
                 if len(c)==0:
                     n1='' #None
                 else:
-                    dict_whole={'alpha_2':'WW','alpha_3':'WWW','numeric':'000','name':'Whole World','alt':'Whole'}
                     try:
-                        if c in [d.title() for d in list(dict_whole.values())]: # managing whole world if asked
-                            n0=dotdict(dict_whole)
-                        else:
-                            n0=pc.countries.lookup(c)
+                        n0=pc.countries.lookup(c)
                     except LookupError:
                         try:
                             nf=pc.countries.search_fuzzy(c)
@@ -409,14 +405,14 @@ class GeoInfo():
                 p=p.drop(f,axis=1)
             # ----------------------------------------------------------
             if f == 'continent_code':
-                p[f] = [pcc.country_alpha2_to_continent_code(k) if k != 'WW' else 'WW' for k in countries_iso2]
+                p[f] = [pcc.country_alpha2_to_continent_code(k) for k in countries_iso2]
             # ----------------------------------------------------------
             elif f == 'continent_name':
                 p[f] = [pcc.convert_continent_code_to_continent_name( \
-                    pcc.country_alpha2_to_continent_code(k) ) if k != 'WW' else 'World' for k in countries_iso2 ]
+                    pcc.country_alpha2_to_continent_code(k) ) for k in countries_iso2 ]
             # ----------------------------------------------------------
             elif f == 'country_name':
-                p[f] = [pcc.country_alpha2_to_country_name(k) if k != 'WW' else 'Whole World' for k in countries_iso2]
+                p[f] = [pcc.country_alpha2_to_country_name(k) for k in countries_iso2]
             # ----------------------------------------------------------
             elif f in ['population','area','fertility','median_age','urban_rate']:
                 if self._data_population.empty:
@@ -489,13 +485,6 @@ class GeoInfo():
                         poly=self._data_geometry[self._data_geometry.id_tmp==newc].geometry.values[0]
                         poly=so.unary_union(sg.MultiPolygon([sg.Polygon([[x,y] if x>=0 else (x+360,y) for x,y in p.exterior.coords]) for p in poly]))
                         self._data_geometry.loc[self._data_geometry.id_tmp==newc,'geometry']=gpd.GeoSeries(poly).values
-
-                    # Merging geometry for whole world. But takes too muche time…
-                    # self._data_geometry['tmp'] = 0
-                    # geo_ww=self._data_geometry.dissolve(by='tmp').reset_index()
-                    # geo_ww['id_tmp']='WWW'
-                    # geo_ww.drop('tmp',axis=1)
-                    # self._data_geometry=self._data_geometry.append(geo_ww)
 
                 p=p.merge(self._data_geometry,how='left',\
                     left_on='iso3_tmp',right_on='id_tmp',\

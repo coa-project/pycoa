@@ -559,6 +559,8 @@ class DataBase(object):
                 pdfiltered[kwargs['which']] = pdfiltered.groupby(['location'])[kwargs['which']].rolling(7,min_periods=7,center=True).mean().reset_index(level=0,drop=True)
                 #pdfiltered[kwargs['which']] = pdfiltered[kwargs['which']].fillna(0) # causes bug with fillnan procedure below
                 pdfiltered = pdfiltered.iloc[3:-3] # remove out of bound dates.
+            elif o == 'global':
+                global_bool = True
             elif o != None and o != '':
                 raise CoaKeyError('The option '+o+' is not recognized in get_stats. See get_available_options() for list.')
 

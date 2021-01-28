@@ -149,6 +149,13 @@ class CocoDisplay():
         input_dico['what']=what
 
         if 'location' in mypandas:
+            uniqloc = list(mypandas.location.unique())
+            newuniqloc=[loc.replace('SumAll ','') for loc in uniqloc if 'SumAll' in loc.split()]
+            if newuniqloc:
+                mypandas = mypandas.replace(uniqloc,newuniqloc)
+            cols_date_location = ['date', 'location']
+            new_columns_order = cols_date_location + (mypandas.columns.drop(cols_date_location).tolist())
+            mypandas = mypandas[new_columns_order]
             which =  mypandas.columns[2]
         else:
             which =  mypandas.columns[1]
@@ -428,7 +435,8 @@ class CocoDisplay():
             my_location = mypandas.location.unique()
             colors = itertools.cycle(Category20[20])
             dico_colors = {i:next(colors) for i in my_location}
-            mypandas['colors']=[ dico_colors[i] for i in mypandas.location ]
+            country_col = pd.DataFrame(dico_colors.items(),columns=['location', 'colors'])
+            mypandas=(pd.merge(mypandas, country_col, on='location'))
 
             if len(my_location)>12:
                 new_loc = my_location[:12]
@@ -803,7 +811,9 @@ class CocoDisplay():
             dshort_loc=CocoDisplay.dict_shorten_loc(my_location)
             colors = itertools.cycle(self.colors)
             dico_colors = {i:next(colors) for i in my_location}
-            mypandas['colors']=[dico_colors[i] for i in mypandas.location ]
+
+            country_col = pd.DataFrame(dico_colors.items(),columns=['location', 'colors'])
+            mypandas=(pd.merge(mypandas, country_col, on='location'))
 
             geopdwd = mypandas
             if func.__name__ == 'map_folium' or func.__name__ == 'bokeh_map':

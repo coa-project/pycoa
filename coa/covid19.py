@@ -498,7 +498,7 @@ class DataBase(object):
         clist=list(set(clist)) # to suppress duplicate countries
         diff_locations = list(set(clist) - set(self.get_locations()))
         clist = [i for i in clist if i not in diff_locations]
-
+        
         if len(clist) == 0:
             raise CoaWhereError('No correct subregion found according to the where option given.')
 
@@ -583,7 +583,6 @@ class DataBase(object):
         # if sumall set, return only integrate val
         if sumall:
             ntot=len(pdfiltered['location'].unique())
-            print(ntot, pdfiltered['location'].unique())
             ptot=pdfiltered.groupby(['location']).fillna(method='ffill').groupby(['date']).sum().reset_index()   # summing for all locations
 
             # mean for some columns, about index and not sum of values.

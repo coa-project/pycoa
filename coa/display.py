@@ -99,7 +99,7 @@ class CocoDisplay():
                     country = 'FRA'
                 info = coge.GeoCountry(country,dense_geometry=False)
 
-                self.geopan = info.get_subregion_list()[['code_subregion','town_subregion','geometry']]
+                self.geopan = info.get_subregion_list()[['code_subregion','name_subregion','geometry']]
                 self.geopan = self.geopan.rename(columns={'code_subregion':'location'})
             elif self.database_name == 'jhu' or self.database_name == 'owid':
                 geom=coge.GeoManager('name')
@@ -802,7 +802,7 @@ class CocoDisplay():
                 else:
                     input_field = dico['input_field'][0]
             if self.database_name == 'spf' or  self.database_name == 'opencovid19' or self.database_name == 'jhu-usa':
-                name_location_displayed = 'town_subregion'
+                name_location_displayed = 'name_subregion'
             else:
                 name_location_displayed = 'location'
 

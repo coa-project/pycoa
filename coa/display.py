@@ -145,7 +145,7 @@ class CocoDisplay():
             bins = bins
         input_dico['bins'] = bins
 
-        what = kwargs.get('what', None)
+        what = kwargs.get('what', 'cumul') # cumul is the default
         input_dico['what']=what
 
         if 'location' in mypandas:

@@ -221,12 +221,12 @@ def get(**kwargs):
                 dict or pandas)
 
     option --   pre-computing option.
-                * nonneg means that negative daily balance is pushed back 
+                * nonneg means that negative daily balance is pushed back
                 to previousdays in order to have a cumulative function which is
                 monotonous increasing.
-                * nofillnan means that nan value won't be filled. 
+                * nofillnan means that nan value won't be filled.
                 * smooth7 will perform a 7 day window average of data
-                * sumall will return integrated over locations given via the 
+                * sumall will return integrated over locations given via the
                 where keyword, the data
                 is available. By default : no option.
     """
@@ -419,7 +419,8 @@ def hist(**kwargs):
 
     typeofhist  --  'bylocation' (default) or 'byvalue'
     """
-    kwargs_test(kwargs,['where','what','which','whom','when','input','input_field','bins','title','typeofhist','cursor_date'],
+    kwargs_test(kwargs,['where','what','which','whom','when','input','input_field','bins','title',
+                        'typeofhist','cursor_date','option'],
             'Bad args used in the pycoa.hist() function.')
 
     bins=kwargs.get('bins',None)
@@ -437,6 +438,7 @@ def hist(**kwargs):
         t=get(**kwargs,output='pandas')
         which=kwargs.get('which',listwhich()[0])
         what=kwargs.get('what',listwhat()[0])
+        option=kwargs.get('option',None)
     else:
         raise CoaTypeError('Waiting input as valid pycoa pandas '
             'dataframe. See help.')

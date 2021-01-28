@@ -164,6 +164,7 @@ class CocoDisplay():
         input_dico['when_beg'] = mypandas.date.min()
         input_dico['when_end'] = mypandas.date.max()
 
+
         if when:
             input_dico['when_beg'],input_dico['when_end']=extract_dates(when)
             if input_dico['when_beg'] == dt.date(1,1,1):
@@ -176,7 +177,6 @@ class CocoDisplay():
             title_temporal =  ' (at ' + input_dico['when_end'].strftime('%d/%m/%Y') + ')'
         else:
             title_temporal =  ' (' + 'between ' + input_dico['when_beg'].strftime('%d/%m/%Y') +' and ' + input_dico['when_end'].strftime('%d/%m/%Y') + ')'
-
 
         if kwargs.get('option', '') != '':
             title_temporal = ', option '+str(kwargs.get('option'))+title_temporal
@@ -425,49 +425,52 @@ class CocoDisplay():
             ax_type = ['linear','log']
             tooltips='Date: @date{%F} <br>  $name: @$name'
 
+            my_location = mypandas.location.unique()
+            colors = itertools.cycle(Category20[20])
+            dico_colors = {i:next(colors) for i in my_location}
+            mypandas['colors']=[ dico_colors[i] for i in mypandas.location ]
+
+            if len(my_location)>12:
+                new_loc = my_location[:12]
+                mypandas = mypandas.loc[mypandas.location.isin(new_loc)]
+
             if 'location' in mypandas.columns:
                 location_ordered_byvalues=list(mypandas.loc[mypandas.date==dico['when_end']].sort_values(by=input_field,ascending=False)['location'])
                 tooltips='Location: @location <br> Date: @date{%F} <br>  $name: @$name'
                 loc = location_ordered_byvalues#mypandas['location'].unique()
                 shorten_loc = list(CocoDisplay.dict_shorten_loc(loc).values())
-                for i in input_field:
-                    dict_filter_data[i] =  \
-                        dict(mypandas.loc[(mypandas['location'].isin(loc)) &
-                                         (mypandas['date']>=dico['when_beg']) & (mypandas['date']<=dico['when_end']) ].groupby('location').__iter__())
+                mypandas = mypandas.loc[(mypandas['date']>=dico['when_beg']) & (mypandas['date']<=dico['when_end'])]
+                mypandas['location'] = pd.Categorical(mypandas['location'],
+                        categories=location_ordered_byvalues,ordered=True)
+                mypandas.sort_values(['location','date'], inplace=True)
 
-                    for j in range(len(loc)):
-                        dict_filter_data[i][shorten_loc[j]] = dict_filter_data[i].pop(loc[j])
                 list_max=[]
                 for i in input_field:
-                    [list_max.append(max(value.loc[value.location.isin(loc)][i])) for key,value in dict_filter_data[i].items()]
+                    list_max.append(max(mypandas.loc[mypandas.location.isin(loc)][i]))
 
                 if len([x for x in list_max if not np.isnan(x)])>0:
                     amplitude=(np.nanmax(list_max) - np.nanmin(list_max))
                     if amplitude > 10**4:
                         ax_type.reverse()
-            else:
-                for i in input_field:
-                    dict_filter_data[i] = {i:mypandas.loc[(mypandas['date']>=dico['when_beg']) & (mypandas['date']<=dico['when_end'])]}
+            #else:
+            #    for i in input_field:
+            #        dict_filter_data[i] = {i:mypandas.loc[(mypandas['date']>=dico['when_beg']) & (mypandas['date']<=dico['when_end'])]}
 
             hover_tool = HoverTool(tooltips=tooltips,formatters={'@date': 'datetime'})
-            return func(self,mypandas, dico, input_field, dict_filter_data, hover_tool,ax_type, **kwargs)
+            return func(self,mypandas, dico, input_field, hover_tool,ax_type, **kwargs)
         return generic_plot
     @decoplot
-    def pycoa_plot(self,mypandas,dico,input_field,dict_filter_data, hover_tool, ax_type,**kwargs):
+    def pycoa_plot(self,mypandas,dico,input_field, hover_tool, ax_type,**kwargs):
         panels = []
         hover_tool = None
+        cases_custom = CustomJSHover(code="""
+                var value;
+                //if(value>0)
+                    return value.toExponential(2).toString();
+                """)
         for axis_type in ax_type :
             standardfig =  self.standardfig(x_axis_label=input_field[0],
             y_axis_label=input_field[1], y_axis_type=axis_type ,title= dico['titlebar'])
-            #tooltips='Location: @location <br>'+ input_field[0] +': @casesx <br>  '+\
-            #input_field[1]+': @casesy <br>' + 'date: @date{%F}'
-            #hover_tool = HoverTool(tooltips=tooltips,formatters={'@date': 'datetime'})
-
-            cases_custom = CustomJSHover(code="""
-                    var value;
-                    //if(value>0)
-                        return value.toExponential(2).toString();
-                    """)
 
             standardfig.add_tools(HoverTool(
             tooltips=[('Location','@location'),('date', '@date{%F}'),(input_field[0],'@{casesx}'+'{custom}'),
@@ -475,10 +478,6 @@ class CocoDisplay():
             formatters={'location':'printf','@{casesx}':cases_custom,'@{casesy}':cases_custom ,'@date': 'datetime'},
             point_policy="follow_mouse"))#,PanTool())
 
-            #tooltips=[('Location','@location'),(input_field,'@{'+input_field+'}'+'{custom}'),],
-            #formatters={'location':'printf','@{'+input_field+'}':cases_custom,},
-            #standardfig.add_tools(hover_tool)
-            colors = itertools.cycle(Category20[20])
             if len(input_field)!=2:
                 raise CoaTypeError('Two variables are needed to be plotted ... ')
 
@@ -486,7 +485,7 @@ class CocoDisplay():
                 pandaloc=mypandas.loc[mypandas.location==loc].sort_values(by='date',ascending='True')
                 pandaloc.rename(columns={input_field[0]:'casesx',input_field[1]:'casesy'},inplace=True)
                 standardfig.line(x='casesx', y='casesy',
-                source=ColumnDataSource(pandaloc), legend_label=loc,color=next(colors), line_width=3,hover_line_width=4)
+                source=ColumnDataSource(pandaloc), legend_label=loc,color=pandaloc.colors.iloc[0], line_width=3,hover_line_width=4)
 
             standardfig.legend.label_text_font_size = "12px"
             panel = Panel(child=standardfig , title=axis_type)
@@ -498,22 +497,34 @@ class CocoDisplay():
         tabs = Tabs(tabs=panels)
         return tabs
     @decoplot
-    def pycoa_date_plot(self,mypandas,dico,input_field,dict_filter_data, hover_tool, ax_type,**kwargs):
+    def pycoa_date_plot(self,mypandas,dico,input_field, hover_tool, ax_type,**kwargs):
         panels = []
+
+        cases_custom = CustomJSHover(code="""
+                var value;
+                //if(value>0)
+                    return value.toExponential(2).toString();
+                """)
+
         for axis_type in ax_type :
             standardfig =  self.standardfig(y_axis_type=axis_type, x_axis_type='datetime',title= dico['titlebar'])
             standardfig.yaxis[0].formatter = PrintfTickFormatter(format="%4.2e")
-            standardfig.add_tools(hover_tool)
-            colors = itertools.cycle(Category20[20])
-            for i in input_field:
-                if len(input_field)>1:
-                    p = [standardfig.line(x='date', y=i, source=ColumnDataSource(value),
-                    color=next(colors), line_width=3, legend_label=key+' ('+i+')',
-                    name=i,hover_line_width=4) for key,value in dict_filter_data[i].items()]
-                else:
-                    p = [standardfig.line(x='date', y=i, source=ColumnDataSource(value),
-                    color=next(colors), line_width=3, legend_label=key,
-                    name=i,hover_line_width=4) for key,value in dict_filter_data[i].items()]
+            formatters={'location':'printf','@date': 'datetime'}
+            tooltips=[('Location','@location'),('date', '@date{%F}')]
+            for val in input_field:
+                for loc in mypandas.location.unique():
+                    if len(input_field) >1:
+                        leg=loc+' '+val
+                    else:
+                        leg=loc
+                    mypandas_filter = mypandas.loc[mypandas.location == loc].reset_index(drop=True)
+                    standardfig.line(x='date', y=val, source=ColumnDataSource(mypandas_filter),
+                    color=mypandas_filter.colors.iloc[0],line_width=3, legend_label=leg,hover_line_width=4)
+                tooltips.append((val,'@{'+val+'}'+'{custom}'))
+                formatters['@{'+val+'}']=cases_custom
+
+            standardfig.add_tools(HoverTool(tooltips=tooltips,formatters=formatters,
+                    point_policy="follow_mouse"))#,PanTool())
 
             standardfig.legend.label_text_font_size = "12px"
             panel = Panel(child=standardfig , title=axis_type)
@@ -528,7 +539,7 @@ class CocoDisplay():
         tabs = Tabs(tabs=panels)
         return tabs
     @decoplot
-    def scrolling_menu(self,mypandas,dico,input_field,dict_filter_data, hover_tool, ax_type,**kwargs):
+    def scrolling_menu(self,mypandas,dico,input_field, hover_tool, ax_type,**kwargs):
         tooltips='Date: @date{%F} <br>  $name: @$name'
         hover_tool = HoverTool(tooltips=tooltips,formatters={'@date': 'datetime'})
 
@@ -559,7 +570,7 @@ class CocoDisplay():
                         ('date', '@date{%F}')],
                         formatters={'@date': 'datetime'})
         panels = []
-        for axis_type in ["linear", "log"]:
+        for axis_type in ax_type:
             standardfig = self.standardfig(y_axis_type=axis_type,
             x_axis_type='datetime',title= dico['titlebar'])
             standardfig.yaxis[0].formatter = PrintfTickFormatter(format="%4.2e")

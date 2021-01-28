@@ -186,7 +186,6 @@ class DataBase(object):
                 drop_field = {'location':['International','World']}
                 owid = self.csv2pandas("https://raw.githubusercontent.com/owid/covid-19-data/master/public/data/owid-covid-data.csv",
                 separator=',',drop_field=drop_field)
-
                 # renaming some columns
                 col_to_rename=['reproduction_rate','icu_patients','hosp_patients','positive_rate']
                 renamed_cols=['cur_'+c if c != 'positive_rate' else 'cur_idx_'+c for c in col_to_rename]
@@ -502,6 +501,16 @@ class DataBase(object):
             raise CoaWhereError('No correct subregion found according to the where option given.')
 
         pdfiltered = self.get_mainpandas().loc[self.get_mainpandas().location.isin(clist)]
+        if 'Serbia' in clist:
+            ptot=self.get_mainpandas().loc[self.get_mainpandas().location=='Serbia'].\
+                groupby(['date','location'])[self.get_available_keys_words()].sum().reset_index()
+            for col in ptot.columns:
+                if col.startswith('cur_idx_'):
+                    ptot[col]=ptot[col]/2
+            clist.remove('Serbia')
+            pdfiltered = self.get_mainpandas().loc[self.get_mainpandas().location.isin(clist)].reset_index()
+            pdfiltered = pd.concat([pdfiltered,ptot])
+
         pdfiltered = pdfiltered[['location','date',kwargs['which']]]
 
         # insert dates at the end for each country if necessary
@@ -518,7 +527,6 @@ class DataBase(object):
         option = kwargs.get('option', '')
         fillnan = True # default
         sumall = False # default
-
         if not isinstance(option,list):
             option=[option]
         for o in option:
@@ -558,7 +566,7 @@ class DataBase(object):
             elif o == 'smooth7':
                 pdfiltered[kwargs['which']] = pdfiltered.groupby(['location'])[kwargs['which']].rolling(7,min_periods=7,center=True).mean().reset_index(level=0,drop=True)
                 #pdfiltered[kwargs['which']] = pdfiltered[kwargs['which']].fillna(0) # causes bug with fillnan procedure below
-                pdfiltered = pdfiltered.iloc[3:-3] # remove out of bound dates.
+                pdfiltered = pdfiltered.groupby('location').apply(lambda x : x[3:-3]).reset_index(drop=True) # remove out of bound dates.
             elif o == 'sumall':
                 sumall = True
             elif o != None and o != '':
@@ -595,7 +603,6 @@ class DataBase(object):
 
         if fillnan:
             pdfiltered = pdfiltered.fillna(0) # for diff if needed
-
         return pdfiltered
 
    ## https://www.kaggle.com/freealf/estimation-of-rt-from-cases

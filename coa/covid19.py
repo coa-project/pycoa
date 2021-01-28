@@ -492,6 +492,8 @@ class DataBase(object):
             clist=self.geo.to_standard(clist,output='list',interpret_region=True)
         else:
             clist=clist+self.geo.get_subregions_from_list_of_region_names(clist)
+            if clist == ['FRA']:
+                clist=self.geo_all
 
         clist=list(set(clist)) # to suppress duplicate countries
         diff_locations = list(set(clist) - set(self.get_locations()))
@@ -581,6 +583,7 @@ class DataBase(object):
         # if sumall set, return only integrate val
         if sumall:
             ntot=len(pdfiltered['location'].unique())
+            print(ntot, pdfiltered['location'].unique())
             ptot=pdfiltered.groupby(['location']).fillna(method='ffill').groupby(['date']).sum().reset_index()   # summing for all locations
 
             # mean for some columns, about index and not sum of values.

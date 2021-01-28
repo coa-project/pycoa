@@ -145,7 +145,7 @@ class CocoDisplay():
             bins = bins
         input_dico['bins'] = bins
 
-        what = kwargs.get('what', 'cumul') # cumul is the default
+        what = kwargs.get('what', '') # cumul is the default
         input_dico['what']=what
 
         if 'location' in mypandas:
@@ -801,10 +801,10 @@ class CocoDisplay():
                     input_field = dico['var_displayed']
                 else:
                     input_field = dico['input_field'][0]
-            if self.database_name == 'spf' or  self.database_name == 'opencovid19' or self.database_name == 'jhu-usa':
-                name_location_displayed = 'name_subregion'
-            else:
-                name_location_displayed = 'location'
+            #if self.database_name == 'spf' or  self.database_name == 'opencovid19' or self.database_name == 'jhu-usa':
+            #    name_location_displayed = 'name_subregion'
+            #else:
+            name_location_displayed = 'location'
 
             my_date = mypandas.date.unique()
             my_location = mypandas.location.unique()
@@ -1287,7 +1287,7 @@ class CocoDisplay():
 
         tile_provider = get_provider(dico['tile'])
         standardfig = self.standardfig(x_range=(minx,maxx), y_range=(miny,maxy),
-        x_axis_type="mercator", y_axis_type="mercator",title=input_field,copyrightposition='left')
+        x_axis_type="mercator", y_axis_type="mercator",title=dico['titlebar'],copyrightposition='left')
         standardfig.add_tile(tile_provider)
         min_col,max_col=CocoDisplay.min_max_range(np.nanmin(geopdwd_filter[input_field]),np.nanmax(geopdwd_filter[input_field]))
         color_mapper = LinearColorMapper(palette=Viridis256, low = min_col, high = max_col, nan_color = '#d9d9d9')

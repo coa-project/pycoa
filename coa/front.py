@@ -235,7 +235,7 @@ def get(**kwargs):
 
     global _db,_whom
     where=kwargs.get('where',None)
-    what=kwargs.get('what',None)
+    what=kwargs.get('what',listwhat()[0])
     which=kwargs.get('which',None)
     whom=kwargs.get('whom',None)
     option = kwargs.get('option',None)
@@ -245,9 +245,6 @@ def get(**kwargs):
 
     if output not in listoutput():
         raise CoaKeyError('Output option '+output+' not supported. See help().')
-
-    if not what:
-        what=listwhat()[0]
 
     if whom == None:
         whom=_whom

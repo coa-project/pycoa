@@ -98,15 +98,13 @@ class CocoDisplay():
                 else:
                     country = 'FRA'
                 info = coge.GeoCountry(country,dense_geometry=False)
-
                 self.geopan = info.get_subregion_list()[['code_subregion','name_subregion','geometry']]
-                self.geopan = self.geopan.rename(columns={'code_subregion':'location'}).rename(columns={'name_subregion':'name_to_display'})
+                self.geopan = self.geopan.rename(columns={'code_subregion':'location'})
             elif self.database_name == 'jhu' or self.database_name == 'owid':
                 geom=coge.GeoManager('name')
                 info = coge.GeoInfo()
                 allcountries = coge.GeoRegion().get_countries_from_region('world')
                 self.geopan['location'] = [geom.to_standard(c)[0] for c in allcountries]
-                self.geopan['name_to_display'] = self.geopan['location']
                 self.geopan = info.add_field(field=['geometry'],input=self.geopan ,geofield='location')
                 self.geopan = self.geopan[self.geopan.location != 'Antarctica']
             else:
@@ -154,6 +152,13 @@ class CocoDisplay():
             newuniqloc=[loc.replace('SumAll ','') for loc in uniqloc if 'SumAll' in loc.split()]
             if newuniqloc:
                 mypandas = mypandas.replace(uniqloc,newuniqloc)
+                mypandas['name_to_display'] = mypandas['location']
+            else:
+                if self.database_name == 'spf' or self.database_name == 'opencovid19' or self.database_name == 'jhu-usa':
+                    pd_name_displayed=self.geopan[['location','name_subregion']]
+                    mypandas=(pd.merge(mypandas,pd_name_displayed,on='location')).rename(columns={'name_subregion':'name_to_display'})
+                else:
+                    mypandas['name_to_display']  =   mypandas['location']
             cols_date_location = ['date', 'location']
             new_columns_order = cols_date_location + (mypandas.columns.drop(cols_date_location).tolist())
             mypandas = mypandas[new_columns_order]
@@ -429,9 +434,6 @@ class CocoDisplay():
                 else:
                     input_field = [dico['input_field']][0]
 
-            pd_name_displayed=self.geopan[['location','name_to_display']]
-            mypandas=(pd.merge(mypandas,pd_name_displayed,on='location'))
-
             dict_filter_data = defaultdict(list)
             ax_type = ['linear','log']
             tooltips='Date: @date{%F} <br>  $name: @$name'
@@ -447,16 +449,22 @@ class CocoDisplay():
                 mypandas = mypandas.loc[mypandas.location.isin(new_loc)]
 
             if 'location' in mypandas.columns:
-                location_ordered_byvalues=list(mypandas.loc[mypandas.date==dico['when_end']].sort_values(by=input_field,ascending=False)['location'])
                 tooltips='Location: @location <br> Date: @date{%F} <br>  $name: @$name'
-                loc = location_ordered_byvalues#mypandas['location'].unique()
-                shorten_loc = list(CocoDisplay.dict_shorten_loc(loc).values())
-                mypandas = mypandas.loc[(mypandas['date']>=dico['when_beg']) & (mypandas['date']<=dico['when_end'])]
-                mypandas['location'] = pd.Categorical(mypandas['location'],
-                        categories=location_ordered_byvalues,ordered=True)
-                mypandas.sort_values(['location','date'], inplace=True)
+                if len(mypandas.location.unique())>1:
+                    location_ordered_byvalues=list(mypandas.loc[mypandas.date==dico['when_end']].sort_values(by=input_field,ascending=False)['location'])
+                    loc = location_ordered_byvalues#mypandas['location'].unique()
+                    shorten_loc = list(CocoDisplay.dict_shorten_loc(loc).values())
+                    mypandas = mypandas.loc[(mypandas['date']>=dico['when_beg']) & (mypandas['date']<=dico['when_end'])]
+                    mypandas['location'] = pd.Categorical(mypandas['location'],
+                            categories=location_ordered_byvalues,ordered=True)
+                    mypandas.sort_values(['location','date'], inplace=True)
+                else:
+                    loc=mypandas.location.values
+                    shorten_loc = list(CocoDisplay.dict_shorten_loc(loc).values())
+                    mypandas = mypandas.loc[(mypandas['date']>=dico['when_beg']) & (mypandas['date']<=dico['when_end'])]
 
                 list_max=[]
+
                 for i in input_field:
                     list_max.append(max(mypandas.loc[mypandas.location.isin(loc)][i]))
 
@@ -517,7 +525,6 @@ class CocoDisplay():
                 //if(value>0)
                     return value.toExponential(2).toString();
                 """)
-
         for axis_type in ax_type :
             standardfig =  self.standardfig(y_axis_type=axis_type, x_axis_type='datetime',title= dico['titlebar'])
             standardfig.yaxis[0].formatter = PrintfTickFormatter(format="%4.2e")
@@ -815,9 +822,9 @@ class CocoDisplay():
 
             country_col = pd.DataFrame(dico_colors.items(),columns=['location', 'colors'])
             mypandas=(pd.merge(mypandas, country_col, on='location'))
-
+            geopdwd = mypandas
             if func.__name__ == 'map_folium' or func.__name__ == 'bokeh_map':
-                geopdwd = mypandas
+
                 self.all_location_indb = self.location_geometry.location.unique()
                 geopdwd = self.location_geometry
                 geopdwd = pd.merge(geopdwd,mypandas,on='location')
@@ -827,10 +834,10 @@ class CocoDisplay():
                     self.boundary = geopdwd.loc[~geopdwd.location.isin(domtom)]['geometry'].total_bounds
                 else:
                     self.boundary = geopdwd.loc[geopdwd.location.isin(geopdwd.location.unique())].total_bounds
-            else:
-                pd_name_displayed=self.geopan[['location','name_to_display']]
-                mypandas=(pd.merge(mypandas,pd_name_displayed,on='location'))
-                geopdwd = mypandas
+            #else:
+            #    pd_name_displayed=self.geopan[['location','name_to_display']]
+            #    mypandas=(pd.merge(mypandas,pd_name_displayed,on='location'))
+            #    geopdwd = mypandas
 
             geopdwd =  geopdwd.loc[geopdwd.date >= dt.date(2020,3,15)] # before makes pb in horizohisto
             geopdwd = geopdwd.sort_values(by=input_field,ascending=False)
@@ -899,7 +906,6 @@ class CocoDisplay():
         """
 
         mypandas = geopdwd_filter.rename(columns={'cases':input_field})
-
         dict_histo = defaultdict(list)
         if 'location' in mypandas.columns:
             tooltips='Value at around @middle_bin : @val'
@@ -984,7 +990,6 @@ class CocoDisplay():
         else:
             geopdwd = geopdwd.rename(columns={'cases':input_field})
             geopdwd_filter = geopdwd_filter.rename(columns={'cases':input_field})
-
         dshort_loc=CocoDisplay.dict_shorten_loc(geopdwd.name_to_display.unique())
         geopdwd['shortenlocation']=[dshort_loc[i] for i in geopdwd.name_to_display.to_list()]
         geopdwd_filter['shortenlocation']=[dshort_loc[i] for i in geopdwd_filter.name_to_display.to_list()]
@@ -1248,7 +1253,6 @@ class CocoDisplay():
         else:
             geopdwd = geopdwd.rename(columns={'cases':input_field})
             geopdwd_filter = geopdwd_filter.rename(columns={'cases':input_field})
-
         geopdwd = geopdwd[['location','name_to_display','geometry','date',input_field]]
         geopdwd_filter =   geopdwd_filter[['location','name_to_display','geometry',input_field]]
 

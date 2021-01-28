@@ -498,7 +498,6 @@ class DataBase(object):
         clist=list(set(clist)) # to suppress duplicate countries
         diff_locations = list(set(clist) - set(self.get_locations()))
         clist = [i for i in clist if i not in diff_locations]
-        
         if len(clist) == 0:
             raise CoaWhereError('No correct subregion found according to the where option given.')
 

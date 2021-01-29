@@ -30,6 +30,7 @@ from collections import defaultdict
 import itertools
 import json
 import io
+import os
 from io import BytesIO
 import base64
 from datascroller import scroll
@@ -63,7 +64,9 @@ from PIL import Image, ImageDraw, ImageFont
 
 import matplotlib.pyplot as plt
 import datetime as dt
+
 width_height_default = [500,380]
+
 class CocoDisplay():
     def __init__(self,db=None):
         verb("Init of CocoDisplay() with db="+str(db))
@@ -1221,7 +1224,8 @@ class CocoDisplay():
         draw = ImageDraw.Draw(im)
         msg = "©pycoa.fr (data from: {})".format(self.database_name)
         w, h = draw.textsize(msg)
-        fnt = ImageFont.truetype('Arial.ttf',12)
+        fnt = ImageFont.truetype(os.path.join(os.path.dirname(plt.__file__), "mpl-data/fonts/ttf/DejaVuSans.ttf"),12) # using matplotlib font for compatibility
+        #ImageFont.truetype('Arial.ttf',12)
         draw.text((2,0), msg, font=fnt,fill=(0, 0, 0))
         draw.text((2,0), msg, fill=(0, 0, 0))
 

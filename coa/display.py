@@ -31,6 +31,8 @@ import itertools
 import json
 import io
 import os
+from tempfile import gettempdir
+from getpass import getuser
 from io import BytesIO
 import base64
 from datascroller import scroll
@@ -1224,13 +1226,13 @@ class CocoDisplay():
         draw = ImageDraw.Draw(im)
         msg = "©pycoa.fr (data from: {})".format(self.database_name)
         w, h = draw.textsize(msg)
-        fnt = ImageFont.truetype(os.path.join(os.path.dirname(plt.__file__), "mpl-data/fonts/ttf/DejaVuSans.ttf"),12) # using matplotlib font for compatibility
-        #ImageFont.truetype('Arial.ttf',12)
+        fnt = ImageFont.truetype(os.path.join(os.path.dirname(plt.__file__), "mpl-data","fonts","ttf","DejaVuSans.ttf"),12) # using matplotlib font for compatibility
         draw.text((2,0), msg, font=fnt,fill=(0, 0, 0))
-        draw.text((2,0), msg, fill=(0, 0, 0))
+        #draw.text((2,0), msg, fill=(0, 0, 0))
 
-        im.crop((0, 0,2*w,2*h)).save("pycoatextlogo.png", "PNG")
-        FloatImage("pycoatextlogo.png", bottom=-2, left=1).add_to(mapa)
+        png_tmp_filename=os.path.join(gettempdir(),"pycoa_txtimg_"+getuser()+".png")
+        im.crop((0, 0,2*w,2*h)).save(png_tmp_filename, "PNG")
+        FloatImage(png_tmp_filename, bottom=2, left=1).add_to(mapa)
 
         return mapa
 

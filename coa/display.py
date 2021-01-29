@@ -829,11 +829,11 @@ class CocoDisplay():
                 geopdwd = self.location_geometry
                 geopdwd = pd.merge(geopdwd,mypandas,on='location')
 
-                if self.database_name == 'spf' or self.database_name == 'opencovid19':
-                    domtom=["971","972","973","974","975","976","977","978","984","986","987","988","989"]
-                    self.boundary = geopdwd.loc[~geopdwd.location.isin(domtom)]['geometry'].total_bounds
-                else:
-                    self.boundary = geopdwd.loc[geopdwd.location.isin(geopdwd.location.unique())].total_bounds
+                #if self.database_name == 'spf' or self.database_name == 'opencovid19':
+                #    domtom=["971","972","973","974","975","976","977","978","984","986","987","988","989"]
+                #self.boundary = geopdwd.loc[~geopdwd.location.isin(domtom)]['geometry'].total_bounds
+                #else:
+                self.boundary = geopdwd.loc[geopdwd.location.isin(geopdwd.location.unique())].total_bounds
             #else:
             #    pd_name_displayed=self.geopan[['location','name_to_display']]
             #    mypandas=(pd.merge(mypandas,pd_name_displayed,on='location'))
@@ -1284,6 +1284,7 @@ class CocoDisplay():
 
         ng = pd.DataFrame(geolistmodified.items(), columns=['location', 'geometry'])
         geolistmodified=gpd.GeoDataFrame({'location':ng['location'],'geometry':gpd.GeoSeries(ng['geometry'])},crs="epsg:3857")
+
         geopdwd_filter = geopdwd_filter.drop(columns='geometry')
         geopdwd_filter = pd.merge(geopdwd_filter,geolistmodified,on='location')
         #geopdwd_filter = geopdwd_filter.rename(columns={'location':name_location_displayed})

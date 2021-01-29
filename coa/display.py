@@ -1155,16 +1155,27 @@ class CocoDisplay():
             zoom = 2
 
         minx, miny, maxx, maxy = self.boundary
+        msg = "(data from: {})".format(self.database_name)
+        openstreet=r'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
+        esri='https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}.png'
+        stamen='http://tile.stamen.com/toner/{z}/{x}/{y}.png'
+        dico['tile'] = esri
+        if dico['tile'] == 'OSM':
+            dico['tile'] = openstreet
+        elif dico['tile'] == 'ESRI_IMAGERY':
+            dico['tile'] = esri
+        elif dico['tile'].find("STAMEN") !=-1:
+            dico['tile'] = stamen
+        else:
+            dico['tile'] = esri
+            
+        tileset = openstreet
+        mapa = folium.Map(location=[ (maxy+miny)/2., (maxx+minx)/2.], zoom_start=zoom,
+            tiles=tileset,attr='<a href=\"http://pycoa.fr\"> ©pycoa.fr </a>'+msg)#
 
-        mapa = folium.Map(location=[ (maxy+miny)/2., (maxx+minx)/2.], zoom_start=zoom)
         fig = Figure(width=self.plot_width, height=self.plot_height)
         fig.add_child(mapa)
         min_col,max_col=CocoDisplay.min_max_range(np.nanmin(geopdwd[input_field]),np.nanmax(geopdwd[input_field]))
-        #Reds9.reverse()
-        #myREDS = [
-        #'#00cc00',
-        # '#ffff00',
-        # '#ff0000',]
 
         color_mapper = LinearColorMapper(palette=Viridis256, low = min_col, high = max_col,nan_color = '#d9d9d9')
         colormap = branca.colormap.LinearColormap(color_mapper.palette).scale(min_col,max_col)
@@ -1172,7 +1183,7 @@ class CocoDisplay():
         colormap.add_to(mapa)
         map_id = colormap.get_name()
 
-        my_js = """
+        custom_label_colorbar_js = """
         var div = document.getElementById('legend');
         var ticks = document.getElementsByClassName('tick')
         for(var i = 0; i < ticks.length; i++){
@@ -1182,7 +1193,7 @@ class CocoDisplay():
         div.innerHTML = div.innerHTML.replace(ticks[i].textContent,val);
         }
         """
-        e = Element(my_js)
+        e = Element(custom_label_colorbar_js)
         html = colormap.get_root()
         html.script.get_root().render()
         html.script._children[e.get_name()] = e
@@ -1219,20 +1230,6 @@ class CocoDisplay():
                         """),
                 #'<div style="barialckground-color: royalblue 0.2; color: black; padding: 2px; border: 1px solid black; border-radius: 2px;">'+input_field+'</div>'])
         ).add_to(mapa)
-
-
-        W, H = (300,200)
-        im = Image.new("RGBA",(W,H))
-        draw = ImageDraw.Draw(im)
-        msg = "©pycoa.fr (data from: {})".format(self.database_name)
-        w, h = draw.textsize(msg)
-        fnt = ImageFont.truetype(os.path.join(os.path.dirname(plt.__file__), "mpl-data","fonts","ttf","DejaVuSans.ttf"),12) # using matplotlib font for compatibility
-        draw.text((2,0), msg, font=fnt,fill=(0, 0, 0))
-        #draw.text((2,0), msg, fill=(0, 0, 0))
-
-        png_tmp_filename=os.path.join(gettempdir(),"pycoa_txtimg_"+getuser()+".png")
-        im.crop((0, 0,2*w,2*h)).save(png_tmp_filename, "PNG")
-        FloatImage(png_tmp_filename, bottom=2, left=1).add_to(mapa)
 
         return mapa
 

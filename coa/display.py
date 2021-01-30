@@ -465,10 +465,6 @@ class CocoDisplay():
             country_col = pd.DataFrame(dico_colors.items(),columns=['location', 'colors'])
             mypandas=(pd.merge(mypandas, country_col, on='location'))
 
-            if len(my_location)>12:
-                new_loc = my_location[:12]
-                mypandas = mypandas.loc[mypandas.location.isin(new_loc)]
-
             if 'location' in mypandas.columns:
                 tooltips='Location: @location <br> Date: @date{%F} <br>  $name: @$name'
                 if len(mypandas.location.unique())>1:
@@ -479,6 +475,8 @@ class CocoDisplay():
                     mypandas['location'] = pd.Categorical(mypandas['location'],
                             categories=location_ordered_byvalues,ordered=True)
                     mypandas.sort_values(['location','date'], inplace=True)
+                    if len(mypandas.location.unique())>12:
+                        mypandas = mypandas.loc[mypandas.location.isin(location_ordered_byvalues[:12])]
                 else:
                     loc=mypandas.location.values
                     shorten_loc = list(CocoDisplay.dict_shorten_loc(loc).values())
@@ -509,6 +507,7 @@ class CocoDisplay():
                 //if(value>0)
                     return value.toExponential(2).toString();
                 """)
+
         for axis_type in ax_type :
             standardfig =  self.standardfig(x_axis_label=input_field[0],
             y_axis_label=input_field[1], y_axis_type=axis_type ,title= dico['titlebar'])

@@ -52,6 +52,7 @@ from bokeh.io import export_png
 from bokeh import events
 from bokeh.models.widgets import DateSlider, Slider
 from bokeh.tile_providers import get_provider, Vendors
+from bokeh.models import WMTSTileSource
 
 import shapely.geometry as sg
 
@@ -86,8 +87,7 @@ class CocoDisplay():
         self.this_done = False
         self.all_available_display_keys=['where','which','what','when','title_temporal','plot_height','plot_width','title','bins','var_displayed',
         'option','input','input_field','visu','plot_last_date','tile','orientation']
-        self.tiles_listing=['CARTODBPOSITRON','CARTODBPOSITRON_RETINA','STAMEN_TERRAIN','STAMEN_TERRAIN_RETINA',
-        'STAMEN_TONER','STAMEN_TONER_BACKGROUND','STAMEN_TONER_LABELS','OSM','WIKIMEDIA','ESRI_IMAGERY']
+        self.tiles_listing=['esri','openstreet','stamen','positron']
         self.location_geometry = self.get_geodata()
 
     def get_geodata(self):
@@ -228,14 +228,11 @@ class CocoDisplay():
         if when_end_change != input_dico['when_end']:
              input_dico['when_end'] = when_end_change
 
-        vendors = kwargs.get('tile', self.tiles_listing[0])
-        provider = None
+        vendors = kwargs.get('tile', 'openstreet')
         if vendors in self.tiles_listing:
-            provider = vendors
+            input_dico['tile'] = vendors
         else:
             raise CoaTypeError('Don\'t know which you want to load ...')
-
-        input_dico['tile']=provider
 
         if title:
             titlebar = title
@@ -261,6 +258,7 @@ class CocoDisplay():
             xpos=0.08
          else:
             CoaKeyError('copyrightposition argument not yet implemented ...')
+
          textcopyright='©pycoa.fr (data from: {})'.format(self.database_name)
          self.logo_db_citation = Label(x=xpos*self.plot_width-len(textcopyright), y=0.01*self.plot_height,
          x_units='screen', y_units='screen',
@@ -269,6 +267,24 @@ class CocoDisplay():
          fig.add_layout(self.logo_db_citation)
          return fig
 ###################### BEGIN Static Methods ##################
+    @staticmethod
+    def get_tile(tilename,which):
+        if tilename == 'openstreet':
+            if which == 'map_folium':
+                tile=r'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
+            else:
+                tile=r'http://c.tile.openstreetmap.org/{Z}/{X}/{Y}.png'
+        elif tilename== 'positron':
+            tile = 'https://tiles.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png'
+        elif tilename == 'esri':
+            tile=r'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}.png'
+        elif tilename == 'stamen':
+            tile=r'http://tile.stamen.com/toner/{z}/{x}/{y}.png'
+        else:
+            CoaKeyError('Don\'t know you tile ... take default one')
+            tile=tile
+        return tile
+
     @staticmethod
     def dict_shorten_loc(location):
         '''
@@ -833,7 +849,7 @@ class CocoDisplay():
                 self.all_location_indb = self.location_geometry.location.unique()
                 geopdwd = self.location_geometry
                 geopdwd = pd.merge(geopdwd,mypandas,on='location')
-
+                dico['tile'] = CocoDisplay.get_tile(dico['tile'],func.__name__)
                 #if self.database_name == 'spf' or self.database_name == 'opencovid19':
                 #    domtom=["971","972","973","974","975","976","977","978","984","986","987","988","989"]
                 #self.boundary = geopdwd.loc[~geopdwd.location.isin(domtom)]['geometry'].total_bounds
@@ -1155,23 +1171,10 @@ class CocoDisplay():
             zoom = 2
 
         minx, miny, maxx, maxy = self.boundary
+
         msg = "(data from: {})".format(self.database_name)
-        openstreet=r'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
-        esri='https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}.png'
-        stamen='http://tile.stamen.com/toner/{z}/{x}/{y}.png'
-        dico['tile'] = esri
-        if dico['tile'] == 'OSM':
-            dico['tile'] = openstreet
-        elif dico['tile'] == 'ESRI_IMAGERY':
-            dico['tile'] = esri
-        elif dico['tile'].find("STAMEN") !=-1:
-            dico['tile'] = stamen
-        else:
-            dico['tile'] = esri
-            
-        tileset = openstreet
         mapa = folium.Map(location=[ (maxy+miny)/2., (maxx+minx)/2.], zoom_start=zoom,
-            tiles=tileset,attr='<a href=\"http://pycoa.fr\"> ©pycoa.fr </a>'+msg)#
+            tiles=dico['tile'],attr='<a href=\"http://pycoa.fr\"> ©pycoa.fr </a>'+msg)#
 
         fig = Figure(width=self.plot_width, height=self.plot_height)
         fig.add_child(mapa)
@@ -1290,23 +1293,20 @@ class CocoDisplay():
 
         geopdwd_filter = geopdwd_filter.drop(columns='geometry')
         geopdwd_filter = pd.merge(geopdwd_filter,geolistmodified,on='location')
-        #geopdwd_filter = geopdwd_filter.rename(columns={'location':name_location_displayed})
 
-        #if self.database_name == 'spf' or  self.database_name == 'opencovid19' or self.database_name == 'jhu-usa':
-        #    geopdwd_filter = geopdwd_filter.rename(columns={'location':name_location_displayed})
-
-        #    minx, miny, maxx, maxy = geopdwd_filter['geometry'].total_bounds
-        #else:
         minx, miny, maxx, maxy = self.boundary
         (minx, miny) = CocoDisplay.wgs84_to_web_mercator((minx,miny))
         (maxx, maxy) = CocoDisplay.wgs84_to_web_mercator((maxx,maxy))
 
-        tile_provider = get_provider(dico['tile'])
+        wmt=WMTSTileSource(
+        url=dico['tile']
+        #attribution='<a href=\"http://pycoa.fr\"> ©pycoa.fr </a>'+msg + '- Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        )
         standardfig = self.standardfig(x_range=(minx,maxx), y_range=(miny,maxy),
         x_axis_type="mercator", y_axis_type="mercator",title=dico['titlebar'],copyrightposition='left')
-        standardfig.add_tile(tile_provider)
+        standardfig.add_tile(wmt)
         min_col,max_col=CocoDisplay.min_max_range(np.nanmin(geopdwd_filter[input_field]),np.nanmax(geopdwd_filter[input_field]))
-        color_mapper = LinearColorMapper(palette=Viridis256, low = min_col, high = max_col, nan_color = '#d9d9d9')
+        color_mapper = LinearColorMapper(palette=Viridis256, low = 100, high = max_col, nan_color = '#ffffff')
         color_bar = ColorBar(color_mapper=color_mapper, label_standoff=4,
                             border_line_color=None,location = (0,0), orientation = 'horizontal', ticker=BasicTicker())
         color_bar.formatter = BasicTickFormatter(use_scientific=True,precision=1,power_limit_low=int(max_col))

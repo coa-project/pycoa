@@ -354,6 +354,7 @@ def decoplot(func):
         if isinstance(input_arg,pd.DataFrame):
             t=input_arg
             which=kwargs.get('input_field',listwhich()[0]+'/cumul')
+            option=kwargs.get('option',None)
         elif input_arg==None:
             t=get(**kwargs,output='pandas')
             which=kwargs.get('which',listwhich()[0])

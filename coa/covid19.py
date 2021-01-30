@@ -41,7 +41,7 @@ class DataBase(object):
         '''
         verb("Init of covid19.DataBase()")
         self.database_name = ['jhu','owid','jhu-usa','spf','opencovid19']
-        self.available_options = ['nonneg','nofillnan','smooth7','sumall']
+        self.available_options = ['nonneg','nofillnan','smooth7']
         self.available_keys_words = []
         self.dates = []
         self.database_columns_not_computed = {}
@@ -452,7 +452,6 @@ class DataBase(object):
                 will smooth the curve during all the period considered
             * 'nofillnan' if you do not want that NaN values are filled, which is the default behaviour
             * 'smooth7' moving average, window of 7 days
-            * 'sumall' sum data over all locations
 
         keys are keyswords from the selected database
                 location        | date      | keywords          |  daily            |  weekly
@@ -499,6 +498,7 @@ class DataBase(object):
         clist=list(set(clist)) # to suppress duplicate countries
         diff_locations = list(set(clist) - set(self.get_locations()))
         clist = [i for i in clist if i not in diff_locations]
+        
         if len(clist) == 0:
             raise CoaWhereError('No correct subregion found according to the where option given.')
 

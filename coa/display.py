@@ -967,10 +967,12 @@ class CocoDisplay():
         hover_tool = HoverTool(tooltips=tooltips)
         panels = []
         bottom=0
-        for axis_type in ["linear", "linlog", "loglog"]:
-            x_axis_type,y_axis_type,axis_type_title=3*['linear']
+        x_axis_type,y_axis_type,axis_type_title=3*['linear']
+        for axis_type in ["linear", "linlog", "loglin", "loglog"]:
             if axis_type == 'linlog':
-                y_axis_type,axis_type_title = 'log','log'
+                y_axis_type,axis_type_title = 'log','logy'
+            if axis_type == 'loglin':
+                x_axis_type,y_axis_type,axis_type_title = 'log','linear','logx'
             if axis_type == 'loglog':
                 x_axis_type,y_axis_type = 'log','log'
                 axis_type_title = 'loglog'
@@ -983,8 +985,8 @@ class CocoDisplay():
             standardfig.y_range=Range1d(0, 1.05*max(frame_histo['val']))
             if x_axis_type=="log":
                 left=0.8
-                if min(frame_histo['left'])>0:
-                    left=min(frame_histo['left'])
+                if frame_histo['left'][1]>0:
+                    left=frame_histo['left'][1]
                 standardfig.x_range=Range1d(left, 1.05*max(edges))
             if y_axis_type=="log":
                 bottom=0.0001

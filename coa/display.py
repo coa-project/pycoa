@@ -62,7 +62,6 @@ from branca.element import Element, Figure
 import random
 import folium
 from folium.plugins import FloatImage
-
 from PIL import Image, ImageDraw, ImageFont
 
 import matplotlib.pyplot as plt
@@ -74,7 +73,6 @@ class CocoDisplay():
     def __init__(self,db=None):
         verb("Init of CocoDisplay() with db="+str(db))
         self.database_name = db
-        self.geopan = pd.DataFrame()
 
         a=map(list, zip(Paired[10], Set2[8],Set3[12]))
         chain = itertools.chain(*a)
@@ -84,7 +82,9 @@ class CocoDisplay():
         self.plot_width =  width_height_default[0]
         self.plot_height =  width_height_default[1]
         self.geom = []
-        self.this_done = False
+        self.geopan = gpd.GeoDataFrame()
+        self.location_geometry = None
+
         self.all_available_display_keys=['where','which','what','when','title_temporal','plot_height','plot_width','title','bins','var_displayed',
         'option','input','input_field','visu','plot_last_date','tile','orientation']
         self.tiles_listing=['esri','openstreet','stamen','positron']
@@ -92,33 +92,33 @@ class CocoDisplay():
 
     def get_geodata(self):
         '''
-         return a GeoDataFrame used in map display (see map_bokeh and map_folium)
+         Return a GeoDataFrame used in map display (see map_bokeh and map_folium)
          The output format is the following :
          geoid | location |  geometry (POLYGON or MULTIPOLYGON)
         '''
-        if self.geopan.empty:
-            if self.database_name == 'spf' or self.database_name == 'opencovid19' or self.database_name == 'jhu-usa':
-                if self.database_name == 'jhu-usa':
-                    country = 'USA'
-                else:
-                    country = 'FRA'
-                info = coge.GeoCountry(country,dense_geometry=False)
-                self.geopan = info.get_subregion_list()[['code_subregion','name_subregion','geometry']]
-                self.geopan = self.geopan.rename(columns={'code_subregion':'location'})
-            elif self.database_name == 'jhu' or self.database_name == 'owid':
-                geom=coge.GeoManager('name')
-                info = coge.GeoInfo()
-                allcountries = coge.GeoRegion().get_countries_from_region('world')
-                self.geopan['location'] = [geom.to_standard(c)[0] for c in allcountries]
-                self.geopan = info.add_field(field=['geometry'],input=self.geopan ,geofield='location')
-                self.geopan = self.geopan[self.geopan.location != 'Antarctica']
+        geopan = gpd.GeoDataFrame()
+        if self.database_name == 'spf' or self.database_name == 'opencovid19' or self.database_name == 'jhu-usa':
+            if self.database_name == 'jhu-usa':
+                country = 'USA'
             else:
-                raise CoaTypeError('What data base are you looking for ?')
-
-            self.geopan = self.geopan.dropna().reset_index(drop=True)
-            self.data = gpd.GeoDataFrame(self.geopan,crs="EPSG:4326")
-            self.boundary = self.data['geometry'].total_bounds
-
+                country = 'FRA'
+            info = coge.GeoCountry(country,dense_geometry=False)
+            geopan = info.get_subregion_list()[['code_subregion','name_subregion','geometry']]
+            geopan = geopan.rename(columns={'code_subregion':'location'})
+        elif self.database_name == 'jhu' or self.database_name == 'owid':
+            geom=coge.GeoManager('name')
+            info = coge.GeoInfo()
+            allcountries = coge.GeoRegion().get_countries_from_region('world')
+            geopan['location'] = [geom.to_standard(c)[0] for c in allcountries]
+            geopan = info.add_field(field=['geometry'],input=geopan ,geofield='location')
+            geopan = geopan[geopan.location != 'Antarctica']
+        else:
+            raise CoaTypeError('What data base are you looking for ?')
+        geopan = geopan.dropna().reset_index(drop=True)
+        self.data = gpd.GeoDataFrame(geopan,crs="EPSG:4326")
+        self.geopan = geopan
+        self.boundary = self.data['geometry'].total_bounds
+        self.location_geometry = self.data
         return self.data
 
     def standard_input(self,mypandas,input_field=None,**kwargs):
@@ -151,13 +151,17 @@ class CocoDisplay():
 
         what = kwargs.get('what', '') # cumul is the default
         input_dico['what']=what
-
+        input_dico['locsumall']=None
         if 'location' in mypandas:
             uniqloc = list(mypandas.location.unique())
             newuniqloc=[loc.replace('SumAll ','') for loc in uniqloc if 'SumAll' in loc.split()]
             if newuniqloc:
+                newuniqloc = newuniqloc[0]
+                loc = CocoDisplay.return_standard_location(self.database_name,newuniqloc)
                 mypandas = mypandas.replace(uniqloc,newuniqloc)
                 mypandas['name_to_display'] = mypandas['location']
+                input_dico['locsumall'] = self.location_geometry.loc[self.location_geometry.location.isin(loc)]
+                input_dico['locsumall'] =  input_dico['locsumall'].assign(name_to_display=[newuniqloc]*len(input_dico['locsumall']))
             else:
                 if self.database_name == 'spf' or self.database_name == 'opencovid19' or self.database_name == 'jhu-usa':
                     pd_name_displayed=self.geopan[['location','name_subregion']]
@@ -267,6 +271,24 @@ class CocoDisplay():
          fig.add_layout(self.logo_db_citation)
          return fig
 ###################### BEGIN Static Methods ##################
+    @staticmethod
+    def return_standard_location(db,name):
+        if db == 'spf' or db == 'opencovid19' or db == 'jhu-usa':
+            if db == 'jhu-usa':
+                country = 'USA'
+            else:
+                country = 'FRA'
+            info = coge.GeoCountry(country,dense_geometry=False)
+            if name == 'FRA' or name == 'USA':
+                location = info.get_subregion_list()['code_subregion'].to_list()
+            else:
+                location = info.get_subregions_from_region(name=name)
+        elif db == 'jhu' or db == 'owid':
+            geo=coge.GeoManager('name')
+            geo.set_standard('name')
+            location=(geo.to_standard(name,output='list',interpret_region=True))
+        return location
+
     @staticmethod
     def get_tile(tilename,which):
         if tilename == 'openstreet':
@@ -853,7 +875,19 @@ class CocoDisplay():
                 #    domtom=["971","972","973","974","975","976","977","978","984","986","987","988","989"]
                 #self.boundary = geopdwd.loc[~geopdwd.location.isin(domtom)]['geometry'].total_bounds
                 #else:
-                self.boundary = geopdwd.loc[geopdwd.location.isin(geopdwd.location.unique())].total_bounds
+                if dico['locsumall'] is not None:
+                    val=(mypandas.loc[mypandas.date==dico['when_end']][input_field].iloc[-1])
+                    if 'name_subregion' in dico['locsumall'].columns:
+                        dico['locsumall'] = dico['locsumall'].drop(columns=['name_subregion'])
+                    dico['locsumall'][input_field] = [val]*len(dico['locsumall'])
+                    dico['locsumall']['date'] = [dico['when_end']]*len(dico['locsumall'])
+                    dico['locsumall'].append(dico['locsumall'].iloc[-1])
+                    dico['locsumall'].iloc[-1,0]='FAKECOUNTRY'
+                    dico['locsumall'].iloc[-1,4]=dt.date(2020,3,15)
+                    dico['locsumall']=dico['locsumall'].reset_index(drop=True)
+                    geopdwd = dico['locsumall']
+
+                #self.boundary = geopdwd.loc[geopdwd.location.isin(geopdwd.location.unique())].total_bounds
             #else:
             #    pd_name_displayed=self.geopan[['location','name_to_display']]
             #    mypandas=(pd.merge(mypandas,pd_name_displayed,on='location'))
@@ -871,6 +905,7 @@ class CocoDisplay():
 
             geopdwd = geopdwd.rename(columns={input_field:'cases'})
             orientation = kwargs.get('orientation', 'horizontal')
+
             date_slider = DateSlider(title="Date: ", start=geopdwd.date.min(), end=dico['when_end'],
             value=dico['when_end'], step=24*60*60*1000,orientation=orientation)
             geopdwd_filter = geopdwd.copy()
@@ -1376,7 +1411,6 @@ class CocoDisplay():
         point_policy="follow_mouse"))#,PanTool())
         if date_slider:
             standardfig = column(date_slider,standardfig)
-
         return standardfig
 ##################### END HISTOS/MAPS##################
 

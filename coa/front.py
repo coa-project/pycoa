@@ -422,7 +422,6 @@ def hist(**kwargs):
                         'typeofhist','cursor_date','option'],
             'Bad args used in the pycoa.hist() function.')
 
-    bins=kwargs.get('bins',None)
     when=kwargs.get('when',None)
     input_field=None
     input_arg=kwargs.get('input',None)
@@ -442,9 +441,10 @@ def hist(**kwargs):
         raise CoaTypeError('Waiting input as valid pycoa pandas '
             'dataframe. See help.')
 
+
     if typeofhist == 'bylocation':
-        if bins:
-            CoaKeyError("The bins keyword cannot be set with histograms by location.")
+        if 'bins' in kwargs:
+            raise CoaKeyError("The bins keyword cannot be set with histograms by location. See help.")
         fig=_cocoplot.pycoa_horizonhisto(t,input_field,**kwargs)
     elif typeofhist == 'byvalue':
         fig=_cocoplot.pycoa_histo(t,input_field,**kwargs)

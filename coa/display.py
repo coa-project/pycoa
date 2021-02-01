@@ -66,6 +66,7 @@ from PIL import Image, ImageDraw, ImageFont
 
 import matplotlib.pyplot as plt
 import datetime as dt
+from ast import literal_eval
 
 width_height_default = [500,380]
 
@@ -153,14 +154,23 @@ class CocoDisplay():
         input_dico['what']=what
         input_dico['locsumall']=None
         if 'location' in mypandas:
-            uniqloc = list(mypandas.location.unique())
+            uniqloc = mypandas.location.unique()
             newuniqloc=[loc.replace('SumAll ','') for loc in uniqloc if 'SumAll' in loc.split()]
             if newuniqloc:
-                newuniqloc = newuniqloc[0]
-                loc = CocoDisplay.return_standard_location(self.database_name,newuniqloc)
                 mypandas = mypandas.replace(uniqloc,newuniqloc)
                 mypandas['name_to_display'] = mypandas['location']
-                input_dico['locsumall'] = self.location_geometry.loc[self.location_geometry.location.isin(loc)]
+                newuniqloc = newuniqloc[0]
+                try:
+                    loc = CocoDisplay.return_standard_location(self.database_name,newuniqloc)
+                except:
+                    newuniqloc = literal_eval(newuniqloc)
+                    loc =  newuniqloc
+                if type(loc) is int:
+                    loc=str(loc)
+                    input_dico['locsumall'] = self.location_geometry.loc[self.location_geometry.location==loc]
+                    #raise CoaKeyError('Only one location is given then locsumall is not needed')
+                else:
+                    input_dico['locsumall'] = self.location_geometry.loc[self.location_geometry.location.isin(loc)]
                 input_dico['locsumall'] =  input_dico['locsumall'].assign(name_to_display=[newuniqloc]*len(input_dico['locsumall']))
             else:
                 if self.database_name == 'spf' or self.database_name == 'opencovid19' or self.database_name == 'jhu-usa':
@@ -185,7 +195,6 @@ class CocoDisplay():
         title_temporal=''
         input_dico['when_beg'] = mypandas.date.min()
         input_dico['when_end'] = mypandas.date.max()
-
 
         if when:
             input_dico['when_beg'],input_dico['when_end']=extract_dates(when)
@@ -282,6 +291,7 @@ class CocoDisplay():
             if name == 'FRA' or name == 'USA':
                 location = info.get_subregion_list()['code_subregion'].to_list()
             else:
+                #location = info.get_subregions_from_list_of_region_names(name)
                 location = info.get_subregions_from_region(name=name)
         elif db == 'jhu' or db == 'owid':
             geo=coge.GeoManager('name')
@@ -871,19 +881,15 @@ class CocoDisplay():
                 geopdwd = self.location_geometry
                 geopdwd = pd.merge(geopdwd,mypandas,on='location')
                 dico['tile'] = CocoDisplay.get_tile(dico['tile'],func.__name__)
-                #if self.database_name == 'spf' or self.database_name == 'opencovid19':
-                #    domtom=["971","972","973","974","975","976","977","978","984","986","987","988","989"]
-                #self.boundary = geopdwd.loc[~geopdwd.location.isin(domtom)]['geometry'].total_bounds
-                #else:
                 if dico['locsumall'] is not None:
                     val=(mypandas.loc[mypandas.date==dico['when_end']][input_field].iloc[-1])
                     if 'name_subregion' in dico['locsumall'].columns:
                         dico['locsumall'] = dico['locsumall'].drop(columns=['name_subregion'])
                     dico['locsumall'][input_field] = [val]*len(dico['locsumall'])
                     dico['locsumall']['date'] = [dico['when_end']]*len(dico['locsumall'])
-                    dico['locsumall'].append(dico['locsumall'].iloc[-1])
-                    dico['locsumall'].iloc[-1,0]='FAKECOUNTRY'
-                    dico['locsumall'].iloc[-1,4]=dt.date(2020,3,15)
+                    fake={'location':'FAKE','geometry':dico['locsumall'].iloc[-1]['geometry'],
+                    'name_to_display':'FAKE',input_field:val,'date':dt.date(2020,3,15)}
+                    dico['locsumall']=dico['locsumall'].append(fake,ignore_index=True)
                     dico['locsumall']=dico['locsumall'].reset_index(drop=True)
                     geopdwd = dico['locsumall']
 

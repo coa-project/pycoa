@@ -277,29 +277,22 @@ def get(**kwargs):
          pandy = pandy.drop(columns=['cumul'])
          pandy['cumul'] = pandy[which]
          casted_data = pandy
-    else:
-        # col_name = ''
-        # if what == 'daily':
-        #     col_name = 'daily'
-        # if what == 'cumul' and _whom == 'jhu':
-        #     col_name = which
-        # if what == 'weekly':
-        #     col_name = 'weekly'
-        # else:
-        #     col_name = 'daily'
+        #print(pandy)
         #casted_data = pd.pivot_table(pandy, index='date',columns='where',values=col_name).to_dict('series')
-        if output == 'dict':
+        #print(pandy)
+    elif output == 'dict':
             casted_data = pandy.to_dict('split')
-        if output == 'list' or output == 'array':
-            my_list = []
-            for keys,values in pandy.items():
-                vc=[]
-                vc=[i for i in values]
-                my_list.append(vc)
-            casted_data = my_list
-            if output == 'array':
-                casted_data = np.array(pandy)
-
+    elif output == 'list' or output == 'array':
+        my_list = []
+        for keys,values in pandy.items():
+            vc=[]
+            vc=[i for i in values]
+            my_list.append(vc)
+        casted_data = my_list
+        if output == 'array':
+            casted_data = np.array(pandy)
+    else:
+        raise CoaKeyError('Unknown output.')
     return casted_data
 
 # ----------------------------------------------------------------------

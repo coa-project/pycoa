@@ -287,8 +287,9 @@ def get(**kwargs):
             col_name = 'weekly'
         else:
             col_name = 'daily'
-
-        casted_data = pd.pivot_table(pandy, index='date',columns='where',values=col_name).to_dict('series')
+        #print(pandy)
+        #casted_data = pd.pivot_table(pandy, index='date',columns='where',values=col_name).to_dict('series')
+        #print(pandy)
         if output == 'dict':
             casted_data = pandy.to_dict('split')
         if output == 'list' or output == 'array':
@@ -414,7 +415,7 @@ def hist(**kwargs):
     typeofhist  --  'bylocation' (default) or 'byvalue'
 
     bins        --  number of bins used, only available for 'byvalue' type of
-                    histograms. 
+                    histograms.
                     If none provided, a default value will be used.
 
     """

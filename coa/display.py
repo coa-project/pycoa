@@ -154,7 +154,7 @@ class CocoDisplay():
         input_dico['what']=what
         input_dico['locsumall']=None
         if 'location' in mypandas:
-            uniqloc = list(mypandas.location)[0]
+            uniqloc = (mypandas.reset_index(drop=True)).location[0]
             if isinstance(uniqloc,list):
                 mypandas = mypandas.drop(columns=['location'])
                 mypandas = mypandas.rename(columns={'inputlocation':'location'})

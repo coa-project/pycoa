@@ -159,8 +159,9 @@ class CocoDisplay():
             if isinstance(uniqloc,list):
                 mypandas = mypandas.drop(columns=['location'])
                 mypandas = mypandas.rename(columns={'inputlocation':'location'})
+                mypandas['name_to_display'] = mypandas['location']
                 #mypandas = mypandas.replace(uniqloc,newuniqloc)
-                #mypandas['name_to_display'] = mypandas['location']
+
                 #newuniqloc = newuniqloc[0]
                 #try:
                 #    loc = CocoDisplay.return_standard_location(self.database_name,newuniqloc)

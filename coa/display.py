@@ -174,10 +174,7 @@ class CocoDisplay():
                 #input_dico['locsumall'] =  input_dico['locsumall'].assign(name_to_display=[newuniqloc]*len(input_dico['locsumall']))
                 input_dico['locsumall'] = self.location_geometry.loc[self.location_geometry.location.isin(uniqloc)]
                 input_dico['locsumall'] = input_dico['locsumall'].reset_index(drop=True)
-                if 'name_subregion' in input_dico['locsumall'].columns:
-                    input_dico['locsumall'] =  input_dico['locsumall'].rename(columns={'name_subregion':'name_to_display'})
-                else:
-                    input_dico['locsumall']['name_to_display']=[mypandas['location'][0]]*len(input_dico['locsumall'])
+                input_dico['locsumall']['name_to_display']=[mypandas['location'][0]]*len(input_dico['locsumall'])
 
             else:
                 if self.database_name == 'spf' or self.database_name == 'opencovid19' or self.database_name == 'jhu-usa':

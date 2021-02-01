@@ -154,24 +154,32 @@ class CocoDisplay():
         input_dico['what']=what
         input_dico['locsumall']=None
         if 'location' in mypandas:
-            uniqloc = mypandas.location.unique()
-            newuniqloc=[loc.replace('SumAll ','') for loc in uniqloc if 'SumAll' in loc.split()]
-            if newuniqloc:
-                mypandas = mypandas.replace(uniqloc,newuniqloc)
-                mypandas['name_to_display'] = mypandas['location']
-                newuniqloc = newuniqloc[0]
-                try:
-                    loc = CocoDisplay.return_standard_location(self.database_name,newuniqloc)
-                except:
-                    newuniqloc = literal_eval(newuniqloc)
-                    loc =  newuniqloc
-                if type(loc) is int:
-                    loc=str(loc)
-                    input_dico['locsumall'] = self.location_geometry.loc[self.location_geometry.location==loc]
-                    #raise CoaKeyError('Only one location is given then locsumall is not needed')
+            uniqloc = mypandas.location[0]
+
+            if isinstance(uniqloc,list):
+                mypandas = mypandas.drop(columns=['location'])
+                mypandas = mypandas.rename(columns={'inputlocation':'location'})
+                #mypandas = mypandas.replace(uniqloc,newuniqloc)
+                #mypandas['name_to_display'] = mypandas['location']
+                #newuniqloc = newuniqloc[0]
+                #try:
+                #    loc = CocoDisplay.return_standard_location(self.database_name,newuniqloc)
+                #except:
+                #    newuniqloc = literal_eval(newuniqloc)
+                #    loc =  newuniqloc
+                #if type(loc) is int:
+                #    loc=str(loc)
+                #    input_dico['locsumall'] = self.location_geometry.loc[self.location_geometry.location==loc]
+                #else:
+                #    input_dico['locsumall'] = self.location_geometry.loc[self.location_geometry.location.isin(loc)]
+                #input_dico['locsumall'] =  input_dico['locsumall'].assign(name_to_display=[newuniqloc]*len(input_dico['locsumall']))
+                input_dico['locsumall'] = self.location_geometry.loc[self.location_geometry.location.isin(uniqloc)]
+                input_dico['locsumall'] = input_dico['locsumall'].reset_index(drop=True)
+                if 'name_subregion' in input_dico['locsumall'].columns:
+                    input_dico['locsumall'] =  input_dico['locsumall'].rename(columns={'name_subregion':'name_to_display'})
                 else:
-                    input_dico['locsumall'] = self.location_geometry.loc[self.location_geometry.location.isin(loc)]
-                input_dico['locsumall'] =  input_dico['locsumall'].assign(name_to_display=[newuniqloc]*len(input_dico['locsumall']))
+                    input_dico['locsumall']['name_to_display']=[mypandas['location'][0]]*len(input_dico['locsumall'])
+
             else:
                 if self.database_name == 'spf' or self.database_name == 'opencovid19' or self.database_name == 'jhu-usa':
                     pd_name_displayed=self.geopan[['location','name_subregion']]
@@ -433,7 +441,7 @@ class CocoDisplay():
                 boolval = df.loc[df.date == (when_end-dt.timedelta(days=j))][field].dropna().empty
                 j+=1
         if j>1:
-            verb(str(when_end)+', all the value seems to be nan! I will find an other previous date.\n'+
+            info(str(when_end)+'all the value seems to be nan! I will find an other previous date.\n'+
                 'Here the date I will take: '+str(when_end-dt.timedelta(days=j-1)))
         return  when_end-dt.timedelta(days=j-1)
 
@@ -882,16 +890,15 @@ class CocoDisplay():
                 geopdwd = pd.merge(geopdwd,mypandas,on='location')
                 dico['tile'] = CocoDisplay.get_tile(dico['tile'],func.__name__)
                 if dico['locsumall'] is not None:
-                    val=(mypandas.loc[mypandas.date==dico['when_end']][input_field].iloc[-1])
-                    if 'name_subregion' in dico['locsumall'].columns:
-                        dico['locsumall'] = dico['locsumall'].drop(columns=['name_subregion'])
+                    val=(mypandas.loc[mypandas.date==dico['when_end']][input_field]).values[0]
+                    dico['locsumall'] = dico['locsumall'].reset_index(drop=True)
                     dico['locsumall'][input_field] = [val]*len(dico['locsumall'])
                     dico['locsumall']['date'] = [dico['when_end']]*len(dico['locsumall'])
-                    fake={'location':'FAKE','geometry':dico['locsumall'].iloc[-1]['geometry'],
-                    'name_to_display':'FAKE',input_field:val,'date':dt.date(2020,3,15)}
-                    dico['locsumall']=dico['locsumall'].append(fake,ignore_index=True)
+                    dico['locsumall']=dico['locsumall'].append(dico['locsumall'].iloc[-1],ignore_index=True)
+                    dico['locsumall'].iloc[-1,-1] = dt.date(2020,3,15)
                     dico['locsumall']=dico['locsumall'].reset_index(drop=True)
                     geopdwd = dico['locsumall']
+
 
                 #self.boundary = geopdwd.loc[geopdwd.location.isin(geopdwd.location.unique())].total_bounds
             #else:

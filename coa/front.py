@@ -395,10 +395,6 @@ def hist(**kwargs):
 
     where (mandatory if no input), what, which, whom, when : (see help(get))
 
-
-    bins        --  number of bins used. If none provided, a default
-                    value will be used.
-
     input       --  input data to plot within the pycoa framework (e.g.
                     after some analysis or filtering). Default is None which
                     means that we use the basic raw data through the get
@@ -416,12 +412,16 @@ def hist(**kwargs):
                 For instance width_height=[400,500]
 
     typeofhist  --  'bylocation' (default) or 'byvalue'
+
+    bins        --  number of bins used, only available for 'byvalue' type of
+                    histograms. 
+                    If none provided, a default value will be used.
+
     """
     kwargs_test(kwargs,['where','what','which','whom','when','input','input_field','bins','title',
                         'typeofhist','cursor_date','option'],
             'Bad args used in the pycoa.hist() function.')
 
-    bins=kwargs.get('bins',None)
     when=kwargs.get('when',None)
     input_field=None
     input_arg=kwargs.get('input',None)
@@ -441,8 +441,11 @@ def hist(**kwargs):
         raise CoaTypeError('Waiting input as valid pycoa pandas '
             'dataframe. See help.')
 
+
     if typeofhist == 'bylocation':
-            fig=_cocoplot.pycoa_horizonhisto(t,input_field,**kwargs)
+        if 'bins' in kwargs:
+            raise CoaKeyError("The bins keyword cannot be set with histograms by location. See help.")
+        fig=_cocoplot.pycoa_horizonhisto(t,input_field,**kwargs)
     elif typeofhist == 'byvalue':
         fig=_cocoplot.pycoa_histo(t,input_field,**kwargs)
     else:

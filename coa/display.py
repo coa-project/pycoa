@@ -433,7 +433,7 @@ class CocoDisplay():
                 boolval = df.loc[df.date == (when_end-dt.timedelta(days=j))][field].dropna().empty
                 j+=1
         if j>1:
-            info(str(when_end)+'all the value seems to be nan! I will find an other previous date.\n'+
+            verb(str(when_end)+', all the value seems to be nan! I will find an other previous date.\n'+
                 'Here the date I will take: '+str(when_end-dt.timedelta(days=j-1)))
         return  when_end-dt.timedelta(days=j-1)
 

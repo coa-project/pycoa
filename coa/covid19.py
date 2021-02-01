@@ -582,7 +582,8 @@ class DataBase(object):
 
         # if sumall set, return only integrate val
         if sumall:
-            ntot=len(pdfiltered['location'].unique())
+            loc = pdfiltered['location'].unique()
+            ntot=len(loc)
             ptot=pdfiltered.groupby(['location']).fillna(method='ffill').groupby(['date']).sum().reset_index()   # summing for all locations
 
             # mean for some columns, about index and not sum of values.
@@ -591,22 +592,19 @@ class DataBase(object):
                     ptot[col]=ptot[col]/ntot
             # adding the location name
             #all_loc_string=str(kwargs['location'])
-            if isinstance(kwargs['location'],list):
-                if len(kwargs['location'])==1:
-                    all_loc_string = str(kwargs['location'][0])
-                else:
-                    all_loc_string = str(kwargs['location'])
-            else:
-                all_loc_string = str(kwargs['location'])
                 #if len(kwargs['location'])>2:
                     #all_loc_string="["+str(kwargs['location'][0])+"..."+str(kwargs['location'][-1])+"]"
-            ptot['location']="SumAll "+all_loc_string
+            ptot['location']=[list(loc)]*len(ptot)
+            ptot['inputlocation']=[str(kwargs['location'])]*len(ptot)
             pdfiltered=ptot
-
+            pdfiltered['daily'] = pdfiltered[kwargs['which']].diff()
+            pdfiltered['cumul'] = pdfiltered[kwargs['which']].cumsum()
+            pdfiltered['weekly'] = pdfiltered[kwargs['which']].diff(7)
         # computing daily, cumul and weekly
-        pdfiltered['daily'] = pdfiltered.groupby(['location'])[kwargs['which']].diff()
-        pdfiltered['cumul'] = pdfiltered.groupby(['location'])[kwargs['which']].cumsum()
-        pdfiltered['weekly'] = pdfiltered.groupby(['location'])[kwargs['which']].diff(7)
+        else:
+            pdfiltered['daily'] = pdfiltered.groupby(['location'])[kwargs['which']].diff()
+            pdfiltered['cumul'] = pdfiltered.groupby(['location'])[kwargs['which']].cumsum()
+            pdfiltered['weekly'] = pdfiltered.groupby(['location'])[kwargs['which']].diff(7)
 
         if fillnan:
             pdfiltered = pdfiltered.fillna(0) # for diff if needed

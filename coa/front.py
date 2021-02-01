@@ -278,18 +278,16 @@ def get(**kwargs):
          pandy['cumul'] = pandy[which]
          casted_data = pandy
     else:
-        col_name = ''
-        if what == 'daily':
-            col_name = 'daily'
-        if what == 'cumul' and _whom == 'jhu':
-            col_name = which
-        if what == 'weekly':
-            col_name = 'weekly'
-        else:
-            col_name = 'daily'
-        #print(pandy)
+        # col_name = ''
+        # if what == 'daily':
+        #     col_name = 'daily'
+        # if what == 'cumul' and _whom == 'jhu':
+        #     col_name = which
+        # if what == 'weekly':
+        #     col_name = 'weekly'
+        # else:
+        #     col_name = 'daily'
         #casted_data = pd.pivot_table(pandy, index='date',columns='where',values=col_name).to_dict('series')
-        #print(pandy)
         if output == 'dict':
             casted_data = pandy.to_dict('split')
         if output == 'list' or output == 'array':

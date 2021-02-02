@@ -110,14 +110,23 @@ class DataBase(object):
                 # vert : R0 entre 0 et 1 ;
                 # Orange : R0 entre 1 et 1,5 ;
                 # Rouge : R0 supérieur à 1,5.
+                spf5=self.csv2pandas("https://www.data.gouv.fr/fr/datasets/r/4f39ec91-80d7-4602-befb-4b522804c0af",
+                    rename_columns=rename,separator=',',encoding="ISO-8859-1",cast=cast)
+                # https://www.data.gouv.fr/fr/datasets/donnees-relatives-aux-personnes-vaccinees-contre-la-covid-19-1
+                # Les données issues du système d’information Vaccin Covid permettent de dénombrer en temps quasi réel 
+                # (J-1), le nombre de personnes ayant reçu une injection de vaccin anti-covid en tenant compte du nombre 
+                # de doses reçues, de l’âge, du sexe ainsi que du niveau géographique (national, régional et 
+                # départemental).
+                # variable n_dose_1
                 cast={'departement':'string'}
                 rename={'extract_date':'date','departement':'location'}
                 #columns_skipped=['region','libelle_reg','libelle_dep','tx_incid_couleur','R_couleur',\
                 #'taux_occupation_sae_couleur','tx_pos_couleur','nb_orange','nb_rouge']
                 spf4=self.csv2pandas("https://www.data.gouv.fr/fr/datasets/r/4acad602-d8b1-4516-bc71-7d5574d5f33e",
                             rename_columns=rename, separator=',', encoding = "ISO-8859-1",cast=cast)
+
                 #result = pd.concat([spf1, spf2,spf3,spf4], axis=1, sort=False)
-                result = reduce(lambda x, y: pd.merge(x, y, on = ['location','date']), [spf1, spf2,spf3,spf4])
+                result = reduce(lambda x, y: pd.merge(x, y, on = ['location','date']), [spf1, spf2,spf3,spf4,spf5])
 
                 # ['location', 'date', 'hosp', 'rea', 'rad', 'dc', 'incid_hosp',
                    # 'incid_rea', 'incid_dc', 'incid_rad', 'P', 'T', 'pop', 'region',
@@ -126,7 +135,7 @@ class DataBase(object):
                    # 'taux_occupation_sae_couleur', 'tx_pos_couleur', 'nb_orange',
                    # 'nb_rouge']
                 min_date=result['date'].min()
-                for w in ['incid_hosp','incid_rea','incid_rad','incid_dc','P','T']:
+                for w in ['incid_hosp','incid_rea','incid_rad','incid_dc','P','T','n_dose1']:
                     if w.startswith('incid_'):
                         ww=w[6:]
                         result['offset_'+w] = result[result.date==min_date][ww]-result[result.date==min_date]['incid_'+ww]
@@ -143,7 +152,8 @@ class DataBase(object):
                     'tx_incid':'cur_idx_tx_incid',
                     'R':'cur_idx_R',
                     'taux_occupation_sae':'cur_idx_taux_occupation_sae',
-                    'tx_pos':'cur_idx_tx_pos'
+                    'tx_pos':'cur_idx_tx_pos',
+                    'tot_n_dose1':'tot_vacc',
                     }
                 result=result.rename(columns=rename_dict)
                 columns_keeped=list(rename_dict.values())+['tot_incid_hosp','tot_incid_rea','tot_incid_rad','tot_incid_dc','tot_P','tot_T']

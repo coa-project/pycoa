@@ -125,9 +125,8 @@ class DataBase(object):
                 spf4=self.csv2pandas("https://www.data.gouv.fr/fr/datasets/r/4acad602-d8b1-4516-bc71-7d5574d5f33e",
                             rename_columns=rename, separator=',', encoding = "ISO-8859-1",cast=cast)
 
-                #result = pd.concat([spf1, spf2,spf3,spf4], axis=1, sort=False)
+                #result = pd.concat([spf1, spf2,spf3,spf4,spf5], axis=1, sort=False)
                 result = reduce(lambda x, y: pd.merge(x, y, on = ['location','date']), [spf1, spf2,spf3,spf4,spf5])
-
                 # ['location', 'date', 'hosp', 'rea', 'rad', 'dc', 'incid_hosp',
                    # 'incid_rea', 'incid_dc', 'incid_rad', 'P', 'T', 'pop', 'region',
                    # 'libelle_reg', 'libelle_dep', 'tx_incid', 'R', 'taux_occupation_sae',
@@ -323,6 +322,8 @@ class DataBase(object):
             self.slocation = d_loc_s
             newloc = d_loc_s
             toremove = ['']
+            g=coge.GeoManager('iso3')
+            codedico={i:str(g.to_standard(i,db=self.get_db(),interpret_region=True)[0]) for i in newloc}
         else:
             loc_sub_name  = list(self.geo.get_subregion_list()['name_subregion'])
             loc_sub_code = list(self.geo.get_subregion_list()['code_subregion'])
@@ -331,10 +332,12 @@ class DataBase(object):
             oldloc = loc_sub_name
             newloc = loc_sub_code
             toremove = [x for x in uniqloc if x not in loc_sub_name]
+            codedico={loc_sub_code:newloc}
 
         result = reduce(lambda x, y: pd.merge(x, y, on = ['location','date']), pandas_list)
         result = result.loc[~result.location.isin(toremove)]
         result = result.replace(oldloc,newloc)
+        result['codelocation'] = result['location'].map(codedico)
         result['date'] = pd.to_datetime(result['date'],errors='coerce').dt.date
         self.dates  = result['date']
         result=result.sort_values(['location','date'])
@@ -522,8 +525,11 @@ class DataBase(object):
             clist.remove('Serbia')
             pdfiltered = self.get_mainpandas().loc[self.get_mainpandas().location.isin(clist)].reset_index()
             pdfiltered = pd.concat([pdfiltered,ptot])
-
-        pdfiltered = pdfiltered[['location','date',kwargs['which']]]
+            pdfiltered.loc[(pdfiltered.location=='Serbia'),'codelocation']='SRB'
+        if self.db_world:
+            pdfiltered = pdfiltered[['location','codelocation','date',kwargs['which']]]
+        else:
+            pdfiltered = pdfiltered[['location','date',kwargs['which']]]
 
         # insert dates at the end for each country if necessary
         maxdate=pdfiltered['date'].max()

@@ -1169,12 +1169,15 @@ class CocoDisplay():
                     """)
                 date_slider.js_on_change('value', callback)
 
-            if self.database_name == 'spf' or self.database_name == 'opencovid19' or self.database_name == 'jhu-usa':
-                mypandas_filter = mypandas_filter.drop(columns=['shortenlocation'])
-                mypandas_filter['shortenlocation'] = mypandas_filter['location']
+            if dico['locsumall'] is None:
+                if self.database_name == 'spf' or self.database_name == 'opencovid19' or self.database_name == 'jhu-usa':
+                    mypandas_filter = mypandas_filter.drop(columns=['shortenlocation'])
+                    mypandas_filter['shortenlocation'] = mypandas_filter['location']
+                else:
+                    mypandas_filter = mypandas_filter.drop(columns=['shortenlocation'])
+                    mypandas_filter['shortenlocation'] = mypandas_filter['codelocation']
 
             loc=mypandas_filter['shortenlocation'].to_list()
-
             self.logo_db_citation.x_offset -= len(max(loc, key=len))
 
             cases_custom = CustomJSHover(code="""

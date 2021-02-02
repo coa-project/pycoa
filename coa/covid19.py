@@ -326,6 +326,8 @@ class DataBase(object):
             self.slocation = d_loc_s
             newloc = d_loc_s
             toremove = ['']
+            g=coge.GeoManager('iso3')
+            codedico={i:str(g.to_standard(i,db=self.get_db(),interpret_region=True)[0]) for i in newloc}
         else:
             loc_sub_name  = list(self.geo.get_subregion_list()['name_subregion'])
             loc_sub_code = list(self.geo.get_subregion_list()['code_subregion'])
@@ -334,10 +336,12 @@ class DataBase(object):
             oldloc = loc_sub_name
             newloc = loc_sub_code
             toremove = [x for x in uniqloc if x not in loc_sub_name]
+            codedico={loc_sub_code:newloc}
 
         result = reduce(lambda x, y: pd.merge(x, y, on = ['location','date']), pandas_list)
         result = result.loc[~result.location.isin(toremove)]
         result = result.replace(oldloc,newloc)
+        result['codelocation'] = result['location'].map(codedico)
         result['date'] = pd.to_datetime(result['date'],errors='coerce').dt.date
         self.dates  = result['date']
         result=result.sort_values(['location','date'])
@@ -525,8 +529,11 @@ class DataBase(object):
             clist.remove('Serbia')
             pdfiltered = self.get_mainpandas().loc[self.get_mainpandas().location.isin(clist)].reset_index()
             pdfiltered = pd.concat([pdfiltered,ptot])
-
-        pdfiltered = pdfiltered[['location','date',kwargs['which']]]
+            pdfiltered.loc[(pdfiltered.location=='Serbia'),'codelocation']='SRB'
+        if self.db_world:
+            pdfiltered = pdfiltered[['location','codelocation','date',kwargs['which']]]
+        else:
+            pdfiltered = pdfiltered[['location','date',kwargs['which']]]
 
         # insert dates at the end for each country if necessary
         maxdate=pdfiltered['date'].max()

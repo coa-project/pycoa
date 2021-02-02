@@ -347,9 +347,12 @@ def decoplot(func):
             t=input_arg
             which=kwargs.get('input_field',listwhich()[0])
             if which not in t.columns:
-                raise CoaKeyError("Cannot find "+which+" field in the pandas data. "
+                raise CoaKeyError("Cannot find "+str(which)+" field in the pandas data. "
                     "Set a proper input_field key.")
-            option=kwargs.get('option',None)
+            if 'option' in kwargs:
+                raise CoaKeyError("Cannot use option with input pandas data. "
+                    "Use option within the get() function instead.")
+
         elif input_arg==None:
             t=get(**kwargs,output='pandas')
             which=kwargs.get('which',listwhich()[0])
@@ -431,7 +434,13 @@ def hist(**kwargs):
 
     if isinstance(input_arg,pd.DataFrame):
         t=input_arg
-        input_field=kwargs.get('input_field')
+        input_field=kwargs.get('input_field',listwhich()[0])
+        if input_field not in t.columns:
+            raise CoaKeyError("Cannot find "+str(input_field)+" field in the pandas data. "
+                "Set a proper input_field key.")
+        if 'option' in kwargs:
+            raise CoaKeyError("Cannot use option with input pandas data. "
+                "Use option within the get() function instead.")
         kwargs={}
     elif input_arg==None:
         t=get(**kwargs,output='pandas')
@@ -476,7 +485,13 @@ def deco_pycoa_graph(f):
 
         input_field = None
         if isinstance(input_arg,pd.DataFrame):
-            input_field=kwargs.get('input_field',input_field)
+            input_field=kwargs.get('input_field',listwhich()[0])
+            if input_field not in input_arg.columns:
+                raise CoaKeyError("Cannot find "+str(input_field)+" field in the pandas data. "
+                    "Set a proper input_field key.")
+            if 'option' in kwargs:
+                raise CoaKeyError("Cannot use option with input pandas data. "
+                    "Use option within the get() function instead.")
             kwargs={}
             kwargs['t']=input_arg
         elif input_arg==None:

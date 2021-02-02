@@ -362,9 +362,10 @@ def decoplot(func):
 @decoplot
 def plot(t,**kwargs):
     input_arg=kwargs.get('input',None)
-    input_fied=kwargs.get('input_field')
-    if isinstance(input_arg,pd.DataFrame) and len(input_fied)==2:
-        fig = _cocoplot.pycoa_plot(t,[input_fied[0],input_fied[1]])
+    input_field=kwargs.get('input_field',listwhich()[0])
+    
+    if isinstance(input_arg,pd.DataFrame) and len(input_field)==2:
+        fig = _cocoplot.pycoa_plot(t,[input_field[0],input_field[1]])
     else:
         fig = _cocoplot.pycoa_date_plot(t,**kwargs)
     show(fig)

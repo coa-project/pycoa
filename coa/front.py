@@ -345,7 +345,10 @@ def decoplot(func):
 
         if isinstance(input_arg,pd.DataFrame):
             t=input_arg
-            which=kwargs.get('input_field',listwhich()[0]+'/cumul')
+            which=kwargs.get('input_field',listwhich()[0])
+            if which not in t.columns:
+                raise CoaKeyError("Cannot find "+which+" field in the pandas data. "
+                    "Set a proper input_field key.")
             option=kwargs.get('option',None)
         elif input_arg==None:
             t=get(**kwargs,output='pandas')

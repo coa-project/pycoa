@@ -112,7 +112,7 @@ class CocoDisplay():
             geom=info.get_GeoManager()
             lstd=geom.get_standard()
             geom.set_standard('name')
-            
+
             allcountries = geom.get_GeoRegion().get_countries_from_region('world')
             geopan['location'] = [geom.to_standard(c)[0] for c in allcountries]
 
@@ -1169,7 +1169,12 @@ class CocoDisplay():
                     """)
                 date_slider.js_on_change('value', callback)
 
+            if self.database_name == 'spf' or self.database_name == 'opencovid19' or self.database_name == 'jhu-usa':
+                mypandas_filter = mypandas_filter.drop(columns=['shortenlocation'])
+                mypandas_filter['shortenlocation'] = mypandas_filter['location']
+
             loc=mypandas_filter['shortenlocation'].to_list()
+
             self.logo_db_citation.x_offset -= len(max(loc, key=len))
 
             cases_custom = CustomJSHover(code="""

@@ -113,9 +113,9 @@ class DataBase(object):
                 spf5=self.csv2pandas("https://www.data.gouv.fr/fr/datasets/r/4f39ec91-80d7-4602-befb-4b522804c0af",
                     rename_columns=rename,separator=',',encoding="ISO-8859-1",cast=cast)
                 # https://www.data.gouv.fr/fr/datasets/donnees-relatives-aux-personnes-vaccinees-contre-la-covid-19-1
-                # Les données issues du système d’information Vaccin Covid permettent de dénombrer en temps quasi réel 
-                # (J-1), le nombre de personnes ayant reçu une injection de vaccin anti-covid en tenant compte du nombre 
-                # de doses reçues, de l’âge, du sexe ainsi que du niveau géographique (national, régional et 
+                # Les données issues du système d’information Vaccin Covid permettent de dénombrer en temps quasi réel
+                # (J-1), le nombre de personnes ayant reçu une injection de vaccin anti-covid en tenant compte du nombre
+                # de doses reçues, de l’âge, du sexe ainsi que du niveau géographique (national, régional et
                 # départemental).
                 # variable n_dose_1
                 cast={'departement':'string'}

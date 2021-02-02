@@ -85,6 +85,36 @@ def kwargs_test(given_args,expected_args,error_string):
 
     return True
 
+def fill_missing_dates(p,date_field,loc_field,d1,d2):
+    """Filling the input pandas dataframe p with missing dates
+    """
+    if not isinstance(p,pandas.DataFrame):
+        raise CoaTypeError("Expecting input p as a pandas dataframe.")
+    if not date_field in p.columns:
+        raise CoaKeyError("The date_field is not a proper column of input pandas dataframe.")
+    if not loc_field in p.columns:
+        raise CoaKeyError("The loc_field is not a proper column of input pandas dataframe.")
+    if not all(isinstance(d, datetime.date) for d in [d1,d2]):
+        raise CoaTypeError("Waiting for dates as datetime.date.")
+    if d1 > d2:
+        raise CoaKeyError("Dates should be ordered as d1<d2.")
+
+    idx = pandas.date_range(d1, d2, freq = "D")
+    all_loc=p[loc_field].unique()
+    pfill=pandas.DataFrame()
+    p[loc_field]=p[loc_field].astype('str')
+    for l in all_loc:
+        pp=p[p[loc_field]==l]
+        pp2=pp.set_index([date_field])
+        pp2.index = pandas.DatetimeIndex(pp2.index)
+        pp3 = pp2.reindex(idx,fill_value=numpy.nan)
+        pp3[loc_field]=l
+        pfill=pandas.concat([pfill,pp3])
+        
+    pfill[date_field]=pfill.index.astype('str')
+    pfill.reset_index(inplace=True,drop=True)
+    return(pfill)
+
 def check_valid_date(date):
     """Check if a string is compatible with a valid date under the format day/month/year
     with 2 digits for day, 2 digits for month and 4 digits for year.

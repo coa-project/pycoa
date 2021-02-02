@@ -624,6 +624,8 @@ class CocoDisplay():
         return tabs
     @decoplot
     def scrolling_menu(self,mypandas,dico,input_field, hover_tool, ax_type,**kwargs):
+        if dico['locsumall'] is not None:
+            raise CoaKeyError('For coherence \'locsumall\' can not be called with scrolling_menu ...')    
         tooltips='Date: @date{%F} <br>  $name: @$name'
         hover_tool = HoverTool(tooltips=tooltips,formatters={'@date': 'datetime'})
 

@@ -413,6 +413,11 @@ def hist(**kwargs):
                     histograms.
                     If none provided, a default value will be used.
 
+    cursor_date -- boolean value
+                   If True, add a date vertical cursor bar to the left of the figure
+                   to dislay histo/map to a particular date (default false)
+                   Warning : this coud be time consuming when one use it with map bokeh
+                   preferable to use this option with folium map
     """
     kwargs_test(kwargs,['where','what','which','whom','when','input','input_field','bins','title',
                         'typeofhist','cursor_date','option'],
@@ -437,13 +442,15 @@ def hist(**kwargs):
         raise CoaTypeError('Waiting input as valid pycoa pandas '
             'dataframe. See help.')
 
-
     if typeofhist == 'bylocation':
         if 'bins' in kwargs:
             raise CoaKeyError("The bins keyword cannot be set with histograms by location. See help.")
         fig=_cocoplot.pycoa_horizonhisto(t,input_field,**kwargs)
     elif typeofhist == 'byvalue':
+        if cursor_date:
+            print('cursor_date not yet implemented in typeofhist = byvalue , sorry about that')
         fig=_cocoplot.pycoa_histo(t,input_field,**kwargs)
+
     else:
         raise CoaKeyError('Unknown typeofhist value. Should be bylocation or byvalue.')
 

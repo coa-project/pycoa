@@ -593,9 +593,17 @@ class CocoDisplay():
                     else:
                         leg=loc
                     mypandas_filter = mypandas.loc[mypandas.location == loc].reset_index(drop=True)
-                    standardfig.line(x='date', y=val, source=ColumnDataSource(mypandas_filter),
-                    color=mypandas_filter.colors.iloc[0],line_width=3, legend_label=mypandas_filter.name_to_display.iloc[0],
-                    hover_line_width=4)
+                    if dico['locsumall'] is not None:
+                        iamthelegend=dico['locsumall']['name_to_display'][0]
+                        if len(iamthelegend)>20:
+                            iamthelegend=iamthelegend.split()[0] + '...' + iamthelegend.split()[-1]
+                        standardfig.line(x='date', y=val, source=ColumnDataSource(mypandas_filter),
+                        color=mypandas_filter.colors.iloc[0],line_width=3, legend_label=iamthelegend,
+                        hover_line_width=4)
+                    else:
+                        standardfig.line(x='date', y=val, source=ColumnDataSource(mypandas_filter),
+                        color=mypandas_filter.colors.iloc[0],line_width=3, legend_label=mypandas_filter.name_to_display.iloc[0],
+                        hover_line_width=4)
                 tooltips.append((val,'@{'+val+'}'+'{custom}'))
                 formatters['@{'+val+'}']=cases_custom
 

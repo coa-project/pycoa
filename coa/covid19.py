@@ -21,7 +21,7 @@ from collections import defaultdict
 import numpy as np
 import pandas as pd
 import sys
-from coa.tools import info,verb,kwargs_test,get_local_from_url
+from coa.tools import info,verb,kwargs_test,get_local_from_url,fill_missing_dates
 import coa.geo as coge
 import coa.display as codisplay
 from coa.error import *
@@ -112,6 +112,7 @@ class DataBase(object):
                 # Rouge : R0 supérieur à 1,5.
                 spf5=self.csv2pandas("https://www.data.gouv.fr/fr/datasets/r/4f39ec91-80d7-4602-befb-4b522804c0af",
                     rename_columns=rename,separator=',',encoding="ISO-8859-1",cast=cast)
+                spf5=fill_missing_dates(spf5,'date','location',spf1.date.min(),spf1.date.max())
                 # https://www.data.gouv.fr/fr/datasets/donnees-relatives-aux-personnes-vaccinees-contre-la-covid-19-1
                 # Les données issues du système d’information Vaccin Covid permettent de dénombrer en temps quasi réel
                 # (J-1), le nombre de personnes ayant reçu une injection de vaccin anti-covid en tenant compte du nombre
@@ -126,7 +127,9 @@ class DataBase(object):
                             rename_columns=rename, separator=',', encoding = "ISO-8859-1",cast=cast)
 
                 #result = pd.concat([spf1, spf2,spf3,spf4], axis=1, sort=False)
+                print(spf4,spf5)
                 result = reduce(lambda x, y: pd.merge(x, y, on = ['location','date']), [spf1, spf2,spf3,spf4,spf5])
+                print(result)
 
                 # ['location', 'date', 'hosp', 'rea', 'rad', 'dc', 'incid_hosp',
                    # 'incid_rea', 'incid_dc', 'incid_rad', 'P', 'T', 'pop', 'region',

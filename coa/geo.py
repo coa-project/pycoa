@@ -19,7 +19,11 @@ GeoInfo class allow to add new fields to a pandas DataFrame about
 statistical information for countries.
 
 GeoRegion class helps returning list of countries in a specified region
+
+Geocountry manages information for a single country.
 """
+
+import inspect  # for debug purpose
 
 import warnings
 
@@ -61,9 +65,14 @@ class GeoManager():
         the used standard. To get the current default standard,
         see get_list_standard()[0].
         """
-        verb("Init of GeoManager()")
+        verb("Init of GeoManager() from "+str(inspect.stack()[1]))
         self.set_standard(standard)
         self._gr=GeoRegion()
+
+    def get_GeoRegion(self):
+        """ return the GeoRegion local instance
+        """
+        return self._gr
 
     def get_region_list(self):
         """ return the list of region via the GeoRegion instance
@@ -312,13 +321,18 @@ class GeoInfo():
     def __init__(self,gm=0):
         """ __init__ member function.
         """
-        verb("Init of GeoInfo()")
+        verb("Init of GeoInfo() from "+str(inspect.stack()[1]))
         if gm != 0:
             self._gm=gm
         else:
             self._gm=GeoManager()
 
         self._grp=self._gm._gr.get_pandas()
+
+    def get_GeoManager(self):
+        """ return the local instance of used GeoManager()
+        """
+        return self._gm
 
     def get_list_field(self):
         """ return the list of supported additionnal fields available
@@ -542,7 +556,7 @@ class GeoRegion():
 
         # --- get the UN M49 information and organize the data in the _region_dict
 
-        verb("Init of GeoRegion()")
+        verb("Init of GeoRegion() from "+str(inspect.stack()[1]))
 
         p_m49=pd.read_html(get_local_from_url(self._source_dict["UN_M49"],0))[1]
 

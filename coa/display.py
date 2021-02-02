@@ -107,10 +107,18 @@ class CocoDisplay():
             geopan = info.get_subregion_list()[['code_subregion','name_subregion','geometry']]
             geopan = geopan.rename(columns={'code_subregion':'location'})
         elif self.database_name == 'jhu' or self.database_name == 'owid':
-            geom=coge.GeoManager('name')
             info = coge.GeoInfo()
-            allcountries = coge.GeoRegion().get_countries_from_region('world')
+
+            geom=info.get_GeoManager()
+            lstd=geom.get_standard()
+            geom.set_standard('name')
+            
+            allcountries = geom.get_GeoRegion().get_countries_from_region('world')
             geopan['location'] = [geom.to_standard(c)[0] for c in allcountries]
+
+            geom.set_standard(lstd)
+            # restore standard
+
             geopan = info.add_field(field=['geometry'],input=geopan ,geofield='location')
             geopan = geopan[geopan.location != 'Antarctica']
         else:

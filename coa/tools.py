@@ -18,6 +18,8 @@ default value is 1 (print information to stdout). The 2 value grants a debug lev
 printing.
 """
 
+import pandas 
+import numpy
 import datetime
 import time
 import os.path

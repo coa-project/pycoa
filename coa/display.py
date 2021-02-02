@@ -625,7 +625,7 @@ class CocoDisplay():
     @decoplot
     def scrolling_menu(self,mypandas,dico,input_field, hover_tool, ax_type,**kwargs):
         if dico['locsumall'] is not None:
-            raise CoaKeyError('For coherence \'locsumall\' can not be called with scrolling_menu ...')    
+            raise CoaKeyError('For coherence \'locsumall\' can not be called with scrolling_menu ...')
         tooltips='Date: @date{%F} <br>  $name: @$name'
         hover_tool = HoverTool(tooltips=tooltips,formatters={'@date': 'datetime'})
 
@@ -952,9 +952,6 @@ class CocoDisplay():
                 geopdwd_filter['bottom']=[len(geopdwd_filter.index)-bthick/2-i for i in geopdwd_filter.index.to_list()]
             if cursor_date == None:
                 date_slider = None
-
-            #geopdwd['location_shorten']=[dshort_loc[i] for i in geopdwd.location.to_list() ]
-            #geopdwd_filter['location_shorten']=[dshort_loc[i] for i in geopdwd_filter.location.to_list() ]
             return func(self,input_field,date_slider,dico,geopdwd,geopdwd_filter)
         return generic_hm
     @decohistomap
@@ -1179,6 +1176,13 @@ class CocoDisplay():
             point_policy="follow_mouse"))#,PanTool())
 
             label_dict={len(mypandas_filter)-k:v for k,v in enumerate(loc)}
+            if dico['locsumall'] is not None:
+                iamthelegend=dico['locsumall']['name_to_display'][0]
+                if len(iamthelegend)>20:
+                    del label_dict
+                    label_dict={}
+                    label_dict[1]=iamthelegend.split()[0] + '...' + iamthelegend.split()[-1]
+
             standardfig.yaxis.major_label_overrides = label_dict
             standardfig.yaxis.ticker = list(range(1,len(loc)+1))
             panel = Panel(child=standardfig,title=axis_type)

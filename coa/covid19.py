@@ -335,6 +335,7 @@ class DataBase(object):
 
         uniqloc = pandas_list[0]['location'].unique()
         oldloc = uniqloc
+        codedico={}
         if self.db_world:
             d_loc_s = self.geo.to_standard(list(uniqloc),output='list',db=self.get_db(),interpret_region=True)
             self.slocation = d_loc_s
@@ -350,7 +351,7 @@ class DataBase(object):
             oldloc = loc_sub_name
             newloc = loc_sub_code
             toremove = [x for x in uniqloc if x not in loc_sub_name]
-            codedico={loc_sub_code:newloc}
+            codedico={i:j for i,j in zip(uniqloc,newloc)}
 
         result = reduce(lambda x, y: pd.merge(x, y, on = ['location','date']), pandas_list)
         result = result.loc[~result.location.isin(toremove)]
@@ -365,8 +366,9 @@ class DataBase(object):
             tmp = tmp[cols]
             result = result.append(tmp)
 
+        result['codelocation'] = result['location'].map(codedico)
         result = result.replace(oldloc,newloc)
-        #result['codelocation'] = result['location'].map(codedico)
+
         result['date'] = pd.to_datetime(result['date'],errors='coerce').dt.date
         self.dates  = result['date']
         result=result.sort_values(['location','date'])
@@ -433,19 +435,23 @@ class DataBase(object):
 
         uniqloc = mypandas['location'].unique()
         oldloc = uniqloc
+        codedico={}
         if self.db_world:
             d_loc_s=self.geo.to_standard(list(uniqloc),output='list',db=self.get_db(),interpret_region=True)
             self.slocation=d_loc_s
             newloc = d_loc_s
             toremove=['']
+            g=coge.GeoManager('iso3')
+            codedico={i:str(g.to_standard(i,db=self.get_db(),interpret_region=True)[0]) for i in newloc}
         else:
-            loc_sub=list(self.geo.get_subregion_list()['name_subregion'])
-            toremove=[x for x in uniqloc if x not in loc_sub]
-            loc_code = list(self.geo.get_subregion_list()['code_subregion'])
-            #loc_code=list(self.geo.get_data().loc[self.geo.get_data().name_subregion.isin(loc_sub)]['code_subregion'])
-            self.slocation=loc_code
-            oldloc = loc_sub
-            newloc = loc_code
+            loc_sub_name  = list(self.geo.get_subregion_list()['name_subregion'])
+            loc_sub_code = list(self.geo.get_subregion_list()['code_subregion'])
+            #loc_code = list(self.geo.get_data().loc[self.geo.get_data().name_subregion.isin(loc_sub)]['code_subregion'])
+            self.slocation = loc_sub_code
+            oldloc = loc_sub_name
+            newloc = loc_sub_code
+            toremove = [x for x in uniqloc if x not in loc_sub_name]
+            codedico={i:j for i,j in zip(loc_sub_code,newloc)}
         tmp = pd.DataFrame()
         if 'Kosovo' in oldloc:
             tmp=(mypandas.loc[mypandas.location.isin(['Kosovo','Serbia'])].groupby('date').sum())
@@ -458,6 +464,8 @@ class DataBase(object):
             mypandas = mypandas.append(tmp)
 
         mypandas = mypandas.replace(oldloc,newloc)
+        mypandas['codelocation'] = mypandas['location'].map(codedico)
+
         #self.mainpandas = mypandas
         self.mainpandas = fill_missing_dates(mypandas)
 
@@ -548,7 +556,7 @@ class DataBase(object):
             clist=self.geo.to_standard(clist,output='list',interpret_region=True)
         else:
             clist=clist+self.geo.get_subregions_from_list_of_region_names(clist)
-            if clist == ['FRA']:
+            if clist == ['FRA'] or clist == ['USA']:
                 clist=self.geo_all
 
         clist=list(set(clist)) # to suppress duplicate countries
@@ -568,7 +576,7 @@ class DataBase(object):
         #    pdfiltered = self.get_mainpandas().loc[self.get_mainpandas().location.isin(clist)].reset_index()
         #    pdfiltered = pd.concat([pdfiltered,ptot])
 
-        pdfiltered = pdfiltered[['location','date',kwargs['which']]]
+        pdfiltered = pdfiltered[['location','date','codelocation',kwargs['which']]]
 
         # insert dates at the end for each country if necessary
         maxdate=pdfiltered['date'].max()
@@ -663,6 +671,10 @@ class DataBase(object):
 
         if fillnan:
             pdfiltered = pdfiltered.fillna(0) # for diff if needed
+
+        cols = pdfiltered.columns.tolist()
+        cols = cols[0:2] + cols[3:] + cols[2:3]
+        pdfiltered = pdfiltered[cols]
         return pdfiltered
 
    ## https://www.kaggle.com/freealf/estimation-of-rt-from-cases

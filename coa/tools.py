@@ -114,6 +114,7 @@ def fill_missing_dates(p,date_field,loc_field,d1,d2):
         pfill=pandas.concat([pfill,pp3])
         
     pfill[date_field]=pfill.index.astype('str')
+    pfill[loc_field]=pfill[loc_field].astype('string')
     pfill.reset_index(inplace=True,drop=True)
     return(pfill)
 

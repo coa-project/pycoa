@@ -112,6 +112,7 @@ class DataBase(object):
                 # Rouge : R0 supérieur à 1,5.
                 spf5=self.csv2pandas("https://www.data.gouv.fr/fr/datasets/r/4f39ec91-80d7-4602-befb-4b522804c0af",
                     rename_columns=rename,separator=',',encoding="ISO-8859-1",cast=cast)
+                #spf5=fill_missing_dates(spf5,'date','location',spf1.date.min(),spf1.date.max())
                 # https://www.data.gouv.fr/fr/datasets/donnees-relatives-aux-personnes-vaccinees-contre-la-covid-19-1
                 # Les données issues du système d’information Vaccin Covid permettent de dénombrer en temps quasi réel
                 # (J-1), le nombre de personnes ayant reçu une injection de vaccin anti-covid en tenant compte du nombre
@@ -124,13 +125,24 @@ class DataBase(object):
                 #'taux_occupation_sae_couleur','tx_pos_couleur','nb_orange','nb_rouge']
                 spf4=self.csv2pandas("https://www.data.gouv.fr/fr/datasets/r/4acad602-d8b1-4516-bc71-7d5574d5f33e",
                             rename_columns=rename, separator=',', encoding = "ISO-8859-1",cast=cast)
-                # now filling empty values
+
+                #result = pd.concat([spf1, spf2,spf3,spf4,spf5], axis=1, sort=False)
                 list_spf=[spf1, spf2,spf3,spf4,spf5]
                 min_date=min([s.date.min() for s in list_spf])
                 max_date=max([s.date.max() for s in list_spf])
-                list_spf=[fill_missing_dates(s,'date','location',min_date,max_date) for s in list_spf]
-                #result = pd.concat([spf1, spf2,spf3,spf4], axis=1, sort=False) # old merge procedure
-                result = reduce(lambda x, y: pd.merge(x, y, on = ['location','date']), list_spf)
+                spf1, spf2,spf3,spf4,spf5 = spf1.set_index(['date','location']),\
+                                            spf2.set_index(['date','location']),\
+                                            spf3.set_index(['date','location']),\
+                                            spf4.set_index(['date','location']),\
+                                            spf5.set_index(['date','location'])
+
+                list_spf = [spf1, spf2,spf3,spf4,spf5]
+                result = reduce(lambda  left,right: pd.merge(left,right,on=['date','location'],
+                                            how='outer'), list_spf)
+                result = result.reset_index()
+                #print(merged)
+                #result = reduce(lambda x, y: x.merge(x, y, on = ['location','date']), [spf1, spf2,spf3,spf4,spf5])
+                #print(result)
                 # ['location', 'date', 'hosp', 'rea', 'rad', 'dc', 'incid_hosp',
                    # 'incid_rea', 'incid_dc', 'incid_rad', 'P', 'T', 'pop', 'region',
                    # 'libelle_reg', 'libelle_dep', 'tx_incid', 'R', 'taux_occupation_sae',
@@ -141,11 +153,13 @@ class DataBase(object):
                 for w in ['incid_hosp','incid_rea','incid_rad','incid_dc','P','T','n_dose1']:
                     if w.startswith('incid_'):
                         ww=w[6:]
-                        result['offset_'+w] = result[result.date==min_date][ww]-result[result.date==min_date]['incid_'+ww]
+                        result[ww]=result.groupby('location')[ww].fillna(method='bfill')
+                        result['incid_'+ww] = result.groupby('location')['incid_'+ww].fillna(method='bfill')
+                        result['offset_'+w] = result.loc[result.date==min_date][ww]-result.loc[result.date==min_date]['incid_'+ww]
                         result['offset_'+w] = result.groupby('location')['offset_'+w].fillna(method='ffill')
                     else:
                         result['offset_'+w] = 0
-                    result['tot_'+w]=result.groupby(['location'])[w].cumsum()+result['offset_'+w]
+                    result['tot_'+w]=result.groupby(['location'])[w].cumsum()#+result['offset_'+w]
                 #
                 rename_dict={
                     'dc':'tot_dc',
@@ -341,11 +355,12 @@ class DataBase(object):
         result = reduce(lambda x, y: pd.merge(x, y, on = ['location','date']), pandas_list)
         result = result.loc[~result.location.isin(toremove)]
         result = result.replace(oldloc,newloc)
-        result['codelocation'] = result['location'].map(codedico)
+        #result['codelocation'] = result['location'].map(codedico)
         result['date'] = pd.to_datetime(result['date'],errors='coerce').dt.date
         self.dates  = result['date']
         result=result.sort_values(['location','date'])
-        self.mainpandas = result
+        #self.mainpandas = result
+        self.mainpandas = fill_missing_dates(result)
 
    def csv2pandas(self,url,**kwargs):
         '''
@@ -408,6 +423,7 @@ class DataBase(object):
         uniqloc = mypandas['location'].unique()
         oldloc = uniqloc
         if self.db_world:
+
             d_loc_s=self.geo.to_standard(list(uniqloc),output='list',db=self.get_db(),interpret_region=True)
             self.slocation=d_loc_s
             newloc = d_loc_s
@@ -420,8 +436,20 @@ class DataBase(object):
             self.slocation=loc_code
             oldloc = loc_sub
             newloc = loc_code
+        tmp = pd.DataFrame()
+        if 'Kosovo' in oldloc:
+            tmp=(mypandas.loc[mypandas.location.isin(['Kosovo','Serbia'])].groupby('date').sum())
+            tmp['location']='Serbia'
+            mypandas = mypandas.loc[~mypandas.location.isin(['Kosovo','Serbia'])]
+            tmp = tmp.reset_index()
+            cols = tmp.columns.tolist()
+            cols = cols[0:1] + cols[-1:] + cols[1:-1]
+            tmp = tmp[cols]
+            mypandas = mypandas.append(tmp)
+
         mypandas = mypandas.replace(oldloc,newloc)
-        self.mainpandas = mypandas
+        #self.mainpandas = mypandas
+        self.mainpandas = fill_missing_dates(mypandas)
 
    def get_mainpandas(self):
        '''
@@ -502,7 +530,7 @@ class DataBase(object):
             raise CoaWhereError("Location via the where keyword should be given as strings. ")
 
         if kwargs['which'] not in self.get_available_keys_words() :
-            raise CoaKeyError(kwargs['which']+' is not a available for' + self.db + 'database name. '
+            raise CoaKeyError(kwargs['which']+' is not a available for ' + self.db + ' database name. '
             'See get_available_keys_words() for the full list.')
 
         if self.db_world:
@@ -520,20 +548,17 @@ class DataBase(object):
             raise CoaWhereError('No correct subregion found according to the where option given.')
 
         pdfiltered = self.get_mainpandas().loc[self.get_mainpandas().location.isin(clist)]
-        if 'Serbia' in clist:
-            ptot=self.get_mainpandas().loc[self.get_mainpandas().location=='Serbia'].\
-                groupby(['date','location'])[self.get_available_keys_words()].sum().reset_index()
-            for col in ptot.columns:
-                if col.startswith('cur_idx_'):
-                    ptot[col]=ptot[col]/2
-            clist.remove('Serbia')
-            pdfiltered = self.get_mainpandas().loc[self.get_mainpandas().location.isin(clist)].reset_index()
-            pdfiltered = pd.concat([pdfiltered,ptot])
-            pdfiltered.loc[(pdfiltered.location=='Serbia'),'codelocation']='SRB'
-        if self.db_world:
-            pdfiltered = pdfiltered[['location','codelocation','date',kwargs['which']]]
-        else:
-            pdfiltered = pdfiltered[['location','date',kwargs['which']]]
+        #if 'Serbia' in clist:
+        #    ptot=self.get_mainpandas().loc[self.get_mainpandas().location=='Serbia'].\
+        #        groupby(['date','location'])[self.get_available_keys_words()].sum().reset_index()
+        #    for col in ptot.columns:
+        #        if col.startswith('cur_idx_'):
+        #            ptot[col]=ptot[col]/2
+        #    clist.remove('Serbia')
+        #    pdfiltered = self.get_mainpandas().loc[self.get_mainpandas().location.isin(clist)].reset_index()
+        #    pdfiltered = pd.concat([pdfiltered,ptot])
+
+        pdfiltered = pdfiltered[['location','date',kwargs['which']]]
 
         # insert dates at the end for each country if necessary
         maxdate=pdfiltered['date'].max()

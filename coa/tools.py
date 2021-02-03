@@ -18,7 +18,7 @@ default value is 1 (print information to stdout). The 2 value grants a debug lev
 printing.
 """
 
-import pandas 
+import pandas
 import numpy
 import datetime
 import time
@@ -96,6 +96,8 @@ def fill_missing_dates(p,date_field='date',loc_field='location',d1=None,d2=None)
         raise CoaKeyError("The date_field is not a proper column of input pandas dataframe.")
     if not loc_field in p.columns:
         raise CoaKeyError("The loc_field is not a proper column of input pandas dataframe.")
+    # datatoilettage :)
+    p = p.loc[~p.location.isin([''])]
 
     if d2==None:
         d2=p[date_field].max()
@@ -108,21 +110,20 @@ def fill_missing_dates(p,date_field='date',loc_field='location',d1=None,d2=None)
         raise CoaKeyError("Dates should be ordered as d1<d2.")
 
     idx = pandas.date_range(d1, d2, freq = "D")
-    all_loc=p[loc_field].unique()
+    idx = idx.date
+    all_loc=list(p[loc_field].unique())
+
     pfill=pandas.DataFrame()
-    p[loc_field]=p[loc_field].astype('str')
     for l in all_loc:
         pp=p[p[loc_field]==l]
         pp2=pp.set_index([date_field])
         pp2.index = pandas.DatetimeIndex(pp2.index)
-        pp3 = pp2.reindex(idx,fill_value=numpy.nan)
-        pp3[loc_field]=l
+        pp3 = pp2.reindex(idx,fill_value=pandas.NA)
+        pp3['location'] = pp3['location'].fillna(method='bfill')
         pfill=pandas.concat([pfill,pp3])
-        
-    pfill[date_field]=pandas.to_datetime(pfill.index,errors='coerce').date
-    pfill[loc_field]=pfill[loc_field].astype('string')
-    pfill.reset_index(inplace=True,drop=True)
-    return(pfill)
+    pfill.reset_index(inplace=True)
+    return pfill
+
 
 def check_valid_date(date):
     """Check if a string is compatible with a valid date under the format day/month/year

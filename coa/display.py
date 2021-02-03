@@ -167,6 +167,7 @@ class CocoDisplay():
                 mypandas = mypandas.drop(columns=['location'])
                 mypandas = mypandas.rename(columns={'inputlocation':'location'})
                 mypandas['name_to_display'] = mypandas['location']
+                mypandas = mypandas.reset_index(drop=True)
                 #mypandas = mypandas.replace(uniqloc,newuniqloc)
                 #newuniqloc = newuniqloc[0]
                 #try:
@@ -182,6 +183,7 @@ class CocoDisplay():
                 #input_dico['locsumall'] =  input_dico['locsumall'].assign(name_to_display=[newuniqloc]*len(input_dico['locsumall']))
                 input_dico['locsumall'] = self.location_geometry.loc[self.location_geometry.location.isin(uniqloc)]
                 input_dico['locsumall'] = input_dico['locsumall'].reset_index(drop=True)
+
                 input_dico['locsumall']['name_to_display']=[mypandas['location'][0]]*len(input_dico['locsumall'])
 
             else:
@@ -1071,7 +1073,9 @@ class CocoDisplay():
         else:
             geopdwd = geopdwd.rename(columns={'cases':input_field})
             geopdwd_filter = geopdwd_filter.rename(columns={'cases':input_field})
+
         dshort_loc=CocoDisplay.dict_shorten_loc(geopdwd.name_to_display.unique())
+
         geopdwd['shortenlocation']=[dshort_loc[i] for i in geopdwd.name_to_display.to_list()]
         geopdwd_filter['shortenlocation']=[dshort_loc[i] for i in geopdwd_filter.name_to_display.to_list()]
 

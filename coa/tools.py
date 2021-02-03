@@ -119,7 +119,7 @@ def fill_missing_dates(p,date_field='date',loc_field='location',d1=None,d2=None)
         pp3[loc_field]=l
         pfill=pandas.concat([pfill,pp3])
         
-    pfill[date_field]=pfill.index.astype('str')
+    pfill[date_field]=pandas.to_datetime(pfill.index,errors='coerce').date
     pfill[loc_field]=pfill[loc_field].astype('string')
     pfill.reset_index(inplace=True,drop=True)
     return(pfill)

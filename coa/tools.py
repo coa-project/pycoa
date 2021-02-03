@@ -87,7 +87,7 @@ def kwargs_test(given_args,expected_args,error_string):
 
     return True
 
-def fill_missing_dates(p,date_field,loc_field,d1,d2):
+def fill_missing_dates(p,date_field='date',loc_field='location',d1=None,d2=None):
     """Filling the input pandas dataframe p with missing dates
     """
     if not isinstance(p,pandas.DataFrame):
@@ -96,6 +96,12 @@ def fill_missing_dates(p,date_field,loc_field,d1,d2):
         raise CoaKeyError("The date_field is not a proper column of input pandas dataframe.")
     if not loc_field in p.columns:
         raise CoaKeyError("The loc_field is not a proper column of input pandas dataframe.")
+
+    if d2==None:
+        d2=p[date_field].max()
+    if d1==None:
+        d1=p[date_field].min()
+
     if not all(isinstance(d, datetime.date) for d in [d1,d2]):
         raise CoaTypeError("Waiting for dates as datetime.date.")
     if d1 > d2:

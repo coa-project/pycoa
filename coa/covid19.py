@@ -354,6 +354,17 @@ class DataBase(object):
 
         result = reduce(lambda x, y: pd.merge(x, y, on = ['location','date']), pandas_list)
         result = result.loc[~result.location.isin(toremove)]
+        tmp = pd.DataFrame()
+        if 'Kosovo' in oldloc:
+            tmp=(result.loc[result.location.isin(['Kosovo','Serbia'])].groupby('date').sum())
+            tmp['location']='Serbia'
+            result = result.loc[~result.location.isin(['Kosovo','Serbia'])]
+            tmp = tmp.reset_index()
+            cols = tmp.columns.tolist()
+            cols = cols[0:1] + cols[-1:] + cols[1:-1]
+            tmp = tmp[cols]
+            result = result.append(tmp)
+
         result = result.replace(oldloc,newloc)
         #result['codelocation'] = result['location'].map(codedico)
         result['date'] = pd.to_datetime(result['date'],errors='coerce').dt.date
@@ -423,7 +434,6 @@ class DataBase(object):
         uniqloc = mypandas['location'].unique()
         oldloc = uniqloc
         if self.db_world:
-
             d_loc_s=self.geo.to_standard(list(uniqloc),output='list',db=self.get_db(),interpret_region=True)
             self.slocation=d_loc_s
             newloc = d_loc_s

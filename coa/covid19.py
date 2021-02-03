@@ -127,11 +127,7 @@ class DataBase(object):
                             rename_columns=rename, separator=',', encoding = "ISO-8859-1",cast=cast)
 
                 #result = pd.concat([spf1, spf2,spf3,spf4], axis=1, sort=False)
-                print(spf4.dtypes,spf5.dtypes)
-                display(spf4,spf5)
                 result = reduce(lambda x, y: pd.merge(x, y, on = ['location','date']), [spf1, spf2,spf3,spf4,spf5])
-                display(result)
-
                 # ['location', 'date', 'hosp', 'rea', 'rad', 'dc', 'incid_hosp',
                    # 'incid_rea', 'incid_dc', 'incid_rad', 'P', 'T', 'pop', 'region',
                    # 'libelle_reg', 'libelle_dep', 'tx_incid', 'R', 'taux_occupation_sae',

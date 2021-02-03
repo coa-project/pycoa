@@ -112,7 +112,6 @@ class DataBase(object):
                 # Rouge : R0 supérieur à 1,5.
                 spf5=self.csv2pandas("https://www.data.gouv.fr/fr/datasets/r/4f39ec91-80d7-4602-befb-4b522804c0af",
                     rename_columns=rename,separator=',',encoding="ISO-8859-1",cast=cast)
-                spf5=fill_missing_dates(spf5,'date','location',spf1.date.min(),spf1.date.max())
                 # https://www.data.gouv.fr/fr/datasets/donnees-relatives-aux-personnes-vaccinees-contre-la-covid-19-1
                 # Les données issues du système d’information Vaccin Covid permettent de dénombrer en temps quasi réel
                 # (J-1), le nombre de personnes ayant reçu une injection de vaccin anti-covid en tenant compte du nombre
@@ -125,16 +124,20 @@ class DataBase(object):
                 #'taux_occupation_sae_couleur','tx_pos_couleur','nb_orange','nb_rouge']
                 spf4=self.csv2pandas("https://www.data.gouv.fr/fr/datasets/r/4acad602-d8b1-4516-bc71-7d5574d5f33e",
                             rename_columns=rename, separator=',', encoding = "ISO-8859-1",cast=cast)
-
-                #result = pd.concat([spf1, spf2,spf3,spf4], axis=1, sort=False)
-                result = reduce(lambda x, y: pd.merge(x, y, on = ['location','date']), [spf1, spf2,spf3,spf4,spf5])
+                # now filling empty values
+                list_spf=[spf1, spf2,spf3,spf4,spf5]
+                min_date=min([s.date.min() for s in list_spf])
+                max_date=max([s.date.max() for s in list_spf])
+                list_spf=[fill_missing_dates(s,'date','location',min_date,max_date) for s in list_spf]
+                #result = pd.concat([spf1, spf2,spf3,spf4], axis=1, sort=False) # old merge procedure
+                result = reduce(lambda x, y: pd.merge(x, y, on = ['location','date']), list_spf)
                 # ['location', 'date', 'hosp', 'rea', 'rad', 'dc', 'incid_hosp',
                    # 'incid_rea', 'incid_dc', 'incid_rad', 'P', 'T', 'pop', 'region',
                    # 'libelle_reg', 'libelle_dep', 'tx_incid', 'R', 'taux_occupation_sae',
                    # 'tx_pos', 'tx_incid_couleur', 'R_couleur',
                    # 'taux_occupation_sae_couleur', 'tx_pos_couleur', 'nb_orange',
                    # 'nb_rouge']
-                min_date=result['date'].min()
+                #min_date=result['date'].min()
                 for w in ['incid_hosp','incid_rea','incid_rad','incid_dc','P','T','n_dose1']:
                     if w.startswith('incid_'):
                         ww=w[6:]

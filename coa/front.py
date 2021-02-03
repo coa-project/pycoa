@@ -334,7 +334,7 @@ def decoplot(func):
                                 according to the locations which were selected
         """
         kwargs_test(kwargs,['where','what','which','whom','when', \
-            'input','input_field','width_height','title'],
+            'input','input_field','width_height','option','title'],
             'Bad args used in the pycoa.plot() function.')
 
         input_arg=kwargs.get('input',None)

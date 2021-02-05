@@ -416,6 +416,7 @@ class DataBase(object):
         pandas_db = pandas_db.sort_values(['location','date'])
         if self.db == 'owid':
             pandas_db = pandas_db.loc[~pandas_db.iso_code.isnull()]
+            pandas_db.columns.values.tolist().remove('iso_code')
         return pandas_db
 
    def return_structured_pandas(self,mypandas,**kwargs):

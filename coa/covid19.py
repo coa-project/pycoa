@@ -216,7 +216,7 @@ class DataBase(object):
                 # renaming some columns
                 col_to_rename=['reproduction_rate','icu_patients','hosp_patients','positive_rate']
                 renamed_cols=['cur_'+c if c != 'positive_rate' else 'cur_idx_'+c for c in col_to_rename]
-                columns_keeped=['total_deaths','total_cases','total_tests','total_vaccinations']
+                columns_keeped=['iso_code','total_deaths','total_cases','total_tests','total_vaccinations']
                 columns_keeped+=['total_cases_per_million','total_deaths_per_million','total_vaccinations_per_hundred']
                 self.return_structured_pandas(owid.rename(columns=dict(zip(col_to_rename,renamed_cols))),columns_keeped=columns_keeped+renamed_cols)
 
@@ -414,6 +414,8 @@ class DataBase(object):
         pandas_db['date'] = pandas.to_datetime(pandas_db['date'],errors='coerce').dt.date
         self.dates  = pandas_db['date']
         pandas_db = pandas_db.sort_values(['location','date'])
+        if self.db == 'owid':
+            pandas_db = pandas_db.loc[~pandas_db.iso_code.isnull()]
         return pandas_db
 
    def return_structured_pandas(self,mypandas,**kwargs):
@@ -433,11 +435,11 @@ class DataBase(object):
         mypandas = mypandas[absolutlyneeded + columns_keeped]
         self.available_keys_words = columns_keeped #+ absolutlyneeded
 
-        uniqloc = mypandas['location'].unique()
+        uniqloc = list(mypandas['location'].unique())
         oldloc = uniqloc
         codedico={}
         if self.db_world:
-            d_loc_s=self.geo.to_standard(list(uniqloc),output='list',db=self.get_db(),interpret_region=True)
+            d_loc_s=self.geo.to_standard(uniqloc,output='list',db=self.get_db(),interpret_region=True)
             self.slocation=d_loc_s
             newloc = d_loc_s
             toremove=['']
@@ -463,8 +465,8 @@ class DataBase(object):
             tmp = tmp[cols]
             mypandas = mypandas.append(tmp)
 
-        mypandas = mypandas.replace(oldloc,newloc)
         mypandas['codelocation'] = mypandas['location'].map(codedico)
+        mypandas = mypandas.replace(oldloc,newloc)
 
         #self.mainpandas = mypandas
         self.mainpandas = fill_missing_dates(mypandas)

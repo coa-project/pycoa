@@ -352,7 +352,6 @@ class DataBase(object):
             newloc = loc_sub_code
             toremove = [x for x in uniqloc if x not in loc_sub_name]
             codedico={i:j for i,j in zip(uniqloc,newloc)}
-
         result = reduce(lambda x, y: pd.merge(x, y, on = ['location','date']), pandas_list)
         result = result.loc[~result.location.isin(toremove)]
         tmp = pd.DataFrame()
@@ -366,8 +365,8 @@ class DataBase(object):
             tmp = tmp[cols]
             result = result.append(tmp)
 
-        result['codelocation'] = result['location'].map(codedico)
         result = result.replace(oldloc,newloc)
+        result['codelocation'] = result['location'].map(codedico)
 
         result['date'] = pd.to_datetime(result['date'],errors='coerce').dt.date
         self.dates  = result['date']
@@ -416,7 +415,7 @@ class DataBase(object):
         pandas_db = pandas_db.sort_values(['location','date'])
         if self.db == 'owid':
             pandas_db = pandas_db.loc[~pandas_db.iso_code.isnull()]
-            pandas_db.columns.values.tolist().remove('iso_code')
+
         return pandas_db
 
    def return_structured_pandas(self,mypandas,**kwargs):
@@ -434,8 +433,10 @@ class DataBase(object):
             columns_keeped = [x for x in mypandas.columns.values.tolist() if x not in columns_skipped + absolutlyneeded]
 
         mypandas = mypandas[absolutlyneeded + columns_keeped]
-        self.available_keys_words = columns_keeped #+ absolutlyneeded
 
+        self.available_keys_words = columns_keeped #+ absolutlyneeded
+        if 'iso_code' in self.available_keys_words:
+            self.available_keys_words.remove('iso_code')
         uniqloc = list(mypandas['location'].unique())
         oldloc = uniqloc
         codedico={}
@@ -472,18 +473,67 @@ class DataBase(object):
         #self.mainpandas = mypandas
         self.mainpandas = fill_missing_dates(mypandas)
 
-   def get_mainpandas(self):
+   def get_mainpandas(self,**kwargs):
        '''
-            Return the csv file to the mainpandas structure
-            index | location              | date      | keywords1       |  keywords2    | ...| keywordsn
-            -----------------------------------------------------------------------------------------
-            0     |        location1      |    1      |  l1-val1-1      |  l1-val2-1    | ...|  l1-valn-1
-            1     |        location1      |    2      |  l1-val1-2      |  l1-val2-2    | ...|  l1-valn-2
-            2     |        location1      |    3      |  l1-val1-3      |  l1-val2-3    | ...|  l1-valn-3
-                             ...
-            p     |       locationp       |    1      |   lp-val1-1     |  lp-val2-1    | ...| lp-valn-1
-            ...
+            * defaut :
+                 - location = None
+                 - date = None
+                 - selected_col = None
+                Return the csv file to the mainpandas structure
+                index | location              | date      | keywords1       |  keywords2    | ...| keywordsn
+                -----------------------------------------------------------------------------------------
+                0     |        location1      |    1      |  l1-val1-1      |  l1-val2-1    | ...|  l1-valn-1
+                1     |        location1      |    2      |  l1-val1-2      |  l1-val2-2    | ...|  l1-valn-2
+                2     |        location1      |    3      |  l1-val1-3      |  l1-val2-3    | ...|  l1-valn-3
+                                 ...
+                p     |       locationp       |    1      |   lp-val1-1     |  lp-val2-1    | ...| lp-valn-1
+                ...
+            * location : list of location (None : all location)
+            * date : latest date to retrieve (None : max date)
+            * selected_col: column to keep according to get_available_keys_words (None : all get_available_keys_words)
+                            N.B. location column is added
         '''
+       kwargs_test(kwargs,['location','date','selected_col'],\
+                    'Bad args used in the get_stats() function.')
+
+       location = kwargs.get('location', None)
+       selected_col = kwargs.get('selected_col', None)
+       watch_date = kwargs.get('date', None)
+       if location:
+            if not isinstance(location, list):
+                clist = ([location]).copy()
+            else:
+                clist = (location).copy()
+            if not all(isinstance(c, str) for c in clist):
+                raise CoaWhereError("Location via the where keyword should be given as strings. ")
+            if self.db_world:
+                self.geo.set_standard('name')
+                clist=self.geo.to_standard(clist,output='list',interpret_region=True)
+            else:
+                clist=clist+self.geo.get_subregions_from_list_of_region_names(clist)
+                if clist == ['FRA'] or clist == ['USA']:
+                    clist=self.geo_all
+
+            clist=list(set(clist)) # to suppress duplicate countries
+            diff_locations = list(set(clist) - set(self.get_locations()))
+            clist = [i for i in clist if i not in diff_locations]
+            filtered_pandas = self.mainpandas.copy()
+            if len(clist) == 0:
+                raise CoaWhereError('No correct subregion found according to the where option given.')
+            filtered_pandas = filtered_pandas.loc[filtered_pandas.location.isin(clist)]
+            if watch_date:
+                mydate = pd.to_datetime(watch_date).date()
+            else :
+                mydate = filtered_pandas.date.max()
+            filtered_pandas = filtered_pandas.loc[filtered_pandas.date==mydate].reset_index(drop=True)
+            if selected_col:
+                l = selected_col
+            else:
+                l=list(self.get_available_keys_words())
+            l.append('location')
+            filtered_pandas = filtered_pandas[l]
+            return filtered_pandas
+
        self.mainpandas = self.mainpandas.reset_index(drop=True)
        return self.mainpandas
 

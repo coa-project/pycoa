@@ -1138,9 +1138,9 @@ class CocoDisplay():
         mypandas_filter = mypandas_filter.sort_values(by=input_field,ascending=False)
 
         srcfiltered = ColumnDataSource(data=mypandas_filter)
-        max_value = geopdwd[input_field].max()
-        min_value = geopdwd[input_field].min()
-        min_value_gt0 = geopdwd[geopdwd[input_field]>0][input_field].min()
+        max_value = mypandas_filter[input_field].max()
+        min_value = mypandas_filter[input_field].min()
+        min_value_gt0 = mypandas_filter[mypandas_filter[input_field]>0][input_field].min()
 
         panels = []
 
@@ -1148,7 +1148,7 @@ class CocoDisplay():
             title = dico['titlebar']
             if title_fig != title.split()[0]:
                 title =  title_fig + ' ' + title
-            if mypandas_filter[mypandas_filter[input_field]<0].empty:
+            if mypandas_filter[mypandas_filter[input_field]<0.].empty:
                 standardfig = self.standardfig(x_axis_type=axis_type,x_range = (0.01,1.05*max_value), title=title)
                 standardfig.xaxis[0].formatter = PrintfTickFormatter(format="%4.2e")
                 if axis_type=="log":

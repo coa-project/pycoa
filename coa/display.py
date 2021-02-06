@@ -53,6 +53,7 @@ from bokeh import events
 from bokeh.models.widgets import DateSlider, Slider
 from bokeh.tile_providers import get_provider, Vendors
 from bokeh.models import WMTSTileSource
+from bokeh.transform import transform
 
 import shapely.geometry as sg
 
@@ -964,6 +965,55 @@ class CocoDisplay():
                 date_slider = None
             return func(self,input_field,date_slider,dico,geopdwd,geopdwd_filter)
         return generic_hm
+
+    def pycoa_heatmap(self,pycoa_pandas):
+        """Create a Bokeh heat map from a pandas input
+        location in the column is mandatory
+        Keyword arguments
+        -----------------
+        pycoa_pandas : pandas considered
+        y_axis : location
+        x_axis : column name
+        The values are normalized to maximun observed in the current columns
+        """
+        if 'location' not in pycoa_pandas.columns:
+            raise CoaKeyError('location column name is not present, this is mandatory')
+
+
+        def norm(columns):
+            return (columns-columns.min())/(columns.max()-columns.min())
+
+        pycoa_pandas = pycoa_pandas.set_index('location')
+        #pycoa_pandas = pycoa_pandas.apply(lambda x: (x-x.min())/(x.max()-x.min()))
+        pycoa_pandas = pycoa_pandas.apply(lambda x: (x-x.min())/(x.max()-x.min()))
+        #apply(lambda x: (x-x.min()/(x.max()-x.min())))
+
+        pycoa_pandas.columns.name = 'data'
+        pycoa_pandas = pycoa_pandas.stack().rename("value").reset_index()
+
+        standardfig = self.standardfig(y_range=list(pycoa_pandas.location.unique()),
+                                        x_range=list(pycoa_pandas.data.unique()))
+        standardfig.xaxis.major_label_orientation = "vertical"
+        color_mapper = LinearColorMapper(palette=Viridis256, low=pycoa_pandas.value.min(), high=pycoa_pandas.value.max(), nan_color = '#ffffff')
+        color_bar = ColorBar(color_mapper=color_mapper, label_standoff=4,\
+                            border_line_color=None,location = (0,0), orientation = 'vertical', ticker=BasicTicker())
+        standardfig.add_layout(color_bar, 'right')
+        standardfig.rect(
+        y="location",
+        x="data",
+        width=1,
+        height=1,
+        source=ColumnDataSource(pycoa_pandas),
+        line_color=None,
+        fill_color=transform('value', color_mapper))
+
+        standardfig.add_tools(HoverTool(
+        tooltips=[('location','@location'),('value','@value')],
+        #formatters={'location':'printf','@{'+input_field+'}':cases_custom,},
+        point_policy="follow_mouse"))
+        return standardfig
+
+
     @decohistomap
     def pycoa_histo(self,input_field,date_slider,dico,geopdwd,geopdwd_filter):
         """Create a Bokeh histogram from a pandas input
@@ -1182,7 +1232,6 @@ class CocoDisplay():
                     mypandas_filter['shortenlocation'] = mypandas_filter['codelocation']
 
             loc=mypandas_filter['shortenlocation'].to_list()
-            self.logo_db_citation.x_offset -= len(max(loc, key=len))
 
             cases_custom = CustomJSHover(code="""
                     var value;
@@ -1202,7 +1251,7 @@ class CocoDisplay():
                     del label_dict
                     label_dict={}
                     label_dict[1]=iamthelegend.split()[0] + '...' + iamthelegend.split()[-1]
-
+                    
             standardfig.yaxis.major_label_overrides = label_dict
             standardfig.yaxis.ticker = list(range(1,len(loc)+1))
             panel = Panel(child=standardfig,title=axis_type)

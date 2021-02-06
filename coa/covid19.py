@@ -21,7 +21,8 @@ from collections import defaultdict
 import numpy as np
 import pandas as pd
 import sys
-from coa.tools import info,verb,kwargs_test,get_local_from_url,fill_missing_dates
+from coa.tools import info,verb,kwargs_test,get_local_from_url,fill_missing_dates,check_valid_date
+
 import coa.geo as coge
 import coa.display as codisplay
 from coa.error import *
@@ -468,7 +469,7 @@ class DataBase(object):
             mypandas = mypandas.append(tmp)
 
         mypandas = mypandas.replace(oldloc,newloc)
-        mypandas = mypandas.groupby(['location','date']).sum().reset_index()
+        mypandas = mypandas.groupby(['location','date']).sum(min_count=1).reset_index() # summing in case of multiple dates (e.g. in opencovid19 data). But keep nan if any
         mypandas['codelocation'] = mypandas['location'].map(codedico)
         #self.mainpandas = mypandas
         self.mainpandas = fill_missing_dates(mypandas)
@@ -522,6 +523,7 @@ class DataBase(object):
                 raise CoaWhereError('No correct subregion found according to the where option given.')
             filtered_pandas = filtered_pandas.loc[filtered_pandas.location.isin(clist)]
             if watch_date:
+                check_valid_date(watch_date)
                 mydate = pd.to_datetime(watch_date).date()
             else :
                 mydate = filtered_pandas.date.max()
@@ -530,7 +532,7 @@ class DataBase(object):
                 l = selected_col
             else:
                 l=list(self.get_available_keys_words())
-            l.append('location')
+            l.insert(0, 'location')
             filtered_pandas = filtered_pandas[l]
             return filtered_pandas
 

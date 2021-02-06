@@ -471,7 +471,7 @@ class DataBase(object):
             mypandas = mypandas.append(tmp)
 
         mypandas = mypandas.replace(oldloc,newloc)
-        mypandas = mypandas.groupby(['location','date']).sum().reset_index()
+        mypandas = mypandas.groupby(['location','date']).sum(min_count=1).reset_index() # summing in case of multiple dates (e.g. in opencovid19 data). But keep nan if any
         mypandas['codelocation'] = mypandas['location'].map(codedico)
         #self.mainpandas = mypandas
         self.mainpandas = fill_missing_dates(mypandas)

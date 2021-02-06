@@ -467,9 +467,9 @@ class DataBase(object):
             tmp = tmp[cols]
             mypandas = mypandas.append(tmp)
 
-        mypandas['codelocation'] = mypandas['location'].map(codedico)
         mypandas = mypandas.replace(oldloc,newloc)
-
+        mypandas = mypandas.groupby(['location','date']).sum().reset_index()
+        mypandas['codelocation'] = mypandas['location'].map(codedico)
         #self.mainpandas = mypandas
         self.mainpandas = fill_missing_dates(mypandas)
 

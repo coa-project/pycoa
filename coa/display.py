@@ -1235,8 +1235,10 @@ class CocoDisplay():
 
             cases_custom = CustomJSHover(code="""
                     var value;
-                    //if(value>0)
+                    if(value>100000)
                         return value.toExponential(2).toString();
+                    else
+                        return value.toString();
                     """)
 
             standardfig.add_tools(HoverTool(
@@ -1251,7 +1253,7 @@ class CocoDisplay():
                     del label_dict
                     label_dict={}
                     label_dict[1]=iamthelegend.split()[0] + '...' + iamthelegend.split()[-1]
-                    
+
             standardfig.yaxis.major_label_overrides = label_dict
             standardfig.yaxis.ticker = list(range(1,len(loc)+1))
             panel = Panel(child=standardfig,title=axis_type)
@@ -1328,7 +1330,8 @@ class CocoDisplay():
         html = colormap.get_root()
         html.script.get_root().render()
         html.script._children[e.get_name()] = e
-        geopdwd_filter[input_field+'scientific_format']=(['{:.3g}'.format(i) for i in geopdwd_filter[input_field]])
+        geopdwd_filter[input_field+'scientific_format']=\
+            (['{:.3g}'.format(i) if i>100000 else i for i in geopdwd_filter[input_field]])
 
         map_dict = geopdwd_filter.set_index('location')[input_field].to_dict()
         if np.nanmin(geopdwd_filter[input_field]) == np.nanmax(geopdwd_filter[input_field]):
@@ -1492,11 +1495,12 @@ class CocoDisplay():
         standardfig.patches('xs','ys', source = geopdwd_filter,fill_color = {'field':input_field, 'transform' : color_mapper},
                   line_color = 'black', line_width = 0.25, fill_alpha = 1)
         cases_custom = CustomJSHover(code="""
-        var value;
-        if(value>0)
-            return value.toExponential(2).toString();
-
-        """)
+                var value;
+                if(value>100000)
+                    return value.toExponential(2).toString();
+                else
+                    return value.toString();
+                """)
         standardfig.add_tools(HoverTool(
         tooltips=[('location','@name_to_display'),(input_field,'@{'+input_field+'}'+'{custom}'),],
         formatters={'location':'printf','@{'+input_field+'}':cases_custom,},

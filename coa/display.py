@@ -27,6 +27,7 @@ import pandas as pd
 import geopandas as gpd
 import numpy as np
 from collections import defaultdict
+import collections
 import itertools
 import json
 import io
@@ -164,29 +165,17 @@ class CocoDisplay():
         input_dico['locsumall']=None
         if 'location' in mypandas:
             uniqloc = (mypandas.reset_index(drop=True)).location[0]
+            tmp=[]
             if isinstance(uniqloc,list):
+                for i in mypandas.location:
+                    tmp+=i
+                uniqloc=([item for item, count in collections.Counter(tmp).items() if count > 1])
                 mypandas = mypandas.drop(columns=['location'])
                 mypandas = mypandas.rename(columns={'inputlocation':'location'})
                 mypandas['name_to_display'] = mypandas['location']
                 mypandas = mypandas.reset_index(drop=True)
-                #mypandas = mypandas.replace(uniqloc,newuniqloc)
-                #newuniqloc = newuniqloc[0]
-                #try:
-                #    loc = CocoDisplay.return_standard_location(self.database_name,newuniqloc)
-                #except:
-                #    newuniqloc = literal_eval(newuniqloc)
-                #    loc =  newuniqloc
-                #if type(loc) is int:
-                #    loc=str(loc)
-                #    input_dico['locsumall'] = self.location_geometry.loc[self.location_geometry.location==loc]
-                #else:
-                #    input_dico['locsumall'] = self.location_geometry.loc[self.location_geometry.location.isin(loc)]
-                #input_dico['locsumall'] =  input_dico['locsumall'].assign(name_to_display=[newuniqloc]*len(input_dico['locsumall']))
                 input_dico['locsumall'] = self.location_geometry.loc[self.location_geometry.location.isin(uniqloc)]
                 input_dico['locsumall'] = input_dico['locsumall'].reset_index(drop=True)
-
-                input_dico['locsumall']['name_to_display']=[mypandas['location'][0]]*len(input_dico['locsumall'])
-
             else:
                 if self.database_name == 'spf' or self.database_name == 'opencovid19' or self.database_name == 'jhu-usa':
                     pd_name_displayed=self.geopan[['location','name_subregion']]
@@ -339,19 +328,28 @@ class CocoDisplay():
         if location add , then location is the string before ,
         else: return 10 caracters name with ...
         '''
+        def shorty(i):
+           i=i.replace('[','').replace(']','')
+           if i.find(',') != -1:
+                a[i]=(i[0:4]+' ... '+i[-3:])
+           else:
+               if len(i)<10:
+                    a[i]=i
+               else:
+                    if i.find(',') != -1:
+                       a[i]=i.split(',')
+                       if type(a[i]) == list:
+                          a[i]=a[i][0].split(',')
+                    else:
+                       tmp=i.replace('(','').replace(')','')
+                       tmp=tmp[0:4]+' ... '+tmp[-3:]
+                       a[i]=tmp
+           return a
         a={}
         if type(location) == str:
             location=[location]
         for i in location:
-            if len(i)<10:
-                a[i]=i
-            else:
-                if i.find(',') != -1:
-                   a[i]=i.split(',')[0]
-                else:
-                   tmp=i.replace('(','').replace(')','')
-                   tmp=tmp[0:4]+'...'+tmp[-3:]
-                   a[i]=tmp
+            shorty(i)
         return a
 
     @staticmethod
@@ -604,17 +602,9 @@ class CocoDisplay():
                     else:
                         leg=loc
                     mypandas_filter = mypandas.loc[mypandas.location == loc].reset_index(drop=True)
-                    if dico['locsumall'] is not None:
-                        iamthelegend=dico['locsumall']['name_to_display'][0]
-                        if len(iamthelegend)>20:
-                            iamthelegend=iamthelegend.split()[0] + '...' + iamthelegend.split()[-1]
-                        standardfig.line(x='date', y=val, source=ColumnDataSource(mypandas_filter),
-                        color=mypandas_filter.colors.iloc[0],line_width=3, legend_label=iamthelegend,
-                        hover_line_width=4)
-                    else:
-                        standardfig.line(x='date', y=val, source=ColumnDataSource(mypandas_filter),
-                        color=mypandas_filter.colors.iloc[0],line_width=3, legend_label=mypandas_filter.name_to_display.iloc[0],
-                        hover_line_width=4)
+                    standardfig.line(x='date', y=val, source=ColumnDataSource(mypandas_filter),
+                    color=mypandas_filter.colors.iloc[0],line_width=3, legend_label=mypandas_filter.name_to_display[0],
+                    hover_line_width=4)
                 tooltips.append((val,'@{'+val+'}'+'{custom}'))
                 formatters['@{'+val+'}']=cases_custom
 

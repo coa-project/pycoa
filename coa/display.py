@@ -968,7 +968,7 @@ class CocoDisplay():
 
     def pycoa_heatmap(self,pycoa_pandas):
         """Create a Bokeh heat map from a pandas input
-        location in the column is mandatory
+        location in the column is mandatory in the pandas structure
         Keyword arguments
         -----------------
         pycoa_pandas : pandas considered
@@ -980,14 +980,15 @@ class CocoDisplay():
             raise CoaKeyError('location column name is not present, this is mandatory')
 
 
-        def norm(columns):
-            return (columns-columns.min())/(columns.max()-columns.min())
+        def norm(col):
+            return (col-col.min())/(col.max()-col.min())
 
         pycoa_pandas = pycoa_pandas.set_index('location')
         #pycoa_pandas = pycoa_pandas.apply(lambda x: (x-x.min())/(x.max()-x.min()))
         pycoa_pandas = pycoa_pandas.apply(lambda x: (x-x.min())/(x.max()-x.min()))
         #apply(lambda x: (x-x.min()/(x.max()-x.min())))
-
+        #normalized_dict = { pycoa_pandas.apply(lambda x: x(x-x.min())/(x.max()-x.min()))}
+        #print(pycoa_pandas['tot_dc'].apply(norm))
         pycoa_pandas.columns.name = 'data'
         pycoa_pandas = pycoa_pandas.stack().rename("value").reset_index()
 
@@ -1238,7 +1239,7 @@ class CocoDisplay():
                     if(value>100000)
                         return value.toExponential(2).toString();
                     else
-                        return value.toString();
+                        return value.toFixed(2).toString();
                     """)
 
             standardfig.add_tools(HoverTool(
@@ -1499,7 +1500,7 @@ class CocoDisplay():
                 if(value>100000)
                     return value.toExponential(2).toString();
                 else
-                    return value.toString();
+                    return value.toFixed(2).toString();
                 """)
         standardfig.add_tools(HoverTool(
         tooltips=[('location','@name_to_display'),(input_field,'@{'+input_field+'}'+'{custom}'),],

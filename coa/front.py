@@ -230,7 +230,7 @@ def get(**kwargs):
                 where keyword, the data
                 is available. By default : no option.
     """
-    kwargs_test(kwargs,['where','what','which','whom','when','output','option','bins','title','visu','tile','cursor_date'],
+    kwargs_test(kwargs,['where','what','which','whom','when','output','option','bins','title','visu','tile','dateslider'],
             'Bad args used in the pycoa.get() function.')
 
     global _db,_whom
@@ -416,21 +416,21 @@ def hist(**kwargs):
                     histograms.
                     If none provided, a default value will be used.
 
-    cursor_date -- boolean value
+    dateslider  -- boolean value. Caution : experimental feature.
                    If True, add a date vertical cursor bar to the left of the figure
                    to dislay histo/map to a particular date (default false)
                    Warning : this coud be time consuming when one use it with map bokeh
                    preferable to use this option with folium map
     """
     kwargs_test(kwargs,['where','what','which','whom','when','input','input_field','bins','title',
-                        'typeofhist','cursor_date','option'],
+                        'typeofhist','dateslider','option'],
             'Bad args used in the pycoa.hist() function.')
 
     when=kwargs.get('when',None)
     input_field=None
     input_arg=kwargs.get('input',None)
     typeofhist=kwargs.pop('typeofhist','bylocation')
-    cursor_date=kwargs.get('cursor_date',None)
+    date_slider=kwargs.get('dateslider',None)
 
     if isinstance(input_arg,pd.DataFrame):
         t=input_arg
@@ -456,8 +456,8 @@ def hist(**kwargs):
             raise CoaKeyError("The bins keyword cannot be set with histograms by location. See help.")
         fig=_cocoplot.pycoa_horizonhisto(t,input_field,**kwargs)
     elif typeofhist == 'byvalue':
-        if cursor_date:
-            print('cursor_date not yet implemented in typeofhist = byvalue , sorry about that')
+        if dateslider:
+            info('dateslider not yet implemented in typeofhist = byvalue , sorry about that')
         fig=_cocoplot.pycoa_histo(t,input_field,**kwargs)
 
     else:
@@ -475,7 +475,7 @@ def deco_pycoa_graph(f):
     '''
     @wraps(f)
     def wrapper(*args, **kwargs):
-        kwargs_test(kwargs,['where','what','which','whom','when','input','visu','input_field','option','tile','cursor_date'],
+        kwargs_test(kwargs,['where','what','which','whom','when','input','visu','input_field','option','tile','dateslider'],
                 'Bad args used in the pycoa.map() function.')
         which=''
         input_arg=kwargs.get('input',None)
@@ -515,7 +515,7 @@ def map(**kwargs):
     visu = kwargs.get('visu',listvisu()[0])
     t=kwargs.pop('t')
     input_field=kwargs.pop('input_field')
-    cursor_date=kwargs.get('cursor_date',None)
+    dateslider=kwargs.get('dateslider',None)
 
     if visu == 'bokeh':
         return show(_cocoplot.bokeh_map(t,input_field,**kwargs))

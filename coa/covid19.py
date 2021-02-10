@@ -378,6 +378,8 @@ class DataBase(object):
         #self.mainpandas = result
         self.mainpandas = fill_missing_dates(result)
 
+
+
    def csv2pandas(self,url,**kwargs):
         '''
         Parse and convert the database cvs file to a pandas structure
@@ -716,23 +718,25 @@ class DataBase(object):
                 #if len(kwargs['location'])>2:
                     #all_loc_string="["+str(kwargs['location'][0])+"..."+str(kwargs['location'][-1])+"]"
             ptot['location']=[list(loc)]*len(ptot)
-            ptot['inputlocation']=[str(kwargs['location'])]*len(ptot)
+            if type(kwargs['location']) == str:
+                kwargs['location']= [kwargs['location']]
+            ptot['codelocation']=[str(kwargs['location'])]*len(ptot)
             pdfiltered=ptot
             pdfiltered['daily'] = pdfiltered[kwargs['which']].diff()
             pdfiltered['cumul'] = pdfiltered[kwargs['which']].cumsum()
             pdfiltered['weekly'] = pdfiltered[kwargs['which']].diff(7)
         # computing daily, cumul and weekly
         else:
+            if type(kwargs['location']) == str:
+                kwargs['location']= [kwargs['location']]
             pdfiltered['daily'] = pdfiltered.groupby(['location'])[kwargs['which']].diff()
             pdfiltered['cumul'] = pdfiltered.groupby(['location'])[kwargs['which']].cumsum()
             pdfiltered['weekly'] = pdfiltered.groupby(['location'])[kwargs['which']].diff(7)
-
         if fillnan:
             pdfiltered = pdfiltered.fillna(0) # for diff if needed
 
-        cols = pdfiltered.columns.tolist()
-        cols = cols[0:2] + cols[3:] + cols[2:3]
-        pdfiltered = pdfiltered[cols]
+        unifiedposition=['location', 'date', kwargs['which'], 'daily', 'cumul', 'weekly', 'codelocation']
+        pdfiltered = pdfiltered[unifiedposition]
         return pdfiltered
 
    ## https://www.kaggle.com/freealf/estimation-of-rt-from-cases

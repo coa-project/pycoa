@@ -46,7 +46,7 @@ from bokeh.models.widgets import Tabs, Panel
 from bokeh.models.tickers import FixedTicker
 from bokeh.plotting import figure
 from bokeh.layouts import row, column, gridplot
-from bokeh.palettes import Set1,Set2,Set3,Spectral,Paired,Category10,Category20
+from bokeh.palettes import Set1,Set2,Set3,Spectral,Paired,Category10,Category20,Viridis256
 from bokeh.palettes import Dark2_5 as palette
 from bokeh.io import export_png
 from bokeh import events
@@ -186,10 +186,13 @@ class CocoDisplay():
                         else:
                             mypandascountry=sub
                 mypandas =  mypandascountry
+
             if self.database_name == 'spf' or self.database_name == 'opencovid19' or self.database_name == 'jhu-usa':
                 pd_name_displayed=self.geopan[['location','name_subregion']]
                 mypandas=pd.merge(mypandas,pd_name_displayed,on='location')
-
+                mypandas['rolloverdisplay'] = mypandas['name_subregion']
+            else:
+                mypandas['rolloverdisplay'] = mypandas['location']
             #else:
             #    mypandas=mypandas.rename(columns={'codelocation':'name_to_display'})
 
@@ -620,7 +623,7 @@ class CocoDisplay():
             standardfig.yaxis[0].formatter = PrintfTickFormatter(format="%4.2e")
             formatters={'location':'printf','@date': 'datetime'}
             if len(mypandas.codelocation.unique())>1:
-                tooltips=[('Location','@location'),('date', '@date{%F}')]
+                tooltips=[('Location','@rolloverdisplay'),('date', '@date{%F}')]
             else:
                 tooltips=[('date', '@date{%F}')]
             for val in input_field:
@@ -696,7 +699,7 @@ class CocoDisplay():
 
             def add_line(src,options, init,  color):
                 s = Select(options=options, value=init)
-                r = standardfig.line(x='date', y='cases', source=src,line_width=3, line_color='colors')
+                r = standardfig.line(x='date', y='cases', source=src,line_width=3, line_color=color)
                 li = LegendItem(label=init, renderers=[r])
                 s.js_on_change('value', CustomJS(args=dict(s0=source, s1=src,li=li),
                                      code = """
@@ -708,8 +711,8 @@ class CocoDisplay():
                                      """))
                 return s,li
 
-            s1, li1 = add_line(src1,uniqloc, uniqloc[0], 'navy')
-            s2, li2 = add_line(src2,uniqloc, uniqloc[1], 'firebrick')
+            s1, li1 = add_line(src1,uniqloc, uniqloc[0], self.scolors[0])
+            s2, li2 = add_line(src2,uniqloc, uniqloc[1],  self.scolors[1])
             standardfig.add_layout(Legend(items=[li1, li2]))
             standardfig.legend.location = 'top_left'
             layout = row(column(row(s1, s2), row(standardfig)))
@@ -1193,7 +1196,7 @@ class CocoDisplay():
                 'color' : None
             },
             highlight_function=lambda x: {'weight':2, 'color':'green'},
-            tooltip=folium.features.GeoJsonTooltip(fields=['codelocation',input_field+'scientific_format'],
+            tooltip=folium.features.GeoJsonTooltip(fields=['rolloverdisplay',input_field+'scientific_format'],
                 aliases=['location'+':',input_field+":"],
                 style="""
                         background-color: #F0EFEF;
@@ -1341,7 +1344,7 @@ class CocoDisplay():
                     return value.toFixed(2).toString();
                 """)
         standardfig.add_tools(HoverTool(
-        tooltips=[('location','@codelocation'),(input_field,'@{'+input_field+'}'+'{custom}'),],
+        tooltips=[('location','@rolloverdisplay'),(input_field,'@{'+input_field+'}'+'{custom}'),],
         formatters={'location':'printf','@{'+input_field+'}':cases_custom,},
         point_policy="follow_mouse"))#,PanTool())
         if date_slider:

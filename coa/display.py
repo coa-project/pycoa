@@ -619,7 +619,7 @@ class CocoDisplay():
             standardfig =  self.standardfig(y_axis_type=axis_type, x_axis_type='datetime',title= dico['titlebar'])
             standardfig.yaxis[0].formatter = PrintfTickFormatter(format="%4.2e")
             formatters={'location':'printf','@date': 'datetime'}
-            tooltips=[('Location','@codelocation'),('date', '@date{%F}')]
+            tooltips=[('Location','@location'),('date', '@date{%F}')]
             for val in input_field:
                 for loc in mypandas.codelocation.unique():
                     if len(input_field) >1:
@@ -1066,7 +1066,6 @@ class CocoDisplay():
             loc=mypandas_filter['codelocation'].to_list()
 
             loc=CocoDisplay.dict_shorten_loc(loc)
-            print("loc",loc)
             cases_custom = CustomJSHover(code="""
                     var value;
                     if(value>100000)

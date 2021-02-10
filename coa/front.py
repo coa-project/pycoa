@@ -430,7 +430,7 @@ def hist(**kwargs):
     input_field=None
     input_arg=kwargs.get('input',None)
     typeofhist=kwargs.pop('typeofhist','bylocation')
-    date_slider=kwargs.get('dateslider',None)
+    dateslider=kwargs.get('dateslider',None)
 
     if isinstance(input_arg,pd.DataFrame):
         t=input_arg

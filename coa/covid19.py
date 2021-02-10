@@ -333,7 +333,6 @@ class DataBase(object):
                     pandas_jhu_db = pandas_jhu_db.melt(id_vars=["location"],var_name="date",value_name=ext)
             else:
                 raise CoaTypeError('jhu nor jhu-usa database selected ... ')
-
             pandas_jhu_db=pandas_jhu_db.groupby(['location','date']).sum().reset_index()
             pandas_list.append(pandas_jhu_db)
 
@@ -370,7 +369,10 @@ class DataBase(object):
             result = result.append(tmp)
 
         result = result.replace(oldloc,newloc)
-        result['codelocation'] = result['location'].map(codedico)
+        if self.db == 'jhu-usa':
+            result['codelocation'] = result['location']
+        else:
+            result['codelocation'] = result['location'].map(codedico)
 
         result['date'] = pd.to_datetime(result['date'],errors='coerce').dt.date
         self.dates  = result['date']

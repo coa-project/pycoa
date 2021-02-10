@@ -463,15 +463,18 @@ class DataBase(object):
             toremove = [x for x in uniqloc if x not in loc_sub_name]
             codedico={i:j for i,j in zip(loc_sub_code,newloc)}
         tmp = pd.DataFrame()
-        if 'Kosovo' in oldloc:
-            tmp=(mypandas.loc[mypandas.location.isin(['Kosovo','Serbia'])].groupby('date').sum())
-            tmp['location']='Serbia'
-            mypandas = mypandas.loc[~mypandas.location.isin(['Kosovo','Serbia'])]
-            tmp = tmp.reset_index()
-            cols = tmp.columns.tolist()
-            cols = cols[0:1] + cols[-1:] + cols[1:-1]
-            tmp = tmp[cols]
-            mypandas = mypandas.append(tmp)
+
+        not_un_nation_dict={'Kosovo':'Serbia','Northern Cyprus':'Cyprus'}
+        for subpart_country, main_country in not_un_nation_dict.items() :
+            if subpart_country in oldloc:
+                tmp=(mypandas.loc[mypandas.location.isin([subpart_country,main_country])].groupby('date').sum())
+                tmp['location']=main_country
+                mypandas = mypandas.loc[~mypandas.location.isin([subpart_country,main_country])]
+                tmp = tmp.reset_index()
+                cols = tmp.columns.tolist()
+                cols = cols[0:1] + cols[-1:] + cols[1:-1]
+                tmp = tmp[cols]
+                mypandas = mypandas.append(tmp)
 
         mypandas = mypandas.replace(oldloc,newloc)
         mypandas = mypandas.groupby(['location','date']).sum(min_count=1).reset_index() # summing in case of multiple dates (e.g. in opencovid19 data). But keep nan if any

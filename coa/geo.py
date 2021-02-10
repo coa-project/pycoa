@@ -283,6 +283,7 @@ class GeoManager():
                     "United States Virgin Islands":"VIR",\
                     "Iran":"IRN",\
                     "Micronesia (Country)":"FSM",\
+                    "Northern Cyprus":"CYP",\
                 })
         return [translation_dict.get(k,k) for k in w]
 

@@ -230,8 +230,9 @@ def get(**kwargs):
                 where keyword, the data
                 is available. By default : no option.
     """
-    kwargs_test(kwargs,['where','what','which','whom','when','output','option','bins','title','visu','tile','dateslider'],
+    kwargs_test(kwargs,['where','what','which','whom','when','output','option','bins','title','visu','tile'],
             'Bad args used in the pycoa.get() function.')
+    # no dateslider currently
 
     global _db,_whom
     where=kwargs.get('where',None)
@@ -415,16 +416,19 @@ def hist(**kwargs):
     bins        --  number of bins used, only available for 'byvalue' type of
                     histograms.
                     If none provided, a default value will be used.
-
-    dateslider  -- boolean value. Caution : experimental feature.
-                   If True, add a date vertical cursor bar to the left of the figure
-                   to dislay histo/map to a particular date (default false)
-                   Warning : this coud be time consuming when one use it with map bokeh
-                   preferable to use this option with folium map
     """
+
+    # not currently supported : dateslider  -- boolean value. Caution : experimental feature.
+    #               If True, add a date vertical cursor bar to the left of the figure
+    #               to dislay histo/map to a particular date (default false)
+    #               Warning : this coud be time consuming when one use it with map bokeh
+    #               preferable to use this option with folium map
+    #"""
+    
     kwargs_test(kwargs,['where','what','which','whom','when','input','input_field','bins','title',
-                        'typeofhist','dateslider','option'],
+                        'typeofhist','option'],
             'Bad args used in the pycoa.hist() function.')
+    # no 'dateslider' currently
 
     when=kwargs.get('when',None)
     input_field=None
@@ -475,8 +479,9 @@ def deco_pycoa_graph(f):
     '''
     @wraps(f)
     def wrapper(*args, **kwargs):
-        kwargs_test(kwargs,['where','what','which','whom','when','input','visu','input_field','option','tile','dateslider'],
+        kwargs_test(kwargs,['where','what','which','whom','when','input','visu','input_field','option','tile'],
                 'Bad args used in the pycoa.map() function.')
+        # no 'dateslider' currently.
         which=''
         input_arg=kwargs.get('input',None)
         where=kwargs.get('where',None)

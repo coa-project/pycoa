@@ -44,10 +44,9 @@ from bokeh.models import ColumnDataSource, TableColumn, DataTable,ColorBar, \
     Range1d, DatetimeTickFormatter, Legend, LegendItem,PanTool
 from bokeh.models.widgets import Tabs, Panel
 from bokeh.models.tickers import FixedTicker
-from bokeh.palettes import  Viridis256, Cividis256, Viridis,Turbo256, Magma256,Inferno256,Plasma256
 from bokeh.plotting import figure
 from bokeh.layouts import row, column, gridplot
-from bokeh.palettes import Set1,Set2,Set3,Spectral,Paired,Category20
+from bokeh.palettes import Set1,Set2,Set3,Spectral,Paired,Category10,Category20
 from bokeh.palettes import Dark2_5 as palette
 from bokeh.io import export_png
 from bokeh import events
@@ -80,7 +79,8 @@ class CocoDisplay():
         a=map(list, zip(Paired[10], Set2[8],Set3[12]))
         chain = itertools.chain(*a)
         #self.colors=[Viridis256[i] for i in random.sample(range(256),30)]
-        self.colors = list(chain)
+        self.lcolors = Category20[20]
+        self.scolors = Category10[5]
 
         self.plot_width =  width_height_default[0]
         self.plot_height =  width_height_default[1]
@@ -333,35 +333,37 @@ class CocoDisplay():
         return tile
 
     @staticmethod
-    def dict_shorten_loc(location):
+    def dict_shorten_loc(toshort):
         '''
-        return a shorten name location
-        if location add , then location is the string before ,
-        else: return 10 caracters name with ...
+            return a shorten name location
         '''
-        def shorty(i):
-           i=i.replace('[','').replace(']','')
-           if i.find(',') != -1:
-                a[i]=(i[0:4]+' ... '+i[-3:])
-           else:
-               if len(i)<10:
-                    a[i]=i
-               else:
-                    if i.find(',') != -1:
-                       a[i]=i.split(',')
-                       if type(a[i]) == list:
-                          a[i]=a[i][0].split(',')
-                    else:
-                       tmp=i.replace('(','').replace(')','')
-                       tmp=tmp[0:4]+' ... '+tmp[-3:]
-                       a[i]=tmp
-           return a
-        a={}
-        if type(location) == str:
-            location=[location]
-        for i in location:
-            shorty(i)
-        return a
+        s=[]
+        if type(toshort) == np.ndarray:
+            toshort=list(toshort)
+            toshort = [toshort]
+            s=''
+        elif type(toshort) == str:
+            toshort = [toshort]
+            s=''
+        if type(toshort) != list:
+            print('That is weird ...',toshort, 'not str nor list')
+
+        for val in toshort:
+            if type(val)==list:
+                val=val[0]
+            if val.find(',') == -1:
+                A=val
+            else:
+                txt=val.split(',')
+                if len(txt[0])<4 and len(txt[-1])<4:
+                     A=[txt[0]+'...'+txt[-1]]
+                else:
+                    A=txt[0][:5]+'...'+txt[-1][-5:]
+            if type(s)==list:
+                s.append(A)
+            else:
+                s=A
+        return s
 
     @staticmethod
     def bokeh_legend(bkfigure):
@@ -516,7 +518,11 @@ class CocoDisplay():
             tooltips='Date: @date{%F} <br>  $name: @$name'
 
             my_location = mypandas.location.unique()
-            colors = itertools.cycle(Category20[20])
+            if len(my_location) < 5:
+                colors =  self.scolors
+            else:
+                colors =  self.lcolors
+            colors = itertools.cycle(colors)
             dico_colors = {i:next(colors) for i in my_location}
             country_col = pd.DataFrame(dico_colors.items(),columns=['location', 'colors'])
             mypandas=(pd.merge(mypandas, country_col, on='location'))
@@ -539,10 +545,11 @@ class CocoDisplay():
                 mypandas = new
                 location_ordered_byvalues=list(mypandas.loc[mypandas.date==dico['when_end']].sort_values(by=input_field,ascending=False)['codelocation'].unique())
                 mypandas = mypandas.loc[(mypandas['date']>=dico['when_beg']) & (mypandas['date']<=dico['when_end'])]
-                mypandas['codelocation'] = pd.Categorical(mypandas['codelocation'],
+                mypandas = mypandas.copy() #needed to avoid warning
+                mypandas.codelocation = pd.Categorical(mypandas.codelocation,
                         categories=location_ordered_byvalues,ordered=True)
-                mypandas.sort_values(['codelocation','date'], inplace=True)
-                if len(mypandas.codelocation.unique())>12:
+                mypandas=mypandas.sort_values(by=['codelocation','date'])
+                if len(location_ordered_byvalues)>12:
                     mypandas = mypandas.loc[mypandas.codelocation.isin(location_ordered_byvalues[:12])]
 
                 list_max=[]
@@ -563,8 +570,10 @@ class CocoDisplay():
         hover_tool = None
         cases_custom = CustomJSHover(code="""
                 var value;
-                //if(value>0)
+                if(value>100000)
                     return value.toExponential(2).toString();
+                else
+                    return value.toFixed(2).toString();
                 """)
 
         for axis_type in ax_type :
@@ -600,9 +609,11 @@ class CocoDisplay():
         panels = []
 
         cases_custom = CustomJSHover(code="""
-                var value;
-                //if(value>0)
-                    return value.toExponential(2).toString();
+                        var value;
+                        if(value>100000)
+                            return value.toExponential(2).toString();
+                        else
+                            return value.toFixed(2).toString();
                 """)
         for axis_type in ax_type :
             standardfig =  self.standardfig(y_axis_type=axis_type, x_axis_type='datetime',title= dico['titlebar'])
@@ -618,7 +629,7 @@ class CocoDisplay():
 
                     mypandas_filter = mypandas.loc[mypandas.codelocation == loc].reset_index(drop=True)
                     standardfig.line(x='date', y=val, source=ColumnDataSource(mypandas_filter),
-                    color=mypandas_filter.colors.iloc[0],line_width=3, legend_label=mypandas_filter.codelocation[0],
+                    color=mypandas_filter.colors.iloc[0],line_width=3, legend_label=CocoDisplay.dict_shorten_loc(mypandas_filter.codelocation[0]),
                     hover_line_width=4)
                 tooltips.append((val,'@{'+val+'}'+'{custom}'))
                 formatters['@{'+val+'}']=cases_custom
@@ -679,11 +690,10 @@ class CocoDisplay():
             if dico['title']:
                 standardfig.title.text = dico['title']
             standardfig.add_tools(hover_tool)
-            colors = itertools.cycle(self.colors)
 
             def add_line(src,options, init,  color):
                 s = Select(options=options, value=init)
-                r = standardfig.line(x='date', y='cases', source=src,line_width=3, line_color=color)
+                r = standardfig.line(x='date', y='cases', source=src,line_width=3, line_color='colors')
                 li = LegendItem(label=init, renderers=[r])
                 s.js_on_change('value', CustomJS(args=dict(s0=source, s1=src,li=li),
                                      code = """
@@ -722,8 +732,13 @@ class CocoDisplay():
 
             my_date = mypandas.date.unique()
             my_location = mypandas.location.unique()
-            dshort_loc=CocoDisplay.dict_shorten_loc(my_location)
-            colors = itertools.cycle(self.colors)
+            dshort_loc=CocoDisplay.dict_shorten_loc(mypandas.codelocation.unique())
+            if len(my_location)<5:
+                colors = self.scolors
+            else:
+                colors = self.lcolors
+
+            colors = itertools.cycle(colors)
             dico_colors = {i:next(colors) for i in my_location}
             country_col = pd.DataFrame(dico_colors.items(),columns=['location', 'colors'])
             mypandas=(pd.merge(mypandas, country_col, on='location'))
@@ -858,8 +873,8 @@ class CocoDisplay():
         dict_histo = defaultdict(list)
         if 'location' in mypandas.columns:
             tooltips='Value at around @middle_bin : @val'
-            uniqloc = mypandas.codelocation.unique()
-            shorten_loc = list(CocoDisplay.dict_shorten_loc(uniqloc).values())
+            uniqloc = list(mypandas.codelocation.unique())
+            shorten_loc = CocoDisplay.dict_shorten_loc(uniqloc)
             val_per_country = defaultdict(list)
             if len(uniqloc) == 1:
                 dico['bins'] = 2
@@ -892,9 +907,12 @@ class CocoDisplay():
                    name_dis=mypandas.loc[mypandas.codelocation.isin(res)]['codelocation'].values
                    contributors.append(name_dis)
 
+            colors = itertools.cycle(self.scolors)
+            lcolors = [next(colors) for i in range(bins)]
 
             frame_histo = pd.DataFrame({'val': histo,'left': edges[:-1],'right': edges[1:],
-              'middle_bin':np.floor(edges[:-1]+(edges[1:]-edges[:-1])/2),'contributors':contributors})
+              'middle_bin':np.floor(edges[:-1]+(edges[1:]-edges[:-1])/2),'contributors':contributors,
+              'colors':lcolors})
         hover_tool = HoverTool(tooltips=tooltips)
         panels = []
         bottom=0
@@ -911,21 +929,21 @@ class CocoDisplay():
             standardfig.xaxis[0].formatter = PrintfTickFormatter(format="%4.2e")
             #standardfig.title.text = dico['titlebar']
             standardfig.add_tools(hover_tool)
-            colors = itertools.cycle(self.colors)
             standardfig.x_range=Range1d(0, 1.05*max(edges))
             standardfig.y_range=Range1d(0, 1.05*max(frame_histo['val']))
             if x_axis_type=="log":
                 left=0.8
-                if frame_histo['left'][1]>0:
-                    left=frame_histo['left'][1]
+                if frame_histo['left'][0]>0:
+                    left=frame_histo['left'][0]
                 standardfig.x_range=Range1d(left, 1.05*max(edges))
             if y_axis_type=="log":
                 bottom=0.0001
                 standardfig.y_range=Range1d(0.001, 1.05*max(frame_histo['val']))
 
             label = dico['titlebar']
+
             p=standardfig.quad(source=ColumnDataSource(frame_histo),top='val', bottom=bottom, left='left', right='right',
-            fill_color=next(colors),legend_label=label)
+            fill_color='colors',legend_label=label)
             standardfig.legend.label_text_font_size = "12px"
             panel = Panel(child=standardfig , title=axis_type_title)
             panels.append(panel)
@@ -1046,6 +1064,9 @@ class CocoDisplay():
             #        mypandas_filter['shortenlocation'] = mypandas_filter['codelocation']
             #loc=mypandas_filter['shortenlocation'].to_list()
             loc=mypandas_filter['codelocation'].to_list()
+
+            loc=CocoDisplay.dict_shorten_loc(loc)
+            print("loc",loc)
             cases_custom = CustomJSHover(code="""
                     var value;
                     if(value>100000)

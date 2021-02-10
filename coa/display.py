@@ -619,7 +619,10 @@ class CocoDisplay():
             standardfig =  self.standardfig(y_axis_type=axis_type, x_axis_type='datetime',title= dico['titlebar'])
             standardfig.yaxis[0].formatter = PrintfTickFormatter(format="%4.2e")
             formatters={'location':'printf','@date': 'datetime'}
-            tooltips=[('Location','@location'),('date', '@date{%F}')]
+            if len(mypandas.codelocation.unique())>1:
+                tooltips=[('Location','@location'),('date', '@date{%F}')]
+            else:
+                tooltips=[('date', '@date{%F}')]
             for val in input_field:
                 for loc in mypandas.codelocation.unique():
                     if len(input_field) >1:

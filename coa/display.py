@@ -625,7 +625,7 @@ class CocoDisplay():
             if len(mypandas.codelocation.unique())>1:
                 tooltips=[('Location','@rolloverdisplay'),('date', '@date{%F}')]
             else:
-                tooltips=[('date', '@date{%F}')]
+               tooltips=[('Location','@codelocation'),('date', '@date{%F}')]
             for val in input_field:
                 for loc in mypandas.codelocation.unique():
                     if len(input_field) >1:
@@ -1081,7 +1081,7 @@ class CocoDisplay():
                     """)
 
             standardfig.add_tools(HoverTool(
-            tooltips=[('Location','@location'),(input_field,'@{'+input_field+'}'+'{custom}'),],
+            tooltips=[('Location','@rolloverdisplay'),(input_field,'@{'+input_field+'}'+'{custom}'),],
             formatters={'location':'printf','@{'+input_field+'}':cases_custom,},
             point_policy="follow_mouse"))#,PanTool())
 
@@ -1139,7 +1139,7 @@ class CocoDisplay():
             self.boundary = geopdwd_filter['geometry'].total_bounds
             name_location_displayed = 'name_subregion'
             zoom = 2
-
+        uniqloc = list(geopdwd_filter.codelocation.unique())
         geopdwd_filter = geopdwd_filter.drop(columns=['date','colors'])
 
         minx, miny, maxx, maxy = self.boundary
@@ -1187,6 +1187,11 @@ class CocoDisplay():
             else:
                 return color_scale(value)
 
+        if len(uniqloc)>1:
+                displayed='rolloverdisplay'
+        else:
+               displayed='codelocation'
+
         folium.GeoJson(
             geopdwd_filter,
             style_function=lambda x:
@@ -1196,7 +1201,7 @@ class CocoDisplay():
                 'color' : None
             },
             highlight_function=lambda x: {'weight':2, 'color':'green'},
-            tooltip=folium.features.GeoJsonTooltip(fields=['rolloverdisplay',input_field+'scientific_format'],
+            tooltip=folium.features.GeoJsonTooltip(fields=[displayed,input_field+'scientific_format'],
                 aliases=['location'+':',input_field+":"],
                 style="""
                         background-color: #F0EFEF;
@@ -1233,6 +1238,7 @@ class CocoDisplay():
         else:
             geopdwd = geopdwd.rename(columns={'cases':input_field})
             geopdwd_filter = geopdwd_filter.rename(columns={'cases':input_field})
+        uniqloc= list(geopdwd_filter.codelocation.unique())
         #geopdwd = geopdwd[['location','codelocation','geometry','date',input_field]]
         #geopdwd_filter =   geopdwd_filter[['location','codelocation','geometry',input_field]]
 
@@ -1343,8 +1349,13 @@ class CocoDisplay():
                 else
                     return value.toFixed(2).toString();
                 """)
+        if len(uniqloc)>1:
+            loctips=('location','@rolloverdisplay')
+        else:
+           loctips=('location','@codelocation')
+
         standardfig.add_tools(HoverTool(
-        tooltips=[('location','@rolloverdisplay'),(input_field,'@{'+input_field+'}'+'{custom}'),],
+        tooltips=[loctips,(input_field,'@{'+input_field+'}'+'{custom}'),],
         formatters={'location':'printf','@{'+input_field+'}':cases_custom,},
         point_policy="follow_mouse"))#,PanTool())
         if date_slider:

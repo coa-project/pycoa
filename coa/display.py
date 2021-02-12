@@ -523,10 +523,10 @@ class CocoDisplay():
     def rollerJS():
         return CustomJSHover(code="""
                 var value;
-                    if(abs(value)>100000 || abs(value)<0.001)
+                    if(Math.abs(value)>100000 || Math.abs(value)<0.001)
                         return value.toExponential(2);
                     else
-                        return value.toString();
+                        return value.toFixed(2);
                 """)
 ###################### END Static Methods ##################
 

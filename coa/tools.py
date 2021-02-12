@@ -219,12 +219,13 @@ def get_local_from_url(url,expiration_time=0,suffix=''):
         local_file_exists=os.path.exists(local_cached_filename)
         local_filename=local_cached_filename
 
-    if os.path.exists(local_tmp_filename) and local_file_exists: # prefering the file in tmp if more recent
-        if os.path.getmtime(local_tmp_filename) > os.path.getmtime(local_filename):
-            local_filename = local_tmp_filename
-    else:
-        local_file_exists=os.path.exists(local_tmp_filename)
-        local_filename=local_tmp_filename
+    if os.path.exists(local_tmp_filename):
+        if local_file_exists: # prefering the file in tmp if more recent
+            if os.path.getmtime(local_tmp_filename) > os.path.getmtime(local_filename):
+                local_filename = local_tmp_filename
+        else:
+            local_file_exists=True
+            local_filename=local_tmp_filename
 
     if expiration_time >=0 and local_file_exists:
         if expiration_time==0 or time.time()-os.path.getmtime(local_filename)<expiration_time:

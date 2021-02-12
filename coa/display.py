@@ -163,6 +163,7 @@ class CocoDisplay():
         input_dico['what']=what
         input_dico['locsumall']=None
         if 'location' in mypandas:
+            mypandas['rolloverdisplay']=mypandas['codelocation']
             if mypandas['location'].apply(lambda x : True if type(x) == list else False).any():
                 #len(x) == 3 or len(x) == 2 : we suppose that codelocation is iso3 -len=3- or int for french code region
                 # For other nationnal db need to check !
@@ -175,8 +176,13 @@ class CocoDisplay():
                     for i in mypandassumall.codelocation.unique():
                         sub = mypandassumall.loc[mypandassumall.codelocation==i]
                         copypandas = sub.copy()
-                        list_list_loc=[j for j in sub['location'].iloc[0]]
+                        if type(sub['location'].iloc[0])==list:
+                            list_list_loc = [j for j in sub['location'].iloc[0]]
+                        else:
+                            list_list_loc = sub['location'].iloc[0]
                         sub = sub.drop(columns=['location'])
+                        if type(list_list_loc)==str:
+                            list_list_loc=[list_list_loc]
                         sub.insert(0, 'location', list_list_loc[0])
                         for i in list_list_loc[1:]:
                             copypandas['location']=i
@@ -186,19 +192,30 @@ class CocoDisplay():
                         else:
                             mypandascountry=sub
                 mypandas =  mypandascountry
-
             if self.database_name == 'spf' or self.database_name == 'opencovid19' or self.database_name == 'jhu-usa':
-                pd_name_displayed=self.geopan[['location','name_subregion']]
-                mypandas=pd.merge(mypandas,pd_name_displayed,on='location')
-                mypandas['rolloverdisplay'] = mypandas['name_subregion']
-            else:
-                mypandas['rolloverdisplay'] = mypandas['location']
-            #else:
-            #    mypandas=mypandas.rename(columns={'codelocation':'name_to_display'})
+                pd_name_displayed = self.geopan[['location','name_subregion']]
+                maskcountries = mypandas['codelocation'].apply(lambda x : True if len(x) == 2 or len(x) == 3 else False)
+                mypandassumall = mypandas[~maskcountries]
+                mypandascountry = mypandas[maskcountries]
+                if not mypandascountry.empty:
+                    mypandascountry = pd.merge(mypandascountry,pd_name_displayed,on='location',how='inner')
+                    mypandascountry = mypandascountry.drop(columns='rolloverdisplay')
+                    mypandascountry['rolloverdisplay'] = mypandascountry['name_subregion']
+                    if not mypandassumall.empty:
+                        mypandascountry=mypandascountry.append(mypandassumall)
+                    mypandas = mypandascountry
 
-            #cols_date_location = ['date', 'location']
-            #new_columns_order = cols_date_location + list(mypandas.columns)[2:]ﬁ
-            #mypandas = mypandas[new_columns_order]
+            else:
+                maskcountries = mypandas['codelocation'].apply(lambda x : True if len(x) == 3 else False)
+                mypandassumall = mypandas[~maskcountries]
+                mypandascountry = mypandas[maskcountries]
+                if not mypandascountry.empty:
+                    mypandascountry = mypandascountry.drop(columns='rolloverdisplay')
+                    mypandascountry['rolloverdisplay'] = mypandascountry['location']
+                    if not mypandassumall.empty:
+                        mypandascountry=mypandascountry.append(mypandassumall)
+                    mypandas = mypandascountry
+
             which =  mypandas.columns[2]
         else:
             which =  mypandas.columns[1]
@@ -584,7 +601,7 @@ class CocoDisplay():
             y_axis_label=input_field[1], y_axis_type=axis_type ,title= dico['titlebar'])
 
             standardfig.add_tools(HoverTool(
-            tooltips=[('Location','@codelocation'),('date', '@date{%F}'),(input_field[0],'@{casesx}'+'{custom}'),
+            tooltips=[('Location','@rolloverdisplay'),('date', '@date{%F}'),(input_field[0],'@{casesx}'+'{custom}'),
             (input_field[1],'@{casesy}'+'{custom}')],
             formatters={'location':'printf','@{casesx}':cases_custom,'@{casesy}':cases_custom ,'@date': 'datetime'},
             point_policy="follow_mouse"))#,PanTool())
@@ -621,11 +638,10 @@ class CocoDisplay():
         for axis_type in ax_type :
             standardfig =  self.standardfig(y_axis_type=axis_type, x_axis_type='datetime',title= dico['titlebar'])
             standardfig.yaxis[0].formatter = PrintfTickFormatter(format="%4.2e")
+
             formatters={'location':'printf','@date': 'datetime'}
-            if len(mypandas.codelocation.unique())>1:
-                tooltips=[('Location','@rolloverdisplay'),('date', '@date{%F}')]
-            else:
-               tooltips=[('Location','@codelocation'),('date', '@date{%F}')]
+            tooltips=[('Location','@rolloverdisplay'),('date', '@date{%F}')]
+
             for val in input_field:
                 for loc in mypandas.codelocation.unique():
                     if len(input_field) >1:
@@ -849,7 +865,7 @@ class CocoDisplay():
         fill_color=transform('value', color_mapper))
 
         standardfig.add_tools(HoverTool(
-        tooltips=[('location','@location'),('value','@value')],
+        tooltips=[('location','@rolloverdisplay'),('value','@value')],
         #formatters={'location':'printf','@{'+input_field+'}':cases_custom,},
         point_policy="follow_mouse"))
         return standardfig
@@ -910,7 +926,7 @@ class CocoDisplay():
             contributors=[]
             for i,j in zip(edges[:-1],edges[1:]):
                    res = [key for key, val in filter(lambda sub: int(sub[1]) >= i and int(sub[1]) <= j, val_per_country.items())]
-                   name_dis=mypandas.loc[mypandas.codelocation.isin(res)]['codelocation'].values
+                   name_dis=mypandas.loc[mypandas.codelocation.isin(res)]['rolloverdisplay'].values
                    contributors.append(name_dis)
 
             colors = itertools.cycle(self.scolors)
@@ -1079,7 +1095,6 @@ class CocoDisplay():
                     else
                         return value.toFixed(2).toString();
                     """)
-
             standardfig.add_tools(HoverTool(
             tooltips=[('Location','@rolloverdisplay'),(input_field,'@{'+input_field+'}'+'{custom}'),],
             formatters={'location':'printf','@{'+input_field+'}':cases_custom,},

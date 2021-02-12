@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """ Project : PyCoA
-Date :    april-november 2020
+Date :    april 2020 - february 2021
 Authors : Olivier Dadoun, Julien Browaeys, Tristan Beau
 Copyright ©pycoa.fr
 License: See joint LICENSE file
@@ -20,7 +20,7 @@ statistical information for countries.
 
 GeoRegion class helps returning list of countries in a specified region
 
-Geocountry manages information for a single country.
+GeoCountry manages information for a single country.
 """
 
 import inspect  # for debug purpose

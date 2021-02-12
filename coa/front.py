@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """Project : PyCoA - Copyright ©pycoa.fr
-Date :    april-november 2020
+Date :    april 2020 - february 2021
 Authors : Olivier Dadoun, Julien Browaeys, Tristan Beau
 License: See joint LICENSE file
 
@@ -17,17 +17,21 @@ with keywords (see help of functions below).
 Basic usage
 -----------
 ** plotting covid deaths (default value) vs. time **
-    import coa.coa as cc
-    cc.plot(where='France')  # where keyword is mandatory
+    import coa.front as cf
+
+    cf.plot(where='France')  # where keyword is mandatory
 ** getting recovered data for some countries **
 
-    cc.get(where=['Spain','Italy'],which='recovered')
+    cf.get(where=['Spain','Italy'],which='recovered')
 ** listing available database and which data can be used **
-    cc.listwhom()
-    cc.setwhom('JHU') # return available keywords (aka 'which' data)
-    cc.listwhich()   # idem
-    cc.listwhat()    # return available time serie type (total,
+    cf.listwhom()
+    cf.setwhom('jhu') # return available keywords (aka 'which' data)
+    cf.listwhich()   # idem
+    cf.listwhat()    # return available time serie type (weekly,
                      # daily...)
+    cf.plot(option='sumall') # return the cumulative plot for all countries
+                     # for default which keyword. See cf.listwhich() and
+                     # and other cf.list**() function (see below)
 
 """
 

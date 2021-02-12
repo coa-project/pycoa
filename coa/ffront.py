@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """Project : PyCoA - Copyright ©pycoa.fr
-Date :    april 2020 - january 2021
+Date :    april 2020 - february 2021
 Authors : Olivier Dadoun, Julien Browaeys, Tristan Beau
 License: See joint LICENSE file
 

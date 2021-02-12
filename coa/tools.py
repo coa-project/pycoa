@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """Project : PyCoA - Copyright ©pycoa.fr
-Date :    april-november 2020
+Date :    april 2020 - february 2021
 Authors : Olivier Dadoun, Julien Browaeys, Tristan Beau
 License: See joint LICENSE file
 
@@ -12,6 +12,9 @@ This is the PyCoA tools module to be considered as a swiss knife list of functio
 One find function for
  - verbose or warning mode management.
  - kwargs analysis
+ - filling nan values of given pandas 
+ - date parsing validation
+ - automatic file caching system
 
 The _verbose_mode variable should be set to 0 if no printing output needed. The
 default value is 1 (print information to stdout). The 2 value grants a debug level information

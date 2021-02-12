@@ -518,6 +518,14 @@ class CocoDisplay():
                 lat  = tuple_xy[1]
             y = np.log(np.tan((90 + lat) * np.pi/360.0)) * k
             return x,y
+
+    @staticmethod
+    def rollerJS():
+        return CustomJSHover(code="""
+                var value;
+                    return value.toPrecision(5).toString();
+                """)
+
 ###################### END Static Methods ##################
 
 ###################### BEGIN Plots ##################
@@ -588,14 +596,7 @@ class CocoDisplay():
     def pycoa_plot(self,mypandas,dico,input_field, hover_tool, ax_type,**kwargs):
         panels = []
         hover_tool = None
-        cases_custom = CustomJSHover(code="""
-                var value;
-                if(value>100000)
-                    return value.toExponential(2).toString();
-                else
-                    return value.toFixed(2).toString();
-                """)
-
+        cases_custom = CocoDisplay.rollerJS()
         for axis_type in ax_type :
             standardfig =  self.standardfig(x_axis_label=input_field[0],
             y_axis_label=input_field[1], y_axis_type=axis_type ,title= dico['titlebar'])
@@ -628,13 +629,7 @@ class CocoDisplay():
     def pycoa_date_plot(self,mypandas,dico,input_field, hover_tool, ax_type,**kwargs):
         panels = []
 
-        cases_custom = CustomJSHover(code="""
-                        var value;
-                        if(value>100000)
-                            return value.toExponential(2).toString();
-                        else
-                            return value.toFixed(2).toString();
-                """)
+        cases_custom = CocoDisplay.rollerJS()
         for axis_type in ax_type :
             standardfig =  self.standardfig(y_axis_type=axis_type, x_axis_type='datetime',title= dico['titlebar'])
             standardfig.yaxis[0].formatter = PrintfTickFormatter(format="%4.2e")
@@ -700,10 +695,13 @@ class CocoDisplay():
 
         filter_data2 = mypivot[[uniqloc[1]]].rename(columns={uniqloc[1]: 'cases'})
         src2 = ColumnDataSource(filter_data2)
-        hover_tool = HoverTool(tooltips=[
-                        ("Cases", '@cases'),
-                        ('date', '@date{%F}')],
-                        formatters={'@date': 'datetime'})
+
+        cases_custom = CocoDisplay.rollerJS()
+        hover_tool = HoverTool(tooltips=[('Cases','@{cases}'+'{custom}'),('date', '@date{%F}')],
+            formatters={'Cases':'printf','@{cases}':cases_custom,'@date': 'datetime'},
+            point_policy="follow_mouse")#,PanTool())
+
+
         panels = []
         for axis_type in ax_type:
             standardfig = self.standardfig(y_axis_type=axis_type,
@@ -1088,13 +1086,7 @@ class CocoDisplay():
             loc=mypandas_filter['codelocation'].to_list()
 
             loc=CocoDisplay.dict_shorten_loc(loc)
-            cases_custom = CustomJSHover(code="""
-                    var value;
-                    if(value>100000)
-                        return value.toExponential(2).toString();
-                    else
-                        return value.toFixed(2).toString();
-                    """)
+            cases_custom = CocoDisplay.rollerJS()
             standardfig.add_tools(HoverTool(
             tooltips=[('Location','@rolloverdisplay'),(input_field,'@{'+input_field+'}'+'{custom}'),],
             formatters={'location':'printf','@{'+input_field+'}':cases_custom,},
@@ -1188,7 +1180,9 @@ class CocoDisplay():
         html.script.get_root().render()
         html.script._children[e.get_name()] = e
         geopdwd_filter[input_field+'scientific_format']=\
-            (['{:.3g}'.format(i) if i>100000 else i for i in geopdwd_filter[input_field]])
+        (['{:.5g}'.format(i) for i in geopdwd_filter[input_field]])
+        #(['{:.3g}'.format(i) if i>100000 else i for i in geopdwd_filter[input_field]])
+
 
         map_dict = geopdwd_filter.set_index('location')[input_field].to_dict()
         if np.nanmin(geopdwd_filter[input_field]) == np.nanmax(geopdwd_filter[input_field]):
@@ -1357,13 +1351,7 @@ class CocoDisplay():
         standardfig.ygrid.grid_line_color = None
         standardfig.patches('xs','ys', source = geopdwd_filter,fill_color = {'field':input_field, 'transform' : color_mapper},
                   line_color = 'black', line_width = 0.25, fill_alpha = 1)
-        cases_custom = CustomJSHover(code="""
-                var value;
-                if(value>100000)
-                    return value.toExponential(2).toString();
-                else
-                    return value.toFixed(2).toString();
-                """)
+        cases_custom = CocoDisplay.rollerJS()
         if len(uniqloc)>1:
             loctips=('location','@rolloverdisplay')
         else:

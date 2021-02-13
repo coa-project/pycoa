@@ -248,7 +248,7 @@ class CocoDisplay():
             title_temporal = ', option '+str(kwargs.get('option'))+title_temporal
 
         input_dico['title_temporal'] = title_temporal
-        titlebar = title_temporal
+        titlebar = which + title_temporal
 
         if input_field:
             if not isinstance(input_field, list):

@@ -443,7 +443,10 @@ class DataBase(object):
         mypandas = mypandas[absolutlyneeded + columns_keeped]
 
         self.available_keys_words = columns_keeped #+ absolutlyneeded
+
         if 'iso_code' in self.available_keys_words:
+            strangeiso3tokick=[i for i in mypandas['iso_code'].unique() if not len(i)==3]
+            mypandas = mypandas.loc[~mypandas.iso_code.isin(strangeiso3tokick)]
             self.available_keys_words.remove('iso_code')
         uniqloc = list(mypandas['location'].unique())
         oldloc = uniqloc
@@ -478,6 +481,8 @@ class DataBase(object):
                 tmp = tmp[cols]
                 mypandas = mypandas.append(tmp)
 
+        if len(oldloc) != len(newloc):
+            raise CoaKeyError('Seems to be an iso3 problem behaviour ...')
         mypandas = mypandas.replace(oldloc,newloc)
         mypandas = mypandas.groupby(['location','date']).sum(min_count=1).reset_index() # summing in case of multiple dates (e.g. in opencovid19 data). But keep nan if any
         mypandas['codelocation'] = mypandas['location'].map(codedico)

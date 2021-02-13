@@ -867,7 +867,7 @@ class CocoDisplay():
         pycoa_pandas = pycoa_pandas.stack().rename("value").reset_index()
 
         standardfig = self.standardfig(y_range=list(pycoa_pandas.location.unique()),
-                                        x_range=list(pycoa_pandas.data.unique()))
+                                        x_range=list(pycoa_pandas.data.unique()),title= dico['titlebar'])
         standardfig.xaxis.major_label_orientation = "vertical"
         color_mapper = LinearColorMapper(palette=Viridis256, low=pycoa_pandas.value.min(), high=pycoa_pandas.value.max(), nan_color = '#ffffff')
         color_bar = ColorBar(color_mapper=color_mapper, label_standoff=4,\
@@ -965,7 +965,7 @@ class CocoDisplay():
             if axis_type == 'loglog':
                 x_axis_type,y_axis_type = 'log','log'
                 axis_type_title = 'loglog'
-            standardfig = self.standardfig(x_axis_type=x_axis_type,y_axis_type=y_axis_type)
+            standardfig = self.standardfig(x_axis_type=x_axis_type,y_axis_type=y_axis_type,title= dico['titlebar'])
             standardfig.xaxis[0].formatter = PrintfTickFormatter(format="%4.2e")
             #standardfig.title.text = dico['titlebar']
             standardfig.add_tools(hover_tool)
@@ -1021,7 +1021,7 @@ class CocoDisplay():
             if title_fig != title.split()[0]:
                 title =  title_fig + ' ' + title
             if mypandas_filter[mypandas_filter[input_field]<0.].empty:
-                standardfig = self.standardfig(x_axis_type=axis_type,x_range = (0.01,1.05*max_value), title=title)
+                standardfig = self.standardfig(x_axis_type=axis_type,x_range = (0.01,1.05*max_value), title=dico['titlebar'])
                 standardfig.xaxis[0].formatter = PrintfTickFormatter(format="%4.2e")
                 if axis_type=="log":
                     min_range_val=0.01
@@ -1033,7 +1033,7 @@ class CocoDisplay():
                     srcfiltered = ColumnDataSource(data=mypandas_filter)
             else:
                 max_value = max(np.abs(mypandas_filter['left']).max(),mypandas_filter['right'].max())
-                standardfig = self.standardfig(x_axis_type=axis_type,x_range = (-max_value,max_value), title=title)
+                standardfig = self.standardfig(x_axis_type=axis_type,x_range = (-max_value,max_value), title= dico['titlebar'])
 
             standardfig.quad(source=srcfiltered,
                 top='top', bottom='bottom',left='left', right='right',color='colors',line_color='black',

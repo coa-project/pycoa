@@ -27,34 +27,21 @@ setup(
     packages=['coa'],
     # Needed for dependencies
     install_requires=[ \
-        'altair',\
         'bokeh',\
         'branca',\
-        #'collections',\   std
-        #'copy',\  std
+        'bs4',\
+        'datascroller',\
         'datetime',\
-        'folium',\
+        'folium ~=0.12.1',\
         'geopandas',\
-        'geopy',\
-        #'inspect', \should be std
-        #'io',\ std
-        #'itertools',\  std
-        #'json',\  std
-        #'math',\   std
         'matplotlib',\
         'numpy',\
         'pandas',\
-        #'PIL',\ should be std
-        'plotly',\
         'pycountry',\
         'pycountry_convert',\
-        'pyproj',\
-        #'random',\   std
         'requests',\
         'scipy',\
         'shapely',\
-        #'sys',\   std
-        #'warnings',\  std
         ],
     # The license can be anything you like
     license='MIT',

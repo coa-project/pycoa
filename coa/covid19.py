@@ -130,6 +130,9 @@ class DataBase(object):
 
                     #result = pd.concat([spf1, spf2,spf3,spf4,spf5], axis=1, sort=False)
                     list_spf=[spf1, spf2,spf3,spf4,spf5]
+                    for i in list_spf:
+                        i['date'] = pd.to_datetime(i['date']).apply(lambda x: x if not pd.isnull(x) else '')
+
                     min_date=min([s.date.min() for s in list_spf])
                     max_date=max([s.date.max() for s in list_spf])
                     spf1, spf2,spf3,spf4,spf5 = spf1.set_index(['date','location']),\

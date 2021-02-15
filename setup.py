@@ -42,6 +42,7 @@ setup(
         'requests',\
         'scipy',\
         'shapely',\
+        'pytest ~=6.2.2',\
         ],
     # The license can be anything you like
     license='MIT',

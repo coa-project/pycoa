@@ -677,7 +677,7 @@ class GeoCountry():
     The list of supported countries is given by get_list_countries() function. """
 
     # Assuming zip file here
-    _country_info_dict = {'FRA':'https://public.opendatasoft.com/explore/dataset/contours-simplifies-des-departements-francais-2015/download/?format=shp&timezone=Europe/Berlin&lang=fr',\
+    _country_info_dict = {'FRA':'https://github.com/coa-project/coadata/raw/main/coacache/public.opendatasoft.com_912711563.zip',\
                     'USA':'https://alicia.data.socrata.com/api/geospatial/jhnu-yfrj?method=export&format=Original'
                     }
 

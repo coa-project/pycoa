@@ -156,6 +156,7 @@ class DataBase(object):
                        # 'nb_rouge']
                     #min_date=result['date'].min()
                     for w in ['incid_hosp','incid_rea','incid_rad','incid_dc','P','T','n_dose1']:
+                        result[w]=pd.to_numeric(result[w],errors='coerce')
                         if w.startswith('incid_'):
                             ww=w[6:]
                             result[ww]=result.groupby('location')[ww].fillna(method='bfill')

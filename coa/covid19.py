@@ -161,10 +161,10 @@ class DataBase(object):
                             ww=w[6:]
                             result[ww]=result.groupby('location')[ww].fillna(method='bfill')
                             result['incid_'+ww] = result.groupby('location')['incid_'+ww].fillna(method='bfill')
-                            result['offset_'+w] = result.loc[result.date==min_date][ww]-result.loc[result.date==min_date]['incid_'+ww]
-                            result['offset_'+w] = result.groupby('location')['offset_'+w].fillna(method='ffill')
+                            #result['offset_'+w] = result.loc[result.date==min_date][ww]-result.loc[result.date==min_date]['incid_'+ww]
+                            #result['offset_'+w] = result.groupby('location')['offset_'+w].fillna(method='ffill')
                         else:
-                            result['offset_'+w] = 0
+                            #result['offset_'+w] = 0
                         result['tot_'+w]=result.groupby(['location'])[w].cumsum()#+result['offset_'+w]
                     #
                     rename_dict={

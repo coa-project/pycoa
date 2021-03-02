@@ -164,6 +164,7 @@ class DataBase(object):
                             #result['offset_'+w] = result.loc[result.date==min_date][ww]-result.loc[result.date==min_date]['incid_'+ww]
                             #result['offset_'+w] = result.groupby('location')['offset_'+w].fillna(method='ffill')
                         else:
+                            pass
                             #result['offset_'+w] = 0
                         result['tot_'+w]=result.groupby(['location'])[w].cumsum()#+result['offset_'+w]
                     #

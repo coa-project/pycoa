@@ -72,6 +72,7 @@ class DataBase(object):
                     self.geo = coge.GeoCountry('FRA') # not using dense geometry
                     self.geo_all = self.geo.get_subregion_list()['code_subregion'].to_list()
                     info('SPF aka Sante Publique France database selected ...')
+
                     info('... Five differents db from SPF will be parsed ...')
                     # https://www.data.gouv.fr/fr/datasets/donnees-hospitalieres-relatives-a-lepidemie-de-covid-19/
                     # Parse and convert spf data structure to JHU one for historical raison
@@ -85,6 +86,7 @@ class DataBase(object):
                     constraints={'sexe':0}
                     spf1=self.csv2pandas("https://www.data.gouv.fr/fr/datasets/r/63352e38-d353-4b54-bfd1-f1b3ee1cabd7",
                                   rename_columns=rename,constraints=constraints,cast=cast)
+
                     # https://www.data.gouv.fr/fr/datasets/donnees-hospitalieres-relatives-a-lepidemie-de-covid-19/
                     # All data are incidence. → integrated later in the code
                     # incid_hosp	string 	Nombre quotidien de personnes nouvellement hospitalisées
@@ -93,12 +95,25 @@ class DataBase(object):
                     # incid_rad	integer	Nombre quotidien de nouveaux retours à domicile
                     spf2=self.csv2pandas("https://www.data.gouv.fr/fr/datasets/r/6fadff46-9efd-4c53-942a-54aca783c30c",
                                   rename_columns=rename,cast=cast)
+
                     # https://www.data.gouv.fr/fr/datasets/donnees-relatives-aux-resultats-des-tests-virologiques-covid-19/
                     # T       Number of tests performed daily → integrated later
                     # P       Number of positive tests daily → integrated later
                     constraints={'cl_age90':0}
                     spf3=self.csv2pandas("https://www.data.gouv.fr/fr/datasets/r/406c6a23-e283-4300-9484-54e78c8ae675",
                                   rename_columns=rename,constraints=constraints,cast=cast)
+
+                    # https://www.data.gouv.fr/fr/datasets/donnees-relatives-aux-personnes-vaccinees-contre-la-covid-19-1
+                    # Les données issues du système d’information Vaccin Covid permettent de dénombrer en temps quasi réel
+                    # (J-1), le nombre de personnes ayant reçu une injection de vaccin anti-covid en tenant compte du nombre
+                    # de doses reçues, de l’âge, du sexe ainsi que du niveau géographique (national, régional et
+                    # départemental).
+                    # variables n_dose_1, n_dose_2
+                    constraints={'vaccin':0} # all vaccins
+                    # previously : https://www.data.gouv.fr/fr/datasets/r/4f39ec91-80d7-4602-befb-4b522804c0af
+                    spf5=self.csv2pandas("https://www.data.gouv.fr/fr/datasets/r/535f8686-d75d-43d9-94b3-da8cdf850634",
+                        rename_columns=rename,constraints=constraints,separator=',',encoding="ISO-8859-1",cast=cast)
+
                     #https://www.data.gouv.fr/fr/datasets/indicateurs-de-suivi-de-lepidemie-de-covid-19/#_
                     # tension hospitaliere
                     #'date', 'location', 'region', 'libelle_reg', 'libelle_dep', 'tx_incid',
@@ -112,15 +127,6 @@ class DataBase(object):
                     # vert : R0 entre 0 et 1 ;
                     # Orange : R0 entre 1 et 1,5 ;
                     # Rouge : R0 supérieur à 1,5.
-                    spf5=self.csv2pandas("https://www.data.gouv.fr/fr/datasets/r/4f39ec91-80d7-4602-befb-4b522804c0af",
-                        rename_columns=rename,separator=',',encoding="ISO-8859-1",cast=cast)
-                    #spf5=fill_missing_dates(spf5,'date','location',spf1.date.min(),spf1.date.max())
-                    # https://www.data.gouv.fr/fr/datasets/donnees-relatives-aux-personnes-vaccinees-contre-la-covid-19-1
-                    # Les données issues du système d’information Vaccin Covid permettent de dénombrer en temps quasi réel
-                    # (J-1), le nombre de personnes ayant reçu une injection de vaccin anti-covid en tenant compte du nombre
-                    # de doses reçues, de l’âge, du sexe ainsi que du niveau géographique (national, régional et
-                    # départemental).
-                    # variable n_dose_1
                     cast={'departement':'string'}
                     rename={'extract_date':'date','departement':'location'}
                     #columns_skipped=['region','libelle_reg','libelle_dep','tx_incid_couleur','R_couleur',\
@@ -155,7 +161,7 @@ class DataBase(object):
                        # 'taux_occupation_sae_couleur', 'tx_pos_couleur', 'nb_orange',
                        # 'nb_rouge']
                     #min_date=result['date'].min()
-                    for w in ['incid_hosp','incid_rea','incid_rad','incid_dc','P','T','n_dose1']:
+                    for w in ['incid_hosp','incid_rea','incid_rad','incid_dc','P','T','n_dose1','n_dose2']:
                         result[w]=pd.to_numeric(result[w],errors='coerce')
                         if w.startswith('incid_'):
                             ww=w[6:]
@@ -178,6 +184,7 @@ class DataBase(object):
                         'taux_occupation_sae':'cur_idx_taux_occupation_sae',
                         'tx_pos':'cur_idx_tx_pos',
                         'tot_n_dose1':'tot_vacc',
+                        'tot_n_dose2':'tot_vacc2',
                         }
                     result=result.rename(columns=rename_dict)
                     columns_keeped=list(rename_dict.values())+['tot_incid_hosp','tot_incid_rea','tot_incid_rad','tot_incid_dc','tot_P','tot_T']

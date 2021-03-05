@@ -242,6 +242,10 @@ class CocoDisplay():
             if input_dico['when_end'] == '':
                 input_dico['when_end'] = mypandas.date.max()
 
+            if input_dico['when_end'] <= input_dico['when_beg']:
+                print('Requested date below available one, take',input_dico['when_beg'])
+                input_dico['when_end'] = input_dico['when_beg']
+
         if kwargs.get('plot_last_date',None) == True:
             title_temporal =  ' (at ' + input_dico['when_end'].strftime('%d/%m/%Y') + ')'
         else:
@@ -290,7 +294,6 @@ class CocoDisplay():
         input_dico['titlebar']=titlebar
         input_dico['var_displayed']=var_displayed
         input_dico['data_base'] = self.database_name
-
         return mypandas, input_dico
 
     def get_tiles(self):
@@ -795,9 +798,14 @@ class CocoDisplay():
 
             geopdwd = geopdwd.rename(columns={input_field:'cases'})
             orientation = kwargs.get('orientation', 'horizontal')
-
-            date_slider = DateSlider(title="Date: ", start=geopdwd.date.min(), end=dico['when_end'],
-            value=dico['when_end'], step=24*60*60*1000,orientation=orientation)
+            if dico['when_end'] <= geopdwd.date.min():
+                started=geopdwd.date.min()
+                ended=geopdwd.date.min() + dt.timedelta(days=1)
+            else:
+                started=geopdwd.date.min()
+                ended=dico['when_end']
+            date_slider = DateSlider(title="Date: ", start=started, end=ended,
+            value=ended, step=24*60*60*1000,orientation=orientation)
             geopdwd_filter = geopdwd.copy()
             wanted_date = date_slider.value_as_datetime.date()
             geopdwd_filter = geopdwd_filter.loc[geopdwd_filter.date == wanted_date]

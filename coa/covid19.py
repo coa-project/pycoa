@@ -41,7 +41,7 @@ class DataBase(object):
          Fill the pandas_datase
         '''
         verb("Init of covid19.DataBase()")
-        self.database_name = ['jhu','owid','jhu-usa','spf','opencovid19']
+        self.database_name = ['jhu','owid','jhu-usa','spf','opencovid19','dpc']
         self.available_options = ['nonneg','nofillnan','smooth7','sumall']
         self.available_keys_words = []
         self.dates = []
@@ -67,6 +67,16 @@ class DataBase(object):
                     self.geo = coge.GeoCountry('USA')
                     self.geo_all = self.geo.get_subregion_list()['code_subregion'].to_list()
                     self.return_jhu_pandas()
+                if self.db == 'dpc':
+                    self.db_world=False
+                    info('ITA, Dipartimento della Protezione Civile database selected ...')
+                    self.geo = coge.GeoCountry('ITA')
+                    self.geo_all = self.geo.get_subregion_list()['code_subregion'].to_list()
+                    rename_dict={'data':'date','sigla_provincia':'location','totale_casi':'tot_casi'}
+                    dpc1=self.csv2pandas("https://github.com/pcm-dpc/COVID-19/raw/master/dati-province/dpc-covid19-ita-province.csv",\
+                        rename_columns=rename_dict,separator=',')
+                    columns_keeped=['tot_casi']
+                    self.return_structured_pandas(dpc1,columns_keeped=columns_keeped) 
                 elif self.db == 'spf':
                     self.db_world=False
                     self.geo = coge.GeoCountry('FRA') # not using dense geometry
@@ -539,7 +549,7 @@ class DataBase(object):
                 clist=self.geo.to_standard(clist,output='list',interpret_region=True)
             else:
                 clist=clist+self.geo.get_subregions_from_list_of_region_names(clist)
-                if clist == ['FRA'] or clist == ['USA']:
+                if clist == ['FRA'] or clist == ['USA'] or clist == ['ITA']:
                     clist=self.geo_all
 
             clist=list(set(clist)) # to suppress duplicate countries
@@ -662,7 +672,7 @@ class DataBase(object):
 
         # insert dates at the end for each country if necessary
         maxdate=pdfiltered['date'].max()
-        for loca in clist:
+        for loca in pdfiltered.location.unique(): # not clist because it may happen that some location does not exist in actual pandas
             lmaxdate=pdfiltered.loc[ pdfiltered.location == loca ]['date'].max()
             if lmaxdate != maxdate:
                 pdfiltered = pdfiltered.append(pd.DataFrame({'location':loca,

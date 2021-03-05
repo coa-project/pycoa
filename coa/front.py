@@ -55,7 +55,9 @@ _listwhom=['jhu',    # John Hopkins University first base, default
             'owid', # Our World in Data
             'jhu-usa',
             'spf',   # Sante publique France
-            'opencovid19'] #  see data.gouv.fr
+            'opencovid19', #  see data.gouv.fr
+            'dpc', # see https://github.com/pcm-dpc
+            ]
 
 if 'coa_db' in __builtins__.keys():
     if not  __builtins__['coa_db'] in _listwhom:
@@ -84,7 +86,7 @@ def getversion():
     """Return the current running version of pycoa.
     """
     return coa._version.__version__
-    
+
 # ----------------------------------------------------------------------
 # --- listoutput() -----------------------------------------------------
 # ----------------------------------------------------------------------

@@ -100,9 +100,11 @@ class CocoDisplay():
          geoid | location |  geometry (POLYGON or MULTIPOLYGON)
         '''
         geopan = gpd.GeoDataFrame()
-        if self.database_name == 'spf' or self.database_name == 'opencovid19' or self.database_name == 'jhu-usa':
+        if self.database_name == 'spf' or self.database_name == 'opencovid19' or self.database_name == 'jhu-usa' or self.database_name == 'dpc':
             if self.database_name == 'jhu-usa':
                 country = 'USA'
+            elif self.database_name == 'dpc':
+                country = 'ITA'
             else:
                 country = 'FRA'
             info = coge.GeoCountry(country,dense_geometry=False)
@@ -1162,7 +1164,7 @@ class CocoDisplay():
             geopdwd = geopdwd.rename(columns={'cases':input_field})
             geopdwd_filter = geopdwd_filter.rename(columns={'cases':input_field})
         zoom = 2
-        if self.database_name == 'spf' or  self.database_name == 'opencovid19' or self.database_name == 'jhu-usa':
+        if self.database_name == 'spf' or  self.database_name == 'opencovid19' or self.database_name == 'jhu-usa' or self.database_name == 'dpc':
             self.boundary = geopdwd_filter['geometry'].total_bounds
             name_location_displayed = 'name_subregion'
             zoom = 2

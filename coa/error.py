@@ -20,6 +20,12 @@ class CoaError(Exception):
         self.message = message
         Exception(message)
 
+class CoaNoData(CoaError):
+    """Exception raised when there is no data to plot or to manage (invalid cut)"""
+    def __init__(self, message):
+        self.message = message
+        CoaError(message)
+
 class CoaKeyError(CoaError, KeyError):
     """Exception raised for errors in used key option.
 

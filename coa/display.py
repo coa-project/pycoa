@@ -242,6 +242,9 @@ class CocoDisplay():
             if input_dico['when_end'] == '':
                 input_dico['when_end'] = mypandas.date.max()
 
+            if np.isnan(input_dico['when_beg']):
+                raise CoaNoData("With your current cuts, there are no data to plot.")
+
             if input_dico['when_end'] <= input_dico['when_beg']:
                 print('Requested date below available one, take',input_dico['when_beg'])
                 input_dico['when_end'] = input_dico['when_beg']

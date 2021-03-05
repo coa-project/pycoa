@@ -109,12 +109,12 @@ class DataBase(object):
                     # de doses reçues, de l’âge, du sexe ainsi que du niveau géographique (national, régional et
                     # départemental).
                     # variables n_dose_1, n_dose_2
-                    constraints={'vaccin':0} # all vaccins
+                    constraints={'vaccin':0} # all vaccines
                     # previously : https://www.data.gouv.fr/fr/datasets/r/4f39ec91-80d7-4602-befb-4b522804c0af
                     spf5=self.csv2pandas("https://www.data.gouv.fr/fr/datasets/r/535f8686-d75d-43d9-94b3-da8cdf850634",
-                        rename_columns=rename,constraints=constraints,separator=',',encoding="ISO-8859-1",cast=cast)
+                        rename_columns=rename,constraints=constraints,separator=';',encoding="ISO-8859-1",cast=cast)
 
-                    #https://www.data.gouv.fr/fr/datasets/indicateurs-de-suivi-de-lepidemie-de-covid-19/#_
+                    # https://www.data.gouv.fr/fr/datasets/indicateurs-de-suivi-de-lepidemie-de-covid-19/#_
                     # tension hospitaliere
                     #'date', 'location', 'region', 'libelle_reg', 'libelle_dep', 'tx_incid',
                     # 'R', 'taux_occupation_sae', 'tx_pos', 'tx_incid_couleur', 'R_couleur',

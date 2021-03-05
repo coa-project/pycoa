@@ -46,7 +46,7 @@ from coa.tools import kwargs_test,extract_dates
 import coa.covid19 as coco
 from coa.error import *
 import coa.display as cd
-import coa._version 
+import coa._version
 
 output_notebook(hide_banner=True)
 
@@ -285,7 +285,6 @@ def get(**kwargs):
         when_beg = db_first_date
     if when_end > db_last_date:
         when_end=db_last_date
-
     # when cut
     pandy=pandy[(pandy.date>=when_beg) & (pandy.date<=when_end)]
     pandy.reset_index()
@@ -440,7 +439,6 @@ def hist(**kwargs):
     #               Warning : this coud be time consuming when one use it with map bokeh
     #               preferable to use this option with folium map
     #"""
-    
     kwargs_test(kwargs,['where','what','which','whom','when','input','input_field','bins','title',
                         'typeofhist','option'],
             'Bad args used in the pycoa.hist() function.')

@@ -790,7 +790,7 @@ class CocoDisplay():
             mypandas=(pd.merge(mypandas, country_col, on='location'))
 
             geopdwd = mypandas
-            geopdwd =  geopdwd.loc[geopdwd.date >= dt.date(2020,3,15)] # before makes pb in horizohisto
+            #geopdwd =  geopdwd.loc[geopdwd.date >= dt.date(2020,3,15)] # before makes pb in horizohisto
             geopdwd = geopdwd.sort_values(by=input_field,ascending=False)
 
             geopdwd=geopdwd.dropna(subset=[input_field])
@@ -798,6 +798,7 @@ class CocoDisplay():
 
             geopdwd = geopdwd.rename(columns={input_field:'cases'})
             orientation = kwargs.get('orientation', 'horizontal')
+
             if dico['when_end'] <= geopdwd.date.min():
                 started=geopdwd.date.min()
                 ended=geopdwd.date.min() + dt.timedelta(days=1)

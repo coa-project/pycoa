@@ -402,8 +402,6 @@ class DataBase(object):
         #self.mainpandas = result
         self.mainpandas = fill_missing_dates(result)
 
-
-
    def csv2pandas(self,url,**kwargs):
         '''
         Parse and convert the database cvs file to a pandas structure

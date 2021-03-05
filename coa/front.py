@@ -57,6 +57,7 @@ _listwhom=['jhu',    # John Hopkins University first base, default
             'spf',   # Sante publique France
             'opencovid19', #  see data.gouv.fr
             'dpc', # see https://github.com/pcm-dpc
+            'covidtracking', # https://covidtracking.com/
             ]
 
 if 'coa_db' in __builtins__.keys():

@@ -41,7 +41,7 @@ class DataBase(object):
          Fill the pandas_datase
         '''
         verb("Init of covid19.DataBase()")
-        self.database_name = ['jhu','owid','jhu-usa','spf','opencovid19','dpc']
+        self.database_name = ['jhu','owid','jhu-usa','spf','opencovid19','dpc','covidtracking']
         self.available_options = ['nonneg','nofillnan','smooth7','sumall']
         self.available_keys_words = []
         self.dates = []
@@ -61,13 +61,13 @@ class DataBase(object):
                     self.geo = coge.GeoManager('name')
                     self.geo_all='world'
                     self.return_jhu_pandas()
-                if self.db == 'jhu-usa':
+                elif self.db == 'jhu-usa':
                     self.db_world=False
                     info('USA, JHU aka Johns Hopkins database selected ...')
                     self.geo = coge.GeoCountry('USA')
                     self.geo_all = self.geo.get_subregion_list()['code_subregion'].to_list()
                     self.return_jhu_pandas()
-                if self.db == 'dpc':
+                elif self.db == 'dpc':
                     self.db_world=False
                     info('ITA, Dipartimento della Protezione Civile database selected ...')
                     self.geo = coge.GeoCountry('ITA')
@@ -77,6 +77,28 @@ class DataBase(object):
                         rename_columns=rename_dict,separator=',')
                     columns_keeped=['tot_casi']
                     self.return_structured_pandas(dpc1,columns_keeped=columns_keeped) 
+                elif self.db == 'covidtracking':
+                    self.db_world=False
+                    info('USA, CovidTracking.com database selected... ...')
+                    self.geo = coge.GeoCountry('USA')
+                    self.geo_all = self.geo.get_subregion_list()['code_subregion'].to_list()
+                    rename_dict={'state':'location',\
+                            'death':'tot_death',\
+                            'hospitalizedCumulative':'tot_hosp',\
+                            'hospitalizedCurrently':'cur_hosp',\
+                            'inIcuCumulative':'tot_icu',\
+                            'inIcuCurrently':'cur_icu',\
+                            'negative':'tot_neg_test',\
+                            'positive':'tot_pos_test',\
+                            'onVentilatorCumulative':'tot_onVentilator',\
+                            'onVentilatorCurrently':'cur_onVentilator',\
+                            'totalTestResults':'tot_test',\
+                            }
+                    ctusa=self.csv2pandas("https://covidtracking.com/data/download/all-states-history.csv",\
+                        rename_columns=rename_dict,separator=',')
+                    columns_keeped=list(rename_dict.values())
+                    columns_keeped.remove('location') # is already expected
+                    self.return_structured_pandas(ctusa,columns_keeped=columns_keeped) 
                 elif self.db == 'spf':
                     self.db_world=False
                     self.geo = coge.GeoCountry('FRA') # not using dense geometry
@@ -271,15 +293,13 @@ class DataBase(object):
 
    def get_db(self):
         '''
-        Return the current covid19 database selected, so far:
-        'jhu','spf','owid' or 'opencovid19'
+        Return the current covid19 database selected. See get_available_database() for full list
         '''
         return self.db
 
    def get_available_database(self):
         '''
-        Return all the available Covid19 database :
-        ['jhu', 'spf', 'owid', 'opencovid19']
+        Return all the available Covid19 database
         '''
         return self.database_name
 

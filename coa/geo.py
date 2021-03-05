@@ -678,14 +678,16 @@ class GeoCountry():
 
     # Assuming zip file here
     _country_info_dict = {'FRA':'https://github.com/coa-project/coadata/raw/main/coacache/public.opendatasoft.com_912711563.zip',\
-                    'USA':'https://alicia.data.socrata.com/api/geospatial/jhnu-yfrj?method=export&format=Original'
+                    'USA':'https://alicia.data.socrata.com/api/geospatial/jhnu-yfrj?method=export&format=Original',\
+                    'ITA':'https://raw.githubusercontent.com/openpolis/geojson-italy/master/geojson/limits_IT_provinces.geojson',\
                     }
 
     _source_dict = {'FRA':{'Basics':_country_info_dict['FRA'],\
                     'Subregion Flags':'http://sticker-departement.com/',\
                     'Region Flags':'https://fr.wikipedia.org/w/index.php?title=R%C3%A9gion_fran%C3%A7aise&oldid=177269957'},\
                     'USA':{'Basics':_country_info_dict['USA'],\
-                    'Subregion informations':'https://en.wikipedia.org/wiki/List_of_states_and_territories_of_the_United_States'}
+                    'Subregion informations':'https://en.wikipedia.org/wiki/List_of_states_and_territories_of_the_United_States'},\
+                    'ITA':{'Basics':_country_info_dict['ITA']},\
                     }
 
     def __init__(self,country=None,**kwargs):
@@ -719,12 +721,11 @@ class GeoCountry():
         self._country_data_subregion=None
 
         url=self._country_info_dict[country]
-        self._country_data = gpd.read_file('zip://'+get_local_from_url(url,0,'.zip')) # under the hypothesis this is a zip file
-
         # country by country, adapt the read file informations
 
         # --- 'FRA' case ---------------------------------------------------------------------------------------
         if self._country=='FRA':
+            self._country_data = gpd.read_file('zip://'+get_local_from_url(url,0,'.zip')) 
 
             # adding a flag for subregion (departements)
             self._country_data['flag_subregion']=self._source_dict['FRA']['Subregion Flags']+'img/dept/sticker_plaque_immat_'+\
@@ -803,6 +804,7 @@ class GeoCountry():
 
         # --- 'USA' case ---------------------------------------------------------------------------------------
         elif self._country == 'USA':
+            self._country_data = gpd.read_file('zip://'+get_local_from_url(url,0,'.zip')) # under the hypothesis this is a zip file
             self._country_data.rename(columns={\
                 'STATE_NAME':'name_subregion',\
                 'STATE_ABBR':'code_subregion',\
@@ -851,11 +853,26 @@ class GeoCountry():
 
             if main_area == True:
                 self._country_data=self._country_data[~self._country_data['code_subregion'].isin(list_translation.keys())]
+    
+        # --- 'ITA' case ---------------------------------------------------------------------------------------
+        elif self._country == 'ITA':
+            self._country_data = gpd.read_file(get_local_from_url(url,0)) # this is a geojson file
+            self._country_data.rename(columns={\
+                'prov_name':'name_subregion',\
+                'prov_acr':'code_subregion',\
+                'reg_name':'name_region',\
+                'reg_istat_code':'code_region',\
+                },
+                inplace=True)
+            self._country_data.drop(['prov_istat_code_num','reg_istat_code_num','prov_istat_code'],axis=1,inplace=True)
 
     def get_source(self):
         """ Return informations about URL sources
         """
-        return self._source_dict
+        if self.get_country() != None:
+            return self._source_dict[self.get_country()]
+        else:
+            return self._source_dict
 
     def get_country(self):
         """ Return the current country used.

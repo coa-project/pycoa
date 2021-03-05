@@ -194,7 +194,8 @@ class CocoDisplay():
                         else:
                             mypandascountry=sub
                 mypandas =  mypandascountry
-            if self.database_name == 'spf' or self.database_name == 'opencovid19' or self.database_name == 'jhu-usa':
+            if self.database_name == 'spf' or self.database_name == 'opencovid19' or self.database_name == 'jhu-usa' \
+                or self.database_name == 'dpc':
                 pd_name_displayed = self.geopan[['location','name_subregion']]
                 maskcountries = mypandas['codelocation'].apply(lambda x : True if len(x) == 2 or len(x) == 3 else False)
                 mypandassumall = mypandas[~maskcountries]

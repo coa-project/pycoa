@@ -421,7 +421,8 @@ class DataBase(object):
         encoding = kwargs.get('encoding', None)
         if encoding:
             encoding = encoding
-        pandas_db = pandas.read_csv(get_local_from_url(url,7200),sep=separator,dtype=dico_cast, encoding = encoding ) # cached for 2 hours
+        pandas_db = pandas.read_csv(get_local_from_url(url,7200),sep=separator,dtype=dico_cast, encoding = encoding,
+            keep_default_na=False,na_values='' ) # cached for 2 hours
         #pandas_db = pandas.read_csv(self.database_url,sep=separator,dtype=dico_cast, encoding = encoding )
         constraints = kwargs.get('constraints', None)
         rename_columns = kwargs.get('rename_columns', None)

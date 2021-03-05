@@ -46,6 +46,7 @@ from coa.tools import kwargs_test,extract_dates
 import coa.covid19 as coco
 from coa.error import *
 import coa.display as cd
+import coa._version 
 
 output_notebook(hide_banner=True)
 
@@ -77,8 +78,17 @@ _listvisu=['bokeh','folium']
 # --- Front end functions ----------------------------------------------
 
 # ----------------------------------------------------------------------
+# --- getversion() -----------------------------------------------------
+# ----------------------------------------------------------------------
+def getversion():
+    """Return the current running version of pycoa.
+    """
+    return coa._version.__version__
+    
+# ----------------------------------------------------------------------
 # --- listoutput() -----------------------------------------------------
 # ----------------------------------------------------------------------
+
 def listoutput():
     """Return the list of currently available output types for the
     get() function. The first one is the default output given if

@@ -100,11 +100,13 @@ class CocoDisplay():
          geoid | location |  geometry (POLYGON or MULTIPOLYGON)
         '''
         geopan = gpd.GeoDataFrame()
-        if self.database_name in ['spf','opencovid19','jhu-usa','dpc','covidtracking']:
+        if self.database_name in ['spf','opencovid19','jhu-usa','dpc','covidtracking','covid19-india']:
             if self.database_name == 'jhu-usa' or self.database_name == 'covidtracking':
                 country = 'USA'
             elif self.database_name == 'dpc':
                 country = 'ITA'
+            elif self.database_name == 'covid19-india':
+                country = 'IND'
             else:
                 country = 'FRA'
             info = coge.GeoCountry(country,dense_geometry=False)

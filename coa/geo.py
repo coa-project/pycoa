@@ -680,6 +680,7 @@ class GeoCountry():
     _country_info_dict = {'FRA':'https://github.com/coa-project/coadata/raw/main/coacache/public.opendatasoft.com_912711563.zip',\
                     'USA':'https://alicia.data.socrata.com/api/geospatial/jhnu-yfrj?method=export&format=Original',\
                     'ITA':'https://raw.githubusercontent.com/openpolis/geojson-italy/master/geojson/limits_IT_provinces.geojson',\
+                    'IND':'https://raw.githubusercontent.com/deldersveld/topojson/master/countries/india/india-states.json'\
                     }
 
     _source_dict = {'FRA':{'Basics':_country_info_dict['FRA'],\
@@ -688,6 +689,7 @@ class GeoCountry():
                     'USA':{'Basics':_country_info_dict['USA'],\
                     'Subregion informations':'https://en.wikipedia.org/wiki/List_of_states_and_territories_of_the_United_States'},\
                     'ITA':{'Basics':_country_info_dict['ITA']},\
+                    'IND':{'Basics':_country_info_dict['IND']},\
                     }
 
     def __init__(self,country=None,**kwargs):
@@ -725,7 +727,7 @@ class GeoCountry():
 
         # --- 'FRA' case ---------------------------------------------------------------------------------------
         if self._country=='FRA':
-            self._country_data = gpd.read_file('zip://'+get_local_from_url(url,0,'.zip')) 
+            self._country_data = gpd.read_file('zip://'+get_local_from_url(url,0,'.zip'))
 
             # adding a flag for subregion (departements)
             self._country_data['flag_subregion']=self._source_dict['FRA']['Subregion Flags']+'img/dept/sticker_plaque_immat_'+\
@@ -853,7 +855,7 @@ class GeoCountry():
 
             if main_area == True:
                 self._country_data=self._country_data[~self._country_data['code_subregion'].isin(list_translation.keys())]
-    
+
         # --- 'ITA' case ---------------------------------------------------------------------------------------
         elif self._country == 'ITA':
             self._country_data = gpd.read_file(get_local_from_url(url,0)) # this is a geojson file
@@ -865,6 +867,18 @@ class GeoCountry():
                 },
                 inplace=True)
             self._country_data.drop(['prov_istat_code_num','reg_istat_code_num','prov_istat_code'],axis=1,inplace=True)
+        # --- 'IND' case ---------------------------------------------------------------------------------------
+        elif self._country == 'IND':
+            self._country_data = gpd.read_file(get_local_from_url(url,0)) # this is a geojson file
+            self._country_data.rename(columns={\
+                'NAME_1':'name_subregion',\
+                'VARNAME_1':'name_region',\
+                'HASC_1':'code_subregion',\
+                },
+                inplace=True)
+            self._country_data['code_region'] = self._country_data['code_subregion']
+            self._country_data.drop(['ISO','NAME_0','ID_1','TYPE_1','ENGTYPE_1'],axis=1,inplace=True)
+
 
     def get_source(self):
         """ Return informations about URL sources

@@ -41,7 +41,7 @@ class DataBase(object):
          Fill the pandas_datase
         '''
         verb("Init of covid19.DataBase()")
-        self.database_name = ['jhu','owid','jhu-usa','spf','opencovid19','dpc','covidtracking']
+        self.database_name = ['jhu','owid','jhu-usa','spf','opencovid19','dpc','covidtracking','covid19-india']
         self.available_options = ['nonneg','nofillnan','smooth7','sumall']
         self.available_keys_words = []
         self.dates = []
@@ -76,7 +76,16 @@ class DataBase(object):
                     dpc1=self.csv2pandas("https://github.com/pcm-dpc/COVID-19/raw/master/dati-province/dpc-covid19-ita-province.csv",\
                         rename_columns=rename_dict,separator=',')
                     columns_keeped=['tot_casi']
-                    self.return_structured_pandas(dpc1,columns_keeped=columns_keeped) 
+                    self.return_structured_pandas(dpc1,columns_keeped=columns_keeped)
+                elif self.db == 'covid19-india':
+                    self.db_world=False
+                    info('COVID19-India database selected ...')
+                    self.geo = coge.GeoCountry('IND')
+                    self.geo_all = self.geo.get_subregion_list()['code_subregion'].to_list()
+                    rename_dict={'Date':'date','State':'location'}
+                    indi=self.csv2pandas("https://api.covid19india.org/csv/latest/states.csv",rename_columns=rename_dict,separator=',')
+                    columns_keeped=['Confirmed','Recovered','Deceased','Other','Tested']
+                    self.return_structured_pandas(indi,columns_keeped=columns_keeped)
                 elif self.db == 'covidtracking':
                     self.db_world=False
                     info('USA, CovidTracking.com database selected... ...')
@@ -98,7 +107,7 @@ class DataBase(object):
                         rename_columns=rename_dict,separator=',')
                     columns_keeped=list(rename_dict.values())
                     columns_keeped.remove('location') # is already expected
-                    self.return_structured_pandas(ctusa,columns_keeped=columns_keeped) 
+                    self.return_structured_pandas(ctusa,columns_keeped=columns_keeped)
                 elif self.db == 'spf':
                     self.db_world=False
                     self.geo = coge.GeoCountry('FRA') # not using dense geometry

@@ -1150,7 +1150,7 @@ class CocoDisplay():
         return tabs
 
     @decohistomap
-    def map_folium(self,input_field,date_slider,dico,geopdwd,geopdwd_filter):
+    def map_folium(self,input_field,date_slider ,dico,geopdwd,geopdwd_filter):
         """Create a Folium map from a pandas input
         Folium limite so far:
             - scale format can not be changed (no way to use scientific notation)
@@ -1287,8 +1287,8 @@ class CocoDisplay():
         #geopdwd = geopdwd[['location','codelocation','geometry','date',input_field]]
         #geopdwd_filter =   geopdwd_filter[['location','codelocation','geometry',input_field]]
 
-        #geopdwd = geopdwd.sort_values(by=['location','date'],ascending=False)
-        #geopdwd = geopdwd.drop(columns=['date'])
+        geopdwd = geopdwd.sort_values(by=['location','date'],ascending=False)
+        geopdwd = geopdwd.drop(columns=['date'])
         geopdwd_filter = geopdwd_filter.drop(columns=['date','colors'])
 
         new_poly=[]
@@ -1325,29 +1325,27 @@ class CocoDisplay():
 
         wmt=WMTSTileSource(
         url=dico['tile']
-        #attribution='<a href=\"http://pycoa.fr\"> ©pycoa.fr </a>'+msg + '- Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         )
         standardfig = self.standardfig(x_range=(minx,maxx), y_range=(miny,maxy),
         x_axis_type="mercator", y_axis_type="mercator",title=dico['titlebar'],copyrightposition='left')
         standardfig.add_tile(wmt)
         min_col,max_col=CocoDisplay.min_max_range(np.nanmin(geopdwd_filter[input_field]),np.nanmax(geopdwd_filter[input_field]))
-        color_mapper = LinearColorMapper(palette=Viridis256, low = 100, high = max_col, nan_color = '#ffffff')
+        color_mapper = LinearColorMapper(palette=Viridis256, low = min_col, high = max_col, nan_color = '#ffffff')
         color_bar = ColorBar(color_mapper=color_mapper, label_standoff=4,
                             border_line_color=None,location = (0,0), orientation = 'horizontal', ticker=BasicTicker())
         color_bar.formatter = BasicTickFormatter(use_scientific=True,precision=1,power_limit_low=int(max_col))
-
         standardfig.add_layout(color_bar, 'below')
         json_data = json.dumps(json.loads(geopdwd_filter.to_json()))
         geopdwd_filter = GeoJSONDataSource(geojson = json_data)
         if date_slider :
             allcases_location, allcases_dates=pd.DataFrame(),pd.DataFrame()
             allcases_location = (geopdwd.groupby('location')['cases'].apply(list))
-            geopdwd_tmp = geopdwd.drop_duplicates(subset=['geometry'])
+            geopdwd_tmp = geopdwd.drop_duplicates(subset=['codelocation'])
             geopdwd_tmp = geopdwd_tmp.drop(columns='cases')
             geopdwd_tmp = pd.merge(geopdwd_tmp,allcases_location,on='location')
+            geopdwd_tmp = pd.merge(geolistmodified,geopdwd_tmp,on='location')
             json_data = json.dumps(json.loads(geopdwd_tmp.to_json()))
             geopdwd_tmp = GeoJSONDataSource(geojson = json_data)
-
             callback = CustomJS(args=dict(source=geopdwd_tmp,
                                           source_filter=geopdwd_filter,
                                           date_slider=date_slider),
@@ -1380,7 +1378,6 @@ class CocoDisplay():
                         source_filter.change.emit();
                     """)
             date_slider.js_on_change('value', callback)
-
         standardfig.xaxis.visible = False
         standardfig.yaxis.visible = False
         standardfig.xgrid.grid_line_color = None
@@ -1399,6 +1396,7 @@ class CocoDisplay():
         point_policy="follow_mouse"))#,PanTool())
         if date_slider:
             standardfig = column(date_slider,standardfig)
+
         return standardfig
 ##################### END HISTOS/MAPS##################
 

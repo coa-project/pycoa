@@ -884,7 +884,7 @@ class GeoCountry():
                     replace(name_subregion,alllocationvariation)
             self._country_data['name_region'] = self._country_data['name_subregion']
             self._country_data['code_region'] = self._country_data['code_subregion']
-            self._country_data.drop(['ISO','NAME_0','ID_1','TYPE_1','ENGTYPE_1'],axis=1,inplace=True)
+            self._country_data.drop(['ISO','NAME_0','ID_1','TYPE_1','ENGTYPE_1','id'],axis=1,inplace=True)
 
 
     def get_source(self):

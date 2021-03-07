@@ -44,9 +44,23 @@ if _coacache_module_info != None:
 # Verbosity of pycoa
 _verbose_mode = 1 # default
 
+# Known db
+_db_list_dict = {'jhu':'WW',\
+    'owid':'WW',\
+    'jhu-usa':'USA',\
+    'spf':'FRA',\
+    'opencovid19':'FRA',\
+    'dpc':'ITA',\
+    'covidtracking':'USA',\
+    'covid19-india':'IND' }
+
 # ----------------------------------------------------
 # --- Usefull functions for pycoa --------------------
 # ----------------------------------------------------
+
+def get_db_list_dict():
+    """Return db list dict"""
+    return _db_list_dict
 
 def get_verbose_mode():
     """Return the verbose mode

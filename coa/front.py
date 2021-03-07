@@ -42,7 +42,7 @@ from functools import wraps
 import numpy as np
 from bokeh.io import show, output_notebook
 
-from coa.tools import kwargs_test,extract_dates
+from coa.tools import kwargs_test,extract_dates,get_db_list_dict
 import coa.covid19 as coco
 from coa.error import *
 import coa.display as cd
@@ -51,14 +51,7 @@ import coa._version
 output_notebook(hide_banner=True)
 
 # --- Needed global private variables ----------------------------------
-_listwhom=['jhu',    # John Hopkins University first base, default
-            'owid', # Our World in Data
-            'jhu-usa',
-            'spf',   # Sante publique France
-            'opencovid19', #  see data.gouv.fr
-            'dpc', # see https://github.com/pcm-dpc
-            'covidtracking', # https://covidtracking.com/
-            ]
+_listwhom=list(get_db_list_dict().keys())
 
 if 'coa_db' in __builtins__.keys():
     if not  __builtins__['coa_db'] in _listwhom:

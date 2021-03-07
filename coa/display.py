@@ -16,10 +16,9 @@ An interface module to easily plot pycoa data with bokeh
 
 """
 
-from coa.tools import kwargs_test,check_valid_date,extract_dates,info,verb
+from coa.tools import kwargs_test,check_valid_date,extract_dates,info,verb,get_db_list_dict
 import coa.geo as coge
 from coa.geo import GeoManager as gm
-
 from coa.error import *
 
 import math
@@ -75,6 +74,7 @@ class CocoDisplay():
     def __init__(self,db=None):
         verb("Init of CocoDisplay() with db="+str(db))
         self.database_name = db
+        self.dbld = get_db_list_dict()
 
         a=map(list, zip(Paired[10], Set2[8],Set3[12]))
         chain = itertools.chain(*a)
@@ -100,34 +100,28 @@ class CocoDisplay():
          geoid | location |  geometry (POLYGON or MULTIPOLYGON)
         '''
         geopan = gpd.GeoDataFrame()
-        if self.database_name in ['spf','opencovid19','jhu-usa','dpc','covidtracking','covid19-india']:
-            if self.database_name == 'jhu-usa' or self.database_name == 'covidtracking':
-                country = 'USA'
-            elif self.database_name == 'dpc':
-                country = 'ITA'
-            elif self.database_name == 'covid19-india':
-                country = 'IND'
+        try:
+            if self.dbld[self.database_name] != 'WW' :
+                country = self.dbld[self.database_name]
+                info = coge.GeoCountry(country,dense_geometry=False)
+                geopan = info.get_subregion_list()[['code_subregion','name_subregion','geometry']]
+                geopan = geopan.rename(columns={'code_subregion':'location'})
             else:
-                country = 'FRA'
-            info = coge.GeoCountry(country,dense_geometry=False)
-            geopan = info.get_subregion_list()[['code_subregion','name_subregion','geometry']]
-            geopan = geopan.rename(columns={'code_subregion':'location'})
-        elif self.database_name == 'jhu' or self.database_name == 'owid':
-            info = coge.GeoInfo()
+                info = coge.GeoInfo()
 
-            geom=info.get_GeoManager()
-            lstd=geom.get_standard()
-            geom.set_standard('name')
+                geom=info.get_GeoManager()
+                lstd=geom.get_standard()
+                geom.set_standard('name')
 
-            allcountries = geom.get_GeoRegion().get_countries_from_region('world')
-            geopan['location'] = [geom.to_standard(c)[0] for c in allcountries]
+                allcountries = geom.get_GeoRegion().get_countries_from_region('world')
+                geopan['location'] = [geom.to_standard(c)[0] for c in allcountries]
 
-            geom.set_standard(lstd)
-            # restore standard
+                geom.set_standard(lstd)
+                # restore standard
 
-            geopan = info.add_field(field=['geometry'],input=geopan ,geofield='location')
-            geopan = geopan[geopan.location != 'Antarctica']
-        else:
+                geopan = info.add_field(field=['geometry'],input=geopan ,geofield='location')
+                geopan = geopan[geopan.location != 'Antarctica']
+        except:
             raise CoaTypeError('What data base are you looking for ?')
         geopan = geopan.dropna().reset_index(drop=True)
         self.data = gpd.GeoDataFrame(geopan,crs="EPSG:4326")
@@ -196,7 +190,7 @@ class CocoDisplay():
                         else:
                             mypandascountry=sub
                 mypandas =  mypandascountry
-            if self.database_name in ['spf','opencovid19','jhu-usa','dpc','covidtracking','covid19-india']:
+            if self.dbld[self.database_name] != 'WW':
                 pd_name_displayed = self.geopan[['location','name_subregion']]
                 maskcountries = mypandas['codelocation'].apply(lambda x : True if len(x) == 2 or len(x) == 3 or len(x) == 5 else False)
                 mypandassumall = mypandas[~maskcountries]
@@ -326,22 +320,15 @@ class CocoDisplay():
 ###################### BEGIN Static Methods ##################
     @staticmethod
     def return_standard_location(db,name):
-        if db in ['spf','opencovid19','jhu-usa','dpc','covidtracking','covid19-india'] :
-            if db == 'jhu-usa' or db == 'covidtracking' :
-                country = 'USA'
-            elif db == 'dpc':
-                country = 'ITA'
-            elif db == 'covid19-india':
-                country = 'IND'
-            else:
-                country = 'FRA'
+        if self.dbld[db] != 'WW':
+            country=self.dbld[db]
             info = coge.GeoCountry(country,dense_geometry=False)
-            if name == 'FRA' or name == 'USA' or name == 'ITA'  or name == 'IND':
+            if name in self.dbld.values():
                 location = info.get_subregion_list()['code_subregion'].to_list()
             else:
                 #location = info.get_subregions_from_list_of_region_names(name)
                 location = info.get_subregions_from_region(name=name)
-        elif db == 'jhu' or db == 'owid':
+        else:
             geo=coge.GeoManager('name')
             geo.set_standard('name')
             location=(geo.to_standard(name,output='list',interpret_region=True))
@@ -1181,7 +1168,7 @@ class CocoDisplay():
             geopdwd = geopdwd.rename(columns={'cases':input_field})
             geopdwd_filter = geopdwd_filter.rename(columns={'cases':input_field})
         zoom = 2
-        if self.database_name in ['spf','opencovid19','jhu-usa','dpc','covidtracking','covid19-india']:
+        if self.dbld[self.database_name] != 'WW':
             self.boundary = geopdwd_filter['geometry'].total_bounds
             name_location_displayed = 'name_subregion'
             zoom = 2

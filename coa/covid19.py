@@ -21,7 +21,7 @@ from collections import defaultdict
 import numpy as np
 import pandas as pd
 import sys
-from coa.tools import info,verb,kwargs_test,get_local_from_url,fill_missing_dates,check_valid_date
+from coa.tools import info,verb,kwargs_test,get_local_from_url,fill_missing_dates,check_valid_date,get_db_list_dict
 
 import coa.geo as coge
 import coa.display as codisplay
@@ -41,7 +41,7 @@ class DataBase(object):
          Fill the pandas_datase
         '''
         verb("Init of covid19.DataBase()")
-        self.database_name = ['jhu','owid','jhu-usa','spf','opencovid19','dpc','covidtracking','covid19-india']
+        self.database_name = list(get_db_list_dict().keys())
         self.available_options = ['nonneg','nofillnan','smooth7','sumall']
         self.available_keys_words = []
         self.dates = []
@@ -55,37 +55,36 @@ class DataBase(object):
             raise CoaDbError('Unknown ' + self.db + '. Available database so far in PyCoa are : ' + str(self.database_name) ,file=sys.stderr)
         else:
             try:
-                if self.db == 'jhu':
+
+                if get_db_list_dict()[self.db] == 'WW': # world wide db
                     self.db_world=True
-                    info('JHU aka Johns Hopkins database selected ...')
                     self.geo = coge.GeoManager('name')
                     self.geo_all='world'
+                else: # local db
+                    self.db_world=False
+                    self.geo = coge.GeoCountry(get_db_list_dict()[self.db])
+                    self.geo_all = self.geo.get_subregion_list()['code_subregion'].to_list()
+
+                # specific reading of data according to the db
+                if self.db == 'jhu':
+                    info('JHU aka Johns Hopkins database selected ...')
                     self.return_jhu_pandas()
                 elif self.db == 'jhu-usa':
-                    self.db_world=False
                     info('USA, JHU aka Johns Hopkins database selected ...')
-                    self.geo = coge.GeoCountry('USA')
-                    self.geo_all = self.geo.get_subregion_list()['code_subregion'].to_list()
                     self.return_jhu_pandas()
                 elif self.db == 'dpc':
-                    self.db_world=False
                     info('ITA, Dipartimento della Protezione Civile database selected ...')
-                    self.geo = coge.GeoCountry('ITA')
-                    self.geo_all = self.geo.get_subregion_list()['code_subregion'].to_list()
                     rename_dict={'data':'date','sigla_provincia':'location','totale_casi':'tot_casi'}
                     dpc1=self.csv2pandas("https://github.com/pcm-dpc/COVID-19/raw/master/dati-province/dpc-covid19-ita-province.csv",\
                         rename_columns=rename_dict,separator=',')
                     columns_keeped=['tot_casi']
                     self.return_structured_pandas(dpc1,columns_keeped=columns_keeped)
                 elif self.db == 'covid19-india':
-                    self.db_world=False
                     info('COVID19-India database selected ...')
-                    self.geo = coge.GeoCountry('IND')
-                    self.geo_all = self.geo.get_subregion_list()['code_subregion'].to_list()
                     rename_dict={'Date':'date','State':'location'}
                     drop_field  = {'State':['India','State Unassigned']}
                     indi=self.csv2pandas("https://api.covid19india.org/csv/latest/states.csv",drop_field=drop_field,rename_columns=rename_dict,separator=',')
-                    columns_keeped=['Confirmed','Recovered','Deceased','Other','Tested']
+                    columns_keeped=['Deceased','Confirmed','Recovered','Other','Tested']
                     indi['location'] = indi['location'].apply(lambda x: x.replace('Andaman and Nicobar Islands','Andaman and Nicobar'))
                     locationvariant=self.geo.get_subregion_list()['variation_name_subregion'].to_list()
                     locationgeo=self.geo.get_subregion_list()['name_subregion'].to_list()
@@ -112,10 +111,7 @@ class DataBase(object):
                     indi['location'] = indi['location'].map(oldnew)
                     self.return_structured_pandas(indi,columns_keeped=columns_keeped)
                 elif self.db == 'covidtracking':
-                    self.db_world=False
                     info('USA, CovidTracking.com database selected... ...')
-                    self.geo = coge.GeoCountry('USA')
-                    self.geo_all = self.geo.get_subregion_list()['code_subregion'].to_list()
                     rename_dict={'state':'location',\
                             'death':'tot_death',\
                             'hospitalizedCumulative':'tot_hosp',\
@@ -134,9 +130,6 @@ class DataBase(object):
                     columns_keeped.remove('location') # is already expected
                     self.return_structured_pandas(ctusa,columns_keeped=columns_keeped)
                 elif self.db == 'spf':
-                    self.db_world=False
-                    self.geo = coge.GeoCountry('FRA') # not using dense geometry
-                    self.geo_all = self.geo.get_subregion_list()['code_subregion'].to_list()
                     info('SPF aka Sante Publique France database selected ...')
 
                     info('... Five differents db from SPF will be parsed ...')
@@ -256,10 +249,7 @@ class DataBase(object):
                     columns_keeped=list(rename_dict.values())+['tot_incid_hosp','tot_incid_rea','tot_incid_rad','tot_incid_dc','tot_P','tot_T']
                     self.return_structured_pandas(result,columns_keeped=columns_keeped) # with 'tot_dc' first
                 elif self.db == 'opencovid19':
-                    self.db_world=False
                     info('OPENCOVID19 selected ...')
-                    self.geo = coge.GeoCountry('FRA')
-                    self.geo_all = self.geo.get_subregion_list()['code_subregion'].to_list()
                     rename={'maille_code':'location'}
                     cast={'source_url':str,'source_archive':str,'source_type':str}
                     drop_field  = {'granularite':['pays','monde','region']}
@@ -285,11 +275,7 @@ class DataBase(object):
                         }
                     self.return_structured_pandas(opencovid19.rename(columns=dict_columns_keeped),columns_keeped=list(dict_columns_keeped.values())+['tot_'+c for c in column_to_integrate])
                 elif self.db == 'owid':
-                    self.db_world=True
                     info('OWID aka \"Our World in Data\" database selected ...')
-                    self.geo = coge.GeoManager('name')
-                    self.geo_all='world'
-
                     drop_field = {'location':['International','World']}
                     owid = self.csv2pandas("https://raw.githubusercontent.com/owid/covid-19-data/master/public/data/owid-covid-data.csv",
                     separator=',',drop_field=drop_field)

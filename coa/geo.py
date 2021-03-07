@@ -872,10 +872,17 @@ class GeoCountry():
             self._country_data = gpd.read_file(get_local_from_url(url,0)) # this is a geojson file
             self._country_data.rename(columns={\
                 'NAME_1':'name_subregion',\
-                'VARNAME_1':'name_region',\
+                'VARNAME_1':'variationname',\
                 'HASC_1':'code_subregion',\
                 },
                 inplace=True)
+            self._country_data['name_subregion']= self._country_data['name_subregion'].replace('Orissa','Odisha')
+            variationname=self._country_data['variationname'].to_list()
+            name_subregion=self._country_data['name_subregion'].to_list()
+            alllocationvariation=[ i+'|'+j if j != '' else i for i,j in zip(name_subregion,variationname)]
+            self._country_data['variation_name_subregion'] = self._country_data['name_subregion'].\
+                    replace(name_subregion,alllocationvariation)
+            self._country_data['name_region'] = self._country_data['name_subregion']
             self._country_data['code_region'] = self._country_data['code_subregion']
             self._country_data.drop(['ISO','NAME_0','ID_1','TYPE_1','ENGTYPE_1'],axis=1,inplace=True)
 

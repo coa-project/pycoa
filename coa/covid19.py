@@ -83,8 +83,33 @@ class DataBase(object):
                     self.geo = coge.GeoCountry('IND')
                     self.geo_all = self.geo.get_subregion_list()['code_subregion'].to_list()
                     rename_dict={'Date':'date','State':'location'}
-                    indi=self.csv2pandas("https://api.covid19india.org/csv/latest/states.csv",rename_columns=rename_dict,separator=',')
+                    drop_field  = {'State':['India','State Unassigned']}
+                    indi=self.csv2pandas("https://api.covid19india.org/csv/latest/states.csv",drop_field=drop_field,rename_columns=rename_dict,separator=',')
                     columns_keeped=['Confirmed','Recovered','Deceased','Other','Tested']
+                    indi['location'] = indi['location'].apply(lambda x: x.replace('Andaman and Nicobar Islands','Andaman and Nicobar'))
+                    locationvariant=self.geo.get_subregion_list()['variation_name_subregion'].to_list()
+                    locationgeo=self.geo.get_subregion_list()['name_subregion'].to_list()
+
+                    def fusion(pan,new,old):
+                        tmp=(pan.loc[pan.location.isin([new,old])].groupby('date').sum())
+                        tmp['location']=old
+                        tmp = tmp.reset_index()
+                        cols = tmp.columns.tolist()
+                        cols = cols[0:1] + cols[-1:] + cols[1:-1]
+                        tmp = tmp[cols]
+                        pan = pan.loc[~pan.location.isin([new,old])]
+                        pan = pan.append(tmp)
+                        return pan
+
+                    indi=fusion(indi,'Telangana','Andhra Pradesh')
+                    indi=fusion(indi,'Ladakh','Jammu and Kashmir')
+                    # change name according to json one
+                    oldnew={}
+                    for i in indi.location.unique():
+                        for k,l in zip(locationgeo,locationvariant):
+                            if l.find(i) == 0:
+                                oldnew[i]=k
+                    indi['location'] = indi['location'].map(oldnew)
                     self.return_structured_pandas(indi,columns_keeped=columns_keeped)
                 elif self.db == 'covidtracking':
                     self.db_world=False

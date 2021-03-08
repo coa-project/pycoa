@@ -84,7 +84,7 @@ class DataBase(object):
                     rename_dict={'Date':'date','State':'location'}
                     drop_field  = {'State':['India','State Unassigned']}
                     indi=self.csv2pandas("https://api.covid19india.org/csv/latest/states.csv",drop_field=drop_field,rename_columns=rename_dict,separator=',')
-                    columns_keeped=['Deceased','Confirmed','Recovered','Other','Tested']
+                    columns_keeped=['Deceased','Confirmed','Recovered','Tested'] # Removing 'Other' data, not identified
                     indi['location'] = indi['location'].apply(lambda x: x.replace('Andaman and Nicobar Islands','Andaman and Nicobar'))
                     locationvariant=self.geo.get_subregion_list()['variation_name_subregion'].to_list()
                     locationgeo=self.geo.get_subregion_list()['name_subregion'].to_list()

@@ -388,7 +388,7 @@ def plot(t,**kwargs):
 
 @decoplot
 def scrollmenu_plot(t,**kwargs):
-    fig = _cocoplot.scrolling_menu(t,**kwargs)
+    fig = _cocoplot.pycoa_scrollingmenu(t,**kwargs)
     show(fig)
 
 # ----------------------------------------------------------------------
@@ -531,8 +531,8 @@ def map(**kwargs):
     dateslider=kwargs.get('dateslider',None)
 
     if visu == 'bokeh':
-        return show(_cocoplot.bokeh_map(t,input_field,**kwargs))
+        return show(_cocoplot.pycoa_map(t,input_field,**kwargs))
     elif visu == 'folium':
-        return _cocoplot.map_folium(t,input_field,**kwargs)
+        return _cocoplot.pycoa_mapfolium(t,input_field,**kwargs)
     else:
         raise CoaTypeError('Waiting for a valid visualisation. So far: \'bokeh\' or \'folium\'.See help.')

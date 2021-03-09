@@ -126,6 +126,10 @@ class CocoDisplay():
         geopan = geopan.dropna().reset_index(drop=True)
         self.data = gpd.GeoDataFrame(geopan,crs="EPSG:4326")
         self.geopan = geopan
+        self.boundary_metropole=''
+        if self.dbld[self.database_name] == 'FRA':
+            list_dep_metro = info.get_subregions_from_region(name='Métropole')
+            self.boundary_metropole = self.data.loc[self.data.location.isin(list_dep_metro)]['geometry'].total_bounds
         self.boundary = self.data['geometry'].total_bounds
         self.location_geometry = self.data
         return self.data
@@ -1175,7 +1179,11 @@ class CocoDisplay():
         uniqloc = list(geopdwd_filter.codelocation.unique())
         geopdwd_filter = geopdwd_filter.drop(columns=['date','colors'])
 
-        minx, miny, maxx, maxy = self.boundary
+        if self.dbld[self.database_name] == 'FRA' and all([len(i) == 2 for i in geopdwd_filter.location.unique()]):
+            minx, miny, maxx, maxy = self.boundary_metropole
+            zoom = 3
+        else:
+            minx, miny, maxx, maxy = self.boundary
 
         msg = "(data from: {})".format(self.database_name)
         mapa = folium.Map(location=[ (maxy+miny)/2., (maxx+minx)/2.], zoom_start=zoom,
@@ -1312,13 +1320,12 @@ class CocoDisplay():
         geopdwd_filter = pd.merge(geolistmodified,geopdwd_filter,on='location')
 
 
-        #if not any([len(i) ==2 for i in geolistmodified.location.unique()]):
-        if self.dbld[self.database_name] == 'FRA' and all([len(i) == 2 for i in geolistmodified.location.unique()])==True:
-            minx, miny, maxx, maxy = geopdwd_filter['geometry'].total_bounds
+        if self.dbld[self.database_name] == 'FRA' and all([len(i) == 2 for i in geolistmodified.location.unique()]):
+            minx, miny, maxx, maxy = self.boundary_metropole
         else:
             minx, miny, maxx, maxy = self.boundary
-            (minx, miny) = CocoDisplay.wgs84_to_web_mercator((minx,miny))
-            (maxx, maxy) = CocoDisplay.wgs84_to_web_mercator((maxx,maxy))
+        (minx, miny) = CocoDisplay.wgs84_to_web_mercator((minx,miny))
+        (maxx, maxy) = CocoDisplay.wgs84_to_web_mercator((maxx,maxy))
 
         wmt=WMTSTileSource(
         url=dico['tile']

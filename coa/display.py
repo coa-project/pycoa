@@ -95,7 +95,7 @@ class CocoDisplay():
 
     def get_geodata(self):
         '''
-         Return a GeoDataFrame used in map display (see map_bokeh and map_folium)
+         Return a GeoDataFrame used in map display (see map and mapfolium)
          The output format is the following :
          geoid | location |  geometry (POLYGON or MULTIPOLYGON)
         '''
@@ -337,7 +337,7 @@ class CocoDisplay():
     @staticmethod
     def get_tile(tilename,which):
         if tilename == 'openstreet':
-            if which == 'map_folium':
+            if which == 'pycoa_mapfolium':
                 tile=r'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
             else:
                 tile=r'http://c.tile.openstreetmap.org/{Z}/{X}/{Y}.png'
@@ -687,7 +687,7 @@ class CocoDisplay():
         tabs = Tabs(tabs=panels)
         return tabs
     @decoplot
-    def scrolling_menu(self,mypandas,dico,input_field, hover_tool, ax_type,**kwargs):
+    def pycoa_scrollingmenu(self,mypandas,dico,input_field, hover_tool, ax_type,**kwargs):
         if dico['locsumall'] is not None:
             raise CoaKeyError('For coherence \'locsumall\' can not be called with scrolling_menu ...')
         tooltips='Date: @date{%F} <br>  $name: @$name'
@@ -807,7 +807,7 @@ class CocoDisplay():
             #geopdwd_filter = geopdwd_filter.drop(columns=['date'])
             geopdwd_filter = geopdwd_filter.reset_index(drop=True)
             uniqcodeloc = geopdwd_filter.codelocation.unique()
-            if func.__name__ == 'map_folium' or func.__name__ == 'bokeh_map':
+            if func.__name__ == 'pycoa_mapfolium' or func.__name__ == 'pycoa_map':
                 self.all_location_indb = self.location_geometry.location.unique()
                 geopdwd_filter = pd.merge(geopdwd_filter,self.location_geometry,on='location')
                 dico['tile'] = CocoDisplay.get_tile(dico['tile'],func.__name__)
@@ -1140,7 +1140,7 @@ class CocoDisplay():
         return tabs
 
     @decohistomap
-    def map_folium(self,input_field,date_slider ,dico,geopdwd,geopdwd_filter):
+    def pycoa_mapfolium(self,input_field,date_slider ,dico,geopdwd,geopdwd_filter):
         """Create a Folium map from a pandas input
         Folium limite so far:
             - scale format can not be changed (no way to use scientific notation)
@@ -1251,7 +1251,7 @@ class CocoDisplay():
         return mapa
 
     @decohistomap
-    def bokeh_map(self,input_field,date_slider,dico,geopdwd,geopdwd_filter):
+    def pycoa_map(self,input_field,date_slider,dico,geopdwd,geopdwd_filter):
         """Create a Bokeh map from a pandas input
         Keyword arguments
         -----------------

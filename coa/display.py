@@ -1273,6 +1273,7 @@ class CocoDisplay():
         else:
             geopdwd = geopdwd.rename(columns={'cases':input_field})
             geopdwd_filter = geopdwd_filter.rename(columns={'cases':input_field})
+        geopdwd_filter = gpd.GeoDataFrame(geopdwd_filter , geometry = geopdwd_filter.geometry,crs="EPSG:4326")
         uniqloc= list(geopdwd_filter.codelocation.unique())
         #geopdwd = geopdwd[['location','codelocation','geometry','date',input_field]]
         #geopdwd_filter =   geopdwd_filter[['location','codelocation','geometry',input_field]]
@@ -1303,15 +1304,21 @@ class CocoDisplay():
             else:
                geolistmodified[row['location']]=sg.MultiPolygon(new_poly)
 
+
         ng = pd.DataFrame(geolistmodified.items(), columns=['location', 'geometry'])
         geolistmodified=gpd.GeoDataFrame({'location':ng['location'],'geometry':gpd.GeoSeries(ng['geometry'])},crs="epsg:3857")
 
         geopdwd_filter = geopdwd_filter.drop(columns='geometry')
         geopdwd_filter = pd.merge(geolistmodified,geopdwd_filter,on='location')
 
-        minx, miny, maxx, maxy = self.boundary
-        (minx, miny) = CocoDisplay.wgs84_to_web_mercator((minx,miny))
-        (maxx, maxy) = CocoDisplay.wgs84_to_web_mercator((maxx,maxy))
+
+        #if not any([len(i) ==2 for i in geolistmodified.location.unique()]):
+        if self.dbld[self.database_name] == 'FRA' and all([len(i) == 2 for i in geolistmodified.location.unique()])==True:
+            minx, miny, maxx, maxy = geopdwd_filter['geometry'].total_bounds
+        else:
+            minx, miny, maxx, maxy = self.boundary
+            (minx, miny) = CocoDisplay.wgs84_to_web_mercator((minx,miny))
+            (maxx, maxy) = CocoDisplay.wgs84_to_web_mercator((maxx,maxy))
 
         wmt=WMTSTileSource(
         url=dico['tile']

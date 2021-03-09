@@ -1015,6 +1015,12 @@ class GeoCountry():
 
                         pr=pr.append(pr_metropole,ignore_index=True).append(pr_outremer,ignore_index=True)
 
+                    elif self.get_country()=='USA':
+                        usa_col=pr.columns.tolist()
+                        usa_col.remove('population_subregion') # Remove numeric column, if not, the dissolve does not work properly
+                        usa_col.remove('area_subregion') # idem
+                        pr=pr[usa_col]
+
                     pr['code_subregion']=pr.code_subregion.apply(lambda x: [x])
                     self._country_data_region=pr.dissolve(by=col_reg,aggfunc='sum').sort_values(by='code_region').reset_index()
                 return self._country_data_region

@@ -867,6 +867,7 @@ class GeoCountry():
                 },
                 inplace=True)
             self._country_data.drop(['prov_istat_code_num','reg_istat_code_num','prov_istat_code'],axis=1,inplace=True)
+
         # --- 'IND' case ---------------------------------------------------------------------------------------
         elif self._country == 'IND':
             self._country_data = gpd.read_file(get_local_from_url(url,0)) # this is a geojson file
@@ -950,16 +951,16 @@ class GeoCountry():
                 raise CoaTypeError("Name should be given as string.")
             if not name in self.get_region_list()['name_region'].to_list():
                 raise CoaWhereError ("The region "+name+" does not exist for country "+self.get_country()+". See get_region_list().")
-            cut=(self.get_data()['name_region']==name)
+            cut=(self.get_data(True)['name_region']==name)
 
         if code != None:
             if not isinstance(code,str):
                 raise CoaTypeError("Name should be given as string.")
             if not code in self.get_region_list()['code_region'].to_list():
                 raise CoaWhereError("The region "+code+" does not exist for country "+self.get_country()+". See get_region_list().")
-            cut=(self.get_data()['code_region']==code)
+            cut=(self.get_data(True)['code_region']==code)
 
-        return self.get_data()[cut]['code_subregion'].to_list()
+        return self.get_data(True)[cut]['code_subregion'].iloc[0]#.to_list()
 
     def get_subregions_from_list_of_region_names(self,l):
         """ Return the list of subregions according to list of region names given
@@ -996,6 +997,24 @@ class GeoCountry():
                         col.append('code_subregion') # to get the list of subregion in region
 
                     pr=self._country_data[col].copy()
+
+                    # Country specific management
+                    if self.get_country()=='FRA': # manage pseudo 'FRA' regions 'Métropole' and 'Outre-mer'
+                        metropole_codes=pr.code_region.astype(int)>=10
+                        outremer_codes=pr.code_region.astype(int)<10
+
+                        pr_metropole=pr[pr.code_region.astype(int)>=10].copy()
+                        pr_metropole['code_region']='100'
+                        pr_metropole['name_region']='Métropole'
+                        pr_metropole['flag_region']=''
+
+                        pr_outremer=pr[pr.code_region.astype(int)<10].copy()
+                        pr_outremer['code_region']='000'
+                        pr_outremer['name_region']='Outre-mer'
+                        pr_outremer['flag_region']=''
+
+                        pr=pr.append(pr_metropole,ignore_index=True).append(pr_outremer,ignore_index=True)
+
                     pr['code_subregion']=pr.code_subregion.apply(lambda x: [x])
                     self._country_data_region=pr.dissolve(by=col_reg,aggfunc='sum').sort_values(by='code_region').reset_index()
                 return self._country_data_region

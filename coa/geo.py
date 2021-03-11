@@ -678,14 +678,18 @@ class GeoCountry():
 
     # Assuming zip file here
     _country_info_dict = {'FRA':'https://github.com/coa-project/coadata/raw/main/coacache/public.opendatasoft.com_912711563.zip',\
-                    'USA':'https://alicia.data.socrata.com/api/geospatial/jhnu-yfrj?method=export&format=Original'
+                    'USA':'https://alicia.data.socrata.com/api/geospatial/jhnu-yfrj?method=export&format=Original',\
+                    'ITA':'https://raw.githubusercontent.com/openpolis/geojson-italy/master/geojson/limits_IT_provinces.geojson',\
+                    'IND':'https://raw.githubusercontent.com/deldersveld/topojson/master/countries/india/india-states.json'\
                     }
 
     _source_dict = {'FRA':{'Basics':_country_info_dict['FRA'],\
                     'Subregion Flags':'http://sticker-departement.com/',\
                     'Region Flags':'https://fr.wikipedia.org/w/index.php?title=R%C3%A9gion_fran%C3%A7aise&oldid=177269957'},\
                     'USA':{'Basics':_country_info_dict['USA'],\
-                    'Subregion informations':'https://en.wikipedia.org/wiki/List_of_states_and_territories_of_the_United_States'}
+                    'Subregion informations':'https://en.wikipedia.org/wiki/List_of_states_and_territories_of_the_United_States'},\
+                    'ITA':{'Basics':_country_info_dict['ITA']},\
+                    'IND':{'Basics':_country_info_dict['IND']},\
                     }
 
     def __init__(self,country=None,**kwargs):
@@ -719,12 +723,11 @@ class GeoCountry():
         self._country_data_subregion=None
 
         url=self._country_info_dict[country]
-        self._country_data = gpd.read_file('zip://'+get_local_from_url(url,0,'.zip')) # under the hypothesis this is a zip file
-
         # country by country, adapt the read file informations
 
         # --- 'FRA' case ---------------------------------------------------------------------------------------
         if self._country=='FRA':
+            self._country_data = gpd.read_file('zip://'+get_local_from_url(url,0,'.zip'))
 
             # adding a flag for subregion (departements)
             self._country_data['flag_subregion']=self._source_dict['FRA']['Subregion Flags']+'img/dept/sticker_plaque_immat_'+\
@@ -803,6 +806,7 @@ class GeoCountry():
 
         # --- 'USA' case ---------------------------------------------------------------------------------------
         elif self._country == 'USA':
+            self._country_data = gpd.read_file('zip://'+get_local_from_url(url,0,'.zip')) # under the hypothesis this is a zip file
             self._country_data.rename(columns={\
                 'STATE_NAME':'name_subregion',\
                 'STATE_ABBR':'code_subregion',\
@@ -852,10 +856,45 @@ class GeoCountry():
             if main_area == True:
                 self._country_data=self._country_data[~self._country_data['code_subregion'].isin(list_translation.keys())]
 
+        # --- 'ITA' case ---------------------------------------------------------------------------------------
+        elif self._country == 'ITA':
+            self._country_data = gpd.read_file(get_local_from_url(url,0)) # this is a geojson file
+            self._country_data.rename(columns={\
+                'prov_name':'name_subregion',\
+                'prov_acr':'code_subregion',\
+                'reg_name':'name_region',\
+                'reg_istat_code':'code_region',\
+                },
+                inplace=True)
+            self._country_data.drop(['prov_istat_code_num','reg_istat_code_num','prov_istat_code'],axis=1,inplace=True)
+
+        # --- 'IND' case ---------------------------------------------------------------------------------------
+        elif self._country == 'IND':
+            self._country_data = gpd.read_file(get_local_from_url(url,0)) # this is a geojson file
+            self._country_data.rename(columns={\
+                'NAME_1':'name_subregion',\
+                'VARNAME_1':'variationname',\
+                'HASC_1':'code_subregion',\
+                },
+                inplace=True)
+            self._country_data['name_subregion']= self._country_data['name_subregion'].replace('Orissa','Odisha')
+            variationname=self._country_data['variationname'].to_list()
+            name_subregion=self._country_data['name_subregion'].to_list()
+            alllocationvariation=[ i+'|'+j if j != '' else i for i,j in zip(name_subregion,variationname)]
+            self._country_data['variation_name_subregion'] = self._country_data['name_subregion'].\
+                    replace(name_subregion,alllocationvariation)
+            self._country_data['name_region'] = self._country_data['name_subregion']
+            self._country_data['code_region'] = self._country_data['code_subregion']
+            self._country_data.drop(['ISO','NAME_0','ID_1','TYPE_1','ENGTYPE_1','id'],axis=1,inplace=True)
+
+
     def get_source(self):
         """ Return informations about URL sources
         """
-        return self._source_dict
+        if self.get_country() != None:
+            return self._source_dict[self.get_country()]
+        else:
+            return self._source_dict
 
     def get_country(self):
         """ Return the current country used.
@@ -912,16 +951,16 @@ class GeoCountry():
                 raise CoaTypeError("Name should be given as string.")
             if not name in self.get_region_list()['name_region'].to_list():
                 raise CoaWhereError ("The region "+name+" does not exist for country "+self.get_country()+". See get_region_list().")
-            cut=(self.get_data()['name_region']==name)
+            cut=(self.get_data(True)['name_region']==name)
 
         if code != None:
             if not isinstance(code,str):
                 raise CoaTypeError("Name should be given as string.")
             if not code in self.get_region_list()['code_region'].to_list():
                 raise CoaWhereError("The region "+code+" does not exist for country "+self.get_country()+". See get_region_list().")
-            cut=(self.get_data()['code_region']==code)
+            cut=(self.get_data(True)['code_region']==code)
 
-        return self.get_data()[cut]['code_subregion'].to_list()
+        return self.get_data(True)[cut]['code_subregion'].iloc[0]#.to_list()
 
     def get_subregions_from_list_of_region_names(self,l):
         """ Return the list of subregions according to list of region names given
@@ -958,6 +997,30 @@ class GeoCountry():
                         col.append('code_subregion') # to get the list of subregion in region
 
                     pr=self._country_data[col].copy()
+
+                    # Country specific management
+                    if self.get_country()=='FRA': # manage pseudo 'FRA' regions 'Métropole' and 'Outre-mer'
+                        metropole_codes=pr.code_region.astype(int)>=10
+                        outremer_codes=pr.code_region.astype(int)<10
+
+                        pr_metropole=pr[pr.code_region.astype(int)>=10].copy()
+                        pr_metropole['code_region']='100'
+                        pr_metropole['name_region']='Métropole'
+                        pr_metropole['flag_region']=''
+
+                        pr_outremer=pr[pr.code_region.astype(int)<10].copy()
+                        pr_outremer['code_region']='000'
+                        pr_outremer['name_region']='Outre-mer'
+                        pr_outremer['flag_region']=''
+
+                        pr=pr.append(pr_metropole,ignore_index=True).append(pr_outremer,ignore_index=True)
+
+                    elif self.get_country()=='USA':
+                        usa_col=pr.columns.tolist()
+                        usa_col.remove('population_subregion') # Remove numeric column, if not, the dissolve does not work properly
+                        usa_col.remove('area_subregion') # idem
+                        pr=pr[usa_col]
+
                     pr['code_subregion']=pr.code_subregion.apply(lambda x: [x])
                     self._country_data_region=pr.dissolve(by=col_reg,aggfunc='sum').sort_values(by='code_region').reset_index()
                 return self._country_data_region

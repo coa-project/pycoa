@@ -42,19 +42,16 @@ from functools import wraps
 import numpy as np
 from bokeh.io import show, output_notebook
 
-from coa.tools import kwargs_test,extract_dates
+from coa.tools import kwargs_test,extract_dates,get_db_list_dict
 import coa.covid19 as coco
 from coa.error import *
 import coa.display as cd
+import coa._version
 
 output_notebook(hide_banner=True)
 
 # --- Needed global private variables ----------------------------------
-_listwhom=['jhu',    # John Hopkins University first base, default
-            'owid', # Our World in Data
-            'jhu-usa',
-            'spf',   # Sante publique France
-            'opencovid19'] #  see data.gouv.fr
+_listwhom=list(get_db_list_dict().keys())
 
 if 'coa_db' in __builtins__.keys():
     if not  __builtins__['coa_db'] in _listwhom:
@@ -77,8 +74,17 @@ _listvisu=['bokeh','folium']
 # --- Front end functions ----------------------------------------------
 
 # ----------------------------------------------------------------------
+# --- getversion() -----------------------------------------------------
+# ----------------------------------------------------------------------
+def getversion():
+    """Return the current running version of pycoa.
+    """
+    return coa._version.__version__
+
+# ----------------------------------------------------------------------
 # --- listoutput() -----------------------------------------------------
 # ----------------------------------------------------------------------
+
 def listoutput():
     """Return the list of currently available output types for the
     get() function. The first one is the default output given if
@@ -273,7 +279,6 @@ def get(**kwargs):
         when_beg = db_first_date
     if when_end > db_last_date:
         when_end=db_last_date
-
     # when cut
     pandy=pandy[(pandy.date>=when_beg) & (pandy.date<=when_end)]
     pandy.reset_index()
@@ -383,7 +388,7 @@ def plot(t,**kwargs):
 
 @decoplot
 def scrollmenu_plot(t,**kwargs):
-    fig = _cocoplot.scrolling_menu(t,**kwargs)
+    fig = _cocoplot.pycoa_scrollingmenu(t,**kwargs)
     show(fig)
 
 # ----------------------------------------------------------------------
@@ -428,7 +433,6 @@ def hist(**kwargs):
     #               Warning : this coud be time consuming when one use it with map bokeh
     #               preferable to use this option with folium map
     #"""
-    
     kwargs_test(kwargs,['where','what','which','whom','when','input','input_field','bins','title',
                         'typeofhist','option'],
             'Bad args used in the pycoa.hist() function.')
@@ -527,8 +531,8 @@ def map(**kwargs):
     dateslider=kwargs.get('dateslider',None)
 
     if visu == 'bokeh':
-        return show(_cocoplot.bokeh_map(t,input_field,**kwargs))
+        return show(_cocoplot.pycoa_map(t,input_field,**kwargs))
     elif visu == 'folium':
-        return _cocoplot.map_folium(t,input_field,**kwargs)
+        return _cocoplot.pycoa_mapfolium(t,input_field,**kwargs)
     else:
         raise CoaTypeError('Waiting for a valid visualisation. So far: \'bokeh\' or \'folium\'.See help.')

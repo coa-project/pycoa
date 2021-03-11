@@ -16,10 +16,9 @@ An interface module to easily plot pycoa data with bokeh
 
 """
 
-from coa.tools import kwargs_test,check_valid_date,extract_dates,info,verb
+from coa.tools import kwargs_test,check_valid_date,extract_dates,info,verb,get_db_list_dict
 import coa.geo as coge
 from coa.geo import GeoManager as gm
-
 from coa.error import *
 
 import math
@@ -75,6 +74,7 @@ class CocoDisplay():
     def __init__(self,db=None):
         verb("Init of CocoDisplay() with db="+str(db))
         self.database_name = db
+        self.dbld = get_db_list_dict()
 
         a=map(list, zip(Paired[10], Set2[8],Set3[12]))
         chain = itertools.chain(*a)
@@ -95,39 +95,41 @@ class CocoDisplay():
 
     def get_geodata(self):
         '''
-         Return a GeoDataFrame used in map display (see map_bokeh and map_folium)
+         Return a GeoDataFrame used in map display (see map and mapfolium)
          The output format is the following :
          geoid | location |  geometry (POLYGON or MULTIPOLYGON)
         '''
         geopan = gpd.GeoDataFrame()
-        if self.database_name == 'spf' or self.database_name == 'opencovid19' or self.database_name == 'jhu-usa':
-            if self.database_name == 'jhu-usa':
-                country = 'USA'
+        try:
+            if self.dbld[self.database_name] != 'WW' :
+                country = self.dbld[self.database_name]
+                info = coge.GeoCountry(country,dense_geometry=False)
+                geopan = info.get_subregion_list()[['code_subregion','name_subregion','geometry']]
+                geopan = geopan.rename(columns={'code_subregion':'location'})
             else:
-                country = 'FRA'
-            info = coge.GeoCountry(country,dense_geometry=False)
-            geopan = info.get_subregion_list()[['code_subregion','name_subregion','geometry']]
-            geopan = geopan.rename(columns={'code_subregion':'location'})
-        elif self.database_name == 'jhu' or self.database_name == 'owid':
-            info = coge.GeoInfo()
+                info = coge.GeoInfo()
 
-            geom=info.get_GeoManager()
-            lstd=geom.get_standard()
-            geom.set_standard('name')
+                geom=info.get_GeoManager()
+                lstd=geom.get_standard()
+                geom.set_standard('name')
 
-            allcountries = geom.get_GeoRegion().get_countries_from_region('world')
-            geopan['location'] = [geom.to_standard(c)[0] for c in allcountries]
+                allcountries = geom.get_GeoRegion().get_countries_from_region('world')
+                geopan['location'] = [geom.to_standard(c)[0] for c in allcountries]
 
-            geom.set_standard(lstd)
-            # restore standard
+                geom.set_standard(lstd)
+                # restore standard
 
-            geopan = info.add_field(field=['geometry'],input=geopan ,geofield='location')
-            geopan = geopan[geopan.location != 'Antarctica']
-        else:
+                geopan = info.add_field(field=['geometry'],input=geopan ,geofield='location')
+                geopan = geopan[geopan.location != 'Antarctica']
+        except:
             raise CoaTypeError('What data base are you looking for ?')
         geopan = geopan.dropna().reset_index(drop=True)
         self.data = gpd.GeoDataFrame(geopan,crs="EPSG:4326")
         self.geopan = geopan
+        self.boundary_metropole=''
+        if self.dbld[self.database_name] == 'FRA':
+            list_dep_metro = info.get_subregions_from_region(name='Métropole')
+            self.boundary_metropole = self.data.loc[self.data.location.isin(list_dep_metro)]['geometry'].total_bounds
         self.boundary = self.data['geometry'].total_bounds
         self.location_geometry = self.data
         return self.data
@@ -192,9 +194,9 @@ class CocoDisplay():
                         else:
                             mypandascountry=sub
                 mypandas =  mypandascountry
-            if self.database_name == 'spf' or self.database_name == 'opencovid19' or self.database_name == 'jhu-usa':
+            if self.dbld[self.database_name] != 'WW':
                 pd_name_displayed = self.geopan[['location','name_subregion']]
-                maskcountries = mypandas['codelocation'].apply(lambda x : True if len(x) == 2 or len(x) == 3 else False)
+                maskcountries = mypandas['codelocation'].apply(lambda x : True if len(x) == 2 or len(x) == 3 or len(x) == 5 else False)
                 mypandassumall = mypandas[~maskcountries]
                 mypandascountry = mypandas[maskcountries]
                 if not mypandascountry.empty:
@@ -204,7 +206,6 @@ class CocoDisplay():
                     if not mypandassumall.empty:
                         mypandascountry=mypandascountry.append(mypandassumall)
                     mypandas = mypandascountry
-
             else:
                 maskcountries = mypandas['codelocation'].apply(lambda x : True if len(x) == 3 else False)
                 mypandassumall = mypandas[~maskcountries]
@@ -238,6 +239,13 @@ class CocoDisplay():
 
             if input_dico['when_end'] == '':
                 input_dico['when_end'] = mypandas.date.max()
+
+            if not isinstance(input_dico['when_beg'],dt.date):
+                raise CoaNoData("With your current cuts, there are no data to plot.")
+
+            if input_dico['when_end'] <= input_dico['when_beg']:
+                print('Requested date below available one, take',input_dico['when_beg'])
+                input_dico['when_end'] = input_dico['when_beg']
 
         if kwargs.get('plot_last_date',None) == True:
             title_temporal =  ' (at ' + input_dico['when_end'].strftime('%d/%m/%Y') + ')'
@@ -287,7 +295,6 @@ class CocoDisplay():
         input_dico['titlebar']=titlebar
         input_dico['var_displayed']=var_displayed
         input_dico['data_base'] = self.database_name
-
         return mypandas, input_dico
 
     def get_tiles(self):
@@ -317,18 +324,15 @@ class CocoDisplay():
 ###################### BEGIN Static Methods ##################
     @staticmethod
     def return_standard_location(db,name):
-        if db == 'spf' or db == 'opencovid19' or db == 'jhu-usa':
-            if db == 'jhu-usa':
-                country = 'USA'
-            else:
-                country = 'FRA'
+        if self.dbld[db] != 'WW':
+            country=self.dbld[db]
             info = coge.GeoCountry(country,dense_geometry=False)
-            if name == 'FRA' or name == 'USA':
+            if name in self.dbld.values():
                 location = info.get_subregion_list()['code_subregion'].to_list()
             else:
                 #location = info.get_subregions_from_list_of_region_names(name)
                 location = info.get_subregions_from_region(name=name)
-        elif db == 'jhu' or db == 'owid':
+        else:
             geo=coge.GeoManager('name')
             geo.set_standard('name')
             location=(geo.to_standard(name,output='list',interpret_region=True))
@@ -337,7 +341,7 @@ class CocoDisplay():
     @staticmethod
     def get_tile(tilename,which):
         if tilename == 'openstreet':
-            if which == 'map_folium':
+            if which == 'pycoa_mapfolium':
                 tile=r'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
             else:
                 tile=r'http://c.tile.openstreetmap.org/{Z}/{X}/{Y}.png'
@@ -687,7 +691,7 @@ class CocoDisplay():
         tabs = Tabs(tabs=panels)
         return tabs
     @decoplot
-    def scrolling_menu(self,mypandas,dico,input_field, hover_tool, ax_type,**kwargs):
+    def pycoa_scrollingmenu(self,mypandas,dico,input_field, hover_tool, ax_type,**kwargs):
         if dico['locsumall'] is not None:
             raise CoaKeyError('For coherence \'locsumall\' can not be called with scrolling_menu ...')
         tooltips='Date: @date{%F} <br>  $name: @$name'
@@ -784,7 +788,7 @@ class CocoDisplay():
             mypandas=(pd.merge(mypandas, country_col, on='location'))
 
             geopdwd = mypandas
-            geopdwd =  geopdwd.loc[geopdwd.date >= dt.date(2020,3,15)] # before makes pb in horizohisto
+            #geopdwd =  geopdwd.loc[geopdwd.date >= dt.date(2020,3,15)] # before makes pb in horizohisto
             geopdwd = geopdwd.sort_values(by=input_field,ascending=False)
 
             geopdwd=geopdwd.dropna(subset=[input_field])
@@ -793,15 +797,21 @@ class CocoDisplay():
             geopdwd = geopdwd.rename(columns={input_field:'cases'})
             orientation = kwargs.get('orientation', 'horizontal')
 
-            date_slider = DateSlider(title="Date: ", start=geopdwd.date.min(), end=dico['when_end'],
-            value=dico['when_end'], step=24*60*60*1000,orientation=orientation)
+            if dico['when_end'] <= geopdwd.date.min():
+                started=geopdwd.date.min()
+                ended=geopdwd.date.min() + dt.timedelta(days=1)
+            else:
+                started=geopdwd.date.min()
+                ended=dico['when_end']
+            date_slider = DateSlider(title="Date: ", start=started, end=ended,
+            value=ended, step=24*60*60*1000,orientation=orientation)
             geopdwd_filter = geopdwd.copy()
             wanted_date = date_slider.value_as_datetime.date()
             geopdwd_filter = geopdwd_filter.loc[geopdwd_filter.date == wanted_date]
             #geopdwd_filter = geopdwd_filter.drop(columns=['date'])
             geopdwd_filter = geopdwd_filter.reset_index(drop=True)
             uniqcodeloc = geopdwd_filter.codelocation.unique()
-            if func.__name__ == 'map_folium' or func.__name__ == 'bokeh_map':
+            if func.__name__ == 'pycoa_mapfolium' or func.__name__ == 'pycoa_map':
                 self.all_location_indb = self.location_geometry.location.unique()
                 geopdwd_filter = pd.merge(geopdwd_filter,self.location_geometry,on='location')
                 dico['tile'] = CocoDisplay.get_tile(dico['tile'],func.__name__)
@@ -1134,7 +1144,7 @@ class CocoDisplay():
         return tabs
 
     @decohistomap
-    def map_folium(self,input_field,date_slider,dico,geopdwd,geopdwd_filter):
+    def pycoa_mapfolium(self,input_field,date_slider ,dico,geopdwd,geopdwd_filter):
         """Create a Folium map from a pandas input
         Folium limite so far:
             - scale format can not be changed (no way to use scientific notation)
@@ -1162,14 +1172,18 @@ class CocoDisplay():
             geopdwd = geopdwd.rename(columns={'cases':input_field})
             geopdwd_filter = geopdwd_filter.rename(columns={'cases':input_field})
         zoom = 2
-        if self.database_name == 'spf' or  self.database_name == 'opencovid19' or self.database_name == 'jhu-usa':
+        if self.dbld[self.database_name] != 'WW':
             self.boundary = geopdwd_filter['geometry'].total_bounds
             name_location_displayed = 'name_subregion'
             zoom = 2
         uniqloc = list(geopdwd_filter.codelocation.unique())
         geopdwd_filter = geopdwd_filter.drop(columns=['date','colors'])
 
-        minx, miny, maxx, maxy = self.boundary
+        if self.dbld[self.database_name] == 'FRA' and all([len(i) == 2 for i in geopdwd_filter.location.unique()]):
+            minx, miny, maxx, maxy = self.boundary_metropole
+            zoom = 3
+        else:
+            minx, miny, maxx, maxy = self.boundary
 
         msg = "(data from: {})".format(self.database_name)
         mapa = folium.Map(location=[ (maxy+miny)/2., (maxx+minx)/2.], zoom_start=zoom,
@@ -1245,7 +1259,7 @@ class CocoDisplay():
         return mapa
 
     @decohistomap
-    def bokeh_map(self,input_field,date_slider,dico,geopdwd,geopdwd_filter):
+    def pycoa_map(self,input_field,date_slider,dico,geopdwd,geopdwd_filter):
         """Create a Bokeh map from a pandas input
         Keyword arguments
         -----------------
@@ -1267,12 +1281,13 @@ class CocoDisplay():
         else:
             geopdwd = geopdwd.rename(columns={'cases':input_field})
             geopdwd_filter = geopdwd_filter.rename(columns={'cases':input_field})
+        geopdwd_filter = gpd.GeoDataFrame(geopdwd_filter , geometry = geopdwd_filter.geometry,crs="EPSG:4326")
         uniqloc= list(geopdwd_filter.codelocation.unique())
         #geopdwd = geopdwd[['location','codelocation','geometry','date',input_field]]
         #geopdwd_filter =   geopdwd_filter[['location','codelocation','geometry',input_field]]
 
-        #geopdwd = geopdwd.sort_values(by=['location','date'],ascending=False)
-        #geopdwd = geopdwd.drop(columns=['date'])
+        geopdwd = geopdwd.sort_values(by=['location','date'],ascending=False)
+        geopdwd = geopdwd.drop(columns=['date'])
         geopdwd_filter = geopdwd_filter.drop(columns=['date','colors'])
 
         new_poly=[]
@@ -1297,41 +1312,44 @@ class CocoDisplay():
             else:
                geolistmodified[row['location']]=sg.MultiPolygon(new_poly)
 
+
         ng = pd.DataFrame(geolistmodified.items(), columns=['location', 'geometry'])
         geolistmodified=gpd.GeoDataFrame({'location':ng['location'],'geometry':gpd.GeoSeries(ng['geometry'])},crs="epsg:3857")
 
         geopdwd_filter = geopdwd_filter.drop(columns='geometry')
         geopdwd_filter = pd.merge(geolistmodified,geopdwd_filter,on='location')
 
-        minx, miny, maxx, maxy = self.boundary
+
+        if self.dbld[self.database_name] == 'FRA' and all([len(i) == 2 for i in geolistmodified.location.unique()]):
+            minx, miny, maxx, maxy = self.boundary_metropole
+        else:
+            minx, miny, maxx, maxy = self.boundary
         (minx, miny) = CocoDisplay.wgs84_to_web_mercator((minx,miny))
         (maxx, maxy) = CocoDisplay.wgs84_to_web_mercator((maxx,maxy))
 
         wmt=WMTSTileSource(
         url=dico['tile']
-        #attribution='<a href=\"http://pycoa.fr\"> ©pycoa.fr </a>'+msg + '- Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         )
         standardfig = self.standardfig(x_range=(minx,maxx), y_range=(miny,maxy),
         x_axis_type="mercator", y_axis_type="mercator",title=dico['titlebar'],copyrightposition='left')
         standardfig.add_tile(wmt)
         min_col,max_col=CocoDisplay.min_max_range(np.nanmin(geopdwd_filter[input_field]),np.nanmax(geopdwd_filter[input_field]))
-        color_mapper = LinearColorMapper(palette=Viridis256, low = 100, high = max_col, nan_color = '#ffffff')
+        color_mapper = LinearColorMapper(palette=Viridis256, low = min_col, high = max_col, nan_color = '#ffffff')
         color_bar = ColorBar(color_mapper=color_mapper, label_standoff=4,
                             border_line_color=None,location = (0,0), orientation = 'horizontal', ticker=BasicTicker())
         color_bar.formatter = BasicTickFormatter(use_scientific=True,precision=1,power_limit_low=int(max_col))
-
         standardfig.add_layout(color_bar, 'below')
         json_data = json.dumps(json.loads(geopdwd_filter.to_json()))
         geopdwd_filter = GeoJSONDataSource(geojson = json_data)
         if date_slider :
             allcases_location, allcases_dates=pd.DataFrame(),pd.DataFrame()
             allcases_location = (geopdwd.groupby('location')['cases'].apply(list))
-            geopdwd_tmp = geopdwd.drop_duplicates(subset=['geometry'])
+            geopdwd_tmp = geopdwd.drop_duplicates(subset=['codelocation'])
             geopdwd_tmp = geopdwd_tmp.drop(columns='cases')
             geopdwd_tmp = pd.merge(geopdwd_tmp,allcases_location,on='location')
+            geopdwd_tmp = pd.merge(geolistmodified,geopdwd_tmp,on='location')
             json_data = json.dumps(json.loads(geopdwd_tmp.to_json()))
             geopdwd_tmp = GeoJSONDataSource(geojson = json_data)
-
             callback = CustomJS(args=dict(source=geopdwd_tmp,
                                           source_filter=geopdwd_filter,
                                           date_slider=date_slider),
@@ -1364,7 +1382,6 @@ class CocoDisplay():
                         source_filter.change.emit();
                     """)
             date_slider.js_on_change('value', callback)
-
         standardfig.xaxis.visible = False
         standardfig.yaxis.visible = False
         standardfig.xgrid.grid_line_color = None
@@ -1383,6 +1400,7 @@ class CocoDisplay():
         point_policy="follow_mouse"))#,PanTool())
         if date_slider:
             standardfig = column(date_slider,standardfig)
+
         return standardfig
 ##################### END HISTOS/MAPS##################
 

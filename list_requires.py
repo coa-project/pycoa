@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Project : PyCoA - Copyright ©pycoa.fr
-Date :    april-december 2020
+Date :    april 2020 - march 2021
 Authors : Olivier Dadoun, Julien Browaeys, Tristan Beau
 License: See joint LICENSE file
 

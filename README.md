@@ -1,6 +1,6 @@
-#  PyCoA release v2.0 <img src="https://github.com/coa-project/coa-project.github.io/blob/main/fig/logo-anime.gif" width="140px" align=bottom > 
+#  PyCoA release v2 <img src="https://github.com/coa-project/coa-project.github.io/blob/main/fig/logo-anime.gif" width="140px" align=bottom > 
 
-_April 2020/February 2021_
+_April 2020/March 2021_
 
 [<img src="https://github.com/coa-project/coa-project.github.io/raw/main/fig/UK.png" height="14px" alt="UK flag"> English  version ](https://github.com/coa-project/pycoa)
 /
@@ -37,7 +37,7 @@ cf.hist(which='total_vaccinations') # default is for all countries
 
 Since the `v2.0` version, PyCoA manages also local data like
 [JHU-USA](https://coronavirus.jhu.edu/) for the United-States, 
-[SPF](https://www.santepubliquefrance.fr/dossiers/coronavirus-covid-19) or [OpenCovid19](https://github.com/opencovid19-fr) for France. Then we get plots like the ones just below.
+[SPF](https://www.santepubliquefrance.fr/dossiers/coronavirus-covid-19) or [OpenCovid19](https://github.com/opencovid19-fr) for France. Then we get plots like the ones just below. Other databases has been added for Italy or India.
 
 |SPF data | JHU-USA data |
 |------------|-------------|

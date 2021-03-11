@@ -109,7 +109,6 @@ class DataBase(object):
                             if l.find(i) == 0:
                                 oldnew[i]=k
                     indi['location'] = indi['location'].map(oldnew)
-                    print(indi)
                     self.return_structured_pandas(indi,columns_keeped=columns_keeped)
                 elif self.db == 'covidtracking':
                     info('USA, CovidTracking.com database selected... ...')

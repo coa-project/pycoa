@@ -79,8 +79,8 @@ class DataBase(object):
                         rename_columns=rename_dict,separator=',')
                     columns_keeped=['tot_casi']
                     self.return_structured_pandas(dpc1,columns_keeped=columns_keeped)
-                elif self.db == 'covid19-india':
-                    info('COVID19-India database selected ...')
+                elif self.db == 'covid19india':
+                    info('COVID19India database selected ...')
                     rename_dict={'Date':'date','State':'location'}
                     drop_field  = {'State':['India','State Unassigned']}
                     indi=self.csv2pandas("https://api.covid19india.org/csv/latest/states.csv",drop_field=drop_field,rename_columns=rename_dict,separator=',')
@@ -109,6 +109,7 @@ class DataBase(object):
                             if l.find(i) == 0:
                                 oldnew[i]=k
                     indi['location'] = indi['location'].map(oldnew)
+                    print(indi)
                     self.return_structured_pandas(indi,columns_keeped=columns_keeped)
                 elif self.db == 'covidtracking':
                     info('USA, CovidTracking.com database selected... ...')
@@ -462,7 +463,7 @@ class DataBase(object):
         if encoding:
             encoding = encoding
         pandas_db = pandas.read_csv(get_local_from_url(url,7200),sep=separator,dtype=dico_cast, encoding = encoding,
-            keep_default_na=False,na_values='' ) # cached for 2 hours
+            keep_default_na=False,na_values='') # cached for 2 hours
         #pandas_db = pandas.read_csv(self.database_url,sep=separator,dtype=dico_cast, encoding = encoding )
         constraints = kwargs.get('constraints', None)
         rename_columns = kwargs.get('rename_columns', None)

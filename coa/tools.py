@@ -52,7 +52,7 @@ _db_list_dict = {'jhu':'WW',\
     'opencovid19':'FRA',\
     'dpc':'ITA',\
     'covidtracking':'USA',\
-    'covid19-india':'IND' }
+    'covid19india':'IND' }
 
 # ----------------------------------------------------
 # --- Usefull functions for pycoa --------------------

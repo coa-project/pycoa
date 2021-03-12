@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """Project : PyCoA - Copyright ©pycoa.fr
-Date :    april 2020 - march 2021
+Date :    april 2020 - february 2021
 Authors : Olivier Dadoun, Julien Browaeys, Tristan Beau
 License: See joint LICENSE file
 
@@ -12,7 +12,7 @@ This is the PyCoA tools module to be considered as a swiss knife list of functio
 One find function for
  - verbose or warning mode management.
  - kwargs analysis
- - filling nan values of given pandas 
+ - filling nan values of given pandas
  - date parsing validation
  - automatic file caching system
 
@@ -52,7 +52,7 @@ _db_list_dict = {'jhu':'WW',\
     'opencovid19':'FRA',\
     'dpc':'ITA',\
     'covidtracking':'USA',\
-    'covid19india':'IND' }
+    'covid19-india':'IND' }
 
 # ----------------------------------------------------
 # --- Usefull functions for pycoa --------------------

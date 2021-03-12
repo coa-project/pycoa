@@ -37,7 +37,6 @@ Basic usage
 
 # --- Imports ----------------------------------------------------------
 import pandas as pd
-import inspect
 from functools import wraps
 import numpy as np
 from bokeh.io import show, output_notebook
@@ -45,7 +44,6 @@ from bokeh.io import show, output_notebook
 from coa.tools import kwargs_test,extract_dates,get_db_list_dict
 import coa.covid19 as coco
 from coa.error import *
-import coa.display as cd
 import coa._version
 
 output_notebook(hide_banner=True)

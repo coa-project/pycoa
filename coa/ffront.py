@@ -14,8 +14,7 @@ It should be used just like the coa.front file.
 """
 
 import builtins
-__builtins__["coa_db"]='spf'
+__builtins__["coa_db"] = 'spf'
 
 from coa.front import *
 import coa.front
-

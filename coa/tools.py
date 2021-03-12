@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """Project : PyCoA - Copyright ©pycoa.fr
-Date :    april 2020 - february 2021
+Date :    april 2020 - march 2021
 Authors : Olivier Dadoun, Julien Browaeys, Tristan Beau
 License: See joint LICENSE file
 
@@ -32,7 +32,7 @@ from getpass import getuser
 from zlib import crc32
 from urllib.parse import urlparse
 
-from coa.error import CoaKeyError,CoaTypeError,CoaConnectionError,CoaNotManagedError
+from coa.error import CoaKeyError, CoaTypeError, CoaConnectionError, CoaNotManagedError
 
 # testing if coadata is available
 import importlib
@@ -45,14 +45,14 @@ if _coacache_module_info != None:
 _verbose_mode = 1 # default
 
 # Known db
-_db_list_dict = {'jhu':'WW',\
-    'owid':'WW',\
-    'jhu-usa':'USA',\
-    'spf':'FRA',\
-    'opencovid19':'FRA',\
-    'dpc':'ITA',\
-    'covidtracking':'USA',\
-    'covid19-india':'IND' }
+_db_list_dict = {'jhu': 'WW',
+    'owid': 'WW',
+    'jhu-usa': 'USA',
+    'spf': 'FRA',
+    'opencovid19': 'FRA',
+    'dpc': 'ITA',
+    'covidtracking': 'USA',
+    'covid19india': 'IND'}
 
 # ----------------------------------------------------
 # --- Usefull functions for pycoa --------------------
@@ -88,7 +88,7 @@ def verb(*args):
     if _verbose_mode > 1:
         print(*args)
 
-def kwargs_test(given_args,expected_args,error_string):
+def kwargs_test(given_args, expected_args, error_string):
     """Test that the list of kwargs is compatible with expected args. If not
     it raises a CoaKeyError with error_string.
     """
@@ -104,10 +104,10 @@ def kwargs_test(given_args,expected_args,error_string):
 
     return True
 
-def fill_missing_dates(p,date_field='date',loc_field='location',d1=None,d2=None):
+def fill_missing_dates(p, date_field='date', loc_field='location', d1=None, d2=None):
     """Filling the input pandas dataframe p with missing dates
     """
-    if not isinstance(p,pandas.DataFrame):
+    if not isinstance(p, pandas.DataFrame):
         raise CoaTypeError("Expecting input p as a pandas dataframe.")
     if not date_field in p.columns:
         raise CoaKeyError("The date_field is not a proper column of input pandas dataframe.")
@@ -139,7 +139,7 @@ def fill_missing_dates(p,date_field='date',loc_field='location',d1=None,d2=None)
         pp3['location'] = pp3['location'].fillna(l)  #pp3['location'].fillna(method='bfill')
         pp3['codelocation'] = pp3['codelocation'].fillna(method='bfill')
         pp3['codelocation'] = pp3['codelocation'].fillna(method='ffill')
-        pfill=pandas.concat([pfill,pp3])
+        pfill=pandas.concat([pfill, pp3])
     pfill.reset_index(inplace=True)
     return pfill
 

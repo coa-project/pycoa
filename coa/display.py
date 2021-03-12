@@ -59,18 +59,13 @@ import datetime as dt
 width_height_default = [500, 380]
 
 
-class CocoDisplay():
+class CocoDisplay:
     def __init__(self, db=None):
         verb("Init of CocoDisplay() with db=" + str(db))
         self.database_name = db
         self.dbld = get_db_list_dict()
-
-        a = map(list, zip(Paired[10], Set2[8], Set3[12]))
-        chain = itertools.chain(*a)
-        # self.colors=[Viridis256[i] for i in random.sample(range(256),30)]
         self.lcolors = Category20[20]
         self.scolors = Category10[5]
-
         self.plot_width = width_height_default[0]
         self.plot_height = width_height_default[1]
         self.geom = []
@@ -85,11 +80,11 @@ class CocoDisplay():
         self.location_geometry = self.get_geodata()
 
     def get_geodata(self):
-        '''
+        """
          Return a GeoDataFrame used in map display (see map and mapfolium)
          The output format is the following :
          geoid | location |  geometry (POLYGON or MULTIPOLYGON)
-        '''
+        """
         geopan = gpd.GeoDataFrame()
         try:
             if self.dbld[self.database_name] != 'WW':
@@ -126,13 +121,13 @@ class CocoDisplay():
         return self.data
 
     def standard_input(self, mypandas, input_field=None, **kwargs):
-        '''
+        """
         Parse a standard input, return :
             - pandas: with location keyword (eventually force a column named 'where' to 'location')
             - dico:
                 * keys = [plot_width, plot_width, titlebar, when, title_temporal,bins, what, which, var_displayed]
         Note that method used only the needed variables, some of them are useless
-        '''
+        """
         input_dico = {}
         if 'where' in mypandas.columns:
             mypandas = mypandas.rename(columns={'where': 'location'})
@@ -178,8 +173,8 @@ class CocoDisplay():
                         if type(list_list_loc) == str:
                             list_list_loc = [list_list_loc]
                         sub.insert(0, 'location', list_list_loc[0])
-                        for i in list_list_loc[1:]:
-                            copypandas['location'] = i
+                        for j in list_list_loc[1:]:
+                            copypandas['location'] = j
                             sub = sub.append(copypandas)
                         if not mypandascountry.empty:
                             mypandascountry = mypandascountry.append(sub)
@@ -297,7 +292,7 @@ class CocoDisplay():
 
     def standardfig(self, dbname=None, copyrightposition='left', **kwargs):
         """
-         Create a standard Bokeh figure, with pycoa.frlabel,used in all the bokeh charts
+         Create a standard Bokeh figure, with pycoa.fr label, used in all the bokeh charts
          """
         fig = figure(**kwargs, plot_width=self.plot_width, plot_height=self.plot_height,
                      tools=['save', 'box_zoom,reset'], toolbar_location="right")
@@ -371,19 +366,22 @@ class CocoDisplay():
 
     @staticmethod
     def bokeh_legend(bkfigure):
-        toggle_legend_js = CustomJS(args=dict(leg=bkfigure.legend[0]), code="""
-                            if (leg.visible) {
-                            leg.visible = false
-                            }
-                            else {
-                            leg.visible = true
-                            }
-                            """)
+        toggle_legend_js = CustomJS(args=dict(leg=bkfigure.legend[0]), \
+                                    code="""
+        if(leg.visible) 
+        {
+            leg.visible = false;
+        }
+        else 
+        {
+            leg.visible = true;
+        }
+        """)
         bkfigure.js_on_event(events.DoubleTap, toggle_legend_js)
 
     @staticmethod
     def min_max_range(a_min, a_max):
-        """Return a cleverly rounded min and max giving raw min and raw max of data.
+        """ Return a cleverly rounded min and max giving raw min and raw max of data.
         Usefull for hist range and colormap
         """
         min_p = 0
@@ -430,9 +428,9 @@ class CocoDisplay():
 
     @staticmethod
     def save_map2png(map=None, pngfile='map.png'):
-        '''
+        """
         Save map as png geckodriver and PIL packages are needed
-        '''
+        """
         size = width_height_default[0], width_height_default[1]
         if pngfile:
             pngfile = pngfile
@@ -449,7 +447,7 @@ class CocoDisplay():
         df_columns.extend(df.columns.values)
         columns_for_table = []
         for column in df_columns:
-            if column != None:
+            if column is not None:
                 columns_for_table.append(TableColumn(field=column, title=column))
                 # width_height_default
         data_table = DataTable(source=source, columns=columns_for_table,
@@ -460,7 +458,7 @@ class CocoDisplay():
     def changeto_nonan_date(df=None, when_end=None, field=None):
         boolval = True
         j = 0
-        while (boolval == True):
+        while (boolval):
             boolval = df.loc[df.date == (when_end - dt.timedelta(days=j))][field].dropna().empty
             j += 1
         if j > 1:
@@ -479,9 +477,11 @@ class CocoDisplay():
 
     @staticmethod
     def get_polycoords(geopandasrow):
-        """ Take a row of a geopandas as an input (i.e : for index, row in geopdwd.iterrows():...)
+        """
+        Take a row of a geopandas as an input (i.e : for index, row in geopdwd.iterrows():...)
             and returns a tuple (if the geometry is a Polygon) or a list (if the geometry is a multipolygon)
-            of an exterior.coords """
+            of an exterior.coords
+        """
         geometry = geopandasrow['geometry']
         if geometry.type == 'Polygon':
             return list(geometry.exterior.coords)
@@ -489,12 +489,14 @@ class CocoDisplay():
             all = []
             for ea in geometry:
                 all.append(list(ea.exterior.coords))
-            return all
+        return all
 
     @staticmethod
     def wgs84_to_web_mercator(tuple_xy):
-        ''' Take a tuple (longitude,latitude) from a coordinate reference system crs=EPSG:4326 '''
-        ''' and converts it to a  longitude/latitude tuple from to Web Mercator format '''
+        """
+        Take a tuple (longitude,latitude) from a coordinate reference system crs=EPSG:4326
+         and converts it to a  longitude/latitude tuple from to Web Mercator format
+        """
         k = 6378137
         x = tuple_xy[0] * (k * np.pi / 180.0)
         if tuple_xy[1] == -90:
@@ -536,7 +538,9 @@ class CocoDisplay():
 
     ###################### BEGIN Plots ##################
     def decoplot(func):
-        ''' decorator for plot purpose'''
+        """
+        decorator for plot purpose
+        """
 
         def generic_plot(self, mypandas, input_field=None, cursor_date=None, **kwargs):
             mypandas, dico = self.standard_input(mypandas, input_field, **kwargs)
@@ -567,7 +571,6 @@ class CocoDisplay():
                 uniqcodeloc = mypandas.codelocation.unique()
 
                 new = pd.DataFrame(columns=mypandas.columns)
-                n = 0
                 for i in uniqcodeloc:
                     pos = (mypandas.loc[mypandas.codelocation == i].index)
 
@@ -606,7 +609,6 @@ class CocoDisplay():
     @decoplot
     def pycoa_plot(self, mypandas, dico, input_field, hover_tool, ax_type, **kwargs):
         panels = []
-        hover_tool = None
         cases_custom = CocoDisplay.rollerJS()
         for axis_type in ax_type:
             standardfig = self.standardfig(x_axis_label=input_field[0],
@@ -651,14 +653,8 @@ class CocoDisplay():
 
             formatters = {'location': 'printf', '@date': 'datetime'}
             tooltips = [('Location', '@rolloverdisplay'), ('date', '@date{%F}')]
-            print(mypandas)
             for val in input_field:
                 for loc in mypandas.codelocation.unique():
-                    if len(input_field) > 1:
-                        leg = loc + ' ' + val
-                    else:
-                        leg = loc
-
                     mypandas_filter = mypandas.loc[mypandas.codelocation == loc].reset_index(drop=True)
                     standardfig.line(x='date', y=val, source=ColumnDataSource(mypandas_filter),
                                      color=mypandas_filter.colors.iloc[0], line_width=3,
@@ -755,7 +751,9 @@ class CocoDisplay():
     ###################### END Plots ##################
     ##################### BEGIN HISTOS/MAPS##################
     def decohistomap(func):
-        ''' Decorator function used for histogram and map '''
+        """
+        Decorator function used for histogram and map
+        """
 
         def generic_hm(self, mypandas, input_field=None, cursor_date=None, **kwargs):
             mypandas, dico = self.standard_input(mypandas, input_field, **kwargs, plot_last_date=True)
@@ -767,7 +765,6 @@ class CocoDisplay():
                 else:
                     input_field = dico['input_field'][0]
 
-            my_date = mypandas.date.unique()
             my_location = mypandas.location.unique()
             dshort_loc = CocoDisplay.dict_shorten_loc(mypandas.codelocation.unique())
             if len(my_location) < 5:
@@ -839,7 +836,7 @@ class CocoDisplay():
                 geopdwd_filter['bottom'] = [len(geopdwd_filter.index) - bthick / 2 - i for i in
                                             geopdwd_filter.index.to_list()]
 
-            if cursor_date == None:
+            if cursor_date is None:
                 date_slider = None
 
             return func(self, input_field, date_slider, dico, geopdwd, geopdwd_filter)
@@ -858,9 +855,6 @@ class CocoDisplay():
         """
         if 'location' not in pycoa_pandas.columns:
             raise CoaKeyError('location column name is not present, this is mandatory')
-
-        def norm(col):
-            return (col - col.min()) / (col.max() - col.min())
 
         pycoa_pandas = pycoa_pandas.set_index('location')
         # pycoa_pandas = pycoa_pandas.apply(lambda x: (x-x.min())/(x.max()-x.min()))
@@ -991,9 +985,8 @@ class CocoDisplay():
 
             label = dico['titlebar']
 
-            p = standardfig.quad(source=ColumnDataSource(frame_histo), top='val', bottom=bottom, left='left',
-                                 right='right',
-                                 fill_color='colors', legend_label=label)
+            standardfig.quad(source=ColumnDataSource(frame_histo), top='val', bottom=bottom, left='left', \
+                             right='right', fill_color='colors', legend_label=label)
             standardfig.legend.label_text_font_size = "12px"
             panel = Panel(child=standardfig, title=axis_type_title)
             panels.append(panel)
@@ -1004,7 +997,9 @@ class CocoDisplay():
 
     @decohistomap
     def pycoa_horizonhisto(self, input_field, date_slider, dico, geopdwd, geopdwd_filter):
-        ''' Horizontal histogram  '''
+        """
+        Horizontal histogram
+        """
         title_fig = input_field
         if date_slider:
             input_field = 'cases'
@@ -1427,9 +1422,9 @@ class CocoDisplay():
         return '<img src="data:image/png;base64, {}" />'.format(base64.b64encode(img.getvalue()).decode())
 
     def spark_pandas(self, pandy, which_data):
-        '''
-        Return pandas : location as index andwhich_data as sparkline (latest 30 values)
-        '''
+        """
+            Return pandas : location as index andwhich_data as sparkline (latest 30 values)
+        """
         pd.DataFrame._repr_html_ = lambda self: self.to_html(escape=False)
         loc = pandy['location'].unique()
         resume = pd.DataFrame({
@@ -1461,7 +1456,7 @@ class CocoDisplay():
                             for i in self.p.getDates()]
                     if err_y:
                         fig.circle(
-                            date, value[0], color=self.colors[i % 10], legend_label=location)
+                            date, value[0], color=self.scolors[i % 10], legend_label=location)
                         y_err_x = []
                         y_err_y = []
                         for px, py in zip(date, value[0]):
@@ -1469,10 +1464,10 @@ class CocoDisplay():
                             y_err_x.append((px, px))
                             y_err_y.append((py - err, py + err))
                         fig.multi_line(y_err_x, y_err_y,
-                                       color=self.colors[i % 10])
+                                       color=self.scolors[i % 10])
                     else:
                         fig.line(
-                            date, value[0], line_color=self.colors[i % 10], legend_label=location)
+                            date, value[0], line_color=self.scolors[i % 10], legend_label=location)
 
                     fig.line(date[:crys.GetTotalDaysConsidered(
                     )], value[1][:crys.GetTotalDaysConsidered()], line_color='red', line_width=4)

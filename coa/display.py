@@ -541,10 +541,9 @@ class CocoDisplay:
         """
         decorator for plot purpose
         """
-
         def generic_plot(self, mypandas, input_field=None, cursor_date=None, **kwargs):
             mypandas, dico = self.standard_input(mypandas, input_field, **kwargs)
-            if type(input_field) is None.__class__ and dico['which'] is None.__class__:
+            if input_field is None and dico['which'] is None:
                 input_field = mypandas.columns[2]
             else:
                 if type(input_field) is None.__class__:
@@ -570,7 +569,7 @@ class CocoDisplay:
                 tooltips = 'Location: @codelocation <br> Date: @date{%F} <br>  $name: @$name'
                 uniqcodeloc = mypandas.codelocation.unique()
 
-                new = pd.DataFrame(columns=mypandas.columns)
+                new = pd.DataFrame(columns = mypandas.columns)
                 for i in uniqcodeloc:
                     pos = (mypandas.loc[mypandas.codelocation == i].index)
 
@@ -645,38 +644,36 @@ class CocoDisplay:
     @decoplot
     def pycoa_date_plot(self, mypandas, dico, input_field, hover_tool, ax_type, **kwargs):
         panels = []
-
         cases_custom = CocoDisplay.rollerJS()
         for axis_type in ax_type:
-            standardfig = self.standardfig(y_axis_type=axis_type, x_axis_type='datetime', title=dico['titlebar'])
-            standardfig.yaxis[0].formatter = PrintfTickFormatter(format="%4.2e")
-
-            formatters = {'location': 'printf', '@date': 'datetime'}
-            tooltips = [('Location', '@rolloverdisplay'), ('date', '@date{%F}')]
+            standardfig = self.standardfig(y_axis_type = axis_type, x_axis_type = 'datetime', title = dico['titlebar'])
+            standardfig.yaxis[0].formatter = PrintfTickFormatter(format = "%4.2e")
+            i = 0
             for val in input_field:
+                line_style=['solid','dashed','dotted','dotdash']
                 for loc in mypandas.codelocation.unique():
-                    mypandas_filter = mypandas.loc[mypandas.codelocation == loc].reset_index(drop=True)
-                    standardfig.line(x='date', y=val, source=ColumnDataSource(mypandas_filter),
-                                     color=mypandas_filter.colors.iloc[0], line_width=3,
-                                     legend_label=CocoDisplay.dict_shorten_loc(mypandas_filter.codelocation[0]),
-                                     hover_line_width=4)
-                tooltips.append((val, '@{' + val + '}' + '{custom}'))
-                formatters['@{' + val + '}'] = cases_custom
-
-            standardfig.add_tools(HoverTool(tooltips=tooltips, formatters=formatters,
-                                            point_policy="follow_mouse"))  # ,PanTool())
+                    mypandas_filter = mypandas.loc[mypandas.codelocation == loc].reset_index(drop = True)
+                    standardfig.line(x = 'date', y = val, source = ColumnDataSource(mypandas_filter),
+                                     color = mypandas_filter.colors.iloc[0], line_width = 3,
+                                     legend_label = CocoDisplay.dict_shorten_loc(mypandas_filter.codelocation[0])+": "+val,
+                                     hover_line_width = 4,name=val,line_dash=line_style[i])
+                i+=1
+            tooltips = [('Location', '@rolloverdisplay'), ('date', '@date{%F}'),('$name', '@$name')]
+            formatters = {'location': 'printf','@date': 'datetime', '@name': 'printf'}
+            standardfig.add_tools(HoverTool(tooltips = tooltips, formatters = formatters,
+                                            point_policy = "follow_mouse"))  # ,PanTool())
 
             standardfig.legend.label_text_font_size = "12px"
-            panel = Panel(child=standardfig, title=axis_type)
+            panel = Panel(child=standardfig, title = axis_type)
             panels.append(panel)
             standardfig.legend.background_fill_alpha = 0.6
 
             standardfig.legend.location = "top_left"
 
             standardfig.xaxis.formatter = DatetimeTickFormatter(
-                days=["%d/%m/%y"], months=["%d/%m/%y"], years=["%b %Y"])
+                days = ["%d/%m/%y"], months = ["%d/%m/%y"], years = ["%b %Y"])
             CocoDisplay.bokeh_legend(standardfig)
-        tabs = Tabs(tabs=panels)
+        tabs = Tabs(tabs = panels)
         return tabs
 
     @decoplot
@@ -715,17 +712,17 @@ class CocoDisplay:
 
         panels = []
         for axis_type in ax_type:
-            standardfig = self.standardfig(y_axis_type=axis_type,
-                                           x_axis_type='datetime', title=dico['titlebar'])
-            standardfig.yaxis[0].formatter = PrintfTickFormatter(format="%4.2e")
+            standardfig = self.standardfig(y_axis_type = axis_type,
+                                           x_axis_type = 'datetime', title = dico['titlebar'])
+            standardfig.yaxis[0].formatter = PrintfTickFormatter(format = "%4.2e")
             if dico['title']:
                 standardfig.title.text = dico['title']
             standardfig.add_tools(hover_tool)
 
             def add_line(src, options, init, color):
-                s = Select(options=options, value=init)
-                r = standardfig.line(x='date', y='cases', source=src, line_width=3, line_color=color)
-                li = LegendItem(label=init, renderers=[r])
+                s = Select(options = options, value = init)
+                r = standardfig.line(x = 'date', y = 'cases', source = src, line_width = 3, line_color = color)
+                li = LegendItem(label = init, renderers = [r])
                 s.js_on_change('value', CustomJS(args=dict(s0=source, s1=src, li=li),
                                                  code="""
                                             var c = cb_obj.value;
@@ -738,13 +735,13 @@ class CocoDisplay:
 
             s1, li1 = add_line(src1, uniqloc, uniqloc[0], self.scolors[0])
             s2, li2 = add_line(src2, uniqloc, uniqloc[1], self.scolors[1])
-            standardfig.add_layout(Legend(items=[li1, li2]))
+            standardfig.add_layout(Legend(items = [li1, li2]))
             standardfig.legend.location = 'top_left'
             layout = row(column(row(s1, s2), row(standardfig)))
-            panel = Panel(child=layout, title=axis_type)
+            panel = Panel(child = layout, title = axis_type)
             panels.append(panel)
 
-        tabs = Tabs(tabs=panels)
+        tabs = Tabs(tabs = panels)
         label = dico['titlebar']
         return tabs
 
@@ -755,7 +752,7 @@ class CocoDisplay:
         Decorator function used for histogram and map
         """
 
-        def generic_hm(self, mypandas, input_field=None, cursor_date=None, **kwargs):
+        def generic_hm(self, mypandas, input_field = None, cursor_date = None, **kwargs):
             mypandas, dico = self.standard_input(mypandas, input_field, **kwargs, plot_last_date=True)
             if type(input_field) is None.__class__ and dico['which'] is None.__class__:
                 input_field = mypandas.columns[2]
@@ -774,17 +771,17 @@ class CocoDisplay:
 
             colors = itertools.cycle(colors)
             dico_colors = {i: next(colors) for i in my_location}
-            country_col = pd.DataFrame(dico_colors.items(), columns=['location', 'colors'])
-            mypandas = (pd.merge(mypandas, country_col, on='location'))
+            country_col = pd.DataFrame(dico_colors.items(), columns = ['location', 'colors'])
+            mypandas = (pd.merge(mypandas, country_col, on = 'location'))
 
             geopdwd = mypandas
             # geopdwd =  geopdwd.loc[geopdwd.date >= dt.date(2020,3,15)] # before makes pb in horizohisto
-            geopdwd = geopdwd.sort_values(by=input_field, ascending=False)
+            geopdwd = geopdwd.sort_values(by = input_field, ascending=False)
 
-            geopdwd = geopdwd.dropna(subset=[input_field])
-            geopdwd = geopdwd.reset_index(drop=True)
+            geopdwd = geopdwd.dropna(subset = [input_field])
+            geopdwd = geopdwd.reset_index(drop = True)
 
-            geopdwd = geopdwd.rename(columns={input_field: 'cases'})
+            geopdwd = geopdwd.rename(columns = {input_field: 'cases'})
             orientation = kwargs.get('orientation', 'horizontal')
 
             if dico['when_end'] <= geopdwd.date.min():
@@ -793,8 +790,8 @@ class CocoDisplay:
             else:
                 started = geopdwd.date.min()
                 ended = dico['when_end']
-            date_slider = DateSlider(title="Date: ", start=started, end=ended,
-                                     value=ended, step=24 * 60 * 60 * 1000, orientation=orientation)
+            date_slider = DateSlider(title = "Date: ", start = started, end = ended,
+                                     value = ended, step=24 * 60 * 60 * 1000, orientation = orientation)
             geopdwd_filter = geopdwd.copy()
             wanted_date = date_slider.value_as_datetime.date()
             geopdwd_filter = geopdwd_filter.loc[geopdwd_filter.date == wanted_date]
@@ -865,13 +862,13 @@ class CocoDisplay:
         pycoa_pandas.columns.name = 'data'
         pycoa_pandas = pycoa_pandas.stack().rename("value").reset_index()
 
-        standardfig = self.standardfig(y_range=list(pycoa_pandas.location.unique()),
-                                       x_range=list(pycoa_pandas.data.unique()))
+        standardfig = self.standardfig(y_range = list(pycoa_pandas.location.unique()),
+                                       x_range = list(pycoa_pandas.data.unique()))
         standardfig.xaxis.major_label_orientation = "vertical"
-        color_mapper = LinearColorMapper(palette=Viridis256, low=pycoa_pandas.value.min(),
-                                         high=pycoa_pandas.value.max(), nan_color='#ffffff')
-        color_bar = ColorBar(color_mapper=color_mapper, label_standoff=4, \
-                             border_line_color=None, location=(0, 0), orientation='vertical', ticker=BasicTicker())
+        color_mapper = LinearColorMapper(palette = Viridis256, low = pycoa_pandas.value.min(),
+                                         high = pycoa_pandas.value.max(), nan_color = '#ffffff')
+        color_bar = ColorBar(color_mapper = color_mapper, label_standoff=4,
+                             border_line_color = None, location=(0, 0), orientation = 'vertical', ticker = BasicTicker())
         standardfig.add_layout(color_bar, 'right')
         standardfig.rect(
             y="location",
@@ -884,7 +881,7 @@ class CocoDisplay:
 
         standardfig.add_tools(HoverTool(
             tooltips=[('location', '@rolloverdisplay'), ('value', '@value')],
-            # formatters={'location':'printf','@{'+input_field+'}':cases_custom,},
+            # formatters={'location':'printf','@{'+input_field+'}': cases_custom,},
             point_policy="follow_mouse"))
         return standardfig
 
@@ -956,7 +953,7 @@ class CocoDisplay:
                                         'middle_bin': np.floor(edges[:-1] + (edges[1:] - edges[:-1]) / 2),
                                         'contributors': contributors,
                                         'colors': lcolors})
-        hover_tool = HoverTool(tooltips=tooltips)
+        hover_tool = HoverTool(tooltips = tooltips)
         panels = []
         bottom = 0
         x_axis_type, y_axis_type, axis_type_title = 3 * ['linear']
@@ -1280,10 +1277,8 @@ class CocoDisplay:
             geopdwd_filter = geopdwd_filter.rename(columns={'cases': input_field})
         geopdwd_filter = gpd.GeoDataFrame(geopdwd_filter, geometry=geopdwd_filter.geometry, crs="EPSG:4326")
         uniqloc = list(geopdwd_filter.codelocation.unique())
-        # geopdwd = geopdwd[['location','codelocation','geometry','date',input_field]]
-        # geopdwd_filter =   geopdwd_filter[['location','codelocation','geometry',input_field]]
 
-        geopdwd = geopdwd.sort_values(by=['location', 'date'], ascending=False)
+        geopdwd = geopdwd.sort_values(by=['location', 'date'], ascending = False)
         geopdwd = geopdwd.drop(columns=['date'])
         geopdwd_filter = geopdwd_filter.drop(columns=['date', 'colors'])
 

@@ -354,57 +354,55 @@ def decoplot(func):
                                 according to the locations which were selected
         """
         kwargs_test(kwargs, ['where', 'what', 'which', 'whom', 'when',
-                             'input', 'input_field', 'width_height', 'title', 'option'],
+                             'input', 'input_field', 'width_height', 'title', 'option','typeofplot'],
                     'Bad args used in the pycoa.plot() function.')
 
+        when = kwargs.get('when', None)
+        input_field = None
         input_arg = kwargs.get('input', None)
-
-        # which = ''
-        width_height = kwargs.get('width_height', None)
-        what = kwargs.get('what', None)
+        dateslider = kwargs.get('dateslider', None)
+        typeofplot = kwargs.pop('typeofplot', 'date')
 
         if isinstance(input_arg, pd.DataFrame):
             t = input_arg
-            which = kwargs.get('input_field', listwhich()[0])
-            if which not in t.columns:
-                raise CoaKeyError("Cannot find " + str(which) + " field in the pandas data. "
-                                                                "Set a proper input_field key.")
+            input_field = kwargs.get('input_field', listwhich()[0])
+            if not all([i in t.columns for i in input_field]):
+            #if input_field not in t.columns:
+                raise CoaKeyError("Cannot find " + str(input_field) + " field in the pandas data. "
+                                                                      "Set a proper input_field key.")
             if 'option' in kwargs:
                 raise CoaKeyError("Cannot use option with input pandas data. "
                                   "Use option within the get() function instead.")
-
-        elif input_arg is None:
+            kwargs = {}
+        elif input_arg == None:
             t = get(**kwargs, output='pandas')
             which = kwargs.get('which', listwhich()[0])
-            if what == 'cumul' and _whom == 'jhu':
-                what = which
+            what = kwargs.get('what', listwhat()[0])
             option = kwargs.get('option', None)
         else:
             raise CoaTypeError('Waiting input as valid pycoa pandas '
                                'dataframe. See help.')
-        return func(t, **kwargs)
 
+        return func(t,input_field,typeofplot, **kwargs)
     return generic_plot
 
-
 @decoplot
-def plot(t, **kwargs):
-    input_arg = kwargs.get('input', None)
-    input_field = kwargs.get('input_field', listwhich()[0])
-
-    if isinstance(input_arg, pd.DataFrame) and len(input_field) == 2:
-        fig = _cocoplot.pycoa_plot(t, [input_field[0], input_field[1]])
+def plot(t,input_field,typeofplot, **kwargs):
+    if typeofplot == 'date':
+        fig = _cocoplot.pycoa_date_plot(t,input_field, **kwargs)
+    elif typeofplot == 'versus':
+        if input_field is not None and len(input_field) == 2:
+            fig = _cocoplot.pycoa_plot(t, input_field,**kwargs)
+        else:
+            print('typeofplot is versus but dim(input_field)!=2, versus has not effect ...')
+            fig = _cocoplot.pycoa_date_plot(t, input_field, **kwargs)
+    elif typeofplot == 'menulocation':
+        if input_field is not None and len(input_field) > 1:
+            print('typeofplot is menulocation but dim(input_field)>1, menulocation has not effect ...')
+        fig = _cocoplot.pycoa_scrollingmenu(t, **kwargs)
     else:
-        fig = _cocoplot.pycoa_date_plot(t, **kwargs)
+        raise CoaKeyError('Unknown typeofplot value. Should be date, versus or menulocation.')
     show(fig)
-
-
-@decoplot
-def scrollmenu_plot(t, **kwargs):
-    fig = _cocoplot.pycoa_scrollingmenu(t, **kwargs)
-    show(fig)
-
-
 # ----------------------------------------------------------------------
 # --- hist(**kwargs) ---------------------------------------------------
 # ----------------------------------------------------------------------

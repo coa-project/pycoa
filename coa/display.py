@@ -653,11 +653,14 @@ class CocoDisplay:
                 line_style=['solid', 'dashed', 'dotted', 'dotdash']
                 for loc in mypandas.codelocation.unique():
                     mypandas_filter = mypandas.loc[mypandas.codelocation == loc].reset_index(drop = True)
+                    leg = CocoDisplay.dict_shorten_loc(mypandas_filter.codelocation[0])
+                    if len(input_field)>1:
+                        leg = CocoDisplay.dict_shorten_loc(mypandas_filter.codelocation[0]) + val
                     standardfig.line(x = 'date', y = val, source = ColumnDataSource(mypandas_filter),
                                      color = mypandas_filter.colors.iloc[0], line_width = 3,
-                                     legend_label = CocoDisplay.dict_shorten_loc(mypandas_filter.codelocation[0])+": "+val,
+                                     legend_label = leg,
                                      hover_line_width = 4, name=val, line_dash=line_style[i])
-                i+=1
+                i += 1
             tooltips = [('Location', '@rolloverdisplay'), ('date', '@date{%F}'), ('$name', '@$name')]
             formatters = {'location': 'printf', '@date': 'datetime', '@name': 'printf'}
             standardfig.add_tools(HoverTool(tooltips = tooltips, formatters = formatters,

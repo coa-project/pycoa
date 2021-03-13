@@ -366,7 +366,8 @@ def decoplot(func):
         if isinstance(input_arg, pd.DataFrame):
             t = input_arg
             which = kwargs.get('input_field', listwhich()[0])
-            if which not in t.columns:
+            if not all([i in t.columns for i in which]):
+            #if which not in t.columns:
                 raise CoaKeyError("Cannot find " + str(which) + " field in the pandas data. "
                                                                 "Set a proper input_field key.")
             if 'option' in kwargs:
@@ -392,8 +393,8 @@ def plot(t, **kwargs):
     input_arg = kwargs.get('input', None)
     input_field = kwargs.get('input_field', listwhich()[0])
 
-    if isinstance(input_arg, pd.DataFrame) and len(input_field) == 2:
-        fig = _cocoplot.pycoa_plot(t, [input_field[0], input_field[1]])
+    if isinstance(input_arg, pd.DataFrame) and len(input_field) > 1:
+        fig = _cocoplot.pycoa_date_plot(t, input_field)
     else:
         fig = _cocoplot.pycoa_date_plot(t, **kwargs)
     show(fig)

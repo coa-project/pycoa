@@ -38,7 +38,7 @@ from bokeh.models import ColumnDataSource, TableColumn, DataTable, ColorBar, \
 from bokeh.models.widgets import Tabs, Panel
 from bokeh.plotting import figure
 from bokeh.layouts import row, column, gridplot
-from bokeh.palettes import Set2, Set3, Paired, Category10, Category20, Viridis256
+from bokeh.palettes import Category10, Category20, Viridis256
 from bokeh.io import export_png
 from bokeh import events
 from bokeh.models.widgets import DateSlider
@@ -366,7 +366,7 @@ class CocoDisplay:
 
     @staticmethod
     def bokeh_legend(bkfigure):
-        toggle_legend_js = CustomJS(args=dict(leg=bkfigure.legend[0]), \
+        toggle_legend_js = CustomJS(args=dict(leg=bkfigure.legend[0]),
                                     code="""
         if(leg.visible) 
         {
@@ -483,13 +483,13 @@ class CocoDisplay:
             of an exterior.coords
         """
         geometry = geopandasrow['geometry']
+        all = []
         if geometry.type == 'Polygon':
             return list(geometry.exterior.coords)
         if geometry.type == 'MultiPolygon':
-            all = []
             for ea in geometry:
                 all.append(list(ea.exterior.coords))
-        return all
+            return all
 
     @staticmethod
     def wgs84_to_web_mercator(tuple_xy):

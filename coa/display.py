@@ -287,7 +287,7 @@ class CocoDisplay:
         return mypandas, input_dico
 
     def get_tiles(self):
-        ''' Return all the tiles available in Bokeh '''
+        """ Return all the tiles available in Bokeh """
         return self.tiles_listing
 
     def standardfig(self, dbname=None, copyrightposition='left', **kwargs):
@@ -571,7 +571,7 @@ class CocoDisplay:
 
                 new = pd.DataFrame(columns = mypandas.columns)
                 for i in uniqcodeloc:
-                    pos = (mypandas.loc[mypandas.codelocation == i].index)
+                    pos = mypandas.loc[mypandas.codelocation == i].index
 
                     if type(i) == int or len(i) == 3:
                         new = new.append(mypandas.iloc[pos])
@@ -650,16 +650,16 @@ class CocoDisplay:
             standardfig.yaxis[0].formatter = PrintfTickFormatter(format = "%4.2e")
             i = 0
             for val in input_field:
-                line_style=['solid','dashed','dotted','dotdash']
+                line_style=['solid', 'dashed', 'dotted', 'dotdash']
                 for loc in mypandas.codelocation.unique():
                     mypandas_filter = mypandas.loc[mypandas.codelocation == loc].reset_index(drop = True)
                     standardfig.line(x = 'date', y = val, source = ColumnDataSource(mypandas_filter),
                                      color = mypandas_filter.colors.iloc[0], line_width = 3,
                                      legend_label = CocoDisplay.dict_shorten_loc(mypandas_filter.codelocation[0])+": "+val,
-                                     hover_line_width = 4,name=val,line_dash=line_style[i])
+                                     hover_line_width = 4, name=val, line_dash=line_style[i])
                 i+=1
-            tooltips = [('Location', '@rolloverdisplay'), ('date', '@date{%F}'),('$name', '@$name')]
-            formatters = {'location': 'printf','@date': 'datetime', '@name': 'printf'}
+            tooltips = [('Location', '@rolloverdisplay'), ('date', '@date{%F}'), ('$name', '@$name')]
+            formatters = {'location': 'printf', '@date': 'datetime', '@name': 'printf'}
             standardfig.add_tools(HoverTool(tooltips = tooltips, formatters = formatters,
                                             point_policy = "follow_mouse"))  # ,PanTool())
 

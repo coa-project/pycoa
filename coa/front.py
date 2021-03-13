@@ -250,7 +250,7 @@ def get(**kwargs):
                 where keyword, the data
                 is available. By default : no option.
     """
-    kwargs_test(kwargs, ['where', 'what', 'which', 'whom', 'when', 'output', 'option', 'bins', 'title', 'visu', 'tile'],
+    kwargs_test(kwargs, ['where', 'what', 'which', 'whom', 'when', 'output', 'option', 'bins', 'title', 'visu', 'tile','typeofplot'],
                 'Bad args used in the pycoa.get() function.')
     # no dateslider currently
 
@@ -354,11 +354,10 @@ def decoplot(func):
                                 according to the locations which were selected
         """
         kwargs_test(kwargs, ['where', 'what', 'which', 'whom', 'when',
-                             'input', 'input_field', 'width_height', 'title', 'option'],
+                             'input', 'input_field', 'width_height', 'title', 'option','typeofplot'],
                     'Bad args used in the pycoa.plot() function.')
 
         input_arg = kwargs.get('input', None)
-
         # which = ''
         width_height = kwargs.get('width_height', None)
         what = kwargs.get('what', None)
@@ -373,7 +372,6 @@ def decoplot(func):
             if 'option' in kwargs:
                 raise CoaKeyError("Cannot use option with input pandas data. "
                                   "Use option within the get() function instead.")
-
         elif input_arg is None:
             t = get(**kwargs, output='pandas')
             which = kwargs.get('which', listwhich()[0])
@@ -384,27 +382,31 @@ def decoplot(func):
             raise CoaTypeError('Waiting input as valid pycoa pandas '
                                'dataframe. See help.')
         return func(t, **kwargs)
-
     return generic_plot
-
 
 @decoplot
 def plot(t, **kwargs):
+    """
+    typeofplot  --  'date' (default), 'versus','menulocation'
+    """
     input_arg = kwargs.get('input', None)
     input_field = kwargs.get('input_field', listwhich()[0])
+    typeofplot = kwargs.pop('typeofplot','date')
 
-    if isinstance(input_arg, pd.DataFrame) and len(input_field) > 1:
+    if typeofplot == 'date':
+        if 'bins' in kwargs:
+            raise CoaKeyError("The bins keyword cannot be set with histograms by location. See help.")
         fig = _cocoplot.pycoa_date_plot(t, input_field)
+    elif typeofplot == 'versus':
+        if len(input_field) == 2:
+            fig = _cocoplot.pycoa_plot(t, input_field)
+        else:
+            raise CoaKeyError('For versus typeofplot length of input_field should be 2')
+    elif typeofplot == 'menulocation':
+        fig = _cocoplot.pycoa_scrollingmenu(t,input_field)
     else:
-        fig = _cocoplot.pycoa_date_plot(t, **kwargs)
+        raise CoaKeyError('Unknown typeofplot value. Should be date, versus or menulocation')
     show(fig)
-
-
-@decoplot
-def scrollmenu_plot(t, **kwargs):
-    fig = _cocoplot.pycoa_scrollingmenu(t, **kwargs)
-    show(fig)
-
 
 # ----------------------------------------------------------------------
 # --- hist(**kwargs) ---------------------------------------------------
@@ -469,7 +471,7 @@ def hist(**kwargs):
             raise CoaKeyError("Cannot use option with input pandas data. "
                               "Use option within the get() function instead.")
         kwargs = {}
-    elif input_arg == None:
+    elif input_arg is None:
         t = get(**kwargs, output='pandas')
         which = kwargs.get('which', listwhich()[0])
         what = kwargs.get('what', listwhat()[0])

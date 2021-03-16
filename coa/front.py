@@ -65,7 +65,7 @@ _listwhat = ['cumul',  # first one is default, nota:  we must avoid uppercases
              'daily',
              'weekly']
 
-_listoutput = ['list', 'dict', 'array', 'pandas']  # first one is default for get
+_listoutput = ['pandas','list', 'dict', 'array']  # first one is default for get
 
 _listvisu = ['bokeh', 'folium']
 

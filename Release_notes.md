@@ -1,7 +1,7 @@
 # PyCoa - Release_notes
 
 ## dev - 
-- ...
+- new standard output is pandas dataframe
 
 ## v2.01 - march 2021 - Minor improvements
 - New local database support : USA (Covidtracking), ITA (dpc), IND (covid19india)

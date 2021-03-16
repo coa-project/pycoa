@@ -221,24 +221,26 @@ def get(**kwargs):
     where  --   a single string of location, or list of (mandatory,
                 no default value)
     which  --   what sort of data to deliver ( 'death','confirmed',
-                'recovered' …). See listwhat() function for full
-                list according to the used database.
+                'recovered' for 'jhu' default database). See listwhich() function 
+                for full list according to the used database.
+
     what   --   which data are computed, either in cumulative mode
                 ('cumul', default value), or 'daily' (diff with previous day
                 and 'weekly' (diff with previous week). See
                 listwhich() for fullist of available
-                Full list of which keyword with the listwhich() function.
+                Full list of what keyword with the listwhat() function.
+
     whom   --   Database specification (overload the setbase()
                 function). See listwhom() for supported list
-                function). See listwhom() for supported list
+
     when   --   dates are given under the format dd/mm/yyyy. In the when
                 option, one can give one date which will be the end of
                 the data slice. Or one can give two dates separated with
                 ":", which will define the time cut for the output data
                 btw those two dates.
 
-    output --   output format returned ( list (default), array (numpy.array),
-                dict or pandas)
+    output --   output format returned ( pandas (default), array (numpy.array),
+                dict or list). See listoutput() function.
 
     option --   pre-computing option.
                 * nonneg means that negative daily balance is pushed back
@@ -249,6 +251,7 @@ def get(**kwargs):
                 * sumall will return integrated over locations given via the
                 where keyword, the data
                 is available. By default : no option.
+                See listoption().
     """
     kwargs_test(kwargs, ['where', 'what', 'which', 'whom', 'when', 'output', 'option', 'bins', 'title', 'visu', 'tile'],
                 'Bad args used in the pycoa.get() function.')

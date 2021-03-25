@@ -19,7 +19,12 @@ stdlist=['base64','collections','functools','getpass','inspect','io','itertools'
         'warnings','zlib',\
         'coa']
 
-for i in os.popen("cat coa/*.py | grep \"^from\|^import\" | awk '{print $2}' | awk -F. '{print $1}' | sort -u"):
+byhandlist=['lxml']
+extractedlist=list(os.popen("cat coa/*.py | grep \"^from\|^import\" | awk '{print $2}' | awk -F. '{print $1}' | sort -u"))
+
+for i in extractedlist + byhandlist:
     li=i.rstrip()
     if not li in stdlist:
         print("'"+li+"',\\")
+
+

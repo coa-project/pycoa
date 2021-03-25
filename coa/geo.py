@@ -735,7 +735,8 @@ class GeoCountry():
                 [n.lower() for n in self._country_data['nom_dept']]+'_moto.png' # picture of a sticker for motobikes, not so bad...
 
             # Reading information to get region flags and correct names of regions
-            f_reg_flag=open(get_local_from_url(self._source_dict['FRA']['Region Flags'],0), 'r')
+            f_reg_flag=open(get_local_from_url(self._source_dict['FRA']['Region Flags'],0), 'r', encoding="utf8")
+            
             content_reg_flag = f_reg_flag.read()
             f_reg_flag.close()
             soup_reg_flag = bs4.BeautifulSoup(content_reg_flag,'lxml')

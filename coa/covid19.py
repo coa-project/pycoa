@@ -220,7 +220,7 @@ class DataBase(object):
                        # 'taux_occupation_sae_couleur', 'tx_pos_couleur', 'nb_orange',
                        # 'nb_rouge']
                     #min_date=result['date'].min()
-                    for w in ['incid_hosp', 'incid_rea', 'incid_rad', 'incid_dc', 'P', 'T', 'n_dose1', 'n_dose2']:
+                    for w in ['incid_hosp', 'incid_rea', 'incid_rad', 'incid_dc', 'P', 'T']:#, 'n_dose1', 'n_dose2']:
                         result[w]=pd.to_numeric(result[w], errors = 'coerce')
                         if w.startswith('incid_'):
                             ww = w[6:]
@@ -242,8 +242,8 @@ class DataBase(object):
                         'R': 'cur_idx_R',
                         'taux_occupation_sae': 'cur_idx_taux_occupation_sae',
                         'tx_pos': 'cur_idx_tx_pos',
-                        'tot_n_dose1': 'tot_vacc',
-                        'tot_n_dose2': 'tot_vacc2',
+                        'n_cum_dose1': 'tot_vacc',
+                        'n_cum_dose2': 'tot_vacc2',
                         }
                     result = result.rename(columns=rename_dict)
                     columns_keeped=list(rename_dict.values())+['tot_incid_hosp', 'tot_incid_rea', 'tot_incid_rad', 'tot_incid_dc', 'tot_P', 'tot_T']

@@ -1,7 +1,11 @@
 # PyCoa - Release_notes
 
 ## dev - 
-- ...
+## v2.02 - march 2021 - Import decorators modifciation inside the display
+- add pie chart representation
+- simplication on bokeh geo
+- fixed bug on horizontal histo label
+
 
 ## v2.01 - march 2021 - Minor improvements
 - New local database support : USA (Covidtracking), ITA (dpc), IND (covid19india)

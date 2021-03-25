@@ -1,7 +1,10 @@
 # PyCoa - Release_notes
 
-## dev - 
+## dev - Minor improvments
 - new standard output is pandas dataframe
+- Bug solved for a SPF database which has changed
+- Some bugs solved for Windows based machines
+- Optimized style of code writing (pyCharm recommandations), and docstrings corrections
 
 ## v2.01 - march 2021 - Minor improvements
 - New local database support : USA (Covidtracking), ITA (dpc), IND (covid19india)

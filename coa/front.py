@@ -564,6 +564,8 @@ def map(**kwargs):
     if visu == 'bokeh':
         return show(_cocoplot.pycoa_map(t, input_field, **kwargs))
     elif visu == 'folium':
+        if dateslider:
+            raise CoaKeyError('dateslider has no effect with folium map, you should considere to use bokeh map visu in this case')
         return _cocoplot.pycoa_mapfolium(t, input_field, **kwargs)
     else:
         raise CoaTypeError('Waiting for a valid visualisation. So far: \'bokeh\' or \'folium\'.See help.')

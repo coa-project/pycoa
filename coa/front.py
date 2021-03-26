@@ -221,7 +221,7 @@ def get(**kwargs):
     where  --   a single string of location, or list of (mandatory,
                 no default value)
     which  --   what sort of data to deliver ( 'death','confirmed',
-                'recovered' for 'jhu' default database). See listwhich() function 
+                'recovered' for 'jhu' default database). See listwhich() function
                 for full list according to the used database.
 
     what   --   which data are computed, either in cumulative mode
@@ -435,7 +435,7 @@ def hist(**kwargs):
                 If specified should be a list of width and height.
                 For instance width_height=[400,500]
 
-    typeofhist  --  'bylocation' (default) or 'byvalue'
+    typeofhist  --  'bylocation' (default), 'byvalue' or pie
 
     bins        --  number of bins used, only available for 'byvalue' type of
                     histograms.
@@ -486,6 +486,10 @@ def hist(**kwargs):
         if dateslider:
             info('dateslider not yet implemented in typeofhist = byvalue , sorry about that')
         fig = _cocoplot.pycoa_histo(t, input_field, **kwargs)
+    elif typeofhist == 'pie':
+        if dateslider:
+            info('dateslider not yet implemented in typeofhist = byvalue , sorry about that')
+        fig = _cocoplot.pycoa_pie(t, input_field, **kwargs)
 
     else:
         raise CoaKeyError('Unknown typeofhist value. Should be bylocation or byvalue.')

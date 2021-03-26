@@ -1,19 +1,12 @@
 # PyCoa - Release_notes
 
-<<<<<<< HEAD
 ## dev - 
 ## v2.02 - march 2021 - Import decorators modifciation inside the display
 - add pie chart representation
 - simplication on bokeh geo
 - fixed bug on horizontal histo label
+- add date_slider in the front end
 
-=======
-## dev - Minor improvments
-- new standard output is pandas dataframe
-- Bug solved for a SPF database which has changed
-- Some bugs solved for Windows based machines
-- Optimized style of code writing (pyCharm recommandations), and docstrings corrections
->>>>>>> 9798c2ff499f2939c993f66aff21b8882818a986
 
 ## v2.01 - march 2021 - Minor improvements
 - New local database support : USA (Covidtracking), ITA (dpc), IND (covid19india)
@@ -32,3 +25,4 @@ the covid19 for those states have been merged respectively to 'Andhra Pradesh' a
 
 ## v1.0 - november 2020 - Major release
 - First official release : support of the worldwide JHU database
+

@@ -669,7 +669,7 @@ class CocoDisplay:
                     mypandas_filter = mypandas.loc[mypandas.codelocation == loc].reset_index(drop = True)
                     leg = CocoDisplay.dict_shorten_loc(mypandas_filter.codelocation[0])
                     if len(input_field)>1:
-                        leg = CocoDisplay.dict_shorten_loc(mypandas_filter.codelocation[0]) + val
+                        leg = CocoDisplay.dict_shorten_loc(mypandas_filter.codelocation[0]) + ', ' + val
                     r = standardfig.line(x = 'date', y = val, source = ColumnDataSource(mypandas_filter),
                                      color = mypandas_filter.colors.iloc[0], line_width = 3,
                                      legend_label = leg,

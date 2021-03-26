@@ -1072,7 +1072,8 @@ class CocoDisplay:
                     callback = CustomJS(args = dict(source=source,
                                                   source_filter=srcfiltered,
                                                   date_slider=date_slider,
-                                                  ylabel=standardfig.yaxis[0]),
+                                                  ylabel=standardfig.yaxis[0],
+                                                  title=standardfig.title),
                             code = """
                             var date_slide = date_slider.value;
                             var dates = source.data['date_utc'];
@@ -1158,7 +1159,16 @@ class CocoDisplay:
                             source_filter.data['text_y'] = text_y;
 
                             ylabel.major_label_overrides = labeldic;
+                            var tmp = title.text;
+                            tmp = tmp.slice(0, -11);
+                            var dateconverted = new Date(date_slide);
+                            var dd = String(dateconverted.getDate()).padStart(2, '0');
+                            var mm = String(dateconverted.getMonth() + 1).padStart(2, '0'); //January is 0!
+                            var yyyy = dateconverted.getFullYear();
+                            var dmy = dd + '/' + mm + '/' + yyyy;
+                            title.text = tmp + dmy+")";
 
+                            console.log(title.text);
                             console.log(labeldic);
                             console.log('END');
                             source_filter.change.emit();
@@ -1422,7 +1432,8 @@ class CocoDisplay:
 
             callback = CustomJS(args = dict(source = geopdwd_tmp,
                                           source_filter = geopdwd_filtered,
-                                          date_slider = date_slider),
+                                          date_slider = date_slider,
+                                          title=standardfig.title),
                         code = """
                         var ind_date_max = (date_slider.end-date_slider.start)/(24*3600*1000);
                         var ind_date = (date_slider.value-date_slider.start)/(24*3600*1000);
@@ -1436,6 +1447,16 @@ class CocoDisplay:
                             new_cases.push(source.data['cases'][i][ind_date_max-ind_date]);
                         }
                         source_filter.data['cases']=new_cases;
+
+                        var tmp = title.text;
+                        tmp = tmp.slice(0, -11);
+                        var dateconverted = new Date(date_slider.value);
+                        var dd = String(dateconverted.getDate()).padStart(2, '0');
+                        var mm = String(dateconverted.getMonth() + 1).padStart(2, '0'); //January is 0!
+                        var yyyy = dateconverted.getFullYear();
+                        var dmy = dd + '/' + mm + '/' + yyyy;
+                        title.text = tmp + dmy+")";
+
                         source_filter.change.emit();
                     """)
             date_slider.js_on_change('value', callback)

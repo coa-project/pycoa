@@ -253,7 +253,7 @@ def get(**kwargs):
                 is available. By default : no option.
                 See listoption().
     """
-    kwargs_test(kwargs, ['where', 'what', 'which', 'whom', 'when', 'output', 'option', 'bins', 'title', 'visu', 'tile'],
+    kwargs_test(kwargs, ['where', 'what', 'which', 'whom', 'when', 'output', 'option', 'bins', 'title', 'visu', 'tile','dateslider'],
                 'Bad args used in the pycoa.get() function.')
     # no dateslider currently
 
@@ -449,7 +449,7 @@ def hist(**kwargs):
     #               preferable to use this option with folium map
     # """
     kwargs_test(kwargs, ['where', 'what', 'which', 'whom', 'when', 'input', 'input_field', 'bins', 'title',
-                         'typeofhist', 'option'],
+                         'typeofhist', 'option','dateslider'],
                 'Bad args used in the pycoa.hist() function.')
     # no 'dateslider' currently
 
@@ -478,6 +478,11 @@ def hist(**kwargs):
         raise CoaTypeError('Waiting input as valid pycoa pandas '
                            'dataframe. See help.')
 
+
+    if dateslider:
+        del kwargs['dateslider']
+        kwargs['cursor_date']=True
+
     if typeofhist == 'bylocation':
         if 'bins' in kwargs:
             raise CoaKeyError("The bins keyword cannot be set with histograms by location. See help.")
@@ -487,8 +492,6 @@ def hist(**kwargs):
             info('dateslider not yet implemented in typeofhist = byvalue , sorry about that')
         fig = _cocoplot.pycoa_histo(t, input_field, **kwargs)
     elif typeofhist == 'pie':
-        if dateslider:
-            info('dateslider not yet implemented in typeofhist = byvalue , sorry about that')
         fig = _cocoplot.pycoa_pie(t, input_field, **kwargs)
 
     else:
@@ -509,7 +512,7 @@ def deco_pycoa_graph(f):
     @wraps(f)
     def wrapper(*args, **kwargs):
         kwargs_test(kwargs,
-                    ['where', 'what', 'which', 'whom', 'when', 'input', 'visu', 'input_field', 'option', 'tile'],
+                    ['where', 'what', 'which', 'whom', 'when', 'input', 'visu', 'input_field', 'option', 'tile','dateslider'],
                     'Bad args used in the pycoa.map() function.')
         # no 'dateslider' currently.
         which = ''
@@ -553,6 +556,10 @@ def map(**kwargs):
     t = kwargs.pop('t')
     input_field = kwargs.pop('input_field')
     dateslider = kwargs.get('dateslider', None)
+
+    if dateslider:
+        del kwargs['dateslider']
+        kwargs['cursor_date']=True
 
     if visu == 'bokeh':
         return show(_cocoplot.pycoa_map(t, input_field, **kwargs))

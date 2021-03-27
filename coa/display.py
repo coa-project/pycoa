@@ -545,8 +545,11 @@ class CocoDisplay:
         df['middle'] = (df['starts'] + df['ends'])/2
         df['text_x'] = df['middle'].apply(np.cos)*r
         df['text_y'] = df['middle'].apply(np.sin)*r
+        df['text_y2'] = df['text_y']
+        df.loc[:, 'text_y2'] = ( df['text_y2'] - 0.1 )
         df['text_size'] = [str(10*i)+'pt' if i > 0.3 else '3pt' for i in df[column_name]/df[column_name].max()]
         df['text_angle'] = 0.0
+        df.loc[:, 'percentage'] = (( df['percentage'] * 100 ).round(2)).apply(lambda x: '('+str(x)+'%)')
         return df
     ###################### END Static Methods ##################
     ###################### BEGIN Plots ##################
@@ -1124,9 +1127,11 @@ class CocoDisplay:
                             var middle = [];
                             var text_x = [];
                             var text_y = [];
+                            var text_y2 = [];
                             var r = 0.7;
                             var bthick = 0.95;
                             var cumul = 0.;
+                            var percentage = [];
                             for(var i = 0; i < orderval.length; i++)
                             {
                                 cumul += ((orderval[i] / tot) * 2 * Math.PI);
@@ -1138,6 +1143,8 @@ class CocoDisplay:
                                 middle.push((ends[i]+starts[i])/2);
                                 text_x.push(r*Math.cos(middle[i]));
                                 text_y.push(r*Math.sin(middle[i]));
+                                text_y2.push(r*Math.sin(middle[i])-0.1);
+                                percentage.push('('+String(orderval[i] / tot).slice(0, 4)+'%)');
 
                                 top.push((orderval.length-i) + bthick/2);
                                 bottom.push((orderval.length-i) - bthick/2);
@@ -1157,6 +1164,8 @@ class CocoDisplay:
                             source_filter.data['middle'] = middle;
                             source_filter.data['text_x'] = text_x;
                             source_filter.data['text_y'] = text_y;
+                            source_filter.data['text_y2'] = text_y2;
+                            source_filter.data['percentage'] = percentage
 
                             ylabel.major_label_overrides = labeldic;
                             var tmp = title.text;
@@ -1220,9 +1229,13 @@ class CocoDisplay:
                          start_angle = 'starts', end_angle = 'ends',
                          line_color = 'white', color = 'colors', legend_label = 'codelocation', source = srcfiltered)
         standardfig.legend.visible = False
-        txt = Text(x = 'text_x', y = 'text_y', text = 'codelocation', angle = "text_angle",
-              text_align = "center", text_font_size = 'text_size')
-        standardfig.add_glyph(srcfiltered,txt)
+        txt1 = Text(x = 'text_x', y = 'text_y', text = 'codelocation', angle = 'text_angle',
+              text_align = 'center', text_font_size = 'text_size')
+        txt2 = Text(x = 'text_x', y = 'text_y2', text = 'percentage', angle = 'text_angle',
+                  text_align = 'center', text_font_size = 'text_size')
+        standardfig.add_glyph(srcfiltered,txt1)
+        standardfig.add_glyph(srcfiltered,txt2)
+
         if date_slider:
             standardfig = row(standardfig,date_slider)
         return standardfig

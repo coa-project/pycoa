@@ -478,10 +478,11 @@ def hist(**kwargs):
         raise CoaTypeError('Waiting input as valid pycoa pandas '
                            'dataframe. See help.')
 
-
-    if dateslider:
+    if dateslider or dateslider == False:
         del kwargs['dateslider']
-        kwargs['cursor_date']=True
+        kwargs['cursor_date'] = True
+        if dateslider == False:
+            kwargs['cursor_date'] = False
 
     if typeofhist == 'bylocation':
         if 'bins' in kwargs:

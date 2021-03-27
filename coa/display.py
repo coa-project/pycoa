@@ -558,7 +558,7 @@ class CocoDisplay:
         """
         decorator for plot purpose
         """
-        def generic_plot(self, mypandas, input_field=None, cursor_date=None, **kwargs):
+        def generic_plot(self, mypandas, input_field=None, cursor_date=False, **kwargs):
             mypandas, dico = self.standard_input(mypandas, input_field, **kwargs)
             if input_field is None and dico['which'] is None:
                 input_field = mypandas.columns[2]
@@ -776,7 +776,7 @@ class CocoDisplay:
         """
         Decorator function used for histogram and map
         """
-        def generic_hm(self, mypandas, input_field = None, cursor_date = None, **kwargs):
+        def generic_hm(self, mypandas, input_field = None, cursor_date = False, **kwargs):
             mypandas, dico = self.standard_input(mypandas, input_field, **kwargs, plot_last_date=True)
             if type(input_field) is None.__class__ and dico['which'] is None.__class__:
                 input_field = mypandas.columns[2]
@@ -840,8 +840,8 @@ class CocoDisplay:
                 dico_utc = {i: DateSlider(value = i ).value for i in my_date}
                 geopdwd['date_utc'] = [dico_utc[i] for i in geopdwd.date]
 
-            if cursor_date is None:
-                date_slider = None
+            if cursor_date is False:
+                date_slider = False
             return func(self, input_field, date_slider, dico, geopdwd, geopdwd_filter)
         return generic_hm
 
@@ -1440,7 +1440,7 @@ class CocoDisplay:
                              border_line_color=None, location=(0, 0), orientation='horizontal', ticker=BasicTicker())
         color_bar.formatter = BasicTickFormatter(use_scientific=True, precision=1, power_limit_low=int(max_col))
         standardfig.add_layout(color_bar, 'below')
-        geopdwd_filtered = geopdwd_filtered[['cases','geometry','location','codelocation']]
+        geopdwd_filtered = geopdwd_filtered[['cases','geometry','location','codelocation','rolloverdisplay']]
         json_data = json.dumps(json.loads(geopdwd_filtered.to_json()))
         geopdwd_filtered = GeoJSONDataSource(geojson=json_data)
         if date_slider:
@@ -1485,13 +1485,12 @@ class CocoDisplay:
         standardfig.yaxis.visible = False
         standardfig.xgrid.grid_line_color = None
         standardfig.ygrid.grid_line_color = None
-
         standardfig.patches('xs', 'ys', source = geopdwd_filtered,
                             fill_color = {'field': 'cases', 'transform': color_mapper},
                             line_color = 'black', line_width = 0.25, fill_alpha = 1)
         cases_custom = CocoDisplay.rollerJS()
         if len(uniqloc) > 1:
-            loctips = ('location', '@location')
+            loctips = ('location', '@rolloverdisplay')
         else:
             loctips = ('location', '@codelocation')
 

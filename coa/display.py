@@ -543,11 +543,12 @@ class CocoDisplay:
         df['starts'] = [p * 2 * np.pi for p in percentages[:-1]]
         df['ends'] = [p * 2 * np.pi for p in percentages[1:]]
         df['middle'] = (df['starts'] + df['ends'])/2
+        df['diff'] = (df['ends'] - df['starts'])
         df['text_x'] = df['middle'].apply(np.cos)*r
         df['text_y'] = df['middle'].apply(np.sin)*r
         df['text_y2'] = df['text_y']
         df.loc[:, 'text_y2'] = ( df['text_y2'] - 0.1 )
-        df['text_size'] = [str(10*i)+'pt' if i > 0.3 else '3pt' for i in df[column_name]/df[column_name].max()]
+        df['text_size'] = [str(10)+'pt' if i > 0.08*(2 * np.pi) else '4pt' for i in df['diff']]
         df['text_angle'] = 0.0
         df.loc[:, 'percentage'] = (( df['percentage'] * 100 ).round(2)).apply(lambda x: '('+str(x)+'%)')
         return df
@@ -1132,6 +1133,7 @@ class CocoDisplay:
                             var bthick = 0.95;
                             var cumul = 0.;
                             var percentage = [];
+                            var text_size = [];
                             for(var i = 0; i < orderval.length; i++)
                             {
                                 cumul += ((orderval[i] / tot) * 2 * Math.PI);
@@ -1145,6 +1147,11 @@ class CocoDisplay:
                                 text_y.push(r*Math.sin(middle[i]));
                                 text_y2.push(r*Math.sin(middle[i])-0.1);
                                 percentage.push('('+String(orderval[i] / tot).slice(0, 4)+'%)');
+
+                                if ((ends[i]-starts[i]) > 0.08*(2 * Math.PI))
+                                    text_size.push('10pt');
+                                else
+                                    text_size.push('6pt');
 
                                 top.push((orderval.length-i) + bthick/2);
                                 bottom.push((orderval.length-i) - bthick/2);
@@ -1165,6 +1172,7 @@ class CocoDisplay:
                             source_filter.data['text_x'] = text_x;
                             source_filter.data['text_y'] = text_y;
                             source_filter.data['text_y2'] = text_y2;
+                            source_filter.data['text_size'] = text_size;
                             source_filter.data['percentage'] = percentage
 
                             ylabel.major_label_overrides = labeldic;

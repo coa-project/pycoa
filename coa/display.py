@@ -1193,7 +1193,7 @@ class CocoDisplay:
                     date_slider.js_on_change('value', callback)
                 cases_custom = CocoDisplay.rollerJS()
                 standardfig.add_tools(HoverTool(
-                    tooltips=[('Location', '@location'), (input_field, '@{' + input_field + '}' + '{custom}'), ],
+                    tooltips=[('Location', '@rolloverdisplay'), (input_field, '@{' + input_field + '}' + '{custom}'), ],
                     formatters={'location': 'printf', '@{' + input_field + '}': cases_custom, },
                     point_policy="follow_mouse"))  # ,PanTool())
                 panel = Panel(child = standardfig, title = axis_type)

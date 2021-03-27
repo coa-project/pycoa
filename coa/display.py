@@ -1083,6 +1083,7 @@ class CocoDisplay:
                             var dates = source.data['date_utc'];
                             var val = source.data['cases'];
                             var loc = source.data['location'];
+                            var subregion = source.data['name_subregion'];
                             var codeloc = source.data['codelocation'];
                             var colors = source.data['colors'];
 
@@ -1090,7 +1091,7 @@ class CocoDisplay:
                             var newloc = [];
                             var newcolors = [];
                             var newcodeloc = [];
-
+                            var newname_subregion = [];
                             var labeldic = {};
                             for (var i = 0; i < dates.length; i++){
                             if (dates[i] == date_slide){
@@ -1098,6 +1099,8 @@ class CocoDisplay:
                                 newloc.push(loc[i]);
                                 newcodeloc.push(codeloc[i]);
                                 newcolors.push(colors[i]);
+                                if(typeof subregion !== 'undefined')
+                                    newname_subregion.push(subregion[i]);
                                 }
                             }
                             var len = source_filter.data['location'].length;
@@ -1107,6 +1110,7 @@ class CocoDisplay:
                             var orderval = [];
                             var orderloc = [];
                             var ordercodeloc = [];
+                            var ordername_subregion = [];
                             var ordercolors = [];
 
                             for (var i = 0; i < len; i++)
@@ -1114,6 +1118,8 @@ class CocoDisplay:
                                 orderval.push(newval[indices[i]]);
                                 orderloc.push(newloc[indices[i]]);
                                 ordercodeloc.push(newcodeloc[indices[i]]);
+                                if(typeof subregion !== 'undefined')
+                                    ordername_subregion.push(newname_subregion[i]);
                                 ordercolors.push(newcolors[indices[i]]);
                                 labeldic[len-indices[i]] = ordercodeloc[indices[i]];
                             }
@@ -1162,6 +1168,11 @@ class CocoDisplay:
                             source_filter.data['codelocation'] = ordercodeloc;
                             source_filter.data['colors'] = ordercolors;
 
+                            if(typeof subregion !== 'undefined')
+                                source_filter.data['rolloverdisplay'] = ordername_subregion;
+                            else
+                                source_filter.data['rolloverdisplay'] = orderloc;
+                            console.log(source_filter.data['rolloverdisplay']);
                             source_filter.data['right'] = orderval;
                             source_filter.data['top'] = top;
                             source_filter.data['bottom'] = bottom;

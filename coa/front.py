@@ -490,7 +490,7 @@ def hist(**kwargs):
         fig = _cocoplot.pycoa_horizonhisto(t, input_field, **kwargs)
     elif typeofhist == 'byvalue':
         if dateslider:
-            info('dateslider not yet implemented in typeofhist = byvalue , sorry about that')
+            info('dateslider not implemented for typeofhist is byvalue.')
         fig = _cocoplot.pycoa_histo(t, input_field, **kwargs)
     elif typeofhist == 'pie':
         fig = _cocoplot.pycoa_pie(t, input_field, **kwargs)

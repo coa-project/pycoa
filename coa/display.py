@@ -825,10 +825,11 @@ class CocoDisplay:
                 geopdwd_filter = pd.merge(geopdwd_filter, self.location_geometry, on='location')
                 dico['tile'] = CocoDisplay.get_tile(dico['tile'], func.__name__)
 
-            if func.__name__ == 'pycoa_horizonhisto' or func.__name__ == 'pycoa_histo':
+            if func.__name__ == 'inner' or func.__name__ == 'pycoa_histo':
                 pos = {}
                 new = pd.DataFrame(columns=geopdwd_filter.columns)
                 n = 0
+
                 for i in uniqcodeloc:
                     pos = (geopdwd_filter.loc[geopdwd_filter.codelocation == i].index[0])
                     new = new.append(geopdwd_filter.iloc[pos])
@@ -1050,7 +1051,7 @@ class CocoDisplay:
                 title = dico['titlebar']
                 if title_fig != title.split()[0]:
                     title = title_fig + ' ' + title
-                if mypandas_filter[mypandas_filter[input_field] < 0.].empty:
+                if mypandas_filter[mypandas_filter[input_field] <= 0.].empty:
                     standardfig = self.standardfig(x_axis_type = axis_type, x_range = (0.01, 1.05 * max_value),
                                                    title = dico['titlebar'])
                     standardfig.xaxis[0].formatter = PrintfTickFormatter(format="%4.2e")
@@ -1066,6 +1067,7 @@ class CocoDisplay:
                     max_value = max(np.abs(srcfiltered.data['left']).max(), srcfiltered.data['right'].max())
                     standardfig = self.standardfig(x_axis_type = axis_type, x_range = (-max_value, max_value),
                                                    title = dico['titlebar'])
+
                 if func.__name__ == 'pycoa_pie' :
                     standardfig.plot_width = self.plot_height
                     standardfig.plot_height = self.plot_height

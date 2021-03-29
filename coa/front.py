@@ -491,6 +491,8 @@ def hist(**kwargs):
             info('dateslider not implemented for typeofhist is byvalue.')
         fig = _cocoplot.pycoa_histo(t, input_field, **kwargs)
     elif typeofhist == 'pie':
+        if 'bins' in kwargs:
+            raise CoaKeyError("The bins keyword cannot be set with pie histograms. See help.")
         fig = _cocoplot.pycoa_pie(t, input_field, **kwargs)
 
     else:

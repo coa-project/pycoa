@@ -1064,9 +1064,12 @@ class CocoDisplay:
                             standardfig.y_range = Range1d(min(srcfiltered.data['bottom']), max(srcfiltered.data['top']))
                             srcfiltered.data['left'] = [0.001] * len(srcfiltered.data['bottom'])
                 else:
-                    max_value = max(np.abs(srcfiltered.data['left']).max(), srcfiltered.data['right'].max())
-                    standardfig = self.standardfig(x_axis_type = axis_type, x_range = (-max_value, max_value),
+                    if func.__name__ == 'pycoa_horizonhisto':
+                        max_value = max(np.abs(srcfiltered.data['left']).max(), srcfiltered.data['right'].max())
+                        standardfig = self.standardfig(x_axis_type = axis_type, x_range = (-max_value, max_value),
                                                    title = dico['titlebar'])
+                    else:
+                        raise CoaTypeError("Some values are negative, can not use pie chart in this context ...") 
 
                 if func.__name__ == 'pycoa_pie' :
                     standardfig.plot_width = self.plot_height

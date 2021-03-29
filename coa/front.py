@@ -355,8 +355,8 @@ def decoplot(func):
                        'menulocation': date plot with two scroll menu locations.
                                         Usefull to study the behaviour of a variable for two different countries.
                        'versus': plot variable against an other one.
-                                  For this type of plot one should  'input' and 'input_field' (not fully tested).
-                                  Moreover dim(input_field) must be 2 .
+                                 For this type of plot one should used 'input' and 'input_field' (not fully tested).
+                                 Moreover dim(input_field) must be 2.
 
         """
         kwargs_test(kwargs, ['where', 'what', 'which', 'whom', 'when',
@@ -402,7 +402,7 @@ def plot(t,input_field,typeofplot, **kwargs):
         else:
             print('typeofplot is versus but dim(input_field)!=2, versus has not effect ...')
             fig = _cocoplot.pycoa_date_plot(t, input_field, **kwargs)
-        elif typeofplot == 'menulocation':
+    elif typeofplot == 'menulocation':
         if input_field is not None and len(input_field) > 1:
             print('typeofplot is menulocation but dim(input_field)>1, menulocation has not effect ...')
         fig = _cocoplot.pycoa_scrollingmenu(t, **kwargs)
@@ -491,8 +491,10 @@ def hist(**kwargs):
         fig = _cocoplot.pycoa_horizonhisto(t, input_field, **kwargs)
     elif typeofhist == 'byvalue':
         if dateslider:
-            info('dateslider not implemented for typeofhist is byvalue.')
-        fig = _cocoplot.pycoa_histo(t, input_field, **kwargs)
+            info('dateslider not implemented for typeofhist=\'byvalue\'.')
+            fig = _cocoplot.pycoa_horizonhisto(t, input_field, **kwargs)
+        else:
+            fig = _cocoplot.pycoa_histo(t, input_field, **kwargs)
     elif typeofhist == 'pie':
         fig = _cocoplot.pycoa_pie(t, input_field, **kwargs)
 

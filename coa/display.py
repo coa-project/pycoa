@@ -550,7 +550,7 @@ class CocoDisplay:
         df.loc[:, 'text_y2'] = ( df['text_y2'] - 0.1 )
         df['text_size'] = [str(10)+'pt' if i > 0.08*(2 * np.pi) else '4pt' for i in df['diff']]
         df['text_angle'] = 0.0
-        df.loc[:, 'percentage'] = (( df['percentage'] * 100 ).round(2)).apply(lambda x: '('+str(x)+'%)')
+        df.loc[:, 'percentage'] = (( df['percentage'] * 100 ).round(2)).apply(lambda x: str(x))
         return df
     ###################### END Static Methods ##################
     ###################### BEGIN Plots ##################
@@ -825,10 +825,11 @@ class CocoDisplay:
                 geopdwd_filter = pd.merge(geopdwd_filter, self.location_geometry, on='location')
                 dico['tile'] = CocoDisplay.get_tile(dico['tile'], func.__name__)
 
-            if func.__name__ == 'pycoa_horizonhisto' or func.__name__ == 'pycoa_histo':
+            if func.__name__ == 'inner' or func.__name__ == 'pycoa_histo':
                 pos = {}
                 new = pd.DataFrame(columns=geopdwd_filter.columns)
                 n = 0
+
                 for i in uniqcodeloc:
                     pos = (geopdwd_filter.loc[geopdwd_filter.codelocation == i].index[0])
                     new = new.append(geopdwd_filter.iloc[pos])
@@ -1050,7 +1051,7 @@ class CocoDisplay:
                 title = dico['titlebar']
                 if title_fig != title.split()[0]:
                     title = title_fig + ' ' + title
-                if mypandas_filter[mypandas_filter[input_field] < 0.].empty:
+                if mypandas_filter[mypandas_filter[input_field] <= 0.].empty:
                     standardfig = self.standardfig(x_axis_type = axis_type, x_range = (0.01, 1.05 * max_value),
                                                    title = dico['titlebar'])
                     standardfig.xaxis[0].formatter = PrintfTickFormatter(format="%4.2e")
@@ -1066,6 +1067,7 @@ class CocoDisplay:
                     max_value = max(np.abs(srcfiltered.data['left']).max(), srcfiltered.data['right'].max())
                     standardfig = self.standardfig(x_axis_type = axis_type, x_range = (-max_value, max_value),
                                                    title = dico['titlebar'])
+
                 if func.__name__ == 'pycoa_pie' :
                     standardfig.plot_width = self.plot_height
                     standardfig.plot_height = self.plot_height
@@ -1152,7 +1154,7 @@ class CocoDisplay:
                                 text_x.push(r*Math.cos(middle[i]));
                                 text_y.push(r*Math.sin(middle[i]));
                                 text_y2.push(r*Math.sin(middle[i])-0.1);
-                                percentage.push('('+String(orderval[i] / tot).slice(0, 4)+'%)');
+                                percentage.push(String(100.*orderval[i] / tot).slice(0, 4));
 
                                 if ((ends[i]-starts[i]) > 0.08*(2 * Math.PI))
                                     text_size.push('10pt');
@@ -1184,7 +1186,7 @@ class CocoDisplay:
                             source_filter.data['text_y'] = text_y;
                             source_filter.data['text_y2'] = text_y2;
                             source_filter.data['text_size'] = text_size;
-                            source_filter.data['percentage'] = percentage
+                            source_filter.data['percentage'] = percentage;
 
                             ylabel.major_label_overrides = labeldic;
                             var tmp = title.text;
@@ -1203,10 +1205,16 @@ class CocoDisplay:
                         """)
                     date_slider.js_on_change('value', callback)
                 cases_custom = CocoDisplay.rollerJS()
-                standardfig.add_tools(HoverTool(
-                    tooltips=[('Location', '@rolloverdisplay'), (input_field, '@{' + input_field + '}' + '{custom}'), ],
-                    formatters={'location': 'printf', '@{' + input_field + '}': cases_custom, },
-                    point_policy="follow_mouse"))  # ,PanTool())
+                if func.__name__ == 'pycoa_pie' :
+                    standardfig.add_tools(HoverTool(
+                        tooltips=[('Location', '@rolloverdisplay'), (input_field, '@{' + input_field + '}' + '{custom}'), ('%:','@percentage'), ],
+                        formatters={'location': 'printf', '@{' + input_field + '}': cases_custom, '%':'printf'},
+                        point_policy="follow_mouse"))  # ,PanTool())
+                else:
+                    standardfig.add_tools(HoverTool(
+                        tooltips=[('Location', '@rolloverdisplay'), (input_field, '@{' + input_field + '}' + '{custom}'), ],
+                        formatters={'location': 'printf', '@{' + input_field + '}': cases_custom, },
+                        point_policy="follow_mouse"))  # ,PanTool())
                 panel = Panel(child = standardfig, title = axis_type)
                 panels.append(panel)
             return func(self, srcfiltered, panels, date_slider)
@@ -1250,10 +1258,10 @@ class CocoDisplay:
         standardfig.legend.visible = False
         txt1 = Text(x = 'text_x', y = 'text_y', text = 'codelocation', angle = 'text_angle',
               text_align = 'center', text_font_size = 'text_size')
-        txt2 = Text(x = 'text_x', y = 'text_y2', text = 'percentage', angle = 'text_angle',
-                  text_align = 'center', text_font_size = 'text_size')
+        #txt2 = Text(x = 'text_x', y = 'text_y2', text = 'percentage', angle = 'text_angle',
+        #          text_align = 'center', text_font_size = 'text_size')
         standardfig.add_glyph(srcfiltered,txt1)
-        standardfig.add_glyph(srcfiltered,txt2)
+        #standardfig.add_glyph(srcfiltered,txt2)
 
         if date_slider:
             standardfig = row(standardfig,date_slider)

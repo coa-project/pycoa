@@ -476,11 +476,9 @@ def hist(**kwargs):
         raise CoaTypeError('Waiting input as valid pycoa pandas '
                            'dataframe. See help.')
 
-    if dateslider or dateslider == False:
+    if dateslider is not None:
         del kwargs['dateslider']
-        kwargs['cursor_date'] = True
-        if dateslider == False:
-            kwargs['cursor_date'] = False
+        kwargs['cursor_date'] = dateslider
 
     if typeofhist == 'bylocation':
         if 'bins' in kwargs:
@@ -558,9 +556,9 @@ def map(**kwargs):
     input_field = kwargs.pop('input_field')
     dateslider = kwargs.get('dateslider', None)
 
-    if dateslider:
+    if dateslider is not None:
         del kwargs['dateslider']
-        kwargs['cursor_date']=True
+        kwargs['cursor_date'] = dateslider
 
     if visu == 'bokeh':
         return show(_cocoplot.pycoa_map(t, input_field, **kwargs))

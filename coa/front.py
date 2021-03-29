@@ -346,15 +346,18 @@ def decoplot(func):
                         the get() function.
 
         width_height : width and height of the picture .
-                    If specified should be a list of width and height.
-                    For instance width_height=[400,500]
+                    If specified should be a list of width and height. For instance width_height=[400,500]
 
         title       --  to force the title of the plot
 
-        - Two methods from this decorators can be used:
-            * plot : date chart  according to location
-            * scrollmenu_plot: two date charts which can be selected from scroll menu,
-                                according to the locations which were selected
+        typeofplot  -- 'date' (default), 'menulocation' or 'versus'
+                       'date':date plot
+                       'menulocation': date plot with two scroll menu locations.
+                                        Usefull to study the behaviour of a variable for two different countries.
+                       'versus': plot variable against an other one.
+                                  For this type of plot one should  'input' and 'input_field' (not fully tested).
+                                  Moreover dim(input_field) must be 2 .
+
         """
         kwargs_test(kwargs, ['where', 'what', 'which', 'whom', 'when',
                              'input', 'input_field', 'width_height', 'title', 'option','typeofplot'],
@@ -399,7 +402,7 @@ def plot(t,input_field,typeofplot, **kwargs):
         else:
             print('typeofplot is versus but dim(input_field)!=2, versus has not effect ...')
             fig = _cocoplot.pycoa_date_plot(t, input_field, **kwargs)
-    elif typeofplot == 'menulocation':
+        elif typeofplot == 'menulocation':
         if input_field is not None and len(input_field) > 1:
             print('typeofplot is menulocation but dim(input_field)>1, menulocation has not effect ...')
         fig = _cocoplot.pycoa_scrollingmenu(t, **kwargs)
@@ -435,17 +438,19 @@ def hist(**kwargs):
                 If specified should be a list of width and height.
                 For instance width_height=[400,500]
 
-    typeofhist  --  'bylocation' (default), 'byvalue' or 'pie'
+    typeofhist  --  'bylocation' (default), 'byvalue' or pie
 
     bins        --  number of bins used, only available for 'byvalue' type of
                     histograms.
                     If none provided, a default value will be used.
-
-    dateslider  -- boolean value.
-                    If True, add a date cursor bar in the figure
-                    to dislay histo/map to a particular date.
-                    Default value = False
     """
+
+    # not currently supported : dateslider  -- boolean value. Caution : experimental feature.
+    #               If True, add a date vertical cursor bar to the left of the figure
+    #               to dislay histo/map to a particular date (default false)
+    #               Warning : this coud be time consuming when one use it with map bokeh
+    #               preferable to use this option with folium map
+    # """
     kwargs_test(kwargs, ['where', 'what', 'which', 'whom', 'when', 'input', 'input_field', 'bins', 'title',
                          'typeofhist', 'option','dateslider'],
                 'Bad args used in the pycoa.hist() function.')
@@ -489,8 +494,6 @@ def hist(**kwargs):
             info('dateslider not implemented for typeofhist is byvalue.')
         fig = _cocoplot.pycoa_histo(t, input_field, **kwargs)
     elif typeofhist == 'pie':
-        if 'bins' in kwargs:
-            raise CoaKeyError("The bins keyword cannot be set with pie histograms. See help.")
         fig = _cocoplot.pycoa_pie(t, input_field, **kwargs)
 
     else:

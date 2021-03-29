@@ -435,19 +435,17 @@ def hist(**kwargs):
                 If specified should be a list of width and height.
                 For instance width_height=[400,500]
 
-    typeofhist  --  'bylocation' (default), 'byvalue' or pie
+    typeofhist  --  'bylocation' (default), 'byvalue' or 'pie'
 
     bins        --  number of bins used, only available for 'byvalue' type of
                     histograms.
                     If none provided, a default value will be used.
-    """
 
-    # not currently supported : dateslider  -- boolean value. Caution : experimental feature.
-    #               If True, add a date vertical cursor bar to the left of the figure
-    #               to dislay histo/map to a particular date (default false)
-    #               Warning : this coud be time consuming when one use it with map bokeh
-    #               preferable to use this option with folium map
-    # """
+    dateslider  -- boolean value.
+                    If True, add a date cursor bar in the figure
+                    to dislay histo/map to a particular date.
+                    Default value = False
+    """
     kwargs_test(kwargs, ['where', 'what', 'which', 'whom', 'when', 'input', 'input_field', 'bins', 'title',
                          'typeofhist', 'option','dateslider'],
                 'Bad args used in the pycoa.hist() function.')

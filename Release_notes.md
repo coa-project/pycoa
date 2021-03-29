@@ -1,12 +1,16 @@
 # PyCoa - Release_notes
 
 ## dev - 
-## v2.02 - march 2021 - Import decorators modifciation inside the display
-- add pie chart representation
-- simplication on bokeh geo
-- fixed bug on horizontal histo label
-- add date_slider in the front end
 
+## v2.02 - march 2021 - Import decorators modifciation inside the display
+- New standard output is pandas dataframe
+- Bug solved for a SPF database which has changed
+- Some bugs solved for Windows based machines
+- Added pie chart representation (hist with typeofhist='pie' option)
+- Simplication on bokeh geo
+- Fixed bug on horizontal histo label
+- Added date_slider in the front end for hist (except byvalue) and map
+- Optimized style of code writing (pyCharm recommandations), and docstrings corrections
 
 ## v2.01 - march 2021 - Minor improvements
 - New local database support : USA (Covidtracking), ITA (dpc), IND (covid19india)
@@ -15,7 +19,7 @@ the covid19 for those states have been merged respectively to 'Andhra Pradesh' a
 'Jammu and Kashmir'
 - Bug solved for SPF (csv format change), and new data added (2nd vaccination information)
 - Minor improvements and code structure modification
-- fix bug on date_slider (not fully tested with the front end)
+- Fix bug on date_slider (not fully tested with the front end)
 
 ## v2.0 - february 2021 - Major release 
 - Supporting more than one database : worldwide (OWID) and local, USA (JHU-USA) and FRANCE (SPF, OpenCovid19)

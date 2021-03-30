@@ -1050,25 +1050,21 @@ class CocoDisplay:
                 title = dico['titlebar']
                 if title_fig != title.split()[0]:
                     title = title_fig + ' ' + title
-                if mypandas_filter[mypandas_filter[input_field] <= 0.].empty:
-                    standardfig = self.standardfig(x_axis_type = axis_type, x_range = (0.01, 1.05 * max_value),
+
+                standardfig = self.standardfig(x_axis_type = axis_type, x_range = (1.05*min_value, 1.05 * max_value),
                                                    title = dico['titlebar'])
-                    standardfig.xaxis[0].formatter = PrintfTickFormatter(format="%4.2e")
-                    if axis_type == "log":
-                        min_range_val = 0.01
-                        if min_value >= 0:
-                            min_range_val = 10 ** np.floor(np.log10(min_value_gt0))
-                        if func.__name__ == 'pycoa_horizonhisto' :
-                            standardfig.x_range = Range1d(min_range_val, 1.05 * max_value)
-                            standardfig.y_range = Range1d(min(srcfiltered.data['bottom']), max(srcfiltered.data['top']))
-                            srcfiltered.data['left'] = [0.001] * len(srcfiltered.data['bottom'])
-                else:
-                    if func.__name__ == 'pycoa_horizonhisto':
-                        max_value = max(np.abs(srcfiltered.data['left']).max(), srcfiltered.data['right'].max())
-                        standardfig = self.standardfig(x_axis_type = axis_type, x_range = (-max_value, max_value),
-                                                   title = dico['titlebar'])
+                standardfig.xaxis[0].formatter = PrintfTickFormatter(format="%4.2e")
+                if axis_type == "log":
+                    if not mypandas_filter[mypandas_filter[input_field] <= 0.].empty:
+                        print('Some value are negative, can\'t display log scale in this context')
                     else:
-                        raise CoaTypeError("Some values are negative, can not use pie chart in this context ...")
+                        #min_range_val = 0.01
+                        #if min_value >= 0:
+                        #    min_range_val = 10 ** np.floor(np.log10(min_value_gt0))
+                        if func.__name__ == 'pycoa_horizonhisto' :
+                            standardfig.x_range = Range1d(0.01, 1.05 * max_value)
+                            #standardfig.y_range = Range1d(min(srcfiltered.data['bottom']), max(srcfiltered.data['top']))
+                            srcfiltered.data['left'] = [0.001] * len(srcfiltered.data['bottom'])
 
                 if func.__name__ == 'pycoa_pie' :
                     standardfig.plot_width = self.plot_height
@@ -1082,7 +1078,8 @@ class CocoDisplay:
                                                   date_slider = date_slider,
                                                   ylabel = standardfig.yaxis[0],
                                                   title = standardfig.title,
-                                                  x_range = standardfig.x_range),
+                                                  x_range = standardfig.x_range,
+                                                  x_axis_type = axis_type),
                             code = """
                             var date_slide = date_slider.value;
                             var dates = source.data['date_utc'];
@@ -1178,7 +1175,7 @@ class CocoDisplay:
                                 {
                                     left_quad.push(0);
                                     right_quad.push(orderval[i]);
-                                }    
+                                }
                             }
 
                             source_filter.data['location'] = orderloc;
@@ -1215,7 +1212,10 @@ class CocoDisplay:
 
                             x_range.end =  1.05 * maxx;
                             x_range.start =  1.05 * minx;
-
+                            if(x_axis_type=='log' && minx > 0){
+                                x_range.start =  0.01;
+                                source_filter.data['left'] = Array(left_quad.length).fill(0.01);
+                                }
                             var tmp = title.text;
                             tmp = tmp.slice(0, -11);
                             var dateconverted = new Date(date_slide);

@@ -803,7 +803,7 @@ class CocoDisplay:
             geopdwd = geopdwd.dropna(subset = [input_field])
             geopdwd = geopdwd.reset_index(drop = True)
 
-            orientation = kwargs.get('orientation', 'horizontal')
+            orientation = kwargs.get('orientation', 'vertical')
 
             if dico['when_end'] <= geopdwd.date.min():
                 started = geopdwd.date.min()
@@ -1004,7 +1004,6 @@ class CocoDisplay:
             Horizontal histogram & Pie Chart
             """
             title_fig = input_field
-
             geopdwd['cases'] = geopdwd[input_field]
             geopdwd_filtered['cases'] = geopdwd_filtered[input_field]
 
@@ -1069,20 +1068,21 @@ class CocoDisplay:
                         standardfig = self.standardfig(x_axis_type = axis_type, x_range = (-max_value, max_value),
                                                    title = dico['titlebar'])
                     else:
-                        raise CoaTypeError("Some values are negative, can not use pie chart in this context ...") 
+                        raise CoaTypeError("Some values are negative, can not use pie chart in this context ...")
 
                 if func.__name__ == 'pycoa_pie' :
                     standardfig.plot_width = self.plot_height
                     standardfig.plot_height = self.plot_height
 
-                if date_slider and mypandas_filter[mypandas_filter[input_field] < 0].empty:
-                    date_slider.orientation = 'vertical'
+                #if date_slider and mypandas_filter[mypandas_filter[input_field] < 0].empty:
+                if date_slider:
                     date_slider.height = int(0.8 * self.plot_height)
-                    callback = CustomJS(args = dict(source=source,
-                                                  source_filter=srcfiltered,
-                                                  date_slider=date_slider,
-                                                  ylabel=standardfig.yaxis[0],
-                                                  title=standardfig.title),
+                    callback = CustomJS(args = dict(source = source,
+                                                  source_filter = srcfiltered,
+                                                  date_slider = date_slider,
+                                                  ylabel = standardfig.yaxis[0],
+                                                  title = standardfig.title,
+                                                  x_range = standardfig.x_range),
                             code = """
                             var date_slide = date_slider.value;
                             var dates = source.data['date_utc'];
@@ -1128,7 +1128,6 @@ class CocoDisplay:
                                 ordercolors.push(newcolors[indices[i]]);
                                 labeldic[len-indices[i]] = ordercodeloc[indices[i]];
                             }
-                            console.log('Begin');
                             source_filter.data['cases'] = orderval;
                             const reducer = (accumulator, currentValue) => accumulator + currentValue;
                             var tot = orderval.reduce(reducer);
@@ -1145,6 +1144,9 @@ class CocoDisplay:
                             var cumul = 0.;
                             var percentage = [];
                             var text_size = [];
+                            var left_quad = [];
+                            var right_quad = [];
+
                             for(var i = 0; i < orderval.length; i++)
                             {
                                 cumul += ((orderval[i] / tot) * 2 * Math.PI);
@@ -1166,8 +1168,18 @@ class CocoDisplay:
 
                                 top.push((orderval.length-i) + bthick/2);
                                 bottom.push((orderval.length-i) - bthick/2);
+
+                                if(orderval[i]<0)
+                                {
+                                    left_quad.push(orderval[i]);
+                                    right_quad.push(0.);
+                                }
+                                else
+                                {
+                                    left_quad.push(0);
+                                    right_quad.push(orderval[i]);
+                                }    
                             }
-                            console.log(starts);
 
                             source_filter.data['location'] = orderloc;
                             source_filter.data['codelocation'] = ordercodeloc;
@@ -1177,10 +1189,9 @@ class CocoDisplay:
                                 source_filter.data['rolloverdisplay'] = ordername_subregion;
                             else
                                 source_filter.data['rolloverdisplay'] = orderloc;
+
+                            console.log('Begin');
                             console.log(source_filter.data['rolloverdisplay']);
-                            source_filter.data['right'] = orderval;
-                            source_filter.data['top'] = top;
-                            source_filter.data['bottom'] = bottom;
 
                             source_filter.data['ends'] = ends;
                             source_filter.data['starts'] = starts;
@@ -1192,6 +1203,19 @@ class CocoDisplay:
                             source_filter.data['percentage'] = percentage;
 
                             ylabel.major_label_overrides = labeldic;
+
+                            source_filter.data['top'] = top;
+                            source_filter.data['bottom'] = bottom;
+                            source_filter.data['left'] = left_quad;
+                            source_filter.data['right'] = right_quad;
+                            console.log(left_quad);
+                            console.log(right_quad);
+                            var maxx = Math.max.apply(Math, right_quad);
+                            var minx = Math.min.apply(Math, left_quad);
+
+                            x_range.end =  1.05 * maxx;
+                            x_range.start =  1.05 * minx;
+
                             var tmp = title.text;
                             tmp = tmp.slice(0, -11);
                             var dateconverted = new Date(date_slide);
@@ -1210,13 +1234,13 @@ class CocoDisplay:
                 cases_custom = CocoDisplay.rollerJS()
                 if func.__name__ == 'pycoa_pie' :
                     standardfig.add_tools(HoverTool(
-                        tooltips=[('Location', '@rolloverdisplay'), (input_field, '@{' + input_field + '}' + '{custom}'), ('%:','@percentage'), ],
-                        formatters={'location': 'printf', '@{' + input_field + '}': cases_custom, '%':'printf'},
+                        tooltips=[('Location', '@rolloverdisplay'), (input_field, '@{' + 'cases' + '}' + '{custom}'), ('%:','@percentage'), ],
+                        formatters={'location': 'printf', '@{' + 'cases' + '}': cases_custom, '%':'printf'},
                         point_policy="follow_mouse"))  # ,PanTool())
                 else:
                     standardfig.add_tools(HoverTool(
-                        tooltips=[('Location', '@rolloverdisplay'), (input_field, '@{' + input_field + '}' + '{custom}'), ],
-                        formatters={'location': 'printf', '@{' + input_field + '}': cases_custom, },
+                        tooltips=[('Location', '@rolloverdisplay'), (input_field, '@{' + 'cases' + '}' + '{custom}'), ],
+                        formatters={'location': 'printf', '@{' + 'cases' + '}': cases_custom, },
                         point_policy="follow_mouse"))  # ,PanTool())
                 panel = Panel(child = standardfig, title = axis_type)
                 panels.append(panel)
@@ -1414,6 +1438,8 @@ class CocoDisplay:
 
         new_poly = []
         geolistmodified = dict()
+        date_slider.orientation = 'horizontal'
+
         for index, row in geopdwd_filtered.iterrows():
             split_poly = []
             new_poly = []

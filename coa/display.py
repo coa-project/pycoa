@@ -1055,7 +1055,7 @@ class CocoDisplay:
                                                    title = dico['titlebar'])
                 standardfig.xaxis[0].formatter = PrintfTickFormatter(format="%4.2e")
                 if axis_type == "log":
-                    if not mypandas_filter[mypandas_filter[input_field] <= 0.].empty:
+                    if not mypandas_filter[mypandas_filter[input_field] < 0.].empty:
                         print('Some value are negative, can\'t display log scale in this context')
                     else:
                         #min_range_val = 0.01
@@ -1212,10 +1212,13 @@ class CocoDisplay:
 
                             x_range.end =  1.05 * maxx;
                             x_range.start =  1.05 * minx;
-                            if(x_axis_type=='log' && minx > 0){
+                            console.log(x_axis_type)
+                            if(x_axis_type==='log' && minx >= 0){
+                                console.log('BASBABAB')
                                 x_range.start =  0.01;
                                 source_filter.data['left'] = Array(left_quad.length).fill(0.01);
                                 }
+                            console.log(x_range.end,x_range.start );
                             var tmp = title.text;
                             tmp = tmp.slice(0, -11);
                             var dateconverted = new Date(date_slide);

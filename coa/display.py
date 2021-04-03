@@ -55,6 +55,7 @@ from PIL import Image
 
 import matplotlib.pyplot as plt
 import datetime as dt
+import bisect
 
 width_height_default = [500, 380]
 
@@ -796,7 +797,7 @@ class CocoDisplay:
             colors = itertools.cycle(colors)
             dico_colors = {i: next(colors) for i in my_location}
             country_col = pd.DataFrame(dico_colors.items(), columns = ['location', 'colors'])
-            mypandas = (pd.merge(mypandas, country_col, on = 'location'))
+            mypandas = pd.merge(mypandas, country_col, on = 'location')
 
             geopdwd = mypandas
             geopdwd = geopdwd.sort_values(by = input_field, ascending=False)
@@ -912,53 +913,43 @@ class CocoDisplay:
         -----------------
         HoverTool is available it returns position of the middle of the bin and the value.
         """
-        mypandas = geopdwd_filtered.rename(columns={'cases': input_field})
-        dict_histo = defaultdict(list)
+        mypandas = geopdwd_filtered.rename(columns = {'cases': input_field})
         if 'location' in mypandas.columns:
-            tooltips = 'Value at around @middle_bin : @val'
             uniqloc = list(mypandas.codelocation.unique())
-            shorten_loc = CocoDisplay.dict_shorten_loc(uniqloc)
-            val_per_country = defaultdict(list)
+
             if len(uniqloc) == 1:
                 dico['bins'] = 2
-            for w in uniqloc:
-                val = mypandas.loc[mypandas.codelocation == w][input_field]
-                histo, edges = np.histogram(val, density=False, bins=dico['bins'])
-                val_per_country[w] = val.values[0]
-                dict_histo[w] = pd.DataFrame({'location': w, 'val': histo,
-                                              'left': edges[:-1],
-                                              'right': edges[1:],
-                                              'middle_bin': np.floor(edges[:-1] + (edges[1:] - edges[:-1]) / 2)})
 
-            for j in range(len(uniqloc)):
-                dict_histo[shorten_loc[j]] = dict_histo.pop(uniqloc[j])
-
-            tooltips = 'Contributors : @contributors'
-            l_data = list(val_per_country.values())
-            # good nb of bins
-            l_n = len(l_data)
+            allval  = mypandas.loc[mypandas.codelocation.isin(uniqloc)][['rolloverdisplay', input_field]]
+            min_val = allval[input_field].min()
+            max_val = allval[input_field].max()
             if dico['bins']:
                 bins = dico['bins']
             else:
-                bins = math.ceil(2 * l_n ** (1. / 3))  # Rice rule
-                if bins < 8:
-                    bins = 8
-            histo, edges = np.histogram(l_data, density=False, bins=bins,
-                                        range=CocoDisplay.min_max_range(np.min(l_data), np.max(l_data)))
-            contributors = []
-            for i, j in zip(edges[:-1], edges[1:]):
-                res = [key for key, val in
-                       filter(lambda sub: int(sub[1]) >= i and int(sub[1]) <= j, val_per_country.items())]
-                name_dis = mypandas.loc[mypandas.codelocation.isin(res)]['rolloverdisplay'].values
-                contributors.append(name_dis)
+                bins = len(uniqloc)
+            delta = (max_val - min_val ) / (bins-1)
 
-            colors = itertools.cycle(self.scolors)
+            interval = [ min_val + (i-1)*delta for i in range(1,(bins+1)+1)]
+
+            contributors = {  i : [] for i in range(bins)}
+            for i in range(len(allval)):
+                rank = bisect.bisect_left(interval, allval.iloc[i][input_field])
+                contributors[rank].append(allval.iloc[i]['rolloverdisplay'])
+
+            colors = itertools.cycle(self.lcolors)
             lcolors = [next(colors) for i in range(bins)]
+            contributors = dict(sorted(contributors.items()))
+            frame_histo = pd.DataFrame({
+                              'left': interval[:-1],
+                              'right':interval[1:],
+                              'middle_bin': [format((i+j)/2, ".1f") for i,j in zip(interval[:-1],interval[1:])],
+                              'top': [len(i) for i in list(contributors.values())],
+                              'contributors': list(contributors.values()),
+                              'colors': lcolors})
 
-            frame_histo = pd.DataFrame({'val': histo, 'left': edges[:-1], 'right': edges[1:],
-                                        'middle_bin': np.floor(edges[:-1] + (edges[1:] - edges[:-1]) / 2),
-                                        'contributors': contributors,
-                                        'colors': lcolors})
+
+        tooltips=[('Middle value','@middle_bin'),('Contributors', '@contributors')]
+
         hover_tool = HoverTool(tooltips = tooltips)
         panels = []
         bottom = 0
@@ -972,28 +963,27 @@ class CocoDisplay:
                 x_axis_type, y_axis_type = 'log', 'log'
                 axis_type_title = 'loglog'
             standardfig = self.standardfig(x_axis_type=x_axis_type, y_axis_type=y_axis_type, title=dico['titlebar'])
+            standardfig.yaxis[0].formatter = PrintfTickFormatter(format = "%4.2e")
             standardfig.xaxis[0].formatter = PrintfTickFormatter(format="%4.2e")
-            # standardfig.title.text = dico['titlebar']
             standardfig.add_tools(hover_tool)
-            standardfig.x_range = Range1d(0, 1.05 * max(edges))
-            standardfig.y_range = Range1d(0, 1.05 * max(frame_histo['val']))
+            standardfig.x_range = Range1d(1.05 * interval[0], 1.05 * interval[-1])
+            standardfig.y_range = Range1d(0, 1.05 * frame_histo['top'].max())
             if x_axis_type == "log":
                 left = 0.8
-                if frame_histo['left'][0] > 0:
-                    left = frame_histo['left'][0]
-                standardfig.x_range = Range1d(left, 1.05 * max(edges))
+                if frame_histo['left'][0] <= 0:
+                    frame_histo.at[0, 'left'] = left
+                else:
+                    left  = frame_histo['left'][0]
+                standardfig.x_range = Range1d(left, 10 * interval[-1])
+
             if y_axis_type == "log":
                 bottom = 0.0001
-                standardfig.y_range = Range1d(0.001, 1.05 * max(frame_histo['val']))
+                standardfig.y_range = Range1d(0.001, 10 * frame_histo['top'].max())
 
-            label = dico['titlebar']
-
-            standardfig.quad(source=ColumnDataSource(frame_histo), top='val', bottom=bottom, left='left', \
-                             right='right', fill_color='colors', legend_label=label)
-            standardfig.legend.label_text_font_size = "12px"
+            standardfig.quad(source=ColumnDataSource(frame_histo), top='top', bottom=bottom, left='left', \
+                             right='right', fill_color='colors')
             panel = Panel(child=standardfig, title=axis_type_title)
             panels.append(panel)
-            CocoDisplay.bokeh_legend(standardfig)
         tabs = Tabs(tabs=panels)
         return tabs
 
@@ -1032,18 +1022,14 @@ class CocoDisplay:
                 geopdwd_filter = CocoDisplay.add_columns_for_pie_chart(geopdwd_filter,input_field)
                 geopdwd = CocoDisplay.add_columns_for_pie_chart(geopdwd,input_field)
 
-
             source = ColumnDataSource(data = geopdwd)
-
-            mypandas_filter = geopdwd_filter
-            mypandas_filter = mypandas_filter.sort_values(by = input_field, ascending = False)
+            mypandas_filter = geopdwd_filter.sort_values(by = input_field, ascending = False)
 
             srcfiltered = ColumnDataSource(data = mypandas_filter)
 
             max_value = mypandas_filter[input_field].max()
             min_value = mypandas_filter[input_field].min()
             min_value_gt0 = mypandas_filter[mypandas_filter[input_field] > 0][input_field].min()
-
 
             panels = []
             for axis_type in ["linear", "log"]:
@@ -1062,7 +1048,7 @@ class CocoDisplay:
                         #if min_value >= 0:
                         #    min_range_val = 10 ** np.floor(np.log10(min_value_gt0))
                         if func.__name__ == 'pycoa_horizonhisto' :
-                            standardfig.x_range = Range1d(0.01, 1.05 * max_value)
+                            #standardfig.x_range = Range1d(0.01, 1.05 * max_value)
                             #standardfig.y_range = Range1d(min(srcfiltered.data['bottom']), max(srcfiltered.data['top']))
                             srcfiltered.data['left'] = [0.001] * len(srcfiltered.data['bottom'])
 

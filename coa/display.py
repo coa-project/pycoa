@@ -947,7 +947,6 @@ class CocoDisplay:
                               'contributors': list(contributors.values()),
                               'colors': lcolors})
 
-
         tooltips=[('Middle value','@middle_bin'),('Contributors', '@contributors')]
 
         hover_tool = HoverTool(tooltips = tooltips)
@@ -1018,13 +1017,16 @@ class CocoDisplay:
                 geopdwd_filter['bottom'] = [len(geopdwd_filter.index) - bthick / 2 - i for i in
                                                 geopdwd_filter.index.to_list()]
 
+                #geopdwd_filter = geopdwd_filter.loc[geopdwd_filter['cases']>0]
+
             if func.__name__ == 'pycoa_pie' :
                 geopdwd_filter = CocoDisplay.add_columns_for_pie_chart(geopdwd_filter,input_field)
                 geopdwd = CocoDisplay.add_columns_for_pie_chart(geopdwd,input_field)
 
             source = ColumnDataSource(data = geopdwd)
-            mypandas_filter = geopdwd_filter.sort_values(by = input_field, ascending = False)
 
+            #mypandas_filter = geopdwd_filter.sort_values(by = input_field, ascending = False)
+            mypandas_filter = geopdwd_filter
             srcfiltered = ColumnDataSource(data = mypandas_filter)
 
             max_value = mypandas_filter[input_field].max()
@@ -1040,6 +1042,10 @@ class CocoDisplay:
                 standardfig = self.standardfig(x_axis_type = axis_type, x_range = (1.05*min_value, 1.05 * max_value),
                                                    title = dico['titlebar'])
                 standardfig.xaxis[0].formatter = PrintfTickFormatter(format="%4.2e")
+                standardfig.x_range = Range1d(0.01, 1.05 * max_value)
+                if not mypandas_filter[mypandas_filter[input_field] < 0.].empty:
+                    standardfig.x_range = Range1d(1.05 * min_value, 1.05 * max_value)
+
                 if axis_type == "log":
                     if not mypandas_filter[mypandas_filter[input_field] < 0.].empty:
                         print('Some value are negative, can\'t display log scale in this context')
@@ -1048,9 +1054,7 @@ class CocoDisplay:
                         #if min_value >= 0:
                         #    min_range_val = 10 ** np.floor(np.log10(min_value_gt0))
                         if func.__name__ == 'pycoa_horizonhisto' :
-                            #standardfig.x_range = Range1d(0.01, 1.05 * max_value)
-                            #standardfig.y_range = Range1d(min(srcfiltered.data['bottom']), max(srcfiltered.data['top']))
-                            srcfiltered.data['left'] = [0.001] * len(srcfiltered.data['bottom'])
+                            srcfiltered.data['left'] = [0.001] * len(srcfiltered.data['right'])
 
                 if func.__name__ == 'pycoa_pie' :
                     standardfig.plot_width = self.plot_height
@@ -1173,9 +1177,6 @@ class CocoDisplay:
                             else
                                 source_filter.data['rolloverdisplay'] = orderloc;
 
-                            console.log('Begin');
-                            console.log(source_filter.data['rolloverdisplay']);
-
                             source_filter.data['ends'] = ends;
                             source_filter.data['starts'] = starts;
                             source_filter.data['middle'] = middle;
@@ -1191,20 +1192,16 @@ class CocoDisplay:
                             source_filter.data['bottom'] = bottom;
                             source_filter.data['left'] = left_quad;
                             source_filter.data['right'] = right_quad;
-                            console.log(left_quad);
-                            console.log(right_quad);
+
                             var maxx = Math.max.apply(Math, right_quad);
                             var minx = Math.min.apply(Math, left_quad);
 
                             x_range.end =  1.05 * maxx;
                             x_range.start =  1.05 * minx;
-                            console.log(x_axis_type)
                             if(x_axis_type==='log' && minx >= 0){
-                                console.log('BASBABAB')
                                 x_range.start =  0.01;
                                 source_filter.data['left'] = Array(left_quad.length).fill(0.01);
                                 }
-                            console.log(x_range.end,x_range.start );
                             var tmp = title.text;
                             tmp = tmp.slice(0, -11);
                             var dateconverted = new Date(date_slide);
@@ -1214,9 +1211,6 @@ class CocoDisplay:
                             var dmy = dd + '/' + mm + '/' + yyyy;
                             title.text = tmp + dmy+")";
 
-                            console.log(title.text);
-                            console.log(labeldic);
-                            console.log('END');
                             source_filter.change.emit();
                         """)
                     date_slider.js_on_change('value', callback)

@@ -1421,7 +1421,8 @@ class CocoDisplay:
 
         new_poly = []
         geolistmodified = dict()
-        date_slider.orientation = 'horizontal'
+        if date_slider:
+            date_slider.orientation = 'horizontal'
 
         for index, row in geopdwd_filtered.iterrows():
             split_poly = []

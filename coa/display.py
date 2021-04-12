@@ -150,12 +150,13 @@ class CocoDisplay:
 
         what = kwargs.get('what', '')  # cumul is the default
         input_dico['what'] = what
-        input_dico['locsumall'] = None
+        input_dico['locsumall'] = False
         if 'location' in mypandas:
             mypandas['rolloverdisplay'] = mypandas['codelocation']
             if mypandas['location'].apply(lambda x: True if type(x) == list else False).any():
                 # len(x) == 3 or len(x) == 2 : we suppose that codelocation is iso3 -len=3- or int for french code region
                 # For other nationnal db need to check !
+                input_dico['locsumall'] = True
                 maskcountries = mypandas['codelocation'].apply(
                     lambda x: True if type(x) == int or len(x) == 3 else False)
                 mypandascountry = mypandas[maskcountries]
@@ -704,7 +705,7 @@ class CocoDisplay:
 
     @decoplot
     def pycoa_scrollingmenu(self, mypandas, dico, input_field, hover_tool, ax_type, **kwargs):
-        if dico['locsumall'] is not None:
+        if dico['locsumall']:
             raise CoaKeyError('For coherence \'locsumall\' can not be called with scrolling_menu ...')
         tooltips = 'Date: @date{%F} <br>  $name: @$name'
         hover_tool = HoverTool(tooltips=tooltips, formatters={'@date': 'datetime'})
@@ -777,7 +778,7 @@ class CocoDisplay:
         """
         Decorator function used for histogram and map
         """
-        def generic_hm(self, mypandas, input_field = None, cursor_date = False, **kwargs):
+        def generic_hm(self, mypandas, input_field = None, cursor_date = False, maplabelled = False, **kwargs):
             mypandas, dico = self.standard_input(mypandas, input_field, **kwargs, plot_last_date=True)
             if type(input_field) is None.__class__ and dico['which'] is None.__class__:
                 input_field = mypandas.columns[2]
@@ -844,7 +845,7 @@ class CocoDisplay:
 
             if cursor_date is False:
                 date_slider = False
-            return func(self, input_field, date_slider, dico, geopdwd, geopdwd_filter)
+            return func(self, input_field, date_slider, maplabelled, dico, geopdwd, geopdwd_filter)
         return generic_hm
 
     def pycoa_heatmap(self, pycoa_pandas):
@@ -893,7 +894,7 @@ class CocoDisplay:
         return standardfig
 
     @decohistomap
-    def pycoa_histo(self, input_field, date_slider, dico, geopdwd, geopdwd_filtered):
+    def pycoa_histo(self, input_field, date_slider, maplabelled, dico, geopdwd, geopdwd_filtered):
         """Create a Bokeh histogram from a pandas input
         Keyword arguments
         -----------------
@@ -987,7 +988,7 @@ class CocoDisplay:
         return tabs
 
     def decohistopie(func):
-        def inner(self, input_field, date_slider, dico, geopdwd, geopdwd_filtered):
+        def inner(self, input_field, date_slider, maplabelled, dico, geopdwd, geopdwd_filtered):
             """
             Decorator for
             Horizontal histogram & Pie Chart
@@ -1057,6 +1058,8 @@ class CocoDisplay:
                             srcfiltered.data['left'] = [0.001] * len(srcfiltered.data['right'])
 
                 if func.__name__ == 'pycoa_pie' :
+                    if not mypandas_filter[mypandas_filter[input_field] < 0.].empty:
+                        raise CoaKeyError('Some values are negative, can\'t display a Pie chart, try histo by location')
                     standardfig.plot_width = self.plot_height
                     standardfig.plot_height = self.plot_height
 
@@ -1278,7 +1281,7 @@ class CocoDisplay:
         return standardfig
 
     @decohistomap
-    def pycoa_mapfolium(self, input_field, date_slider, dico, geopdwd, geopdwd_filtered):
+    def pycoa_mapfolium(self, input_field, date_slider, maplabelled, dico, geopdwd, geopdwd_filtered):
         """Create a Folium map from a pandas input
         Folium limite so far:
             - scale format can not be changed (no way to use scientific notation)
@@ -1392,7 +1395,7 @@ class CocoDisplay:
         return mapa
 
     @decohistomap
-    def pycoa_map(self, input_field, date_slider, dico, geopdwd, geopdwd_filtered):
+    def pycoa_map(self, input_field, date_slider, maplabelled, dico, geopdwd, geopdwd_filtered):
         """Create a Bokeh map from a pandas input
         Keyword arguments
         -----------------
@@ -1415,9 +1418,9 @@ class CocoDisplay:
         geopdwd_filtered = gpd.GeoDataFrame(geopdwd_filtered, geometry=geopdwd_filtered.geometry, crs="EPSG:4326")
         uniqloc = list(geopdwd_filtered.codelocation.unique())
 
-        geopdwd = geopdwd.sort_values(by=['location', 'date'], ascending = False)
+        geopdwd = geopdwd.sort_values(by=['codelocation', 'date'], ascending = [True, False])
         geopdwd = geopdwd.drop(columns=['date'])
-        geopdwd_filtered = geopdwd_filtered.drop(columns=['date', 'colors'])
+        geopdwd_filtered = geopdwd_filtered.sort_values(by=['codelocation', 'date'], ascending = [True, False]).drop(columns=['date', 'colors'])
 
         new_poly = []
         geolistmodified = dict()
@@ -1451,6 +1454,22 @@ class CocoDisplay:
         geopdwd_filtered = geopdwd_filtered.drop(columns='geometry')
         geopdwd_filtered = pd.merge(geolistmodified, geopdwd_filtered, on='location')
 
+        sourcemaplabel = ColumnDataSource(pd.DataFrame({'centroidx':[],'centroidy':[],'cases':[]}))
+        if maplabelled:
+            geopdwd_filtered['centroidx'] = geopdwd_filtered['geometry'].apply('centroid').x
+            geopdwd_filtered['centroidy'] = geopdwd_filtered['geometry'].apply('centroid').y
+            if dico['locsumall']:
+                locsum = geopdwd_filtered.codelocation.unique()
+                for i in locsum:
+                    cases = geopdwd_filtered.loc[geopdwd_filtered.codelocation == i]['cases'].values[0]
+                    centrosx = geopdwd_filtered.loc[geopdwd_filtered.codelocation == i]['centroidx'].mean()
+                    centrosy = geopdwd_filtered.loc[geopdwd_filtered.codelocation == i]['centroidy'].mean()
+                    geopdwd_filtered.loc[geopdwd_filtered.codelocation == i,'centroidx'] = centrosx
+                    geopdwd_filtered.loc[geopdwd_filtered.codelocation == i,'centroidy'] = centrosy
+            dfLabel=pd.DataFrame(geopdwd_filtered[['location','centroidx','centroidy','cases']])
+            sourcemaplabel = ColumnDataSource(dfLabel)
+
+
         if self.dbld[self.database_name] == 'FRA' and all([len(i) == 2 for i in geolistmodified.location.unique()]):
             minx, miny, maxx, maxy = self.boundary_metropole
         else:
@@ -1473,20 +1492,20 @@ class CocoDisplay:
         color_bar.formatter = BasicTickFormatter(use_scientific=True, precision=1, power_limit_low=int(max_col))
         standardfig.add_layout(color_bar, 'below')
         geopdwd_filtered = geopdwd_filtered[['cases','geometry','location','codelocation','rolloverdisplay']]
+
         json_data = json.dumps(json.loads(geopdwd_filtered.to_json()))
         geopdwd_filtered = GeoJSONDataSource(geojson=json_data)
         if date_slider:
             allcases_location, allcases_dates = pd.DataFrame(), pd.DataFrame()
-            allcases_location = (geopdwd.groupby('location')['cases'].apply(list))
-            geopdwd_tmp = geopdwd.drop_duplicates(subset = ['codelocation'])
-            geopdwd_tmp = geopdwd_tmp.drop(columns = 'cases')
+            allcases_location = geopdwd.groupby('location')['cases'].apply(list)
+
+            geopdwd_tmp = geopdwd.drop_duplicates(subset = ['location']).drop(columns = 'cases')
             geopdwd_tmp = pd.merge(geopdwd_tmp, allcases_location, on = 'location')
             geopdwd_tmp = ColumnDataSource(geopdwd_tmp)
 
-            callback = CustomJS(args = dict(source = geopdwd_tmp,
-                                          source_filter = geopdwd_filtered,
-                                          date_slider = date_slider,
-                                          title=standardfig.title),
+            callback = CustomJS(args =  dict(source = geopdwd_tmp, source_filter = geopdwd_filtered,
+                                          date_slider = date_slider, title=standardfig.title,
+                                          maplabelled = sourcemaplabel),
                         code = """
                         var ind_date_max = (date_slider.end-date_slider.start)/(24*3600*1000);
                         var ind_date = (date_slider.value-date_slider.start)/(24*3600*1000);
@@ -1494,12 +1513,27 @@ class CocoDisplay:
                         var val_loc = [];
                         var val_ind = [];
                         var new_cases = [];
+                        var new_location = [];
                         var dict = {};
+                        var iloop = source_filter.data['location'].length;
+
                         for (var i = 0; i < source.get_length(); i++)
                         {
-                            new_cases.push(source.data['cases'][i][ind_date_max-ind_date]);
+                                new_cases.push(source.data['cases'][i][ind_date_max-ind_date]);
+                                new_location.push(source.data['location'][i][ind_date_max-ind_date]);
                         }
-                        source_filter.data['cases']=new_cases;
+
+                        if(source.get_length() == 1 && iloop>1)
+                            for(var i = 0; i < iloop; i++)
+                                for(var j = 0; j < new_cases.length; j++)
+                                source_filter.data['cases'][i][j] = new_cases[j];
+
+                        else
+                            source_filter.data['cases'] = new_cases;
+
+                        if (maplabelled.get_length() !== 0){
+                            maplabelled.data['cases'] = source_filter.data['cases'];
+                            }
 
                         var tmp = title.text;
                         tmp = tmp.slice(0, -11);
@@ -1509,6 +1543,8 @@ class CocoDisplay:
                         var yyyy = dateconverted.getFullYear();
                         var dmy = dd + '/' + mm + '/' + yyyy;
                         title.text = tmp + dmy+")";
+                        if (maplabelled.get_length() !== 0)
+                            maplabelled.change.emit();
 
                         source_filter.change.emit();
                     """)
@@ -1520,6 +1556,15 @@ class CocoDisplay:
         standardfig.patches('xs', 'ys', source = geopdwd_filtered,
                             fill_color = {'field': 'cases', 'transform': color_mapper},
                             line_color = 'black', line_width = 0.25, fill_alpha = 1)
+
+        if maplabelled :
+            labels = LabelSet(
+                x = 'centroidx',
+                y = 'centroidy',
+                text = 'cases',
+                source = sourcemaplabel,text_font_size='10px',text_color='white')
+            standardfig.add_layout(labels)
+
         cases_custom = CocoDisplay.rollerJS()
         if len(uniqloc) > 1:
             loctips = ('location', '@rolloverdisplay')

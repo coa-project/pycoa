@@ -778,7 +778,7 @@ class CocoDisplay:
         """
         Decorator function used for histogram and map
         """
-        def generic_hm(self, mypandas, input_field = None, cursor_date = False, maplabelled = False, **kwargs):
+        def generic_hm(self, mypandas, input_field = None, cursor_date = False, maplabel = False, **kwargs):
             mypandas, dico = self.standard_input(mypandas, input_field, **kwargs, plot_last_date=True)
             if type(input_field) is None.__class__ and dico['which'] is None.__class__:
                 input_field = mypandas.columns[2]
@@ -845,7 +845,7 @@ class CocoDisplay:
 
             if cursor_date is False:
                 date_slider = False
-            return func(self, input_field, date_slider, maplabelled, dico, geopdwd, geopdwd_filter)
+            return func(self, input_field, date_slider, maplabel, dico, geopdwd, geopdwd_filter)
         return generic_hm
 
     def pycoa_heatmap(self, pycoa_pandas):
@@ -894,7 +894,7 @@ class CocoDisplay:
         return standardfig
 
     @decohistomap
-    def pycoa_histo(self, input_field, date_slider, maplabelled, dico, geopdwd, geopdwd_filtered):
+    def pycoa_histo(self, input_field, date_slider, maplabel, dico, geopdwd, geopdwd_filtered):
         """Create a Bokeh histogram from a pandas input
         Keyword arguments
         -----------------
@@ -988,7 +988,7 @@ class CocoDisplay:
         return tabs
 
     def decohistopie(func):
-        def inner(self, input_field, date_slider, maplabelled, dico, geopdwd, geopdwd_filtered):
+        def inner(self, input_field, date_slider, maplabel, dico, geopdwd, geopdwd_filtered):
             """
             Decorator for
             Horizontal histogram & Pie Chart
@@ -1281,7 +1281,7 @@ class CocoDisplay:
         return standardfig
 
     @decohistomap
-    def pycoa_mapfolium(self, input_field, date_slider, maplabelled, dico, geopdwd, geopdwd_filtered):
+    def pycoa_mapfolium(self, input_field, date_slider, maplabel, dico, geopdwd, geopdwd_filtered):
         """Create a Folium map from a pandas input
         Folium limite so far:
             - scale format can not be changed (no way to use scientific notation)
@@ -1395,7 +1395,7 @@ class CocoDisplay:
         return mapa
 
     @decohistomap
-    def pycoa_map(self, input_field, date_slider, maplabelled, dico, geopdwd, geopdwd_filtered):
+    def pycoa_map(self, input_field, date_slider, maplabel, dico, geopdwd, geopdwd_filtered):
         """Create a Bokeh map from a pandas input
         Keyword arguments
         -----------------
@@ -1455,7 +1455,7 @@ class CocoDisplay:
         geopdwd_filtered = pd.merge(geolistmodified, geopdwd_filtered, on='location')
 
         sourcemaplabel = ColumnDataSource(pd.DataFrame({'centroidx':[],'centroidy':[],'cases':[]}))
-        if maplabelled:
+        if maplabel:
             geopdwd_filtered['centroidx'] = geopdwd_filtered['geometry'].apply('centroid').x
             geopdwd_filtered['centroidy'] = geopdwd_filtered['geometry'].apply('centroid').y
             if dico['locsumall']:
@@ -1505,7 +1505,7 @@ class CocoDisplay:
 
             callback = CustomJS(args =  dict(source = geopdwd_tmp, source_filter = geopdwd_filtered,
                                           date_slider = date_slider, title=standardfig.title,
-                                          maplabelled = sourcemaplabel),
+                                          maplabel = sourcemaplabel),
                         code = """
                         var ind_date_max = (date_slider.end-date_slider.start)/(24*3600*1000);
                         var ind_date = (date_slider.value-date_slider.start)/(24*3600*1000);
@@ -1531,8 +1531,8 @@ class CocoDisplay:
                         else
                             source_filter.data['cases'] = new_cases;
 
-                        if (maplabelled.get_length() !== 0){
-                            maplabelled.data['cases'] = source_filter.data['cases'];
+                        if (maplabel.get_length() !== 0){
+                            maplabel.data['cases'] = source_filter.data['cases'];
                             }
 
                         var tmp = title.text;
@@ -1543,8 +1543,8 @@ class CocoDisplay:
                         var yyyy = dateconverted.getFullYear();
                         var dmy = dd + '/' + mm + '/' + yyyy;
                         title.text = tmp + dmy+")";
-                        if (maplabelled.get_length() !== 0)
-                            maplabelled.change.emit();
+                        if (maplabel.get_length() !== 0)
+                            maplabel.change.emit();
 
                         source_filter.change.emit();
                     """)
@@ -1557,7 +1557,7 @@ class CocoDisplay:
                             fill_color = {'field': 'cases', 'transform': color_mapper},
                             line_color = 'black', line_width = 0.25, fill_alpha = 1)
 
-        if maplabelled :
+        if maplabel :
             labels = LabelSet(
                 x = 'centroidx',
                 y = 'centroidy',

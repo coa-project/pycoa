@@ -253,7 +253,7 @@ def get(**kwargs):
                 is available. By default : no option.
                 See listoption().
     """
-    kwargs_test(kwargs, ['where', 'what', 'which', 'whom', 'when', 'output', 'option', 'bins', 'title', 'visu', 'tile','dateslider'],
+    kwargs_test(kwargs, ['where', 'what', 'which', 'whom', 'when', 'output', 'option', 'bins', 'title', 'visu', 'tile','dateslider','maplabel'],
                 'Bad args used in the pycoa.get() function.')
     # no dateslider currently
 
@@ -516,7 +516,7 @@ def deco_pycoa_graph(f):
     @wraps(f)
     def wrapper(*args, **kwargs):
         kwargs_test(kwargs,
-                    ['where', 'what', 'which', 'whom', 'when', 'input', 'visu', 'input_field', 'option', 'tile','dateslider'],
+                    ['where', 'what', 'which', 'whom', 'when', 'input', 'visu', 'input_field', 'option', 'tile','dateslider','maplabel'],
                     'Bad args used in the pycoa.map() function.')
         # no 'dateslider' currently.
         which = ''
@@ -560,16 +560,20 @@ def map(**kwargs):
     t = kwargs.pop('t')
     input_field = kwargs.pop('input_field')
     dateslider = kwargs.get('dateslider', None)
+    maplabel = kwargs.get('maplabel', None)
 
     if dateslider is not None:
         del kwargs['dateslider']
         kwargs['cursor_date'] = dateslider
+    if maplabel is not None:
+        del kwargs['maplabel']
+        kwargs['maplabel'] = maplabel
 
     if visu == 'bokeh':
         return show(_cocoplot.pycoa_map(t, input_field, **kwargs))
     elif visu == 'folium':
-        if dateslider:
-            raise CoaKeyError('dateslider has no effect with folium map, you should considere to use bokeh map visu in this case')
+        if dateslider or maplabel:
+            raise CoaKeyError('Not available with folium map, you should considere to use bokeh map visu in this case')
         return _cocoplot.pycoa_mapfolium(t, input_field, **kwargs)
     else:
         raise CoaTypeError('Waiting for a valid visualisation. So far: \'bokeh\' or \'folium\'.See help.')

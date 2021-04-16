@@ -39,6 +39,7 @@ from bokeh.models.widgets import Tabs, Panel
 from bokeh.plotting import figure
 from bokeh.layouts import row, column, gridplot
 from bokeh.palettes import Category10, Category20, Viridis256
+
 from bokeh.io import export_png
 from bokeh import events
 from bokeh.models.widgets import DateSlider
@@ -873,7 +874,9 @@ class CocoDisplay:
         standardfig = self.standardfig(y_range = list(pycoa_pandas.location.unique()),
                                        x_range = list(pycoa_pandas.data.unique()))
         standardfig.xaxis.major_label_orientation = "vertical"
-        color_mapper = LinearColorMapper(palette = Viridis256, low = pycoa_pandas.value.min(),
+
+        invViridis256 = Viridis256[::-1]
+        color_mapper = LinearColorMapper(palette = invViridis256, low = pycoa_pandas.value.min(),
                                          high = pycoa_pandas.value.max(), nan_color = '#ffffff')
         color_bar = ColorBar(color_mapper = color_mapper, label_standoff=4,
                              border_line_color = None, location=(0, 0), orientation = 'vertical', ticker = BasicTicker())
@@ -1330,7 +1333,8 @@ class CocoDisplay:
         min_col, max_col = CocoDisplay.min_max_range(np.nanmin(geopdwd_filtered[input_field]),
                                                      np.nanmax(geopdwd_filtered[input_field]))
 
-        color_mapper = LinearColorMapper(palette=Viridis256, low=min_col, high=max_col, nan_color='#d9d9d9')
+        invViridis256 = Viridis256[::-1]
+        color_mapper = LinearColorMapper(palette=invViridis256, low=min_col, high=max_col, nan_color='#d9d9d9')
         colormap = branca.colormap.LinearColormap(color_mapper.palette).scale(min_col, max_col)
         colormap.caption = 'Cases : ' + dico['titlebar']
         colormap.add_to(mapa)
@@ -1487,7 +1491,8 @@ class CocoDisplay:
         standardfig.add_tile(wmt)
         min_col, max_col = CocoDisplay.min_max_range(np.nanmin(geopdwd_filtered[input_field]),
                                                      np.nanmax(geopdwd_filtered[input_field]))
-        color_mapper = LinearColorMapper(palette=Viridis256, low=min_col, high=max_col, nan_color='#ffffff')
+        invViridis256 = Viridis256[::-1]
+        color_mapper = LinearColorMapper(palette=invViridis256, low=min_col, high=max_col, nan_color='#ffffff')
         color_bar = ColorBar(color_mapper=color_mapper, label_standoff=4,
                              border_line_color=None, location=(0, 0), orientation='horizontal', ticker=BasicTicker())
         color_bar.formatter = BasicTickFormatter(use_scientific=True, precision=1, power_limit_low=int(max_col))

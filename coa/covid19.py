@@ -34,7 +34,7 @@ class DataBase(object):
    """
    DataBase class
    Parse a Covid-19 database and filled the pandas python objet : mainpandas
-   It takes a string argument, which can be: 'jhu','spf','owid' and 'opencovid19'
+   It takes a string argument, which can be: 'jhu','spf','owid', 'opencovid19' and 'opencovid19national'
    """
    def __init__(self, db_name):
         """
@@ -248,21 +248,23 @@ class DataBase(object):
                     result = result.rename(columns=rename_dict)
                     columns_keeped=list(rename_dict.values())+['tot_incid_hosp', 'tot_incid_rea', 'tot_incid_rad', 'tot_incid_dc', 'tot_P', 'tot_T']
                     self.return_structured_pandas(result,columns_keeped=columns_keeped) # with 'tot_dc' first
-                elif self.db == 'opencovid19':
-                    info('OPENCOVID19 selected ...')
+                elif self.db == 'opencovid19' or  self.db == 'opencovid19national':
                     rename={'maille_code':'location'}
                     cast={'source_url':str,'source_archive':str,'source_type':str}
-                    drop_field  = {'granularite':['pays','monde','region']}
-                    opencovid19 = self.csv2pandas('https://raw.githubusercontent.com/opencovid19-fr/data/master/dist/chiffres-cles.csv',
-                                drop_field=drop_field,rename_columns=rename,separator=',',cast=cast)
-                    opencovid19['location'] = opencovid19['location'].apply(lambda x: x.replace('COM-','').replace('DEP-',''))
-                    # integrating needed fields
-
-                    column_to_integrate=['nouvelles_hospitalisations', 'nouvelles_reanimations', 'depistes']
-                    for w in ['nouvelles_hospitalisations', 'nouvelles_reanimations', 'depistes']:
-                        opencovid19['tot_'+w]=opencovid19.groupby(['location'])[w].cumsum()
-                    #columns_skipped = ['granularite','maille_nom','source_nom','source_url','source_archive','source_type']
-                    dict_columns_keeped = {
+                    if self.db == 'opencovid19':
+                        info('OPENCOVID19 (county granularity) selected ...')
+                        drop_field  = {'granularite':['pays','monde','region']}
+                        dict_columns_keeped = {
+                            'deces':'tot_deces',
+                            'cas_confirmes':'tot_cas_confirmes',
+                            'reanimation':'cur_reanimation',
+                            'hospitalises':'cur_hospitalises',
+                            'gueris':'tot_gueris'
+                            }
+                    else:
+                        info('OPENCOVID19 (national granularity) selected ...')
+                        drop_field  = {'granularite':['monde','region','departement']}
+                        dict_columns_keeped = {
                         'deces':'tot_deces',
                         'cas_confirmes':'tot_cas_confirmes',
                         'cas_ehpad':'tot_cas_ehpad',
@@ -273,6 +275,21 @@ class DataBase(object):
                         'hospitalises':'cur_hospitalises',
                         'gueris':'tot_gueris'
                         }
+
+
+                    opencovid19 = self.csv2pandas('https://raw.githubusercontent.com/opencovid19-fr/data/master/dist/chiffres-cles.csv',
+                                drop_field=drop_field,rename_columns=rename,separator=',',cast=cast)
+
+                    opencovid19['location'] = opencovid19['location'].apply(lambda x: x.replace('COM-','').replace('DEP-','').replace('FRA','France'))
+                    # integrating needed fields
+                    if self.db == 'opencovid19national':
+                        opencovid19 = opencovid19.loc[~opencovid19.granularite.isin(['collectivite-outremer'])]
+
+                    column_to_integrate=['nouvelles_hospitalisations', 'nouvelles_reanimations', 'depistes']
+                    for w in ['nouvelles_hospitalisations', 'nouvelles_reanimations', 'depistes']:
+                        opencovid19['tot_'+w]=opencovid19.groupby(['location'])[w].cumsum()
+                    #columns_skipped = ['granularite','maille_nom','source_nom','source_url','source_archive','source_type']
+
                     self.return_structured_pandas(opencovid19.rename(columns=dict_columns_keeped),columns_keeped=list(dict_columns_keeped.values())+['tot_'+c for c in column_to_integrate])
                 elif self.db == 'owid':
                     info('OWID aka \"Our World in Data\" database selected ...')
@@ -343,8 +360,11 @@ class DataBase(object):
                     'incid_rad', 'P', 'T', 'tx_incid', 'R', 'taux_occupation_sae', 'tx_pos']
             No translation have been done for french keywords data
         For more information please have a look to  https://www.data.gouv.fr/fr/organizations/sante-publique-france/
-        - 'opencovid19' :['cas_confirmes', 'cas_ehpad', 'cas_confirmes_ehpad', 'cas_possibles_ehpad', 'deces', 'deces_ehpad',
+        - 'opencovid19' :['cas_confirmes', 'deces',
         'reanimation', 'hospitalises','nouvelles_hospitalisations', 'nouvelles_reanimations', 'gueris', 'depistes']
+        - 'opencovid19national' :['cas_confirmes', 'cas_ehpad', 'cas_confirmes_ehpad', 'cas_possibles_ehpad', 'deces', 'deces_ehpad',
+        'reanimation', 'hospitalises','nouvelles_hospitalisations', 'nouvelles_reanimations', 'gueris', 'depistes']
+
         No translation have been done for french keywords data
         For more information please have a look to https://github.com/opencovid19-fr
         '''
@@ -760,9 +780,16 @@ class DataBase(object):
             elif o == 'nofillnan':
                 fillnan=False
             elif o == 'smooth7':
+                if fillnan: # which is the default. Use nofillnan option instead.
+                    # fill with previous value
+                    pdfiltered[kwargs['which']] = pdfiltered.groupby(['location'])[kwargs['which']].fillna(method='ffill')
+                    # fill remaining nan with zeros
+                    pdfiltered = pdfiltered.fillna(0)
+
                 pdfiltered[kwargs['which']] = pdfiltered.groupby(['location'])[kwargs['which']].rolling(7,min_periods=7,center=True).mean().reset_index(level=0,drop=True)
                 #pdfiltered[kwargs['which']] = pdfiltered[kwargs['which']].fillna(0) # causes bug with fillnan procedure below
                 pdfiltered = pdfiltered.groupby('location').apply(lambda x : x[3:-3]).reset_index(drop=True) # remove out of bound dates.
+                fillnan = False
             elif o == 'sumall':
                 sumall = True
             elif o != None and o != '':

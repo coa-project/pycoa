@@ -50,6 +50,7 @@ _db_list_dict = {'jhu': 'WW',
     'jhu-usa': 'USA',
     'spf': 'FRA',
     'opencovid19': 'FRA',
+    'opencovid19national': 'WW',
     'dpc': 'ITA',
     'covidtracking': 'USA',
     'covid19india': 'IND'}

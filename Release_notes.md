@@ -1,7 +1,11 @@
 # PyCoa - Release_notes
 
 ## dev - 
-
+- Map bug fixed for option='sumall'
+- maplabel added for bokeh map   
+- fix bug with smooth7 , in the case data non continious
+- add opencovid19national datase, remove ephad data for opencovid19 (only available for national)
+ 
 ## v2.02 - march 2021 - Import decorators modifciation inside the display
 - New standard output is pandas dataframe
 - Bug solved for a SPF database which has changed
@@ -11,6 +15,7 @@
 - Fixed bug on horizontal histo label
 - Added date_slider in the front end for hist (except byvalue) and map
 - Optimized style of code writing (pyCharm recommandations), and docstrings corrections
+
 
 ## v2.01 - march 2021 - Minor improvements
 - New local database support : USA (Covidtracking), ITA (dpc), IND (covid19india)

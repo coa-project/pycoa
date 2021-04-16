@@ -780,12 +780,8 @@ class DataBase(object):
             elif o == 'nofillnan':
                 fillnan=False
             elif o == 'smooth7':
-                if fillnan: # which is the default. Use nofillnan option instead.
-                    # fill with previous value
-                    pdfiltered[kwargs['which']] = pdfiltered.groupby(['location'])[kwargs['which']].fillna(method='ffill')
-                    # fill remaining nan with zeros
-                    pdfiltered = pdfiltered.fillna(0)
-
+                pdfiltered[kwargs['which']] = pdfiltered.groupby(['location'])[kwargs['which']].fillna(method='ffill')
+                pdfiltered = pdfiltered.fillna(0)
                 pdfiltered[kwargs['which']] = pdfiltered.groupby(['location'])[kwargs['which']].rolling(7,min_periods=7,center=True).mean().reset_index(level=0,drop=True)
                 #pdfiltered[kwargs['which']] = pdfiltered[kwargs['which']].fillna(0) # causes bug with fillnan procedure below
                 pdfiltered = pdfiltered.groupby('location').apply(lambda x : x[3:-3]).reset_index(drop=True) # remove out of bound dates.

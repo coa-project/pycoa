@@ -1467,6 +1467,7 @@ class CocoDisplay:
                     geopdwd_filtered.loc[geopdwd_filtered.codelocation == i,'centroidx'] = centrosx
                     geopdwd_filtered.loc[geopdwd_filtered.codelocation == i,'centroidy'] = centrosy
             dfLabel=pd.DataFrame(geopdwd_filtered[['location','centroidx','centroidy','cases']])
+            dfLabel['cases'] = dfLabel['cases'].round(1)
             sourcemaplabel = ColumnDataSource(dfLabel)
 
 

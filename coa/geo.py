@@ -284,6 +284,7 @@ class GeoManager():
                     "Iran":"IRN",\
                     "Micronesia (Country)":"FSM",\
                     "Northern Cyprus":"CYP",\
+                    "Curacao":"CUW",\
                 })
         return [translation_dict.get(k,k) for k in w]
 

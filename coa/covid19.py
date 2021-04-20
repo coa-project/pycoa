@@ -21,7 +21,7 @@ from collections import defaultdict
 import numpy as np
 import pandas as pd
 import sys
-from coa.tools import info, verb, kwargs_test, get_local_from_url, fill_missing_dates, check_valid_date, get_db_list_dict
+from coa.tools import info, verb, kwargs_test, get_local_from_url, fill_missing_dates, check_valid_date, rollingweek_to_middledate, get_db_list_dict
 
 import coa.geo as coge
 import coa.display as codisplay
@@ -192,21 +192,37 @@ class DataBase(object):
                     #'taux_occupation_sae_couleur','tx_pos_couleur','nb_orange','nb_rouge']
                     spf4 = self.csv2pandas("https://www.data.gouv.fr/fr/datasets/r/4acad602-d8b1-4516-bc71-7d5574d5f33e",
                                 rename_columns = rename, separator=',', encoding = "ISO-8859-1", cast=cast)
+                    #
+                    #Prc_tests_PCR_TA_crible = % de tests PCR criblés parmi les PCR positives
+                    #Prc_susp_501Y_V1 = % de tests avec suspicion de variant 20I/501Y.V1 (UK)
+                    #Prc_susp_501Y_V2_3 = % de tests avec suspicion de variant 20H/501Y.V2 (ZA) ou 20J/501Y.V3 (BR)
+                    #Prc_susp_IND = % de tests avec une détection de variant mais non identifiable
+                    #Prc_susp_ABS = % de tests avec une absence de détection de variant
+                    #Royaume-Uni (UK): code Nexstrain= 20I/501Y.V1
+                    #Afrique du Sud (ZA) : code Nexstrain= 20H/501Y.V2
+                    #Brésil (BR) : code Nexstrain= 20J/501Y.V3
 
+                    cast = {'dep': 'string'}
+                    rename = {'dep': 'location'}
+                    constraints = {'cl_age90': 0}
+                    spf6 =  self.csv2pandas("https://static.data.gouv.fr/resources/donnees-de-laboratoires-pour-le-depistage-indicateurs-sur-les-variants/20210419-191146/sp-variant-7j-dep-2021-04-19-19h11.csv",
+                                constraints = constraints,rename_columns = rename, separator=';', cast=cast)
                     #result = pd.concat([spf1, spf2,spf3,spf4,spf5], axis=1, sort=False)
-                    list_spf=[spf1, spf2, spf3, spf4, spf5]
+                    list_spf=[spf1, spf2, spf3, spf4, spf5, spf6]
+
                     for i in list_spf:
                         i['date'] = pd.to_datetime(i['date']).apply(lambda x: x if not pd.isnull(x) else '')
 
                     min_date=min([s.date.min() for s in list_spf])
                     max_date=max([s.date.max() for s in list_spf])
-                    spf1, spf2, spf3, spf4, spf5 = spf1.set_index(['date', 'location']),\
+                    spf1, spf2, spf3, spf4, spf5, spf6 = spf1.set_index(['date', 'location']),\
                                                 spf2.set_index(['date', 'location']),\
                                                 spf3.set_index(['date', 'location']),\
                                                 spf4.set_index(['date', 'location']),\
-                                                spf5.set_index(['date', 'location'])
+                                                spf5.set_index(['date', 'location']),\
+                                                spf6.set_index(['date', 'location'])
 
-                    list_spf = [spf1, spf2, spf3, spf4, spf5]
+                    list_spf = [spf1, spf2, spf3, spf4, spf5, spf6]
                     result = reduce(lambda left, right: pd.merge(left, right, on = ['date','location'],
                                                 how = 'outer'), list_spf)
                     result = result.reset_index()
@@ -244,9 +260,12 @@ class DataBase(object):
                         'tx_pos': 'cur_idx_tx_pos',
                         'n_cum_dose1': 'tot_vacc',
                         'n_cum_dose2': 'tot_vacc2',
+
                         }
                     result = result.rename(columns=rename_dict)
-                    columns_keeped=list(rename_dict.values())+['tot_incid_hosp', 'tot_incid_rea', 'tot_incid_rad', 'tot_incid_dc', 'tot_P', 'tot_T']
+                    columns_keeped  = list(rename_dict.values())+['tot_incid_hosp', 'tot_incid_rea', 'tot_incid_rad', 'tot_incid_dc', 'tot_P', 'tot_T']
+                    columns_keeped += ['Prc_tests_PCR_TA_crible', 'Prc_susp_501Y_V1', 'Prc_susp_501Y_V2_3', 'Prc_susp_IND', 'Prc_susp_ABS']
+
                     self.return_structured_pandas(result,columns_keeped=columns_keeped) # with 'tot_dc' first
                 elif self.db == 'opencovid19' or  self.db == 'opencovid19national':
                     rename={'maille_code':'location'}
@@ -499,6 +518,11 @@ class DataBase(object):
         if rename_columns:
             for key,val in rename_columns.items():
                 pandas_db = pandas_db.rename(columns={key:val})
+        if 'semaine' in  pandas_db.columns:
+            pandas_db['semaine'] = [ rollingweek_to_middledate(i) for i in pandas_db['semaine'] ]
+            pandas_db = pandas_db.rename(columns={'semaine':'date'})
+
+
         pandas_db['date'] = pandas.to_datetime(pandas_db['date'],errors='coerce').dt.date
         self.dates  = pandas_db['date']
         pandas_db = pandas_db.sort_values(['location','date'])

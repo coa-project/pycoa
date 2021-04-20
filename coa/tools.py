@@ -209,6 +209,12 @@ def extract_dates(when):
 
     return w0,w1
 
+def rollingweek_to_middledate(whenstr):
+    firstday = datetime.date(int(whenstr.split('-')[0]),int(whenstr.split('-')[1]),int(whenstr.split('-')[2]))
+    lastday  = datetime.date(int(whenstr.split('-')[3]),int(whenstr.split('-')[4]),int(whenstr.split('-')[5]))
+    return firstday + (lastday - firstday)/2
+
+
 def get_local_from_url(url,expiration_time=0,suffix=''):
     """"Download data from the given url and store it into a local file.
 

@@ -5,7 +5,8 @@
 - maplabel added for bokeh map   
 - fix bug with smooth7 , in the case data non continious
 - add opencovid19national datase, remove ephad data for opencovid19 (only available for national)
- 
+- add SPF variant
+   
 ## v2.02 - march 2021 - Import decorators modifciation inside the display
 - New standard output is pandas dataframe
 - Bug solved for a SPF database which has changed

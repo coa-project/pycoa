@@ -221,7 +221,8 @@ class CocoDisplay:
         input_dico['when'] = when
         title_temporal = ''
         input_dico['when_beg'] = mypandas.date.min()
-        input_dico['when_end'] = mypandas.date.max()
+        input_dico['when_end'] = mypandas[[which,'date']].dropna().date.max()
+
 
         if when:
             input_dico['when_beg'], input_dico['when_end'] = extract_dates(when)

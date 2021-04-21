@@ -132,7 +132,7 @@ class DataBase(object):
                 elif self.db == 'spf':
                     info('SPF aka Sante Publique France database selected ...')
 
-                    info('... Five differents db from SPF will be parsed ...')
+                    info('... Six differents db from SPF will be parsed ...')
                     # https://www.data.gouv.fr/fr/datasets/donnees-hospitalieres-relatives-a-lepidemie-de-covid-19/
                     # Parse and convert spf data structure to JHU one for historical raison
                     # hosp Number of people currently hospitalized
@@ -205,8 +205,8 @@ class DataBase(object):
                     cast = {'dep': 'string'}
                     rename = {'dep': 'location'}
                     constraints = {'cl_age90': 0}
-                    spf6 =  self.csv2pandas("https://static.data.gouv.fr/resources/donnees-de-laboratoires-pour-le-depistage-indicateurs-sur-les-variants/20210419-191146/sp-variant-7j-dep-2021-04-19-19h11.csv",
-                                constraints = constraints,rename_columns = rename, separator=';', cast=cast)
+                    spf6 =  self.csv2pandas("https://www.data.gouv.fr/fr/datasets/r/16f4fd03-797f-4616-bca9-78ff212d06e8",
+                                constraints = constraints, rename_columns = rename, separator=';', cast=cast)
                     #result = pd.concat([spf1, spf2,spf3,spf4,spf5], axis=1, sort=False)
                     list_spf=[spf1, spf2, spf3, spf4, spf5, spf6]
 

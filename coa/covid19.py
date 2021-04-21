@@ -22,6 +22,7 @@ import numpy as np
 import pandas as pd
 import sys
 from coa.tools import info, verb, kwargs_test, get_local_from_url, fill_missing_dates, check_valid_date, rollingweek_to_middledate, get_db_list_dict
+import coa.rapport as rap
 
 import coa.geo as coge
 import coa.display as codisplay
@@ -271,7 +272,7 @@ class DataBase(object):
                     rename={'maille_code':'location'}
                     cast={'source_url':str,'source_archive':str,'source_type':str}
                     if self.db == 'opencovid19':
-                        info('OPENCOVID19 (county granularity) selected ...')
+                        info('OPENCOVID19 (country granularity) selected ...')
                         drop_field  = {'granularite':['pays','monde','region']}
                         dict_columns_keeped = {
                             'deces':'tot_deces',
@@ -388,6 +389,10 @@ class DataBase(object):
         For more information please have a look to https://github.com/opencovid19-fr
         '''
         return self.available_keys_words
+
+   def get_info_keys_words(self,keys):
+       return rap.keyswords_info(self.get_db(),keys)
+
 
    def get_source(self):
         '''

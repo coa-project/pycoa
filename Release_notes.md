@@ -7,6 +7,7 @@
 - add opencovid19national datase, remove ephad data for opencovid19 (only available for national)
 - add SPF variant
 - fix bug display: last date is lastest date with nonan in which columns
+- add new class rapport to give a rapport on a given keywords 
   
 ## v2.02 - march 2021 - Import decorators modifciation inside the display
 - New standard output is pandas dataframe

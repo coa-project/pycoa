@@ -221,8 +221,10 @@ class CocoDisplay:
         input_dico['when'] = when
         title_temporal = ''
         input_dico['when_beg'] = mypandas.date.min()
-        input_dico['when_end'] = mypandas[[which,'date']].dropna().date.max()
-
+        if mypandas[which].isnull().values.any():
+            input_dico['when_end'] = mypandas.dropna(subset=[which]).date.max()
+        else:
+            input_dico['when_end'] = mypandas.date.max()
 
         if when:
             input_dico['when_beg'], input_dico['when_end'] = extract_dates(when)
@@ -242,8 +244,7 @@ class CocoDisplay:
         if kwargs.get('plot_last_date', None) == True:
             title_temporal = ' (at ' + input_dico['when_end'].strftime('%d/%m/%Y') + ')'
         else:
-            title_temporal = ' (' + 'between ' + input_dico['when_beg'].strftime('%d/%m/%Y') + ' and ' + input_dico[
-                'when_end'].strftime('%d/%m/%Y') + ')'
+            title_temporal = ' (' + 'between ' + input_dico['when_beg'].strftime('%d/%m/%Y') + ' and ' + input_dico['when_end'].strftime('%d/%m/%Y') + ')'
 
         if kwargs.get('option', '') != '':
             title_temporal = ', option ' + str(kwargs.get('option')) + title_temporal

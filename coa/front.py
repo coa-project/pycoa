@@ -210,6 +210,17 @@ def getwhom():
 # ----------------------------------------------------------------------
 # --- get(**kwargs) ----------------------------------------------------
 # ----------------------------------------------------------------------
+
+def get_keyword_definition(which):
+    """
+        Return keyword_definition for the db selected
+    """
+    return _db.get_info_keys_words(which) 
+
+# ----------------------------------------------------------------------
+# --- get(**kwargs) ----------------------------------------------------
+# ----------------------------------------------------------------------
+
 def get(**kwargs):
     """Return covid19 data in specified format output (default, by list)
     for specified locations ('where' keyword).

@@ -7,7 +7,7 @@ _Avril 2020 / Mars 2021_
 [<img src="https://github.com/coa-project/coa-project.github.io/raw/main/fig/FR.png" height="14px" alt="FR flag"> Version française ](https://github.com/coa-project/pycoa/blob/main/README_FR.md)
 
 <center>
-<a href="https://github.com/coa-project/coa-project.github.io/raw/main/fig/pycoa_v2.0_mapworld.html" target="_blank"><img src="https://github.com/coa-project/coa-project.github.io/raw/main/fig/pycoa_v2.0_mapworld.png"></a>
+<a href="https://github.com/coa-project/coa-project.github.io/raw/main/fig/mapFranceVariant.html" target="_blank"><img src="https://github.com/coa-project/coa-project.github.io/raw/main/fig/mapFranceVariant.png"></a>
 </center>
 
 `PyCoA` (Python Covid Analysis) est un ensemble de code Python™ qui fournit :

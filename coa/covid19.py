@@ -255,6 +255,10 @@ class DataBase(object):
                                 #result['offset_'+w] = 0
                             result['tot_'+w]=result.groupby(['location'])[w].cumsum()#+result['offset_'+w]
                         #
+                        for col in result.columns:
+                            if col.startswith('Prc'):
+                                result[col] /= 100.
+
                         rename_dict={
                             'dc': 'tot_dc',
                             'hosp': 'cur_hosp',
@@ -266,11 +270,16 @@ class DataBase(object):
                             'tx_pos': 'cur_idx_tx_pos',
                             'n_cum_dose1': 'tot_vacc',
                             'n_cum_dose2': 'tot_vacc2',
-
+                            'Prc_tests_PCR_TA_crible':'cur_idx_Prc_tests_PCR_TA_crible',
+                            'Prc_susp_501Y_V1':'cur_idx_Prc_susp_501Y_V1',
+                            'Prc_susp_501Y_V2_3':'cur_idx_Prc_susp_501Y_V2_3',
+                            'Prc_susp_IND':'cur_idx_Prc_susp_IND',
+                            'Prc_susp_ABS':'cur_idx_Prc_susp_ABS'
                             }
+
                         result = result.rename(columns=rename_dict)
                         columns_keeped  = list(rename_dict.values())+['tot_incid_hosp', 'tot_incid_rea', 'tot_incid_rad', 'tot_incid_dc', 'tot_P', 'tot_T']
-                        columns_keeped += ['Prc_tests_PCR_TA_crible', 'Prc_susp_501Y_V1', 'Prc_susp_501Y_V2_3', 'Prc_susp_IND', 'Prc_susp_ABS']
+                        #columns_keeped += ['Prc_tests_PCR_TA_crible', 'Prc_susp_501Y_V1', 'Prc_susp_501Y_V2_3', 'Prc_susp_IND', 'Prc_susp_ABS']
 
                         self.return_structured_pandas(result,columns_keeped=columns_keeped) # with 'tot_dc' first
                 elif self.db == 'opencovid19' or  self.db == 'opencovid19national':

@@ -22,7 +22,6 @@ import numpy as np
 import pandas as pd
 import sys
 from coa.tools import info, verb, kwargs_test, get_local_from_url, fill_missing_dates, check_valid_date, rollingweek_to_middledate, get_db_list_dict
-import coa.rapport as rap
 
 import coa.geo as coge
 import coa.display as codisplay
@@ -52,6 +51,7 @@ class DataBase(object):
         self.set_display(self.db)
         self.database_url = []
         self.db_world=None
+
         if self.db not in self.database_name:
             raise CoaDbError('Unknown ' + self.db + '. Available database so far in PyCoa are : ' + str(self.database_name), file=sys.stderr)
         else:
@@ -405,7 +405,7 @@ class DataBase(object):
         return self.available_keys_words
 
    def get_info_keys_words(self,keys):
-       return rap.keyswords_info(self.get_db(),keys)
+       return coge.GeoInfo().keyswords_info(self.get_db(),keys)
 
 
    def get_source(self):

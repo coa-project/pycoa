@@ -51,7 +51,7 @@ class DataBase(object):
         self.set_display(self.db)
         self.database_url = []
         self.db_world=None
-
+        self.geoinfo = coge.GeoInfo()
         if self.db not in self.database_name:
             raise CoaDbError('Unknown ' + self.db + '. Available database so far in PyCoa are : ' + str(self.database_name), file=sys.stderr)
         else:
@@ -405,7 +405,7 @@ class DataBase(object):
         return self.available_keys_words
 
    def get_info_keys_words(self,keys):
-       return coge.GeoInfo().keyswords_info(self.get_db(),keys)
+       return self.geoinfo.keyswords_info(self.get_db(),keys)
 
 
    def get_source(self):

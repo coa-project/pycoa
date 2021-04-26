@@ -280,8 +280,6 @@ class DataBase(object):
 
                         result = result.rename(columns=rename_dict)
                         columns_keeped  = list(rename_dict.values())+['tot_incid_hosp', 'tot_incid_rea', 'tot_incid_rad', 'tot_incid_dc', 'tot_P', 'tot_T']
-                        #columns_keeped += ['Prc_tests_PCR_TA_crible', 'Prc_susp_501Y_V1', 'Prc_susp_501Y_V2_3', 'Prc_susp_IND', 'Prc_susp_ABS']
-
                         self.return_structured_pandas(result,columns_keeped=columns_keeped) # with 'tot_dc' first
                 elif self.db == 'opencovid19' or  self.db == 'opencovid19national':
                     rename={'maille_code':'location'}
@@ -835,6 +833,8 @@ class DataBase(object):
                 fillnan = False
             elif o == 'sumall':
                 sumall = True
+                if kwargs['which'].startswith('cur_idx_Prc'):
+                    print('Warning this data is from rolling value, ended date may be not correct ...')
             elif o != None and o != '':
                 raise CoaKeyError('The option '+o+' is not recognized in get_stats. See get_available_options() for list.')
 
@@ -849,11 +849,7 @@ class DataBase(object):
             loc = pdfiltered['location'].unique()
             ntot=len(loc)
 
-            if fillnan:
-                ptot=pdfiltered.groupby(['location']).fillna(method='ffill').groupby(['date']).sum().reset_index()   # summing for all locations
-            else:
-                ptot=pdfiltered.groupby(by=['location','date']).sum(min_count=1).reset_index()
-
+            ptot=pdfiltered.groupby(['location']).fillna(method='ffill').groupby(['date']).sum().reset_index()   # summing for all locations
             # mean for some columns, about index and not sum of values.
             for col in ptot.columns:
                 if col.startswith('cur_idx_'):

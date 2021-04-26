@@ -24,6 +24,7 @@ import sys
 from coa.tools import info, verb, kwargs_test, get_local_from_url, fill_missing_dates, check_valid_date, rollingweek_to_middledate, get_db_list_dict
 
 import coa.geo as coge
+import coa.dbinfo as report
 import coa.display as codisplay
 from coa.error import *
 from scipy import stats as sps
@@ -51,7 +52,7 @@ class DataBase(object):
         self.set_display(self.db)
         self.database_url = []
         self.db_world=None
-        self.geoinfo = coge.GeoInfo()
+        self.geoinfo = report
         if self.db not in self.database_name:
             raise CoaDbError('Unknown ' + self.db + '. Available database so far in PyCoa are : ' + str(self.database_name), file=sys.stderr)
         else:

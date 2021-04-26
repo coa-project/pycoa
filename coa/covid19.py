@@ -848,7 +848,11 @@ class DataBase(object):
         if sumall:
             loc = pdfiltered['location'].unique()
             ntot=len(loc)
-            ptot=pdfiltered.groupby(['location']).fillna(method='ffill').groupby(['date']).sum().reset_index()   # summing for all locations
+
+            if fillnan:
+                ptot=pdfiltered.groupby(['location']).fillna(method='ffill').groupby(['date']).sum().reset_index()   # summing for all locations
+            else:
+                ptot=pdfiltered.groupby(by=['location','date']).sum(min_count=1).reset_index()
 
             # mean for some columns, about index and not sum of values.
             for col in ptot.columns:

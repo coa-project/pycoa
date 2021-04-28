@@ -211,11 +211,17 @@ def getwhom():
 # --- get(**kwargs) ----------------------------------------------------
 # ----------------------------------------------------------------------
 
-def get_keyword_definition(which):
+def getinfo(which):
     """
         Return keyword_definition for the db selected
     """
-    return _db.get_info_keys_words(which) 
+    if not which:
+        which = listwhich()[0]
+        print('Load default which:',which)
+    elif which not in listwhich():
+        raise CoaKeyError('Which option ' + which + ' not supported. '
+                                                    'See listwhich() for list.')
+    print(_db.get_keyword_definition(which),'\nurl:', _db.get_keyword_url(which))
 
 # ----------------------------------------------------------------------
 # --- get(**kwargs) ----------------------------------------------------

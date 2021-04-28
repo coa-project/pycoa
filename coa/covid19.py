@@ -401,16 +401,19 @@ class DataBase(object):
         '''
         return self.available_keys_words
 
-   def get_info_keys_words(self,keys):
-       return self.geoinfo.keyswords_info(self.get_db(),keys)
+   def get_keyword_definition(self,keys):
+       '''
+            Return definition on the selected keword
+       '''
+       value = self.geoinfo.generic_info(self.get_db(),keys)[0]
+       return value
 
-
-   def get_source(self):
-        '''
-        Return the current url used to fill the mainpandas
-        (csv file)
-        '''
-        return self.database_url
+   def get_keyword_url(self,keys):
+       '''
+        Return url where the keyword have been parsed
+       '''
+       value = self.geoinfo.generic_info(self.get_db(),keys)[1]
+       return value
 
    def return_jhu_pandas(self):
         ''' For center for Systems Science and Engineering (CSSE) at Johns Hopkins University

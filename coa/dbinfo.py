@@ -160,11 +160,19 @@ def generic_info(namedb, keys):
         mydico = india
     elif namedb == 'dpc':
         ita = {
-        'tot_casi':['tot_casi::FILLIT','https://github.com/pcm-dpc/COVID-19/raw/master/dati-province/dpc-covid19-ita-province.csv']
+        'tot_casi':['tot_casi:FILLIT','https://github.com/pcm-dpc/COVID-19/raw/master/dati-province/dpc-covid19-ita-province.csv']
         }
-        for k,v in india.items():
-            india[k].append('https://github.com/pcm-dpc/COVID-19')
+        for k,v in ita.items():
+            ita[k].append('https://github.com/pcm-dpc/COVID-19')
         mydico = ita
+    elif namedb == 'rki':
+        rki = {
+        'deaths':['deaths:FILLIT','https://github.com/jgehrcke/covid-19-germany-gae/raw/master/deaths-rki-by-ags.csv'],
+        'cases':['cases:FILLIT','https://github.com/jgehrcke/covid-19-germany-gae/raw/master/deaths-rki-by-ags.csv'],
+        }
+        for k,v in rki.items():
+            rki[k].append('https://github.com/jgehrcke/covid-19-germany-gae')
+        mydico = rki
     else:
         raise CoaKeyError('Error in the database selected, please check !')
     if keys not in mydico:

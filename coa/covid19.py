@@ -139,7 +139,7 @@ class DataBase(object):
                         self.return_structured_pandas(spf) # with 'tot_dc' first
                     else:
                         info('SPF aka Sante Publique France database selected (France departement granularity) ...')
-                        info('... Six differents db from SPF will be parsed ...')
+                        info('... Six different databases from SPF will be parsed ...')
                         # https://www.data.gouv.fr/fr/datasets/donnees-hospitalieres-relatives-a-lepidemie-de-covid-19/
                         # Parse and convert spf data structure to JHU one for historical raison
                         # hosp Number of people currently hospitalized

@@ -682,7 +682,8 @@ class GeoCountry():
     _country_info_dict = {'FRA':'https://github.com/coa-project/coadata/raw/main/coacache/public.opendatasoft.com_912711563.zip',\
                     'USA':'https://alicia.data.socrata.com/api/geospatial/jhnu-yfrj?method=export&format=Original',\
                     'ITA':'https://raw.githubusercontent.com/openpolis/geojson-italy/master/geojson/limits_IT_provinces.geojson',\
-                    'IND':'https://raw.githubusercontent.com/deldersveld/topojson/master/countries/india/india-states.json'\
+                    'IND':'https://raw.githubusercontent.com/deldersveld/topojson/master/countries/india/india-states.json',\
+                    'DEU':'https://github.com/jgehrcke/covid-19-germany-gae/raw/master/geodata/DE-counties.geojson',\
                     }
 
     _source_dict = {'FRA':{'Basics':_country_info_dict['FRA'],\
@@ -692,6 +693,7 @@ class GeoCountry():
                     'Subregion informations':'https://en.wikipedia.org/wiki/List_of_states_and_territories_of_the_United_States'},\
                     'ITA':{'Basics':_country_info_dict['ITA']},\
                     'IND':{'Basics':_country_info_dict['IND']},\
+                    'DEU':{'Basics':_country_info_dict['DEU']},\
                     }
 
     def __init__(self,country=None,**kwargs):
@@ -890,6 +892,18 @@ class GeoCountry():
             self._country_data['code_region'] = self._country_data['code_subregion']
             self._country_data.drop(['ISO','NAME_0','ID_1','TYPE_1','ENGTYPE_1','id'],axis=1,inplace=True)
 
+        # --- 'IND' case ---------------------------------------------------------------------------------------
+        elif self._country == 'DEU':
+            self._country_data = gpd.read_file(get_local_from_url(url,0)) # this is a geojson file
+            self._country_data.rename(columns={\
+                'GEN':'name_subregion',\
+                'AGS':'code_subregion',\
+                },
+                inplace=True)
+            self._country_data['code_subregion']=self._country_data.code_subregion .astype(int).astype(str)
+            self._country_data['name_region'] = self._country_data['name_subregion']
+            self._country_data['code_region'] = self._country_data['code_subregion']
+            self._country_data=self._country_data[['name_subregion','code_subregion','name_region','code_region','geometry']]
 
     def get_source(self):
         """ Return informations about URL sources

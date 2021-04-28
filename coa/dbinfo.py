@@ -3,13 +3,13 @@
 Date :    april 2020 - april 2021
 Authors : Olivier Dadoun, Julien Browaeys, Tristan Beau
 License: See joint LICENSE file
-Module : report
+Module : coa/dbinfo.py
 About
 -----
-This is the PyCoA rapport module it gives all available information concerning a database key words
+This is the PyCoA dbinfo module which gives informations concerning a database keywords
 """
 
-def keyswords_info(namedb, keys):
+def keywords_info(namedb, keys):
         '''
         Return information on the available keyswords for the database selected
         '''

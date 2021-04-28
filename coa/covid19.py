@@ -83,7 +83,7 @@ class DataBase(object):
                     self.return_structured_pandas(dpc1, columns_keeped=columns_keeped)
                 elif self.db == 'rki':
                     info('DEU, Robert Koch Institut data selected ...')
-                    # TO FILL !!! 
+                    self.return_jhu_pandas()
                 elif self.db == 'covid19india':
                     info('COVID19India database selected ...')
                     rename_dict = {'Date': 'date', 'State': 'location'}
@@ -430,18 +430,30 @@ class DataBase(object):
             '''
         base_url = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/"+\
                                 "csse_covid_19_data/csse_covid_19_time_series/"
-        jhu_files_ext = ['deaths', 'confirmed', 'recovered']
+        base_name = "time_series_covid19_"
+        # previous are default for actual jhu db
+
         pandas_jhu = {}
-        if self.db == 'jhu':
-            extansion =  "_global.csv"
-        else:
-            extansion = "_US.csv"
+
+        if self.db == 'jhu': # worldwide
+            extension =  "_global.csv"
+            jhu_files_ext = ['deaths', 'confirmed', 'recovered']
+        elif self.db == 'jhu-usa': # 'USA'
+            extension = "_US.csv"
             jhu_files_ext = ['deaths','confirmed']
+        elif self.db == 'rki': # 'DEU'
+            base_url = 'https://github.com/jgehrcke/covid-19-germany-gae/raw/master/'
+            jhu_files_ext = ['deaths','cases']
+            extension = '-rki-by-ags.csv'
+            base_name = ''
+        else:  
+            raise CoaDbError('Unknown JHU like db '+str(self.db))
+
         self.available_keys_words = jhu_files_ext
 
         pandas_list = []
         for ext in jhu_files_ext:
-            fileName = "time_series_covid19_" + ext + extansion
+            fileName = base_name + ext + extension
             url = base_url + fileName
             self.database_url.append(url)
             pandas_jhu_db = pandas.read_csv(get_local_from_url(url,7200), sep = ',') # cached for 2 hours
@@ -457,14 +469,22 @@ class DataBase(object):
                     pandas_jhu_db = pandas_jhu_db.melt(id_vars=["location",'Population'],var_name="date",value_name=ext)
                 else:
                     pandas_jhu_db = pandas_jhu_db.melt(id_vars=["location"],var_name="date",value_name=ext)
+            elif self.db == 'rki':
+                pandas_jhu_db = pandas_jhu_db.drop(columns=['sum_'+ext])
+                pandas_jhu_db = pandas_jhu_db.set_index('time_iso8601').T.reset_index().rename(columns={'index':'location'})
+                pandas_jhu_db = pandas_jhu_db.melt(id_vars=["location"],var_name="date",value_name=ext)
+                pandas_jhu_db['location'] = pandas_jhu_db.location.astype(str)
             else:
                 raise CoaTypeError('jhu nor jhu-usa database selected ... ')
+
             pandas_jhu_db=pandas_jhu_db.groupby(['location','date']).sum().reset_index()
             pandas_list.append(pandas_jhu_db)
 
         uniqloc = pandas_list[0]['location'].unique()
         oldloc = uniqloc
         codedico={}
+        toremove = None
+        newloc = None
         if self.db_world:
             d_loc_s = self.geo.to_standard(list(uniqloc),output='list',db=self.get_db(),interpret_region=True)
             self.slocation = d_loc_s
@@ -477,12 +497,16 @@ class DataBase(object):
             loc_sub_code = list(self.geo.get_subregion_list()['code_subregion'])
             #loc_code = list(self.geo.get_data().loc[self.geo.get_data().name_subregion.isin(loc_sub)]['code_subregion'])
             self.slocation = loc_sub_code
-            oldloc = loc_sub_name
-            newloc = loc_sub_code
-            toremove = [x for x in uniqloc if x not in loc_sub_name]
-            codedico={i:j for i,j in zip(uniqloc,newloc)}
+            if self.db == 'jhu-usa':
+                oldloc = loc_sub_name
+                newloc = loc_sub_code
+                toremove = [x for x in uniqloc if x not in loc_sub_name]
+                codedico={i:j for i,j in zip(uniqloc,newloc)}
+
         result = reduce(lambda x, y: pd.merge(x, y, on = ['location','date']), pandas_list)
-        result = result.loc[~result.location.isin(toremove)]
+        if toremove is not None:
+            result = result.loc[~result.location.isin(toremove)]
+
         tmp = pd.DataFrame()
         if 'Kosovo' in oldloc:
             tmp=(result.loc[result.location.isin(['Kosovo','Serbia'])].groupby('date').sum())
@@ -494,17 +518,23 @@ class DataBase(object):
             tmp = tmp[cols]
             result = result.append(tmp)
 
-        result = result.replace(oldloc,newloc)
+        if newloc is not None:
+            result = result.replace(oldloc,newloc)
+
         if self.db == 'jhu-usa':
-            result['codelocation'] = result['location']
-        else:
             result['codelocation'] = result['location'].map(codedico)
+        else:
+            result['codelocation'] = result['location']
 
         result['date'] = pd.to_datetime(result['date'],errors='coerce').dt.date
+
         self.dates  = result['date']
         result=result.sort_values(['location','date'])
         #self.mainpandas = result
-        self.mainpandas = fill_missing_dates(result)
+        if self.db != 'rki':
+            self.mainpandas = fill_missing_dates(result)
+        else:
+            self.mainpandas = result
 
    def csv2pandas(self,url,**kwargs):
         '''

@@ -9,6 +9,8 @@
 - fix bug display: last date is lastest date with nonan in which columns
 - add new class rapport to give a rapport on a given keywords 
 - fixe color bug when 2 var. is displayed
+- self.dates move after fill_missing_dates
+- rki DEU database added
   
 ## v2.02 - march 2021 - Import decorators modifciation inside the display
 - New standard output is pandas dataframe

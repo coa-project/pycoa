@@ -221,7 +221,7 @@ def getinfo(which):
     elif which not in listwhich():
         raise CoaKeyError('Which option ' + which + ' not supported. '
                                                     'See listwhich() for list.')
-    print(_db.get_keyword_definition(which),'\nurl:', _db.get_keyword_url(which))
+    print(_db.get_keyword_definition(which),'\nurl:', _db.get_keyword_url(which)[0],'\n(more info ',_db.get_keyword_url(which)[1],')')
 
 # ----------------------------------------------------------------------
 # --- get(**kwargs) ----------------------------------------------------

@@ -178,6 +178,7 @@ class DataBase(object):
                         # previously : https://www.data.gouv.fr/fr/datasets/r/4f39ec91-80d7-4602-befb-4b522804c0af
                         spf5 = self.csv2pandas("https://www.data.gouv.fr/fr/datasets/r/535f8686-d75d-43d9-94b3-da8cdf850634",
                             rename_columns = rename, constraints = constraints, separator = ';', encoding = "ISO-8859-1", cast = cast)
+
                         # https://www.data.gouv.fr/fr/datasets/indicateurs-de-suivi-de-lepidemie-de-covid-19/#_
                         # tension hospitaliere
                         #'date', 'location', 'region', 'libelle_reg', 'libelle_dep', 'tx_incid',
@@ -197,7 +198,8 @@ class DataBase(object):
                         #'taux_occupation_sae_couleur','tx_pos_couleur','nb_orange','nb_rouge']
                         spf4 = self.csv2pandas("https://www.data.gouv.fr/fr/datasets/r/4acad602-d8b1-4516-bc71-7d5574d5f33e",
                                     rename_columns = rename, separator=',', encoding = "ISO-8859-1", cast=cast)
-                        #
+
+                        #https://www.data.gouv.fr/fr/datasets/donnees-de-laboratoires-pour-le-depistage-indicateurs-sur-les-variants/
                         #Prc_tests_PCR_TA_crible = % de tests PCR criblés parmi les PCR positives
                         #Prc_susp_501Y_V1 = % de tests avec suspicion de variant 20I/501Y.V1 (UK)
                         #Prc_susp_501Y_V2_3 = % de tests avec suspicion de variant 20H/501Y.V2 (ZA) ou 20J/501Y.V3 (BR)
@@ -413,7 +415,8 @@ class DataBase(object):
         Return url where the keyword have been parsed
        '''
        value = self.geoinfo.generic_info(self.get_db(),keys)[1]
-       return value
+       master  = self.geoinfo.generic_info(self.get_db(),keys)[2]
+       return value, master
 
    def return_jhu_pandas(self):
         ''' For center for Systems Science and Engineering (CSSE) at Johns Hopkins University

@@ -139,7 +139,7 @@ class DataBase(object):
                         self.return_structured_pandas(spf) # with 'tot_dc' first
                     else:
                         info('SPF aka Sante Publique France database selected (France departement granularity) ...')
-                        info('... Six differents db from SPF will be parsed ...')
+                        info('... Six different databases from SPF will be parsed ...')
                         # https://www.data.gouv.fr/fr/datasets/donnees-hospitalieres-relatives-a-lepidemie-de-covid-19/
                         # Parse and convert spf data structure to JHU one for historical raison
                         # hosp Number of people currently hospitalized
@@ -174,12 +174,10 @@ class DataBase(object):
                         # (J-1), le nombre de personnes ayant reçu une injection de vaccin anti-covid en tenant compte du nombre
                         # de doses reçues, de l’âge, du sexe ainsi que du niveau géographique (national, régional et
                         # départemental).
-                        # variables n_dose_1, n_dose_2
-                        constraints = {'vaccin': 0} # all vaccines
+                        constraints = {'vaccin': 0} # 0 means all vaccines
                         # previously : https://www.data.gouv.fr/fr/datasets/r/4f39ec91-80d7-4602-befb-4b522804c0af
                         spf5 = self.csv2pandas("https://www.data.gouv.fr/fr/datasets/r/535f8686-d75d-43d9-94b3-da8cdf850634",
                             rename_columns = rename, constraints = constraints, separator = ';', encoding = "ISO-8859-1", cast = cast)
-
                         # https://www.data.gouv.fr/fr/datasets/indicateurs-de-suivi-de-lepidemie-de-covid-19/#_
                         # tension hospitaliere
                         #'date', 'location', 'region', 'libelle_reg', 'libelle_dep', 'tx_incid',
@@ -243,7 +241,7 @@ class DataBase(object):
                            # 'taux_occupation_sae_couleur', 'tx_pos_couleur', 'nb_orange',
                            # 'nb_rouge']
                         #min_date=result['date'].min()
-                        for w in ['incid_hosp', 'incid_rea', 'incid_rad', 'incid_dc', 'P', 'T']:#, 'n_dose1', 'n_dose2']:
+                        for w in ['incid_hosp', 'incid_rea', 'incid_rad', 'incid_dc', 'P', 'T', 'n_dose1', 'n_dose2']:
                             result[w]=pd.to_numeric(result[w], errors = 'coerce')
                             if w.startswith('incid_'):
                                 ww = w[6:]
@@ -269,8 +267,8 @@ class DataBase(object):
                             'R': 'cur_idx_R',
                             'taux_occupation_sae': 'cur_idx_taux_occupation_sae',
                             'tx_pos': 'cur_idx_tx_pos',
-                            'n_cum_dose1': 'tot_vacc',
-                            'n_cum_dose2': 'tot_vacc2',
+                            'tot_n_dose1': 'tot_vacc',
+                            'tot_n_dose2': 'tot_vacc2',
                             'Prc_tests_PCR_TA_crible':'cur_idx_Prc_tests_PCR_TA_crible',
                             'Prc_susp_501Y_V1':'cur_idx_Prc_susp_501Y_V1',
                             'Prc_susp_501Y_V2_3':'cur_idx_Prc_susp_501Y_V2_3',

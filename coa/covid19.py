@@ -81,6 +81,9 @@ class DataBase(object):
                         rename_columns = rename_dict, separator=',')
                     columns_keeped = ['tot_casi']
                     self.return_structured_pandas(dpc1, columns_keeped=columns_keeped)
+                elif self.db == 'rki':
+                    info('DEU, Robert Koch Institut data selected ...')
+                    # TO FILL !!! 
                 elif self.db == 'covid19india':
                     info('COVID19India database selected ...')
                     rename_dict = {'Date': 'date', 'State': 'location'}

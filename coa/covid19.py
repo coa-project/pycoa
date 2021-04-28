@@ -446,7 +446,7 @@ class DataBase(object):
             jhu_files_ext = ['deaths','cases']
             extension = '-rki-by-ags.csv'
             base_name = ''
-        else:  
+        else:
             raise CoaDbError('Unknown JHU like db '+str(self.db))
 
         self.available_keys_words = jhu_files_ext
@@ -528,13 +528,13 @@ class DataBase(object):
 
         result['date'] = pd.to_datetime(result['date'],errors='coerce').dt.date
 
-        self.dates  = result['date']
         result=result.sort_values(['location','date'])
         #self.mainpandas = result
         if self.db != 'rki':
             self.mainpandas = fill_missing_dates(result)
         else:
             self.mainpandas = result
+        self.dates  = self.mainpandas['date']
 
    def csv2pandas(self,url,**kwargs):
         '''
@@ -578,7 +578,7 @@ class DataBase(object):
             pandas_db = pandas_db.rename(columns={'semaine':'date'})
 
         pandas_db['date'] = pandas.to_datetime(pandas_db['date'],errors='coerce').dt.date
-        self.dates  = pandas_db['date']
+        #self.dates  = pandas_db['date']
 
         if self.db == 'spfnational':
             pandas_db['location'] = ['France']*len(pandas_db)
@@ -650,8 +650,8 @@ class DataBase(object):
         mypandas = mypandas.groupby(['location','date']).sum(min_count=1).reset_index() # summing in case of multiple dates (e.g. in opencovid19 data). But keep nan if any
         mypandas['codelocation'] = mypandas['location'].map(codedico)
         #self.mainpandas = mypandas
-
         self.mainpandas = fill_missing_dates(mypandas)
+        self.dates  = self.mainpandas['date']
 
    def get_mainpandas(self,**kwargs):
        '''

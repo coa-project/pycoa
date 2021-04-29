@@ -225,7 +225,6 @@ class CocoDisplay:
             input_dico['when_end'] = mypandas.dropna(subset=[which]).date.max()
         else:
             input_dico['when_end'] = mypandas.date.max()
-
         if when:
             input_dico['when_beg'], input_dico['when_end'] = extract_dates(when)
             if input_dico['when_beg'] == dt.date(1, 1, 1):
@@ -233,7 +232,6 @@ class CocoDisplay:
 
             if input_dico['when_end'] == '':
                 input_dico['when_end'] = mypandas.date.max()
-
             if not isinstance(input_dico['when_beg'], dt.date):
                 raise CoaNoData("With your current cuts, there are no data to plot.")
 

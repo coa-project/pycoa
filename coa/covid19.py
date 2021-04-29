@@ -521,10 +521,10 @@ class DataBase(object):
         if newloc is not None:
             result = result.replace(oldloc,newloc)
 
-        if self.db == 'jhu-usa':
-            result['codelocation'] = result['location'].map(codedico)
-        else:
-            result['codelocation'] = result['location']
+        #if self.db == 'jhu-usa':
+        #    result['codelocation'] = result['location'].map(codedico)
+        #else:
+        result['codelocation'] = result['location']
 
         result['date'] = pd.to_datetime(result['date'],errors='coerce').dt.date
 

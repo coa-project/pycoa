@@ -75,14 +75,14 @@ def generic_info(namedb, keys):
         mydico = spfdic
     elif namedb == 'opencovid19':
         op19 = {
-        'tot_deces':'tot_deces: total cumulé du nombre de décès au niveau national',
-        'tot_cas_confirmes':'tot_cas_confirmes: total cumulé du nombre de cas confirmes au niveau national',
-        'cur_reanimation':'cur_reanimation:  nombre de personnes en réanimation',
-        'cur_hospitalises':'cur_hospitalises: nombre de personnes en hospitalisation',
-        'tot_gueris':'tot_gueris: total cumulé du nombre de gueris au niveau national',
-        'tot_nouvelles_hospitalisations':'tot_nouvelles_hospitalisations: total cumulé du nombre d\'hospitalisation au niveau national',
-        'tot_nouvelles_reanimations':'tot_nouvelles_reanimations: tot_nouvelles_reanimations: total cumulé du nombre réanimations au niveau national',
-        'tot_depistes':'tot_depistes: total cumulé du nombre de personnes dépistées (testées par PCR) au niveau national',
+        'tot_deces':['tot_deces: total cumulé du nombre de décès au niveau national'],
+        'tot_cas_confirmes':['tot_cas_confirmes: total cumulé du nombre de cas confirmes au niveau national'],
+        'cur_reanimation':['cur_reanimation:  nombre de personnes en réanimation'],
+        'cur_hospitalises':['cur_hospitalises: nombre de personnes en hospitalisation'],
+        'tot_gueris':['tot_gueris: total cumulé du nombre de gueris au niveau national'],
+        'tot_nouvelles_hospitalisations':['tot_nouvelles_hospitalisations: total cumulé du nombre d\'hospitalisation au niveau national'],
+        'tot_nouvelles_reanimations':['tot_nouvelles_reanimations: tot_nouvelles_reanimations: total cumulé du nombre réanimations au niveau national'],
+        'tot_depistes':['tot_depistes: total cumulé du nombre de personnes dépistées (testées par PCR) au niveau national'],
         }
         for k,v in op19.items():
             op19[k].append('https://raw.githubusercontent.com/opencovid19-fr/data/master/dist/chiffres-cles.csv')
@@ -90,20 +90,20 @@ def generic_info(namedb, keys):
         mydico = op19
     elif namedb == 'opencovid19national':
         op19nat = {
-         'tot_deces':'tot_deces: total cumulé du nombre de décès',
-         'tot_cas_confirmes':'tot_cas_confirmes: total cumulé du nombre de cas confirmés',
-         'tot_cas_ehpad':'tot_cas_ehpad: total cumulé du nombre de cas en EHPAD',
-         'tot_cas_confirmes_ehpad':'total cumulé du nombre de cas positifs en EHPAD',
-         'tot_cas_possibles_ehpad':'tot_cas_possibles_ehpad:FILLIT',
-         'tot_deces_ehpad':'total cumulé du nombre de décès en EHPAD',
-         'cur_reanimation':'cur_hospitalises: nombre de personnes en reanimation',
-         'cur_hospitalises':'cur_hospitalises: nombre de personnes en hospitalisation',
-         'tot_gueris':'total cumulé du nombre de gueris',
-         'tot_nouvelles_hospitalisations':'tot_nouvelles_hospitalisations: total cumulé du nombre d\'hospitalisation',
-         'tot_nouvelles_reanimations':'tot_nouvelles_reanimations: tot_nouvelles_reanimations: total cumulé du nombre réanimations',
-         'tot_depistes':'tot_depistes: total cumulé du nombre de personnes dépistées (testées par PCR)',
+         'tot_deces':['tot_deces: total cumulé du nombre de décès'],
+         'tot_cas_confirmes':['tot_cas_confirmes: total cumulé du nombre de cas confirmés'],
+         'tot_cas_ehpad':['tot_cas_ehpad: total cumulé du nombre de cas en EHPAD'],
+         'tot_cas_confirmes_ehpad':['total cumulé du nombre de cas positifs en EHPAD'],
+         'tot_cas_possibles_ehpad':['tot_cas_possibles_ehpad:FILLIT'],
+         'tot_deces_ehpad':['total cumulé du nombre de décès en EHPAD'],
+         'cur_reanimation':['cur_hospitalises: nombre de personnes en reanimation'],
+         'cur_hospitalises':['cur_hospitalises: nombre de personnes en hospitalisation'],
+         'tot_gueris':['total cumulé du nombre de gueris'],
+         'tot_nouvelles_hospitalisations':['tot_nouvelles_hospitalisations: total cumulé du nombre d\'hospitalisation'],
+         'tot_nouvelles_reanimations':['tot_nouvelles_reanimations: tot_nouvelles_reanimations: total cumulé du nombre réanimations'],
+         'tot_depistes':['tot_depistes: total cumulé du nombre de personnes dépistées (testées par PCR)']
           }
-        for k,v in jhu.items():
+        for k,v in op19nat.items():
               op19nat[k].append('https://raw.githubusercontent.com/opencovid19-fr/data/master/dist/chiffres-cles.csv')
               op19nat[k].append('https://github.com/opencovid19-fr/data')
         mydico = op19nat

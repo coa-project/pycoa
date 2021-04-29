@@ -924,18 +924,19 @@ class CocoDisplay:
         if 'location' in mypandas.columns:
             uniqloc = list(mypandas.codelocation.unique())
 
-            if len(uniqloc) == 1:
-                dico['bins'] = 2
-
             allval  = mypandas.loc[mypandas.codelocation.isin(uniqloc)][['rolloverdisplay', input_field]]
             min_val = allval[input_field].min()
             max_val = allval[input_field].max()
+            if len(uniqloc) == 1:
+                dico['bins'] = 2
+                min_val = 0.
+
             if dico['bins']:
                 bins = dico['bins']
             else:
                 bins = len(uniqloc)
-            delta = (max_val - min_val ) / (bins-1)
 
+            delta = (max_val - min_val ) / (bins-1)
             interval = [ min_val + (i-1)*delta for i in range(1,(bins+1)+1)]
 
             contributors = {  i : [] for i in range(bins)}

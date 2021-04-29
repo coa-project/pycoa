@@ -570,8 +570,14 @@ def deco_pycoa_graph(f):
 
 @deco_pycoa_graph
 def map(**kwargs):
-    """Create a map according to arguments and options.
+    """
+    Create a map according to arguments and options.
     See help(hist).
+    - 2 types of visu are avalailable so far : bokeh or folium (see listvisu())
+    by default visu='bokeh'
+    - In the default case (i.e visu='bokeh') available option are :
+        - dateslider=True: a date slider is called and displayed on the right part of the map
+        - maplabel=True: value are displayed directly on the map
     """
     visu = kwargs.get('visu', listvisu()[0])
     t = kwargs.pop('t')

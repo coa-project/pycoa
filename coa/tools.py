@@ -55,7 +55,8 @@ _db_list_dict = {'jhu': 'WW',
     'dpc': 'ITA',
     'covidtracking': 'USA',
     'covid19india': 'IND',
-    'rki':'DEU'}
+    'rki':'DEU',
+    'escovid19data':'ITA'}
 
 # ----------------------------------------------------
 # --- Usefull functions for pycoa --------------------

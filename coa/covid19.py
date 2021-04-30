@@ -71,20 +71,29 @@ class DataBase(object):
                 if self.db == 'jhu':
                     info('JHU aka Johns Hopkins database selected ...')
                     self.return_jhu_pandas()
-                elif self.db == 'jhu-usa':
+                elif self.db == 'jhu-usa': #USA
                     info('USA, JHU aka Johns Hopkins database selected ...')
                     self.return_jhu_pandas()
-                elif self.db == 'dpc':
+                elif self.db == 'dpc': #ITA
                     info('ITA, Dipartimento della Protezione Civile database selected ...')
                     rename_dict = {'data': 'date', 'sigla_provincia': 'location', 'totale_casi': 'tot_casi'}
                     dpc1 = self.csv2pandas("https://github.com/pcm-dpc/COVID-19/raw/master/dati-province/dpc-covid19-ita-province.csv",\
                         rename_columns = rename_dict, separator=',')
                     columns_keeped = ['tot_casi']
                     self.return_structured_pandas(dpc1, columns_keeped=columns_keeped)
-                elif self.db == 'rki':
+                elif self.db == 'rki': # DEU
                     info('DEU, Robert Koch Institut data selected ...')
                     self.return_jhu_pandas()
-                elif self.db == 'covid19india':
+                elif self.db == 'escovid19data': # ESP
+                    info('ESP, EsCovid19Data ...')
+                    rename_dict = {'ine_code': 'location'}
+                    esp_data=self.csv2pandas('https://github.com/montera34/escovid19data/raw/master/data/output/covid19-provincias-spain_consolidated.csv',\
+                        separator=',',rename_columns = rename_dict)
+                    display(esp_data.columns)
+                    esp_data['location']=esp_data.location.astype(str).str.zfill(2)
+                    display(esp_data)
+                    self.return_structured_pandas(esp_data,columns_keeped=['hospitalized_accumulated'])
+                elif self.db == 'covid19india': # IND
                     info('COVID19India database selected ...')
                     rename_dict = {'Date': 'date', 'State': 'location'}
                     drop_field  = {'State': ['India', 'State Unassigned']}

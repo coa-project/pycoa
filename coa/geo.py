@@ -900,9 +900,13 @@ class GeoCountry():
                 'AGS':'code_subregion',\
                 },
                 inplace=True)
-            self._country_data['code_subregion']=self._country_data.code_subregion .astype(int).astype(str)
-            self._country_data['name_region'] = self._country_data['name_subregion']
-            self._country_data['code_region'] = self._country_data['code_subregion']
+            # See https://www.ioer-monitor.de/en/methodology/glossary/o/official-municipality-key-ags/ for decoding information of region code
+            self._country_data['code_region'] = (self._country_data.code_subregion.astype(int)//1000).astype(str).str.zfill(2)
+            h_deu=pd.read_html(get_local_from_url('https://de.zxc.wiki/wiki/Amtlicher_Gemeindeschl%C3%BCssel',0))[3]
+            h_deu['id']=h_deu['#'].str.slice(stop=2)
+            h_deu['name_region']=h_deu['country']
+            self._country_data=self._country_data.merge(h_deu,how='left',left_on='code_region',right_on='id')
+            self._country_data['code_subregion']=self._country_data.code_subregion.astype(int).astype(str)            
             self._country_data=self._country_data[['name_subregion','code_subregion','name_region','code_region','geometry']]
 
     def get_source(self):

@@ -684,6 +684,7 @@ class GeoCountry():
                     'ITA':'https://raw.githubusercontent.com/openpolis/geojson-italy/master/geojson/limits_IT_provinces.geojson',\
                     'IND':'https://raw.githubusercontent.com/deldersveld/topojson/master/countries/india/india-states.json',\
                     'DEU':'https://github.com/jgehrcke/covid-19-germany-gae/raw/master/geodata/DE-counties.geojson',\
+                    'ESP':'https://public.opendatasoft.com/explore/dataset/provincias-espanolas/download/?format=shp&timezone=Europe/Berlin&lang=en',\
                     }
 
     _source_dict = {'FRA':{'Basics':_country_info_dict['FRA'],\
@@ -694,6 +695,7 @@ class GeoCountry():
                     'ITA':{'Basics':_country_info_dict['ITA']},\
                     'IND':{'Basics':_country_info_dict['IND']},\
                     'DEU':{'Basics':_country_info_dict['DEU']},\
+                    'ESP':{'Basics':_country_info_dict['ESP']},\
                     }
 
     def __init__(self,country=None,**kwargs):
@@ -908,6 +910,16 @@ class GeoCountry():
             self._country_data=self._country_data.merge(h_deu,how='left',left_on='code_region',right_on='id')
             self._country_data['code_subregion']=self._country_data.code_subregion.astype(int).astype(str)            
             self._country_data=self._country_data[['name_subregion','code_subregion','name_region','code_region','geometry']]
+
+        # --- 'ESP' case ---------------------------------------------------------------------------------------
+        elif self._country == 'ESP':
+            self._country_data = gpd.read_file('zip://'+get_local_from_url(url,0,'.zip'),encoding='utf-8') # this is shapefile file
+            self._country_data.rename(columns={\
+                'ccaa':'name_region',\
+                'cod_ccaa':'code_region',\
+                'provincia':'name_subregion',\
+                'codigo':'code_subregion'},inplace=True)
+            self._country_data.drop(['texto'],axis=1,inplace=True)
 
     def get_source(self):
         """ Return informations about URL sources

@@ -1459,9 +1459,9 @@ class CocoDisplay:
 
         geopdwd_filtered = geopdwd_filtered.drop(columns='geometry')
         geopdwd_filtered = pd.merge(geolistmodified, geopdwd_filtered, on='location')
-
         sourcemaplabel = ColumnDataSource(pd.DataFrame({'centroidx':[],'centroidy':[],'cases':[]}))
         if maplabel:
+            #dicocolors=geopdwd[['location','colors']].drop_duplicates().to_dict('records')
             geopdwd_filtered['centroidx'] = geopdwd_filtered['geometry'].apply('centroid').x
             geopdwd_filtered['centroidy'] = geopdwd_filtered['geometry'].apply('centroid').y
             if dico['locsumall']:
@@ -1474,6 +1474,8 @@ class CocoDisplay:
                     geopdwd_filtered.loc[geopdwd_filtered.codelocation == i,'centroidy'] = centrosy
             dfLabel=pd.DataFrame(geopdwd_filtered[['location','centroidx','centroidy','cases']])
             dfLabel['cases'] = dfLabel['cases'].round(2)
+            #dicocolors=pd.Series(geopdwd.colors.values,index=geopdwd.location.values).drop_duplicates().to_dict()
+            #dfLabel['colors'] = dfLabel['location'].map(dicocolors)
             sourcemaplabel = ColumnDataSource(dfLabel)
 
 
@@ -1572,6 +1574,7 @@ class CocoDisplay:
                 text = 'cases',
                 source = sourcemaplabel,text_font_size='10px',text_color='white')
             standardfig.add_layout(labels)
+
 
         cases_custom = CocoDisplay.rollerJS()
         if len(uniqloc) > 1:

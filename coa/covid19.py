@@ -806,6 +806,11 @@ class DataBase(object):
                     raise CoaWhereError("In the case of national DB, all locations must have the same types i.e\
                     list or string but both is not accepted, could be confusing")
                 devorigclist = [ self.geo.get_subregions_from_list_of_region_names(i) if not len(i[0])<3 and len(i[0])>=2 else i for i in origclistlist ]
+                if origclistlist == [['Métropole']]:
+                    all_region= self.geo.get_region_list()
+                    all_codes=all_region.code_region.astype(int)
+                    origclistlist = [[i] for i in all_region[(all_codes>10) & (all_codes<100)].name_region.to_list()]
+                    devorigclist=[ self.geo.get_subregions_from_list_of_region_names(i) for i in origclistlist ]
                 #devorigclist = [ self.geo.get_subregions_from_list_of_region_names(i) if isinstance(i, list) else i for i in origclist ]
             if clist == ['FRA'] or clist == ['USA']:
                 clist=self.geo_all

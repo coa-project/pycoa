@@ -12,6 +12,7 @@
 - self.dates move after fill_missing_dates
 - rki DEU database added
 - jhu-usa code modification db (codelocation=location)
+- could sumall for different sublist 
   
 ## v2.02 - march 2021 - Import decorators modifciation inside the display
 - New standard output is pandas dataframe

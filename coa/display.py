@@ -1572,7 +1572,7 @@ class CocoDisplay:
                 x = 'centroidx',
                 y = 'centroidy',
                 text = 'cases',
-                source = sourcemaplabel,text_font_size='10px',text_color='white')
+                source = sourcemaplabel,text_font_size='10px',text_color='white',background_fill_color='grey',background_fill_alpha=0.05)
             standardfig.add_layout(labels)
 
 

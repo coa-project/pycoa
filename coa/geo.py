@@ -894,7 +894,7 @@ class GeoCountry():
             self._country_data['code_region'] = self._country_data['code_subregion']
             self._country_data.drop(['ISO','NAME_0','ID_1','TYPE_1','ENGTYPE_1','id'],axis=1,inplace=True)
 
-        # --- 'IND' case ---------------------------------------------------------------------------------------
+        # --- 'DEU' case ---------------------------------------------------------------------------------------
         elif self._country == 'DEU':
             self._country_data = gpd.read_file(get_local_from_url(url,0)) # this is a geojson file
             self._country_data.rename(columns={\

@@ -774,10 +774,18 @@ class DataBase(object):
         else:
             kwargs['location']=kwargs['location']
 
+        doublelist = None
+        devorigclist = None
+        origclistlist = None
         if not isinstance(kwargs['location'], list):
             clist = ([kwargs['location']]).copy()
+            origclist = clist
         else:
             clist = (kwargs['location']).copy()
+            origclist = clist
+            if any(isinstance(c, list) for c in clist):
+                origclistlist = clist
+                clist = [ c[0] if isinstance(c, list) else c for c in clist]
         if not all(isinstance(c, str) for c in clist):
             raise CoaWhereError("Location via the where keyword should be given as strings. ")
 
@@ -788,8 +796,17 @@ class DataBase(object):
         if self.db_world:
             self.geo.set_standard('name')
             clist=self.geo.to_standard(clist,output='list',interpret_region=True)
+            if origclistlist != None:
+                fulllist = [ i if isinstance(i, list) else [i] for i in origclist ]
+                devorigclist = [ self.geo.to_standard(i,output='list',interpret_region=True) for i in fulllist ]
         else:
             clist=clist+self.geo.get_subregions_from_list_of_region_names(clist)
+            if origclistlist != None:
+                if not all(isinstance(c, list) for c in origclistlist):
+                    raise CoaWhereError("In the case of national DB, all locations must have the same types i.e\
+                    list or string but both is not accepted, could be confusing")
+                devorigclist = [ self.geo.get_subregions_from_list_of_region_names(i) if not len(i[0])<3 and len(i[0])>=2 else i for i in origclistlist ]
+                #devorigclist = [ self.geo.get_subregions_from_list_of_region_names(i) if isinstance(i, list) else i for i in origclist ]
             if clist == ['FRA'] or clist == ['USA']:
                 clist=self.geo_all
 
@@ -882,24 +899,39 @@ class DataBase(object):
             pdfiltered = pdfiltered.fillna(0)
 
         # if sumall set, return only integrate val
+        tmppandas=pd.DataFrame()
         if sumall:
-            loc = pdfiltered['location'].unique()
-            ntot=len(loc)
+            if devorigclist != None:
+               k=0
+               for i in devorigclist:
+                   if isinstance(i, list):
+                       tmp = pdfiltered.loc[pdfiltered.location.isin(i)]
+                       tmp = tmp.drop(columns=['location','codelocation'])
+                       tmp = tmp.groupby('date').sum().reset_index()
+                       tmp['location'] = [i]*len(tmp)
+                       tmp['codelocation'] = [str(origclistlist[k])]*len(tmp)
+                   else:
+                        tmp = pdfiltered.loc[pdfiltered.location==i]
+                   if tmppandas.empty:
+                        tmppandas = tmp
+                   else:
+                       tmppandas = tmppandas.append(tmp)
+                   k+=1
+               pdfiltered = tmppandas
+               ntot = len(devorigclist)
 
-            ptot=pdfiltered.groupby(['location']).fillna(method='ffill').groupby(['date']).sum().reset_index()   # summing for all locations
+            else:
+               pdfiltered = pdfiltered.drop(['location','codelocation'],axis=1,)
+               pdfiltered = pdfiltered.groupby('date').sum().reset_index()
+               pdfiltered['location'] = [clist]*len(pdfiltered)
+               pdfiltered['codelocation'] = [str(origclist)]*len(pdfiltered)
+               ntot=len(clist)
+
             # mean for some columns, about index and not sum of values.
-            for col in ptot.columns:
+            for col in pdfiltered.columns:
                 if col.startswith('cur_idx_'):
-                    ptot[col]=ptot[col]/ntot
-            # adding the location name
-            #all_loc_string=str(kwargs['location'])
-                #if len(kwargs['location'])>2:
-                    #all_loc_string="["+str(kwargs['location'][0])+"..."+str(kwargs['location'][-1])+"]"
-            ptot['location']=[list(loc)]*len(ptot)
-            if type(kwargs['location']) == str:
-                kwargs['location']= [kwargs['location']]
-            ptot['codelocation']=[str(kwargs['location'])]*len(ptot)
-            pdfiltered=ptot
+                    pdfiltered[col] /= ntot
+
             pdfiltered['daily'] = pdfiltered[kwargs['which']].diff()
             pdfiltered['cumul'] = pdfiltered[kwargs['which']].cumsum()
             pdfiltered['weekly'] = pdfiltered[kwargs['which']].diff(7)

@@ -165,7 +165,7 @@ class CocoDisplay:
                 if not mypandassumall.empty:
                     copypandas = mypandassumall.copy()
                     new = mypandassumall.iloc[:1]
-                    for i in mypandassumall.codelocation.unique():
+                    for i in mypandassumall.codelocation.   unique():
                         sub = mypandassumall.loc[mypandassumall.codelocation == i]
                         copypandas = sub.copy()
                         if type(sub['location'].iloc[0]) == list:
@@ -1422,14 +1422,12 @@ class CocoDisplay:
         """
         geopdwd['cases'] = geopdwd[input_field]
         geopdwd_filtered['cases'] = geopdwd_filtered[input_field]
-
         geopdwd_filtered = gpd.GeoDataFrame(geopdwd_filtered, geometry=geopdwd_filtered.geometry, crs="EPSG:4326")
         uniqloc = list(geopdwd_filtered.codelocation.unique())
 
         geopdwd = geopdwd.sort_values(by=['codelocation', 'date'], ascending = [True, False])
         geopdwd = geopdwd.drop(columns=['date'])
         geopdwd_filtered = geopdwd_filtered.sort_values(by=['codelocation', 'date'], ascending = [True, False]).drop(columns=['date', 'colors'])
-
         new_poly = []
         geolistmodified = dict()
         if date_slider:

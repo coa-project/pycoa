@@ -305,7 +305,7 @@ class CocoDisplay:
                      tools=['save', 'box_zoom,reset'], toolbar_location="right")
         xpos = 0.
         if copyrightposition == 'right':
-            xpos = 0.8
+            xpos = 0.75
         elif copyrightposition == 'left':
             xpos = 0.08
         else:

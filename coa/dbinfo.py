@@ -73,10 +73,10 @@ def generic_info(namedb, keys):
         ['Prc_susp_IND: % de tests avec une détection de variant mais non identifiable',url6,urlmaster6],
         'cur_idx_Prc_susp_ABS' :
         ['Prc_susp_ABS: % de tests avec une absence de détection de variant',url6,urlmaster6],
-        'cur_ti':
+        'cur_idx_ti':
         ['ti : taux d\'incidence hebdomadaire rapporté à la population pour 100 000 habitants, par semaine calendaire',url7,urlmaster7],
         'cur_tp':
-        ['tp :Le taux de positivité hebdomadaire rapporté 100 tests réalisés, par semaine calendaire.',url7,urlmaster7]
+        ['cur_idx_tp :Le taux de positivité hebdomadaire rapporté 100 tests réalisés, par semaine calendaire.',url7,urlmaster7]
         }
         mydico = spfdic
     elif namedb == 'opencovid19':

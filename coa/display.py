@@ -305,7 +305,7 @@ class CocoDisplay:
                      tools=['save', 'box_zoom,reset'], toolbar_location="right")
         xpos = 0.
         if copyrightposition == 'right':
-            xpos = 0.5
+            xpos = 0.8
         elif copyrightposition == 'left':
             xpos = 0.08
         else:
@@ -1503,9 +1503,13 @@ class CocoDisplay:
         wmt = WMTSTileSource(
             url=dico['tile']
         )
+        copyrightposition = 'left'
+        if self.dbld[self.database_name] == 'ESP' :
+            copyrightposition='right'
+
         standardfig = self.standardfig(x_range=(minx, maxx), y_range=(miny, maxy),
                                        x_axis_type="mercator", y_axis_type="mercator", title=dico['titlebar'],
-                                       copyrightposition='left')
+                                       copyrightposition = copyrightposition)
         standardfig.add_tile(wmt)
         min_col, max_col = CocoDisplay.min_max_range(np.nanmin(geopdwd_filtered[input_field]),
                                                      np.nanmax(geopdwd_filtered[input_field]))

@@ -960,13 +960,18 @@ class DataBase(object):
                        tmp['codelocation'] = [str(origclistlist[k])]*len(tmp)
                    else:
                         tmp = pdfiltered.loc[pdfiltered.location==i]
+
+                   ntot = len(i)
+                   for col in pdfiltered.columns:
+                       if col.startswith('cur_idx_'):
+                           tmp[col] /= ntot
+
                    if tmppandas.empty:
                         tmppandas = tmp
                    else:
                        tmppandas = tmppandas.append(tmp)
                    k+=1
                pdfiltered = tmppandas
-               ntot = len(devorigclist)
 
             else:
                pdfiltered = pdfiltered.drop(['location','codelocation'],axis=1,)
@@ -974,11 +979,10 @@ class DataBase(object):
                pdfiltered['location'] = [clist]*len(pdfiltered)
                pdfiltered['codelocation'] = [str(origclist)]*len(pdfiltered)
                ntot=len(clist)
-
-            # mean for some columns, about index and not sum of values.
-            for col in pdfiltered.columns:
-                if col.startswith('cur_idx_'):
-                    pdfiltered[col] /= ntot
+               # mean for some columns, about index and not sum of values.
+               for col in pdfiltered.columns:
+                   if col.startswith('cur_idx_'):
+                       pdfiltered[col] /= ntot
 
             pdfiltered['daily'] = pdfiltered[kwargs['which']].diff()
             pdfiltered['cumul'] = pdfiltered[kwargs['which']].cumsum()

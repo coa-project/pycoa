@@ -99,14 +99,18 @@ class DataBase(object):
                         'deceassed_per_100000':'tot_deaths_per100k',\
                         'hospitalized_per_100000':'cur_hosp_per100k',\
                     }
-                    esp_data=self.csv2pandas('https://github.com/montera34/escovid19data/raw/master/data/output/covid19-provincias-spain_consolidated.csv',\
-                        separator=',',rename_columns = rename_dict)
+                    #url='https://github.com/montera34/escovid19data/raw/master/data/output/covid19-provincias-spain_consolidated.csv'
+                    url='https://raw.githubusercontent.com/montera34/escovid19data/master/data/output/covid19-provincias-spain_consolidated.csv'
+                    col_names = pd.read_csv(url, nrows=0).columns
+                    cast={i:'string' for i in col_names[17:]}
+                    esp_data=self.csv2pandas(url,\
+                        separator=',',rename_columns = rename_dict,cast = cast)
                     #print('Available columns : ')
                     #display(esp_data.columns)
                     esp_data['location']=esp_data.location.astype(str).str.zfill(2)
                     columns_keeped = list(rename_dict.values())
                     columns_keeped.remove('location')
-                    
+
                     for w in list(columns_keeped):
                             esp_data[w]=pd.to_numeric(esp_data[w], errors = 'coerce')
 

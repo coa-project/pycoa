@@ -132,6 +132,7 @@ def fill_missing_dates(p, date_field='date', loc_field='location', d1=None, d2=N
 
     idx = pandas.date_range(d1, d2, freq = "D")
     idx = idx.date
+
     all_loc=list(p[loc_field].unique())
 
     pfill=pandas.DataFrame()
@@ -212,11 +213,22 @@ def extract_dates(when):
 
     return w0,w1
 
-def rollingweek_to_middledate(whenstr):
-    firstday = datetime.date(int(whenstr.split('-')[0]),int(whenstr.split('-')[1]),int(whenstr.split('-')[2]))
-    lastday  = datetime.date(int(whenstr.split('-')[3]),int(whenstr.split('-')[4]),int(whenstr.split('-')[5]))
-    return firstday + (lastday - firstday)/2
-
+def week_to_date(whenstr):
+    """
+    convert week to date.
+    2 cases:
+    - Rolling week
+        if format is Y-M-D-Y-M-D: return middle dates
+    - One week data Wnumber: return monday correction to the week number
+    """
+    conservation=0
+    if len(whenstr) == 21:
+        firstday = datetime.date(int(whenstr.split('-')[0]),int(whenstr.split('-')[1]),int(whenstr.split('-')[2]))
+        lastday  = datetime.date(int(whenstr.split('-')[3]),int(whenstr.split('-')[4]),int(whenstr.split('-')[5]))
+        convertion = firstday + (lastday - firstday)/2
+    else:
+        convertion = datetime.datetime.strptime(whenstr + '-1', "%Y-S%W-%w")
+    return convertion
 
 def get_local_from_url(url,expiration_time=0,suffix=''):
     """"Download data from the given url and store it into a local file.

@@ -156,6 +156,7 @@ class CocoDisplay:
         input_dico['what'] = what
         input_dico['locsumall'] = False
         if 'location' in mypandas:
+            mypandas = mypandas.reset_index(drop = True)
             mypandas['rolloverdisplay'] = mypandas['codelocation']
             if mypandas['location'].apply(lambda x: True if type(x) == list else False).any():
                 # len(x) == 3 or len(x) == 2 : we suppose that codelocation is iso3 -len=3- or int for french code region
@@ -1492,7 +1493,7 @@ class CocoDisplay:
             sourcemaplabel = ColumnDataSource(dfLabel)
 
 
-        if self.dbld[self.database_name] in ['FRA','ESP'] and all([len(i) == 2 for i in geolistmodified.location.unique()]):
+        if self.dbld[self.database_name] in ['FRA'] and all([len(i) == 2 for i in geolistmodified.location.unique()]):
             minx, miny, maxx, maxy = self.boundary_metropole
         else:
             minx, miny, maxx, maxy = self.boundary

@@ -101,7 +101,7 @@ class DataBase(object):
                     }
                     #url='https://github.com/montera34/escovid19data/raw/master/data/output/covid19-provincias-spain_consolidated.csv'
                     url='https://raw.githubusercontent.com/montera34/escovid19data/master/data/output/covid19-provincias-spain_consolidated.csv'
-                    col_names = pd.read_csv(url, nrows=0).columns
+                    col_names = pd.read_csv(get_local_from_url(url), nrows=0).columns
                     cast={i:'string' for i in col_names[17:]}
                     esp_data=self.csv2pandas(url,\
                         separator=',',rename_columns = rename_dict,cast = cast)

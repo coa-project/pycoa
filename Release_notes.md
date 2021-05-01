@@ -13,7 +13,9 @@
 - rki DEU database added
 - jhu-usa code modification db (codelocation=location)
 - could sumall for different sublist 
-  
+- spain db in progress
+- spf7 added : SI-DEP school (var: ti & tp)
+ 
 ## v2.02 - march 2021 - Import decorators modifciation inside the display
 - New standard output is pandas dataframe
 - Bug solved for a SPF database which has changed

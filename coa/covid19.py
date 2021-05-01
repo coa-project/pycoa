@@ -227,7 +227,7 @@ class DataBase(object):
                         spf6 =  self.csv2pandas("https://www.data.gouv.fr/fr/datasets/r/16f4fd03-797f-4616-bca9-78ff212d06e8",
                                     constraints = constraints, rename_columns = rename, separator=';', cast=cast)
                         #result = pd.concat([spf1, spf2,spf3,spf4,spf5], axis=1, sort=False)
-                        constraints = {'age_18ans': 0}
+                        constraints = {'age_18ans': 10}
                         spf7 =  self.csv2pandas("https://www.data.gouv.fr/fr/datasets/r/c0f59f00-3ab2-4f31-8a05-d317b43e9055",
                                     constraints = constraints, rename_columns = rename, separator=';', cast=cast)
 
@@ -278,7 +278,10 @@ class DataBase(object):
                                 result[col] /= 100.
                         for col in result.columns:
                             if col.startswith('ti'):
-                                result[col] /= (7.*1000) #par jour pour 100         
+                                result[col] /= 7. #par
+                        for col in result.columns:
+                            if col.startswith('tp'):
+                                result[col] /= 7. #par
 
                         rename_dict={
                             'dc': 'tot_dc',
@@ -296,7 +299,8 @@ class DataBase(object):
                             'Prc_susp_501Y_V2_3':'cur_idx_Prc_susp_501Y_V2_3',
                             'Prc_susp_IND':'cur_idx_Prc_susp_IND',
                             'Prc_susp_ABS':'cur_idx_Prc_susp_ABS',
-                            'ti':'cur_ti',
+                            'ti':'cur_idx_ti',
+                            'tp':'cur_idx_tp',
                             }
 
                         result = result.rename(columns=rename_dict)

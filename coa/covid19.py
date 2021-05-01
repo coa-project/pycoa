@@ -86,13 +86,31 @@ class DataBase(object):
                     self.return_jhu_pandas()
                 elif self.db == 'escovid19data': # ESP
                     info('ESP, EsCovid19Data ...')
-                    rename_dict = {'ine_code': 'location'}
+                    rename_dict = {'ine_code': 'location',\
+                        'deceased':'tot_deaths',\
+                        'cases_accumulated':'tot_cases',\
+                        'activos':'cur_cases',\
+                        'hospitalized':'cur_hosp',\
+                        'hospitalized_accumulated':'tot_hosp',\
+                        'intensive_care':'cur_icu',\
+                        'recovered':'tot_recovered',\
+                        'cases_per_cienmil':'cur_cases_per100k',\
+                        'intensive_care_per_1000000':'cur_icu_per1M',\
+                        'deceassed_per_100000':'tot_deaths_per100k',\
+                        'hospitalized_per_100000':'cur_hosp_per100k',\
+                    }
                     esp_data=self.csv2pandas('https://github.com/montera34/escovid19data/raw/master/data/output/covid19-provincias-spain_consolidated.csv',\
                         separator=',',rename_columns = rename_dict)
-                    print('Available columns : ')
-                    display(esp_data.columns)
+                    #print('Available columns : ')
+                    #display(esp_data.columns)
                     esp_data['location']=esp_data.location.astype(str).str.zfill(2)
-                    self.return_structured_pandas(esp_data,columns_keeped=['intensive_care'])
+                    columns_keeped = list(rename_dict.values())
+                    columns_keeped.remove('location')
+                    
+                    for w in list(columns_keeped):
+                            esp_data[w]=pd.to_numeric(esp_data[w], errors = 'coerce')
+
+                    self.return_structured_pandas(esp_data,columns_keeped=columns_keeped)
                 elif self.db == 'covid19india': # IND
                     info('COVID19India database selected ...')
                     rename_dict = {'Date': 'date', 'State': 'location'}

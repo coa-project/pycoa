@@ -115,8 +115,11 @@ class CocoDisplay:
         self.data = gpd.GeoDataFrame(geopan, crs="EPSG:4326")
         self.geopan = geopan
         self.boundary_metropole = ''
-        if self.dbld[self.database_name] == 'FRA':
-            list_dep_metro = info.get_subregions_from_region(name='Métropole')
+        if self.dbld[self.database_name] in ['FRA','ESP']:
+            if self.dbld[self.database_name] == 'FRA':
+                list_dep_metro = info.get_subregions_from_region(name='Métropole')
+            elif self.dbld[self.database_name] == 'ESP':
+                list_dep_metro = info.get_subregions_from_region(name='España peninsular')
             self.boundary_metropole = self.data.loc[self.data.location.isin(list_dep_metro)]['geometry'].total_bounds
         self.boundary = self.data['geometry'].total_bounds
         self.location_geometry = self.data
@@ -1332,7 +1335,7 @@ class CocoDisplay:
         uniqloc = list(geopdwd_filtered.codelocation.unique())
         geopdwd_filtered = geopdwd_filtered.drop(columns=['date', 'colors'])
 
-        if self.dbld[self.database_name] == 'FRA' and all([len(i) == 2 for i in geopdwd_filtered.location.unique()]):
+        if self.dbld[self.database_name] in ['FRA','ESP'] and all([len(i) == 2 for i in geopdwd_filtered.location.unique()]):
             minx, miny, maxx, maxy = self.boundary_metropole
             zoom = 3
         else:
@@ -1489,7 +1492,7 @@ class CocoDisplay:
             sourcemaplabel = ColumnDataSource(dfLabel)
 
 
-        if self.dbld[self.database_name] == 'FRA' and all([len(i) == 2 for i in geolistmodified.location.unique()]):
+        if self.dbld[self.database_name] in ['FRA','ESP'] and all([len(i) == 2 for i in geolistmodified.location.unique()]):
             minx, miny, maxx, maxy = self.boundary_metropole
         else:
             minx, miny, maxx, maxy = self.boundary

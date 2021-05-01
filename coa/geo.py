@@ -1048,6 +1048,22 @@ class GeoCountry():
 
                         pr=pr.append(pr_metropole,ignore_index=True).append(pr_outremer,ignore_index=True)
 
+                    elif self.get_country()=='ESP' : # manage pseudo 'ESP' regions within and outside continent
+                        metropole_codes=pr.code_region.astype(int)>=10
+                        outremer_codes=pr.code_region.astype(int)<10
+
+                        pr_metropole=pr[~pr.code_region.astype(int).isin(['04','05'])].copy()
+                        pr_metropole['code_region']='00'
+                        pr_metropole['name_region']='España peninsular'
+                        pr_metropole['flag_region']=''
+
+                        pr_outremer=pr[pr.code_region.astype(int).isin(['04','05'])].copy()
+                        pr_outremer['code_region']='99'
+                        pr_outremer['name_region']='Islas españolas'
+                        pr_outremer['flag_region']=''
+
+                        pr=pr.append(pr_metropole,ignore_index=True).append(pr_outremer,ignore_index=True)
+
                     elif self.get_country()=='USA':
                         usa_col=pr.columns.tolist()
                         usa_col.remove('population_subregion') # Remove numeric column, if not, the dissolve does not work properly

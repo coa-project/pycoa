@@ -89,10 +89,10 @@ class DataBase(object):
                     rename_dict = {'ine_code': 'location'}
                     esp_data=self.csv2pandas('https://github.com/montera34/escovid19data/raw/master/data/output/covid19-provincias-spain_consolidated.csv',\
                         separator=',',rename_columns = rename_dict)
+                    print('Available columns : ')
                     display(esp_data.columns)
                     esp_data['location']=esp_data.location.astype(str).str.zfill(2)
-                    display(esp_data)
-                    self.return_structured_pandas(esp_data,columns_keeped=['hospitalized_accumulated'])
+                    self.return_structured_pandas(esp_data,columns_keeped=['intensive_care'])
                 elif self.db == 'covid19india': # IND
                     info('COVID19India database selected ...')
                     rename_dict = {'Date': 'date', 'State': 'location'}

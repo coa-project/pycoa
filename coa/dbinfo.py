@@ -22,12 +22,14 @@ def generic_info(namedb, keys):
         urlmaster5='https://www.data.gouv.fr/fr/datasets/donnees-relatives-aux-personnes-vaccinees-contre-la-covid-19-1'
         urlmaster4='https://www.data.gouv.fr/fr/datasets/indicateurs-de-suivi-de-lepidemie-de-covid-19/'
         urlmaster6='https://www.data.gouv.fr/fr/datasets/donnees-de-laboratoires-pour-le-depistage-indicateurs-sur-les-variants/'
-        url1="https://www.data.gouv.fr/fr/datasets/r/63352e38-d353-4b54-bfd1-f1b3ee1cabd7"
-        url2="https://www.data.gouv.fr/fr/datasets/r/6fadff46-9efd-4c53-942a-54aca783c30c"
-        url3="https://www.data.gouv.fr/fr/datasets/r/406c6a23-e283-4300-9484-54e78c8ae675"
-        url4="https://www.data.gouv.fr/fr/datasets/r/4acad602-d8b1-4516-bc71-7d5574d5f33e"
-        url5="https://www.data.gouv.fr/fr/datasets/r/32a16487-3dd3-4326-9d2b-317e5a3b2daf"
-        url6="https://www.data.gouv.fr/fr/datasets/r/16f4fd03-797f-4616-bca9-78ff212d06e8"
+        urlmaster7='https://www.data.gouv.fr/fr/datasets/donnees-de-laboratoires-pour-le-depistage-focus-par-niveau-scolaire/'
+        url1='https://www.data.gouv.fr/fr/datasets/r/63352e38-d353-4b54-bfd1-f1b3ee1cabd7'
+        url2='https://www.data.gouv.fr/fr/datasets/r/6fadff46-9efd-4c53-942a-54aca783c30c'
+        url3='https://www.data.gouv.fr/fr/datasets/r/406c6a23-e283-4300-9484-54e78c8ae675'
+        url4='https://www.data.gouv.fr/fr/datasets/r/4acad602-d8b1-4516-bc71-7d5574d5f33e'
+        url5='https://www.data.gouv.fr/fr/datasets/r/32a16487-3dd3-4326-9d2b-317e5a3b2daf'
+        url6='https://www.data.gouv.fr/fr/datasets/r/16f4fd03-797f-4616-bca9-78ff212d06e8'
+        url7='https://www.data.gouv.fr/fr/datasets/r/c0f59f00-3ab2-4f31-8a05-d317b43e9055'
         spfdic = {
         'tot_dc':
         ['tot_dc:FILLIT',url1,urlmaster1],
@@ -70,7 +72,9 @@ def generic_info(namedb, keys):
         'cur_idx_Prc_susp_IND' :
         ['Prc_susp_IND: % de tests avec une détection de variant mais non identifiable',url6,urlmaster6],
         'cur_idx_Prc_susp_ABS' :
-        ['Prc_susp_ABS: % de tests avec une absence de détection de variant',url6,urlmaster6]
+        ['Prc_susp_ABS: % de tests avec une absence de détection de variant',url6,urlmaster6],
+        'cur_ti':
+        ['ti : taux d\'incidence hebdomadaire rapporté à la population pour 100 000 habitants, par semaine calendaire',url7,urlmaster7]
         }
         mydico = spfdic
     elif namedb == 'opencovid19':

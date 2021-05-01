@@ -21,7 +21,7 @@ from collections import defaultdict
 import numpy as np
 import pandas as pd
 import sys
-from coa.tools import info, verb, kwargs_test, get_local_from_url, fill_missing_dates, check_valid_date, rollingweek_to_middledate, get_db_list_dict
+from coa.tools import info, verb, kwargs_test, get_local_from_url, fill_missing_dates, check_valid_date, week_to_date, get_db_list_dict
 
 import coa.geo as coge
 import coa.dbinfo as report
@@ -151,7 +151,7 @@ class DataBase(object):
                         self.return_structured_pandas(spf) # with 'tot_dc' first
                     else:
                         info('SPF aka Sante Publique France database selected (France departement granularity) ...')
-                        info('... Six different databases from SPF will be parsed ...')
+                        info('... Seven different databases from SPF will be parsed ...')
                         # https://www.data.gouv.fr/fr/datasets/donnees-hospitalieres-relatives-a-lepidemie-de-covid-19/
                         # Parse and convert spf data structure to JHU one for historical raison
                         # hosp Number of people currently hospitalized
@@ -227,21 +227,26 @@ class DataBase(object):
                         spf6 =  self.csv2pandas("https://www.data.gouv.fr/fr/datasets/r/16f4fd03-797f-4616-bca9-78ff212d06e8",
                                     constraints = constraints, rename_columns = rename, separator=';', cast=cast)
                         #result = pd.concat([spf1, spf2,spf3,spf4,spf5], axis=1, sort=False)
-                        list_spf=[spf1, spf2, spf3, spf4, spf5, spf6]
+                        constraints = {'age_18ans': 0}
+                        spf7 =  self.csv2pandas("https://www.data.gouv.fr/fr/datasets/r/c0f59f00-3ab2-4f31-8a05-d317b43e9055",
+                                    constraints = constraints, rename_columns = rename, separator=';', cast=cast)
+
+                        list_spf=[spf1, spf2, spf3, spf4, spf5, spf6, spf7]
 
                         for i in list_spf:
                             i['date'] = pd.to_datetime(i['date']).apply(lambda x: x if not pd.isnull(x) else '')
 
                         min_date=min([s.date.min() for s in list_spf])
                         max_date=max([s.date.max() for s in list_spf])
-                        spf1, spf2, spf3, spf4, spf5, spf6 = spf1.set_index(['date', 'location']),\
+                        spf1, spf2, spf3, spf4, spf5, spf6, spf7 = spf1.set_index(['date', 'location']),\
                                                     spf2.set_index(['date', 'location']),\
                                                     spf3.set_index(['date', 'location']),\
                                                     spf4.set_index(['date', 'location']),\
                                                     spf5.set_index(['date', 'location']),\
-                                                    spf6.set_index(['date', 'location'])
+                                                    spf6.set_index(['date', 'location']),\
+                                                    spf7.set_index(['date', 'location'])
 
-                        list_spf = [spf1, spf2, spf3, spf4, spf5, spf6]
+                        list_spf = [spf1, spf2, spf3, spf4, spf5, spf6,spf7]
                         result = reduce(lambda left, right: pd.merge(left, right, on = ['date','location'],
                                                     how = 'outer'), list_spf)
                         result = result.reset_index()
@@ -271,6 +276,9 @@ class DataBase(object):
                         for col in result.columns:
                             if col.startswith('Prc'):
                                 result[col] /= 100.
+                        for col in result.columns:
+                            if col.startswith('ti'):
+                                result[col] /= (7.*1000) #par jour pour 100         
 
                         rename_dict={
                             'dc': 'tot_dc',
@@ -287,7 +295,8 @@ class DataBase(object):
                             'Prc_susp_501Y_V1':'cur_idx_Prc_susp_501Y_V1',
                             'Prc_susp_501Y_V2_3':'cur_idx_Prc_susp_501Y_V2_3',
                             'Prc_susp_IND':'cur_idx_Prc_susp_IND',
-                            'Prc_susp_ABS':'cur_idx_Prc_susp_ABS'
+                            'Prc_susp_ABS':'cur_idx_Prc_susp_ABS',
+                            'ti':'cur_ti',
                             }
 
                         result = result.rename(columns=rename_dict)
@@ -583,9 +592,8 @@ class DataBase(object):
             for key,val in rename_columns.items():
                 pandas_db = pandas_db.rename(columns={key:val})
         if 'semaine' in  pandas_db.columns:
-            pandas_db['semaine'] = [ rollingweek_to_middledate(i) for i in pandas_db['semaine'] ]
+            pandas_db['semaine'] = [ week_to_date(i) for i in pandas_db['semaine'] ]
             pandas_db = pandas_db.rename(columns={'semaine':'date'})
-
         pandas_db['date'] = pandas.to_datetime(pandas_db['date'],errors='coerce').dt.date
         #self.dates  = pandas_db['date']
 

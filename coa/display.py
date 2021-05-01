@@ -1024,7 +1024,8 @@ class CocoDisplay:
                                              geopdwd_filter.index.to_list()]
                 geopdwd_filter['bottom'] = [len(geopdwd_filter.index) - bthick / 2 - i for i in
                                                 geopdwd_filter.index.to_list()]
-
+                geopdwd_filter['posx'] = 0.1 +  geopdwd_filter['bottom'] + bthick / 2
+                geopdwd_filter['posy'] = 0.1 + geopdwd_filter['right']
                 #geopdwd_filter = geopdwd_filter.loc[geopdwd_filter['cases']>0]
 
             if func.__name__ == 'pycoa_pie' :
@@ -1050,9 +1051,9 @@ class CocoDisplay:
                 standardfig = self.standardfig(x_axis_type = axis_type, x_range = (1.05*min_value, 1.05 * max_value),
                                                    title = dico['titlebar'])
                 standardfig.xaxis[0].formatter = PrintfTickFormatter(format="%4.2e")
-                standardfig.x_range = Range1d(0.01, 1.05 * max_value)
+                standardfig.x_range = Range1d(0.01, 1.2 * max_value)
                 if not mypandas_filter[mypandas_filter[input_field] < 0.].empty:
-                    standardfig.x_range = Range1d(1.05 * min_value, 1.05 * max_value)
+                    standardfig.x_range = Range1d(1.2 * min_value, 1.2 * max_value)
 
                 if axis_type == "log":
                     if not mypandas_filter[mypandas_filter[input_field] < 0.].empty:
@@ -1202,7 +1203,8 @@ class CocoDisplay:
                             source_filter.data['bottom'] = bottom;
                             source_filter.data['left'] = left_quad;
                             source_filter.data['right'] = right_quad;
-
+                            source_filter.data['posx'] = 0.1 + source_filter.data['right']
+                            source_filter.data['posy'] = 0.1 + source_filter.data['bottom'] + (source_filter.data['top']-source_filter.data['bottom'])/2
                             var maxx = Math.max.apply(Math, right_quad);
                             var minx = Math.min.apply(Math, left_quad);
 
@@ -1254,6 +1256,14 @@ class CocoDisplay:
             fig.quad(source = srcfiltered,
                 top='top', bottom = 'bottom', left = 'left', right = 'right', color = 'colors', line_color = 'black',
                 line_width = 1, hover_line_width = 2)
+
+            #if maplabel :
+            #labels = LabelSet(
+            #        x = 'posx',
+            #        y = 'posy',
+            #        text = 'right',
+            #        source = srcfiltered,text_font_size='10px',text_color='black')
+            #fig.add_layout(labels)
 
             panel = Panel(child = fig, title = panels[i].title)
             new_panels.append(panel)

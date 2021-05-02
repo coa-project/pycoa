@@ -184,6 +184,26 @@ def generic_info(namedb, keys):
         for k,v in rki.items():
             rki[k].append('https://github.com/jgehrcke/covid-19-germany-gae')
         mydico = rki
+    elif namedb == 'escovid19data':
+        esco = {
+        'tot_deaths':['Cumulative deaths  (original name deceased)'],\
+        'tot_cases':['Cumulatvie number of new COVID-19 cases (original name cases_accumulated)'],\
+        'cur_cases':['Active COVID-19 cases (original name activos)'],\
+        'cur_hosp':['Hospitalized (original name hospitalized)'],\
+        'tot_hosp':['Cumulative Hospitalized (original name hospitalized_accumulated)'],\
+        'cur_icu':['UCI, intensive care patient, (original name intensive_care)'],\
+        'tot_recovered':['Recovered (original name recovered)'],\
+        'cur_cases_per100k':['Cumulative cases per 100,000 inhabitants (original name cases_per_cienmil)'],\
+        'cur_icu_per1M' :['Intensive care per 1000,000 inhabitants (original name intensive_care_per_1000000)'],\
+        'tot_deaths_per100k':['Cumulative deaths per 100,000 inhabitants (original name deceassed_per_100000)'],\
+        'cur_hosp_per100k':['Intensive care per 100,000 inhabitants, (original name hospitalized_per_100000)'],\
+        'deaths':['deaths:FILLIT','https://github.com/jgehrcke/covid-19-germany-gae/raw/master/deaths-rki-by-ags.csv'],
+        'cases':['cases:FILLIT','https://github.com/jgehrcke/covid-19-germany-gae/raw/master/deaths-rki-by-ags.csv'],
+        }
+        for k,v in esco.items():
+            esco[k].append('https://raw.githubusercontent.com/montera34/escovid19data/master/data/output/covid19-provincias-spain_consolidated.csv')
+            esco[k].append('https://github.com/montera34/escovid19data')
+        mydico = esco
     else:
         raise CoaKeyError('Error in the database selected, please check !')
     if keys not in mydico:

@@ -684,6 +684,11 @@ class CocoDisplay:
                         color = self.scolors[i]
                     else:
                         color = mypandas_filter.colors.iloc[i]
+
+                    ind=len(mypandas_filter)-1
+                    while mypandas_filter[val][ind] == 0.:
+                        ind-=1
+                    mypandas_filter = mypandas_filter[:ind+1]
                     r = standardfig.line(x = 'date', y = val, source = ColumnDataSource(mypandas_filter),
                                      color = color, line_width = 3,
                                      legend_label = leg,

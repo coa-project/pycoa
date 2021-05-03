@@ -119,15 +119,18 @@ class DataBase(object):
                 elif self.db == 'phe': # GBR from https://coronavirus.data.gov.uk/details/download
                     info('GBR, Public Health England data ...')
                     rename_dict = { 'areaCode':'location',\
+                        'cumDeathsByDeathDate':'tot_deaths',\
                         'cumCasesBySpecimenDate':'tot_cases',\
                         #'covidOccupiedMVBeds':'cur_icu',\
-                        #'cumDeathByDeathDate':'tot_deaths',\
                         #'cumPeopleVaccinatedFirstDoseByVaccinationDate':'tot_dose1',\
                         #'cumPeopleVaccinatedSecondDoseByVaccinationDate':'tot_dose2',\
                         #'hospitalCases':'cur_hosp',\
                         }
-                    #url='https://api.coronavirus.data.gov.uk/v2/data?areaType=utla&metric=cumCasesBySpecimenDate&metric=covidOccupiedMVBeds&metric=cumDeathByDeathDate&metric=cumPeopleVaccinatedFirstDoseByVaccinationDate&metric=cumPeopleVaccinatedSecondDoseByVaccinationDate&metric=hospitalCases&format=csv'
-                    url='https://api.coronavirus.data.gov.uk/v2/data?areaType=utla&metric=cumCasesBySpecimenDate&format=csv'
+                    url='https://api.coronavirus.data.gov.uk/v2/data?areaType=utla'
+                    for w in rename_dict.keys():
+                        if w not in ['areaCode']:
+                            url=url+'&metric='+w
+                    url=url+'&format=csv'
                     
                     gbr_data=self.csv2pandas(url,separator=',',rename_columns=rename_dict)
                     columns_keeped = list(rename_dict.values())

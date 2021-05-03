@@ -267,7 +267,7 @@ class DataBase(object):
                         spf6 =  self.csv2pandas("https://www.data.gouv.fr/fr/datasets/r/16f4fd03-797f-4616-bca9-78ff212d06e8",
                                     constraints = constraints, rename_columns = rename, separator=';', cast=cast)
                         #result = pd.concat([spf1, spf2,spf3,spf4,spf5], axis=1, sort=False)
-                        constraints = {'age_18ans': 10}
+                        constraints = {'age_18ans': 0}
                         spf7 =  self.csv2pandas("https://www.data.gouv.fr/fr/datasets/r/c0f59f00-3ab2-4f31-8a05-d317b43e9055",
                                     constraints = constraints, rename_columns = rename, separator=';', cast=cast)
 
@@ -287,9 +287,11 @@ class DataBase(object):
                                                     spf7.set_index(['date', 'location'])
 
                         list_spf = [spf1, spf2, spf3, spf4, spf5, spf6,spf7]
+
                         result = reduce(lambda left, right: pd.merge(left, right, on = ['date','location'],
                                                     how = 'outer'), list_spf)
                         result = result.reset_index()
+
                         #print(merged)
                         #result = reduce(lambda x, y: x.merge(x, y, on = ['location','date']), [spf1, spf2,spf3,spf4,spf5])
                         #print(result)
@@ -647,7 +649,6 @@ class DataBase(object):
 
         if self.db == 'owid':
             pandas_db = pandas_db.loc[~pandas_db.iso_code.isnull()]
-
         return pandas_db
 
    def return_structured_pandas(self,mypandas,**kwargs):

@@ -229,6 +229,13 @@ class CocoDisplay:
             input_dico['when_end'] = mypandas.dropna(subset=[which]).date.max()
         else:
             input_dico['when_end'] = mypandas.date.max()
+
+        #when_end_change = CocoDisplay.changeto_nonan_date(mypandas, input_dico['when_end'], var_displayed)
+        when_end_change = CocoDisplay.changeto_nonull_date(mypandas, var_displayed)
+        if when_end_change != input_dico['when_end']:
+            input_dico['when_end'] = when_end_change
+            mypandas = mypandas[mypandas.date <= input_dico['when_end']]
+                        
         if when:
             input_dico['when_beg'], input_dico['when_end'] = extract_dates(when)
             if input_dico['when_beg'] == dt.date(1, 1, 1):
@@ -274,11 +281,6 @@ class CocoDisplay:
                     # else:
                     #    titlebar = which + ' (' + what +  ' @ ' + when.strftime('%d/%m/%Y') + ')'
                 var_displayed = what
-
-        when_end_change = CocoDisplay.changeto_nonan_date(mypandas, input_dico['when_end'], var_displayed)
-
-        if when_end_change != input_dico['when_end']:
-            input_dico['when_end'] = when_end_change
 
         vendors = kwargs.get('tile', 'openstreet')
         if vendors in self.tiles_listing:
@@ -463,6 +465,9 @@ class CocoDisplay:
 
     @staticmethod
     def changeto_nonan_date(df=None, when_end=None, field=None):
+        if not isinstance(when_end, dt.date):
+            raise CoaTypeError(' Not a valide data ... ')
+
         boolval = True
         j = 0
         while (boolval):
@@ -472,6 +477,20 @@ class CocoDisplay:
             verb(str(when_end) + ': all the value seems to be nan! I will find an other previous date.\n' +
                  'Here the date I will take: ' + str(when_end - dt.timedelta(days=j - 1)))
         return when_end - dt.timedelta(days=j - 1)
+
+    @staticmethod
+    def changeto_nonull_date(df=None, field=None):
+        when_end = df.date.max()
+        boolval = True
+        j = 0
+        while (boolval):
+            boolval = all(v == 0. for v in df.loc[df.date == (when_end - dt.timedelta(days=j))][field].values)
+            j += 1
+        if j > 1:
+            verb(str(when_end) + ': all the value seems to be 0! I will find an other previous date.\n' +
+                 'Here the date I will take: ' + str(when_end - dt.timedelta(days=j - 1)))
+        return when_end - dt.timedelta(days=j - 1)
+
 
     @staticmethod
     def get_utcdate(date):
@@ -685,10 +704,6 @@ class CocoDisplay:
                     else:
                         color = mypandas_filter.colors.iloc[i]
 
-                    ind=len(mypandas_filter)-1
-                    while mypandas_filter[val][ind] == 0.:
-                        ind-=1
-                    mypandas_filter = mypandas_filter[:ind+1]
                     r = standardfig.line(x = 'date', y = val, source = ColumnDataSource(mypandas_filter),
                                      color = color, line_width = 3,
                                      legend_label = leg,

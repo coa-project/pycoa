@@ -115,6 +115,22 @@ class DataBase(object):
                             esp_data[w]=pd.to_numeric(esp_data[w], errors = 'coerce')
 
                     self.return_structured_pandas(esp_data,columns_keeped=columns_keeped)
+
+                elif self.db == 'phe': # GBR from https://coronavirus.data.gov.uk/details/download
+                    info('GBR, Public Health England data ...')
+                    rename_dict = { 'areaCode':'location',\
+                        'cumCasesBySpecimenDate':'tot_cases',\
+                        'covidOccupiedMVBeds':'cur_icu',\
+                        'cumDeathByDeathDate':'tot_deaths',\
+                        'cumPeopleVaccinatedFirstDoseByVaccinationDate':'tot_dose1',\
+                        'cumPeopleVaccinatedSecondDoseByVaccinationDate':'tot_dose2',\
+                        'hospitalCases':'cur_hosp',\
+                        }
+                    url='https://api.coronavirus.data.gov.uk/v2/data?areaType=utla&metric=cumCasesBySpecimenDate&metric=covidOccupiedMVBeds&metric=cumDeathByDeathDate&metric=cumPeopleVaccinatedFirstDoseByVaccinationDate&metric=cumPeopleVaccinatedSecondDoseByVaccinationDate&metric=hospitalCases&Receivingformat=csv'
+                    gbr_data=self.csv2pandas(url,separator=',',rename_columns=rename_dict)
+                    columns_keeped = list(rename_dict.values())
+                    columns_keeped.remove('location')
+                    self.return_structured_pandas(gbr_data,columns_keeped=columns_keeped)
                 elif self.db == 'covid19india': # IND
                     info('COVID19India database selected ...')
                     rename_dict = {'Date': 'date', 'State': 'location'}

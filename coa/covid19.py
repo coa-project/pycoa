@@ -120,13 +120,15 @@ class DataBase(object):
                     info('GBR, Public Health England data ...')
                     rename_dict = { 'areaCode':'location',\
                         'cumCasesBySpecimenDate':'tot_cases',\
-                        'covidOccupiedMVBeds':'cur_icu',\
-                        'cumDeathByDeathDate':'tot_deaths',\
-                        'cumPeopleVaccinatedFirstDoseByVaccinationDate':'tot_dose1',\
-                        'cumPeopleVaccinatedSecondDoseByVaccinationDate':'tot_dose2',\
-                        'hospitalCases':'cur_hosp',\
+                        #'covidOccupiedMVBeds':'cur_icu',\
+                        #'cumDeathByDeathDate':'tot_deaths',\
+                        #'cumPeopleVaccinatedFirstDoseByVaccinationDate':'tot_dose1',\
+                        #'cumPeopleVaccinatedSecondDoseByVaccinationDate':'tot_dose2',\
+                        #'hospitalCases':'cur_hosp',\
                         }
-                    url='https://api.coronavirus.data.gov.uk/v2/data?areaType=utla&metric=cumCasesBySpecimenDate&metric=covidOccupiedMVBeds&metric=cumDeathByDeathDate&metric=cumPeopleVaccinatedFirstDoseByVaccinationDate&metric=cumPeopleVaccinatedSecondDoseByVaccinationDate&metric=hospitalCases&Receivingformat=csv'
+                    #url='https://api.coronavirus.data.gov.uk/v2/data?areaType=utla&metric=cumCasesBySpecimenDate&metric=covidOccupiedMVBeds&metric=cumDeathByDeathDate&metric=cumPeopleVaccinatedFirstDoseByVaccinationDate&metric=cumPeopleVaccinatedSecondDoseByVaccinationDate&metric=hospitalCases&format=csv'
+                    url='https://api.coronavirus.data.gov.uk/v2/data?areaType=utla&metric=cumCasesBySpecimenDate&format=csv'
+                    
                     gbr_data=self.csv2pandas(url,separator=',',rename_columns=rename_dict)
                     columns_keeped = list(rename_dict.values())
                     columns_keeped.remove('location')

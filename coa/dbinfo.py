@@ -17,7 +17,7 @@ def generic_info(namedb, keys):
     mydico = {}
     if namedb == 'spf':
         urlmaster1='https://www.data.gouv.fr/fr/datasets/donnees-hospitalieres-relatives-a-lepidemie-de-covid-19/'
-        urlmaster2=urlmaster1
+        urlmaster2='https://www.data.gouv.fr/fr/datasets/synthese-des-indicateurs-de-suivi-de-lepidemie-covid-19/'
         urlmaster3='https://www.data.gouv.fr/fr/datasets/donnees-relatives-aux-resultats-des-tests-virologiques-covid-19/'
         urlmaster5='https://www.data.gouv.fr/fr/datasets/donnees-relatives-aux-personnes-vaccinees-contre-la-covid-19-1'
         urlmaster4='https://www.data.gouv.fr/fr/datasets/indicateurs-de-suivi-de-lepidemie-de-covid-19/'
@@ -40,13 +40,17 @@ def generic_info(namedb, keys):
         'cur_rea':
         ['cur_rea:FILLIT',url1,urlmaster1],
         'cur_idx_tx_incid':
-        ['cur_idx_tx_incid:FILLIT',url2,urlmaster2],
+        ['cur_idx_tx_incid: Taux d\'incidence (activité épidémique : Le taux d\'incidence correspond au nombre de personnes testées\
+        positives (RT-PCR et test antigénique) pour la première fois depuis plus de 60 jours rapporté à la taille de la population. \
+        Il est exprimé pour 100 000 habitants)',url2,urlmaster2],
         'cur_idx_R':
         ['cur_idx_R:FILLIT',url4,urlmaster4],
         'cur_idx_taux_occupation_sae':
         ['cur_idx_taux_occupation_sae:FILLIT',url4,urlmaster4],
         'cur_idx_tx_pos':
-        ['cur_idx_tx_pos:FILLIT',url4,urlmaster4],
+        ['cur_idx_tx_pos: Taux de positivité des tests virologiques (Le taux de positivité correspond au nombre de personnes testées positives\
+         (RT-PCR et test antigénique) pour la première fois depuis plus de 60 jours rapporté au nombre total de personnes testées positives ou \
+         négatives sur une période donnée ; et qui n‘ont jamais été testées positive dans les 60 jours précédents.)',url4,urlmaster2],
         'tot_vacc':
         ['tot_vacc: (nom initial n_cum_dose1)',url5,urlmaster5],
         'tot_vacc2':
@@ -68,15 +72,16 @@ def generic_info(namedb, keys):
         'cur_idx_Prc_susp_501Y_V1' :
         ['Prc_susp_501Y_V1: % de tests avec suspicion de variant 20I/501Y.V1 (UK).\n Royaume-Uni (UK): code Nexstrain= 20I/501Y.V1.',url6,urlmaster6],
         'cur_idx_Prc_susp_501Y_V2_3' :
-        ['Prc_susp_501Y_V2_3: % de tests avec suspicion de variant 20H/501Y.V2 (ZA) ou 20J/501Y.V3 (BR).Afrique du Sud (ZA) : code Nexstrain= 20H/501Y.V2. Brésil (BR) : code Nexstrain= 20J/501Y.V3',url6,urlmaster6],
+        ['Prc_susp_501Y_V2_3: % de tests avec suspicion de variant 20H/501Y.V2 (ZA) ou 20J/501Y.V3 (BR).Afrique du Sud (ZA) : \
+        code Nexstrain= 20H/501Y.V2. Brésil (BR) : code Nexstrain= 20J/501Y.V3',url6,urlmaster6],
         'cur_idx_Prc_susp_IND' :
         ['Prc_susp_IND: % de tests avec une détection de variant mais non identifiable',url6,urlmaster6],
         'cur_idx_Prc_susp_ABS' :
         ['Prc_susp_ABS: % de tests avec une absence de détection de variant',url6,urlmaster6],
-        'cur_ti':
-        ['ti : taux d\'incidence hebdomadaire rapporté à la population pour 100 000 habitants, par semaine calendaire',url7,urlmaster7],
-        'cur_tp':
-        ['tp :Le taux de positivité hebdomadaire rapporté 100 tests réalisés, par semaine calendaire.',url7,urlmaster7]
+        'cur_idx_ti':
+        ['ti : taux d\'incidence hebdomadaire rapporté à la population pour 100 000 habitants , par semaine calendaire (en milieu scolaire)',url7,urlmaster7],
+        'cur_idx_tp':
+        ['tp :Le taux de positivité hebdomadaire rapporté 100 tests réalisés, par semaine calendaire (en milieu scolaire)',url7,urlmaster7]
         }
         mydico = spfdic
     elif namedb == 'opencovid19':
@@ -179,6 +184,26 @@ def generic_info(namedb, keys):
         for k,v in rki.items():
             rki[k].append('https://github.com/jgehrcke/covid-19-germany-gae')
         mydico = rki
+    elif namedb == 'escovid19data':
+        esco = {
+        'tot_deaths':['Cumulative deaths  (original name deceased)'],\
+        'tot_cases':['Cumulatvie number of new COVID-19 cases (original name cases_accumulated)'],\
+        'cur_cases':['Active COVID-19 cases (original name activos)'],\
+        'cur_hosp':['Hospitalized (original name hospitalized)'],\
+        'tot_hosp':['Cumulative Hospitalized (original name hospitalized_accumulated)'],\
+        'cur_icu':['UCI, intensive care patient, (original name intensive_care)'],\
+        'tot_recovered':['Recovered (original name recovered)'],\
+        'cur_cases_per100k':['Cumulative cases per 100,000 inhabitants (original name cases_per_cienmil)'],\
+        'cur_icu_per1M' :['Intensive care per 1000,000 inhabitants (original name intensive_care_per_1000000)'],\
+        'tot_deaths_per100k':['Cumulative deaths per 100,000 inhabitants (original name deceassed_per_100000)'],\
+        'cur_hosp_per100k':['Intensive care per 100,000 inhabitants, (original name hospitalized_per_100000)'],\
+        'deaths':['deaths:FILLIT','https://github.com/jgehrcke/covid-19-germany-gae/raw/master/deaths-rki-by-ags.csv'],
+        'cases':['cases:FILLIT','https://github.com/jgehrcke/covid-19-germany-gae/raw/master/deaths-rki-by-ags.csv'],
+        }
+        for k,v in esco.items():
+            esco[k].append('https://raw.githubusercontent.com/montera34/escovid19data/master/data/output/covid19-provincias-spain_consolidated.csv')
+            esco[k].append('https://github.com/montera34/escovid19data')
+        mydico = esco
     else:
         raise CoaKeyError('Error in the database selected, please check !')
     if keys not in mydico:

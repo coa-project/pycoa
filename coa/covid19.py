@@ -708,7 +708,6 @@ class DataBase(object):
         mypandas = mypandas.replace(oldloc,newloc)
         mypandas = mypandas.groupby(['location','date']).sum(min_count=1).reset_index() # summing in case of multiple dates (e.g. in opencovid19 data). But keep nan if any
         mypandas['codelocation'] = mypandas['location'].map(codedico)
-        #self.mainpandas = mypandas
         self.mainpandas = fill_missing_dates(mypandas)
         self.dates  = self.mainpandas['date']
 
@@ -958,7 +957,8 @@ class DataBase(object):
 
         if fillnan: # which is the default. Use nofillnan option instead.
             # fill with previous value
-            pdfiltered[kwargs['which']] = pdfiltered.groupby(['location'])[kwargs['which']].fillna(method='ffill')
+            #pdfiltered[kwargs['which']] = pdfiltered.groupby(['location'])[kwargs['which']].fillna(method='ffill')
+            pdfiltered[kwargs['which']] = pdfiltered.groupby(['location'])[kwargs['which']].fillna(method='bfill')
             # fill remaining nan with zeros
             pdfiltered = pdfiltered.fillna(0)
 
@@ -976,13 +976,18 @@ class DataBase(object):
                        tmp['codelocation'] = [str(origclistlist[k])]*len(tmp)
                    else:
                         tmp = pdfiltered.loc[pdfiltered.location==i]
+
+                   ntot = len(i)
+                   for col in pdfiltered.columns:
+                       if col.startswith('cur_idx_'):
+                           tmp[col] /= ntot
+
                    if tmppandas.empty:
                         tmppandas = tmp
                    else:
                        tmppandas = tmppandas.append(tmp)
                    k+=1
                pdfiltered = tmppandas
-               ntot = len(devorigclist)
 
             else:
                pdfiltered = pdfiltered.drop(['location','codelocation'],axis=1,)
@@ -990,11 +995,10 @@ class DataBase(object):
                pdfiltered['location'] = [clist]*len(pdfiltered)
                pdfiltered['codelocation'] = [str(origclist)]*len(pdfiltered)
                ntot=len(clist)
-
-            # mean for some columns, about index and not sum of values.
-            for col in pdfiltered.columns:
-                if col.startswith('cur_idx_'):
-                    pdfiltered[col] /= ntot
+               # mean for some columns, about index and not sum of values.
+               for col in pdfiltered.columns:
+                   if col.startswith('cur_idx_'):
+                       pdfiltered[col] /= ntot
 
             pdfiltered['daily'] = pdfiltered[kwargs['which']].diff()
             pdfiltered['cumul'] = pdfiltered[kwargs['which']].cumsum()

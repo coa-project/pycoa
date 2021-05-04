@@ -932,7 +932,7 @@ class GeoCountry():
             self._country_data=self._country_data[['name_subregion','code_subregion','geometry']]
             self._country_data['code_region']=self._country_data.code_subregion.str.slice(stop=1)
             dict_region={\
-                'E':'England 06',\
+                'E':'England',\
                 'W':'Whales',\
                 'S':'Scotland',\
                 'N':'Northern Ireland'\

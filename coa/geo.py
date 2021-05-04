@@ -686,6 +686,7 @@ class GeoCountry():
                     'DEU':'https://github.com/jgehrcke/covid-19-germany-gae/raw/master/geodata/DE-counties.geojson',\
                     'ESP':'https://public.opendatasoft.com/explore/dataset/provincias-espanolas/download/?format=shp&timezone=Europe/Berlin&lang=en',\
                     'GBR':'https://opendata.arcgis.com/datasets/69dc11c7386943b4ad8893c45648b1e1_0.zip?geometry=%7B%22xmin%22%3A-44.36%2C%22ymin%22%3A51.099%2C%22xmax%22%3A39.487%2C%22ymax%22%3A59.78%2C%22type%22%3A%22extent%22%2C%22spatialReference%22%3A%7B%22wkid%22%3A4326%7D%7D&outSR=%7B%22latestWkid%22%3A27700%2C%22wkid%22%3A27700%7D',\
+                    'BEL':'https://public.opendatasoft.com/explore/dataset/arrondissements-belges-2019/download/?format=shp&timezone=Europe/Berlin&lang=en,'\
                     }
 
     _source_dict = {'FRA':{'Basics':_country_info_dict['FRA'],\
@@ -698,6 +699,7 @@ class GeoCountry():
                     'DEU':{'Basics':_country_info_dict['DEU']},\
                     'ESP':{'Basics':_country_info_dict['ESP']},\
                     'GBR':{'Basics':_country_info_dict['GBR']},\
+                    'BEL':{'Basics':_country_info_dict['BEL']},\
                     }
 
     def __init__(self,country=None,**kwargs):
@@ -939,6 +941,27 @@ class GeoCountry():
                 }
             self._country_data['name_region']=[dict_region[x] for x in self._country_data.code_region]
             # modifying projection
+            self._country_data['geometry']=self._country_data.geometry.to_crs('epsg:4326')
+
+        # --- 'BEL' case --------------------------------------------------------------------------------------------
+        elif self._country == 'BEL':
+            self._country_data = gpd.read_file('zip://'+get_local_from_url(url,0,'.zip'),encoding='utf-8') # this is shapefile file
+            self._country_data.rename(columns={\
+                'nom_arrondi':'name_subregion',\
+                'niscode':'code_subregion',\
+                'prov_code':'code_region'},inplace=True)
+            p=[]
+            for index,row in self._country_data.iterrows():
+                if row.prov_name_f is not None:
+                    p0=row.prov_name_f
+                elif row.prov_name_n is not None:
+                    p0=row.prov_name_n
+                else:
+                    p0=row.region
+                p.append(p0)
+            self._country_data['name_region']=p
+            self._country_data.loc[self._country_data.code_region.isnull(),'code_region']='00000'
+            self._country_data=self._country_data[['name_subregion','code_subregion','name_region','code_region','geometry']]
             self._country_data['geometry']=self._country_data.geometry.to_crs('epsg:4326')
 
     def get_source(self):

@@ -863,8 +863,6 @@ class CocoDisplay:
 
             if func.__name__ == 'pycoa_mapfolium' or func.__name__ == 'pycoa_map':
                 self.all_location_indb = self.location_geometry.location.unique()
-                print('CSV',geopdwd_filter)
-                print('JSON',self.location_geometry)
                 geopdwd_filter = pd.merge(geopdwd_filter, self.location_geometry, on='location')
                 dico['tile'] = CocoDisplay.get_tile(dico['tile'], func.__name__)
 

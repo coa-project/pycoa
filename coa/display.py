@@ -94,6 +94,9 @@ class CocoDisplay:
                 info = coge.GeoCountry(country, dense_geometry=False)
                 geopan = info.get_subregion_list()[['code_subregion', 'name_subregion', 'geometry']]
                 geopan = geopan.rename(columns={'code_subregion': 'location'})
+                if self.dbld[self.database_name] == 'BEL':
+                    geopan = info.get_region_list()[['code_region', 'name_region', 'geometry']]
+                    geopan = geopan.rename(columns={'code_region': 'location'})
             else:
                 info = coge.GeoInfo()
 
@@ -189,15 +192,20 @@ class CocoDisplay:
                             mypandascountry = sub
                 mypandas = mypandascountry
             if self.dbld[self.database_name] != 'WW':
-                pd_name_displayed = self.geopan[['location', 'name_subregion']]
+                pd_name_displayed = self.geopan[['location', 'name_region']]
                 maskcountries = mypandas['codelocation'].apply(
                     lambda x: True if len(x) == 2 or len(x) == 3 or len(x) == 5 or len(x)==9 else False)
+
                 mypandassumall = mypandas[~maskcountries]
                 mypandascountry = mypandas[maskcountries]
                 if not mypandascountry.empty:
                     mypandascountry = pd.merge(mypandascountry, pd_name_displayed, on='location', how='inner')
                     mypandascountry = mypandascountry.drop(columns='rolloverdisplay')
-                    mypandascountry['rolloverdisplay'] = mypandascountry['name_subregion']
+                    if self.dbld[self.database_name] == 'BEL':
+                        mypandascountry['rolloverdisplay'] = mypandascountry['name_region']
+                    else:
+                        mypandascountry['rolloverdisplay'] = mypandascountry['name_subregion']
+
                     if not mypandassumall.empty:
                         mypandascountry = mypandascountry.append(mypandassumall)
                     mypandas = mypandascountry
@@ -225,6 +233,7 @@ class CocoDisplay:
         input_dico['when'] = when
         title_temporal = ''
         input_dico['when_beg'] = mypandas.date.min()
+
         if mypandas[which].isnull().values.any():
             input_dico['when_end'] = mypandas.dropna(subset=[which]).date.max()
         else:
@@ -232,6 +241,7 @@ class CocoDisplay:
 
         #when_end_change = CocoDisplay.changeto_nonan_date(mypandas, input_dico['when_end'], var_displayed)
         when_end_change = CocoDisplay.changeto_nonull_date(mypandas, var_displayed)
+
         if when_end_change != input_dico['when_end']:
             input_dico['when_end'] = when_end_change
             mypandas = mypandas[mypandas.date <= input_dico['when_end']]
@@ -853,6 +863,8 @@ class CocoDisplay:
 
             if func.__name__ == 'pycoa_mapfolium' or func.__name__ == 'pycoa_map':
                 self.all_location_indb = self.location_geometry.location.unique()
+                print('CSV',geopdwd_filter)
+                print('JSON',self.location_geometry)
                 geopdwd_filter = pd.merge(geopdwd_filter, self.location_geometry, on='location')
                 dico['tile'] = CocoDisplay.get_tile(dico['tile'], func.__name__)
 
@@ -1460,7 +1472,6 @@ class CocoDisplay:
         geopdwd_filtered['cases'] = geopdwd_filtered[input_field]
         geopdwd_filtered = gpd.GeoDataFrame(geopdwd_filtered, geometry=geopdwd_filtered.geometry, crs="EPSG:4326")
         uniqloc = list(geopdwd_filtered.codelocation.unique())
-
         geopdwd = geopdwd.sort_values(by=['codelocation', 'date'], ascending = [True, False])
         geopdwd = geopdwd.drop(columns=['date'])
         geopdwd_filtered = geopdwd_filtered.sort_values(by=['codelocation', 'date'], ascending = [True, False]).drop(columns=['date', 'colors'])

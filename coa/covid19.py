@@ -66,6 +66,8 @@ class DataBase(object):
                     self.db_world = False
                     self.geo = coge.GeoCountry(get_db_list_dict()[self.db])
                     self.geo_all = self.geo.get_subregion_list()['code_subregion'].to_list()
+                    if self.db == 'bih':
+                        self.geo_all = self.geo.get_region_list()['code_region'].to_list()
 
                 # specific reading of data according to the db
                 if self.db == 'jhu':
@@ -116,6 +118,29 @@ class DataBase(object):
 
                     self.return_structured_pandas(esp_data,columns_keeped=columns_keeped)
 
+                elif self.db == 'bih': #Belgian institute for health,
+                    info('BEL, Belgian institute for health data  ...')
+                    rename_dict = { 'DATE' : 'date',\
+                    'PROVINCE':'location',\
+                    'TOTAL_IN':'tot_hosp',
+                    'TOTAL_IN_ICU':'tot_icu',
+                    'TOTAL_IN_RESP':'tot_resp',
+                    'TOTAL_IN_ECMO':'tot_ecmo'}
+                    url='https://epistat.sciensano.be/Data/COVID19BE_HOSP.csv'
+                    beldata=self.csv2pandas(url,separator=',',rename_columns=rename_dict)
+                    columns_keeped = ['tot_hosp','tot_icu','tot_resp','tot_ecmo']
+                    cvsloc2jsonloc={
+                    'BrabantWallon':'Brabant wallon (le)',\
+                    'Brussels':'Région de Bruxelles-Capitale',\
+                    'Limburg':'Limbourg (le)',\
+                    'OostVlaanderen':'Flandre orientale (la)',\
+                    'Hainaut':'Hainaut (le)',\
+                    'VlaamsBrabant':'Brabant flamand (le)',\
+                    'WestVlaanderen':'Flandre occidentale (la)',\
+                    }
+                    beldata["location"].replace(cvsloc2jsonloc, inplace=True)
+                    beldata['date'] = pandas.to_datetime(beldata['date'],errors='coerce').dt.date
+                    self.return_structured_pandas(beldata,columns_keeped=columns_keeped)
                 elif self.db == 'phe': # GBR from https://coronavirus.data.gov.uk/details/download
                     info('GBR, Public Health England data ...')
                     rename_dict = { 'areaCode':'location',\
@@ -131,11 +156,12 @@ class DataBase(object):
                         if w not in ['areaCode']:
                             url=url+'&metric='+w
                     url=url+'&format=csv'
-                    
+
                     gbr_data=self.csv2pandas(url,separator=',',rename_columns=rename_dict)
                     columns_keeped = list(rename_dict.values())
                     columns_keeped.remove('location')
                     self.return_structured_pandas(gbr_data,columns_keeped=columns_keeped)
+
                 elif self.db == 'covid19india': # IND
                     info('COVID19India database selected ...')
                     rename_dict = {'Date': 'date', 'State': 'location'}
@@ -592,7 +618,6 @@ class DataBase(object):
         #    result['codelocation'] = result['location'].map(codedico)
         #else:
         result['codelocation'] = result['location']
-
         result['date'] = pd.to_datetime(result['date'],errors='coerce').dt.date
 
         result=result.sort_values(['location','date'])
@@ -676,6 +701,7 @@ class DataBase(object):
             strangeiso3tokick=[i for i in mypandas['iso_code'].unique() if not len(i)==3]
             mypandas = mypandas.loc[~mypandas.iso_code.isin(strangeiso3tokick)]
             self.available_keys_words.remove('iso_code')
+
         uniqloc = list(mypandas['location'].unique())
         oldloc = uniqloc
         codedico={}
@@ -689,15 +715,20 @@ class DataBase(object):
         else:
             loc_sub_name  = list(self.geo.get_subregion_list()['name_subregion'])
             loc_sub_code = list(self.geo.get_subregion_list()['code_subregion'])
+            if self.db == 'bih':
+                loc_sub_name  = list(self.geo.get_region_list()['name_region'])
+                loc_sub_code = list(self.geo.get_region_list()['code_region'])
             #loc_code = list(self.geo.get_data().loc[self.geo.get_data().name_subregion.isin(loc_sub)]['code_subregion'])
             self.slocation = loc_sub_code
             oldloc = loc_sub_name
             newloc = loc_sub_code
             toremove = [x for x in uniqloc if x not in loc_sub_name]
             codedico={i:j for i,j in zip(loc_sub_code,newloc)}
+
         tmp = pd.DataFrame()
 
         not_un_nation_dict={'Kosovo':'Serbia','Northern Cyprus':'Cyprus'}
+
         for subpart_country, main_country in not_un_nation_dict.items() :
             if subpart_country in oldloc:
                 tmp=(mypandas.loc[mypandas.location.isin([subpart_country,main_country])].groupby('date').sum())

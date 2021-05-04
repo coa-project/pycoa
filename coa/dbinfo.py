@@ -204,6 +204,17 @@ def generic_info(namedb, keys):
             esco[k].append('https://raw.githubusercontent.com/montera34/escovid19data/master/data/output/covid19-provincias-spain_consolidated.csv')
             esco[k].append('https://github.com/montera34/escovid19data')
         mydico = esco
+    elif namedb == 'bih':
+        bih = {
+        'tot_hosp':['Total number of lab-confirmed hospitalized COVID-19 patients at the moment of reporting, including ICU (prevalence) (original name TOTAL_IN)'],\
+        'tot_icu':['Total number of lab-confirmed hospitalized COVID-19 patients in ICU at the moment of reporting (prevalence) (original name TOTAL_IN_ICU)'],\
+        'tot_resp':['Total number of lab-confirmed hospitalized COVID-19 patients under respiratory support at the moment of reporting (prevalence) (original name TOTAL_IN_RESP)'],\
+        'tot_ecmo':['Total number of lab-confirmed hospitalized COVID-19 patients on ECMO at the moment of reporting (prevalence) (orginale name TOTAL_IN_ECMO)']
+        }
+        for k,v in bih.items():
+            bih[k].append('https://epistat.sciensano.be/Data/COVID19BE_HOSP.csv')
+            bih[k].append('https://epistat.wiv-isp.be/covid/')
+        mydico = bih
     else:
         raise CoaKeyError('Error in the database selected, please check !')
     if keys not in mydico:

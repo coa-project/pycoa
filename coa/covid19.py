@@ -126,7 +126,7 @@ class DataBase(object):
                         #'cumPeopleVaccinatedSecondDoseByVaccinationDate':'tot_dose2',\
                         #'hospitalCases':'cur_hosp',\
                         }
-                    url='https://api.coronavirus.data.gov.uk/v2/data?areaType=utla'
+                    url='https://api.coronavirus.data.gov.uk/v2/data?areaType=ltla'
                     for w in rename_dict.keys():
                         if w not in ['areaCode']:
                             url=url+'&metric='+w

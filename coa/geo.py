@@ -930,18 +930,16 @@ class GeoCountry():
                 'LAD20NM':'name_subregion',\
                 'LAD20CD':'code_subregion'},inplace=True)
             self._country_data=self._country_data[['name_subregion','code_subregion','geometry']]
-            self._country_data['code_region']=self._country_data.code_subregion.str.slice(stop=3)
-            'E06', 'E07', 'E08', 'E09', 'N09', 'S12', 'W06'
+            self._country_data['code_region']=self._country_data.code_subregion.str.slice(stop=1)
             dict_region={\
-                'E06':'England 06',\
-                'E07':'England 07',\
-                'E08':'England 08',\
-                'E09':'England 09',\
-                'W06':'Whales',\
-                'S12':'Scotland',\
-                'N09':'Northern Ireland'\
+                'E':'England 06',\
+                'W':'Whales',\
+                'S':'Scotland',\
+                'N':'Northern Ireland'\
                 }
             self._country_data['name_region']=[dict_region[x] for x in self._country_data.code_region]
+            # modifying projection
+            self._country_data['geometry']=self._country_data.geometry.to_crs('epsg:4326')
 
     def get_source(self):
         """ Return informations about URL sources

@@ -191,7 +191,7 @@ class CocoDisplay:
             if self.dbld[self.database_name] != 'WW':
                 pd_name_displayed = self.geopan[['location', 'name_subregion']]
                 maskcountries = mypandas['codelocation'].apply(
-                    lambda x: True if len(x) == 2 or len(x) == 3 or len(x) == 5 else False)
+                    lambda x: True if len(x) == 2 or len(x) == 3 or len(x) == 5 or len(x)==9 else False)
                 mypandassumall = mypandas[~maskcountries]
                 mypandascountry = mypandas[maskcountries]
                 if not mypandascountry.empty:
@@ -235,7 +235,7 @@ class CocoDisplay:
         if when_end_change != input_dico['when_end']:
             input_dico['when_end'] = when_end_change
             mypandas = mypandas[mypandas.date <= input_dico['when_end']]
-                        
+
         if when:
             input_dico['when_beg'], input_dico['when_end'] = extract_dates(when)
             if input_dico['when_beg'] == dt.date(1, 1, 1):
@@ -525,6 +525,7 @@ class CocoDisplay:
         """
         k = 6378137
         x = tuple_xy[0] * (k * np.pi / 180.0)
+
         if tuple_xy[1] == -90:
             lat = -89
         else:
@@ -1310,6 +1311,7 @@ class CocoDisplay:
                          start_angle = 'starts', end_angle = 'ends',
                          line_color = 'white', color = 'colors', legend_label = 'codelocation', source = srcfiltered)
         standardfig.legend.visible = False
+        srcfiltered.data['text_angle'] = srcfiltered.data['starts']+np.abs(srcfiltered.data['ends']-srcfiltered.data['starts'])/2.
         txt1 = Text(x = 'text_x', y = 'text_y', text = 'codelocation', angle = 'text_angle',
               text_align = 'center', text_font_size = 'text_size')
         #txt2 = Text(x = 'text_x', y = 'text_y2', text = 'percentage', angle = 'text_angle',

@@ -192,7 +192,10 @@ class CocoDisplay:
                             mypandascountry = sub
                 mypandas = mypandascountry
             if self.dbld[self.database_name] != 'WW':
-                pd_name_displayed = self.geopan[['location', 'name_region']]
+                if self.dbld[self.database_name] == 'BEL':
+                    pd_name_displayed = self.geopan[['location', 'name_region']]
+                else:
+                    pd_name_displayed = self.geopan[['location', 'name_subregion']]    
                 maskcountries = mypandas['codelocation'].apply(
                     lambda x: True if len(x) == 2 or len(x) == 3 or len(x) == 5 or len(x)==9 else False)
 
@@ -587,7 +590,8 @@ class CocoDisplay:
         df.loc[:, 'text_y2'] = ( df['text_y2'] - 0.1 )
         df['text_size'] = [str(10)+'pt' if i > 0.08*(2 * np.pi) else '4pt' for i in df['diff']]
         df['text_angle'] = 0.0
-        df.loc[:, 'percentage'] = (( df['percentage'] * 100 ).round(2)).apply(lambda x: str(x))
+        print(df.loc[:, 'percentage'])
+        df.loc[:, 'percentage'] = (( df['percentage'] * 100 ).astype(np.double).round(2)).apply(lambda x: str(x))
         return df
     ###################### END Static Methods ##################
     ###################### BEGIN Plots ##################

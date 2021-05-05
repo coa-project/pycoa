@@ -1561,9 +1561,9 @@ class CocoDisplay:
             reorder = list(geopdwd_filtered.location.unique())
             reorder = [i for i in reorder[1:]]
             reorder.append('00000')
-        geopdwd_filtered = geopdwd_filtered.set_index('location')
-        geopdwd_filtered = geopdwd_filtered.reindex(index = reorder)
-        geopdwd_filtered = geopdwd_filtered.reset_index()
+            geopdwd_filtered = geopdwd_filtered.set_index('location')
+            geopdwd_filtered = geopdwd_filtered.reindex(index = reorder)
+            geopdwd_filtered = geopdwd_filtered.reset_index()
 
 
         json_data = json.dumps(json.loads(geopdwd_filtered.to_json()))

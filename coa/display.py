@@ -71,6 +71,7 @@ class CocoDisplay:
         self.plot_width = width_height_default[0]
         self.plot_height = width_height_default[1]
         self.geom = []
+        self.pycoageo =[]
         self.geopan = gpd.GeoDataFrame()
         self.location_geometry = None
 
@@ -333,6 +334,9 @@ class CocoDisplay:
                                       text=textcopyright)
         fig.add_layout(self.logo_db_citation)
         return fig
+
+    def get_pycoageo(self):
+        return self.pycoageo
 
     ###################### BEGIN Static Methods ##################
     @staticmethod
@@ -1511,6 +1515,7 @@ class CocoDisplay:
         geopdwd_filtered = geopdwd_filtered.drop(columns='geometry')
         geopdwd_filtered = pd.merge(geolistmodified, geopdwd_filtered, on='location')
         sourcemaplabel = ColumnDataSource(pd.DataFrame({'centroidx':[],'centroidy':[],'cases':[]}))
+
         if maplabel:
             #dicocolors=geopdwd[['location','colors']].drop_duplicates().to_dict('records')
             geopdwd_filtered['centroidx'] = geopdwd_filtered['geometry'].apply('centroid').x
@@ -1565,6 +1570,7 @@ class CocoDisplay:
             geopdwd_filtered = geopdwd_filtered.reindex(index = reorder)
             geopdwd_filtered = geopdwd_filtered.reset_index()
 
+        self.pycoageo = geopdwd_filtered
 
         json_data = json.dumps(json.loads(geopdwd_filtered.to_json()))
         geopdwd_filtered = GeoJSONDataSource(geojson=json_data)

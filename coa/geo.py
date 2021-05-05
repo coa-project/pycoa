@@ -353,7 +353,7 @@ class GeoInfo():
                 'the get_list_field() output.')
         return field+' : '+self._list_field[field]
 
-    
+
     def add_field(self,**kwargs):
         """ this is the main function of the GeoInfo class. It adds to
         the input pandas dataframe some fields according to
@@ -912,7 +912,7 @@ class GeoCountry():
             h_deu['id']=h_deu['#'].str.slice(stop=2)
             h_deu['name_region']=h_deu['country']
             self._country_data=self._country_data.merge(h_deu,how='left',left_on='code_region',right_on='id')
-            self._country_data['code_subregion']=self._country_data.code_subregion.astype(int).astype(str)            
+            self._country_data['code_subregion']=self._country_data.code_subregion.astype(int).astype(str)
             self._country_data=self._country_data[['name_subregion','code_subregion','name_region','code_region','geometry']]
 
         # --- 'ESP' case ---------------------------------------------------------------------------------------

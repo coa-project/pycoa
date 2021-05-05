@@ -71,7 +71,7 @@ class CocoDisplay:
         self.plot_width = width_height_default[0]
         self.plot_height = width_height_default[1]
         self.geom = []
-        self.pycoageo =[]
+
         self.geopan = gpd.GeoDataFrame()
         self.location_geometry = None
 
@@ -243,12 +243,6 @@ class CocoDisplay:
         else:
             input_dico['when_end'] = mypandas.date.max()
 
-        #when_end_change = CocoDisplay.changeto_nonan_date(mypandas, input_dico['when_end'], var_displayed)
-        when_end_change = CocoDisplay.changeto_nonull_date(mypandas, var_displayed)
-
-        if when_end_change != input_dico['when_end']:
-            input_dico['when_end'] = when_end_change
-            mypandas = mypandas[mypandas.date <= input_dico['when_end']]
 
         if when:
             input_dico['when_beg'], input_dico['when_end'] = extract_dates(when)
@@ -256,13 +250,21 @@ class CocoDisplay:
                 input_dico['when_beg'] = mypandas['date'].min()
 
             if input_dico['when_end'] == '':
-                input_dico['when_end'] = mypandas.date.max()
+                input_dico['when_end'] = when_end_change
+
             if not isinstance(input_dico['when_beg'], dt.date):
                 raise CoaNoData("With your current cuts, there are no data to plot.")
 
             if input_dico['when_end'] <= input_dico['when_beg']:
                 print('Requested date below available one, take', input_dico['when_beg'])
                 input_dico['when_end'] = input_dico['when_beg']
+
+        #when_end_change = CocoDisplay.changeto_nonan_date(mypandas, input_dico['when_end'], var_displayed)
+        when_end_change = CocoDisplay.changeto_nonull_date(mypandas, var_displayed)
+
+        if when_end_change != input_dico['when_end']:
+            input_dico['when_end'] = when_end_change
+            mypandas = mypandas[mypandas.date <= input_dico['when_end']]
 
         if kwargs.get('plot_last_date', None) == True:
             title_temporal = ' (at ' + input_dico['when_end'].strftime('%d/%m/%Y') + ')'
@@ -334,9 +336,6 @@ class CocoDisplay:
                                       text=textcopyright)
         fig.add_layout(self.logo_db_citation)
         return fig
-
-    def get_pycoageo(self):
-        return self.pycoageo
 
     ###################### BEGIN Static Methods ##################
     @staticmethod
@@ -871,7 +870,7 @@ class CocoDisplay:
             geopdwd_filter = geopdwd_filter.reset_index(drop = True)
             uniqcodeloc = geopdwd_filter.codelocation.unique()
 
-            if func.__name__ == 'pycoa_mapfolium' or func.__name__ == 'pycoa_map':
+            if func.__name__ == 'pycoa_mapfolium' or func.__name__ == 'pycoa_map' or func.__name__ == 'innerdecopycoageo':
                 self.all_location_indb = self.location_geometry.location.unique()
                 geopdwd_filter = pd.merge(geopdwd_filter, self.location_geometry, on='location')
                 dico['tile'] = CocoDisplay.get_tile(dico['tile'], func.__name__)
@@ -1458,8 +1457,56 @@ class CocoDisplay:
 
         return mapa
 
+    def decopycoageo(func):
+        def innerdecopycoageo(self,input_field, date_slider, maplabel, dico, geopdwd, geopdwd_filtered):
+            geopdwd['cases'] = geopdwd[input_field]
+            geopdwd_filtered['cases'] = geopdwd_filtered[input_field]
+            geopdwd_filtered = gpd.GeoDataFrame(geopdwd_filtered, geometry=geopdwd_filtered.geometry, crs="EPSG:4326")
+            geopdwd = geopdwd.sort_values(by=['codelocation', 'date'], ascending = [True, False])
+            geopdwd = geopdwd.drop(columns=['date'])
+            geopdwd_filtered = geopdwd_filtered.sort_values(by=['codelocation', 'date'], ascending = [True, False]).drop(columns=['date', 'colors'])
+            new_poly = []
+            geolistmodified = dict()
+            if date_slider:
+                date_slider.orientation = 'horizontal'
+
+            for index, row in geopdwd_filtered.iterrows():
+                split_poly = []
+                new_poly = []
+                for pt in self.get_polycoords(row):
+                    if type(pt) == tuple:
+                        new_poly.append(CocoDisplay.wgs84_to_web_mercator(pt))
+                    elif type(pt) == list:
+                        shifted = []
+                        for p in pt:
+                            shifted.append(CocoDisplay.wgs84_to_web_mercator(p))
+                        new_poly.append(sg.Polygon(shifted))
+                    else:
+                        raise CoaTypeError("Neither tuple or list don't know what to do with \
+                            your geometry description")
+
+                if type(new_poly[0]) == tuple:
+                    geolistmodified[row['location']] = sg.Polygon(new_poly)
+                else:
+                    geolistmodified[row['location']] = sg.MultiPolygon(new_poly)
+
+            ng = pd.DataFrame(geolistmodified.items(), columns=['location', 'geometry'])
+            geolistmodified = gpd.GeoDataFrame({'location': ng['location'], 'geometry': gpd.GeoSeries(ng['geometry'])},
+                                               crs="epsg:3857")
+
+            geopdwd_filtered = geopdwd_filtered.drop(columns='geometry')
+            geopdwd_filtered = pd.merge(geolistmodified, geopdwd_filtered, on='location')
+            return func(self,input_field, date_slider, maplabel, dico, geopdwd, geopdwd_filtered)
+        return innerdecopycoageo
+
     @decohistomap
-    def pycoa_map(self, input_field, date_slider, maplabel, dico, geopdwd, geopdwd_filtered):
+    @decopycoageo
+    def pycoageo(self,input_field, date_slider, maplabel, dico, geopdwd, geopdwd_filtered):
+        return geopdwd_filtered
+
+    @decohistomap
+    @decopycoageo
+    def pycoa_map(self,input_field, date_slider, maplabel, dico, geopdwd, geopdwd_filtered):
         """Create a Bokeh map from a pandas input
         Keyword arguments
         -----------------
@@ -1476,46 +1523,8 @@ class CocoDisplay:
           - plot_width, plot_height (default [500,400]): bokeh variable for map size
         Known issue: can not avoid to display value when there are Nan values
         """
-        geopdwd['cases'] = geopdwd[input_field]
-        geopdwd_filtered['cases'] = geopdwd_filtered[input_field]
-        geopdwd_filtered = gpd.GeoDataFrame(geopdwd_filtered, geometry=geopdwd_filtered.geometry, crs="EPSG:4326")
-        uniqloc = list(geopdwd_filtered.codelocation.unique())
-        geopdwd = geopdwd.sort_values(by=['codelocation', 'date'], ascending = [True, False])
-        geopdwd = geopdwd.drop(columns=['date'])
-        geopdwd_filtered = geopdwd_filtered.sort_values(by=['codelocation', 'date'], ascending = [True, False]).drop(columns=['date', 'colors'])
-        new_poly = []
-        geolistmodified = dict()
-        if date_slider:
-            date_slider.orientation = 'horizontal'
-
-        for index, row in geopdwd_filtered.iterrows():
-            split_poly = []
-            new_poly = []
-            for pt in self.get_polycoords(row):
-                if type(pt) == tuple:
-                    new_poly.append(CocoDisplay.wgs84_to_web_mercator(pt))
-                elif type(pt) == list:
-                    shifted = []
-                    for p in pt:
-                        shifted.append(CocoDisplay.wgs84_to_web_mercator(p))
-                    new_poly.append(sg.Polygon(shifted))
-                else:
-                    raise CoaTypeError("Neither tuple or list don't know what to do with \
-                        your geometry description")
-
-            if type(new_poly[0]) == tuple:
-                geolistmodified[row['location']] = sg.Polygon(new_poly)
-            else:
-                geolistmodified[row['location']] = sg.MultiPolygon(new_poly)
-
-        ng = pd.DataFrame(geolistmodified.items(), columns=['location', 'geometry'])
-        geolistmodified = gpd.GeoDataFrame({'location': ng['location'], 'geometry': gpd.GeoSeries(ng['geometry'])},
-                                           crs="epsg:3857")
-
-        geopdwd_filtered = geopdwd_filtered.drop(columns='geometry')
-        geopdwd_filtered = pd.merge(geolistmodified, geopdwd_filtered, on='location')
         sourcemaplabel = ColumnDataSource(pd.DataFrame({'centroidx':[],'centroidy':[],'cases':[]}))
-
+        uniqloc = list(geopdwd_filtered.codelocation.unique())
         if maplabel:
             #dicocolors=geopdwd[['location','colors']].drop_duplicates().to_dict('records')
             geopdwd_filtered['centroidx'] = geopdwd_filtered['geometry'].apply('centroid').x
@@ -1534,8 +1543,7 @@ class CocoDisplay:
             #dfLabel['colors'] = dfLabel['location'].map(dicocolors)
             sourcemaplabel = ColumnDataSource(dfLabel)
 
-
-        if self.dbld[self.database_name] in ['FRA'] and all([len(i) == 2 for i in geolistmodified.location.unique()]):
+        if self.dbld[self.database_name] in ['FRA'] and all([len(i) == 2 for i in geopdwd_filtered.location.unique()]):
             minx, miny, maxx, maxy = self.boundary_metropole
         else:
             minx, miny, maxx, maxy = self.boundary
@@ -1569,8 +1577,6 @@ class CocoDisplay:
             geopdwd_filtered = geopdwd_filtered.set_index('location')
             geopdwd_filtered = geopdwd_filtered.reindex(index = reorder)
             geopdwd_filtered = geopdwd_filtered.reset_index()
-
-        self.pycoageo = geopdwd_filtered
 
         json_data = json.dumps(json.loads(geopdwd_filtered.to_json()))
         geopdwd_filtered = GeoJSONDataSource(geojson=json_data)

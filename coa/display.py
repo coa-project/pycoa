@@ -1557,9 +1557,10 @@ class CocoDisplay:
         color_bar.formatter = BasicTickFormatter(use_scientific=True, precision=1, power_limit_low=int(max_col))
         standardfig.add_layout(color_bar, 'below')
         geopdwd_filtered = geopdwd_filtered[['cases','geometry','location','codelocation','rolloverdisplay']]
-        reorder = list(geopdwd_filtered.location.unique())
-        reorder = [i for i in reorder[1:]]
-        reorder.append('00000')
+        if self.dbld[self.database_name] == 'BEL' :
+            reorder = list(geopdwd_filtered.location.unique())
+            reorder = [i for i in reorder[1:]]
+            reorder.append('00000')
         geopdwd_filtered = geopdwd_filtered.set_index('location')
         geopdwd_filtered = geopdwd_filtered.reindex(index = reorder)
         geopdwd_filtered = geopdwd_filtered.reset_index()

@@ -575,21 +575,24 @@ class CocoDisplay:
                 """)
     @staticmethod
     def add_columns_for_pie_chart(df,column_name):
-        r = 0.7
+        r = 0.6
         df = df.copy()
         column_sum = df[column_name].sum()
         df['percentage'] = (df[column_name]/column_sum)
+        df['textdisplayed'] = df[column_name].apply(lambda x: '\n(N='+str(x)+')')
+        #(( df['percentage'] * 100 ).astype(np.double).round(2)).apply(lambda x: str(x)+'%')
         percentages = [0]  + df['percentage'].cumsum().tolist()
         df['starts'] = [p * 2 * np.pi for p in percentages[:-1]]
         df['ends'] = [p * 2 * np.pi for p in percentages[1:]]
-        df['middle'] = (df['starts'] + df['ends'])/2
+        #df['middle'] = (df['starts'] + df['ends'])/2
         df['diff'] = (df['ends'] - df['starts'])
+        df['middle'] = df['starts']+np.abs(df['ends']-df['starts'])/2.
         df['text_x'] = df['middle'].apply(np.cos)*r
         df['text_y'] = df['middle'].apply(np.sin)*r
         df['text_y2'] = df['text_y']
         df.loc[:, 'text_y2'] = ( df['text_y2'] - 0.1 )
         df['text_size'] = [str(10)+'pt' if i > 0.08*(2 * np.pi) else '4pt' for i in df['diff']]
-        df['text_angle'] = 0.0
+        df['text_angle'] = 0.
         df.loc[:, 'percentage'] = (( df['percentage'] * 100 ).astype(np.double).round(2)).apply(lambda x: str(x))
         return df
     ###################### END Static Methods ##################
@@ -1324,8 +1327,8 @@ class CocoDisplay:
                          start_angle = 'starts', end_angle = 'ends',
                          line_color = 'white', color = 'colors', legend_label = 'codelocation', source = srcfiltered)
         standardfig.legend.visible = False
-        srcfiltered.data['text_angle'] = srcfiltered.data['starts']+np.abs(srcfiltered.data['ends']-srcfiltered.data['starts'])/2.
-        txt1 = Text(x = 'text_x', y = 'text_y', text = 'codelocation', angle = 'text_angle',
+        srcfiltered.data['textdisplayed'] = srcfiltered.data['codelocation'] + srcfiltered.data['textdisplayed']
+        txt1 = Text(x = 'text_x', y = 'text_y', text = 'textdisplayed', angle = 'text_angle',
               text_align = 'center', text_font_size = 'text_size')
         #txt2 = Text(x = 'text_x', y = 'text_y2', text = 'percentage', angle = 'text_angle',
         #          text_align = 'center', text_font_size = 'text_size')

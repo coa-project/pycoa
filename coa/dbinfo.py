@@ -214,7 +214,7 @@ def generic_info(namedb, keys):
         for k,v in sci.items():
             sci[k].append('https://epistat.sciensano.be/Data/COVID19BE_HOSP.csv')
             sci[k].append('https://epistat.wiv-isp.be/covid/')
-        mydico = bih
+        mydico = sci
     else:
         raise CoaKeyError('Error in the database selected, please check !')
     if keys not in mydico:

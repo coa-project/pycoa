@@ -66,7 +66,7 @@ class DataBase(object):
                     self.db_world = False
                     self.geo = coge.GeoCountry(get_db_list_dict()[self.db])
                     self.geo_all = self.geo.get_subregion_list()['code_subregion'].to_list()
-                    if self.db == 'bih':
+                    if self.db == 'sciensano':
                         self.geo_all = self.geo.get_region_list()['code_region'].to_list()
 
                 # specific reading of data according to the db
@@ -118,8 +118,8 @@ class DataBase(object):
 
                     self.return_structured_pandas(esp_data,columns_keeped=columns_keeped)
 
-                elif self.db == 'bih': #Belgian institute for health,
-                    info('BEL, Belgian institute for health data  ...')
+                elif self.db == 'sciensano': #Belgian institute for health,
+                    info('BEL, Sciensano Belgian institute for health data  ...')
                     rename_dict = { 'DATE' : 'date',\
                     'PROVINCE':'location',\
                     'TOTAL_IN':'tot_hosp',
@@ -715,7 +715,7 @@ class DataBase(object):
         else:
             loc_sub_name  = list(self.geo.get_subregion_list()['name_subregion'])
             loc_sub_code = list(self.geo.get_subregion_list()['code_subregion'])
-            if self.db == 'bih':
+            if self.db == 'sciensano':
                 loc_sub_name  = list(self.geo.get_region_list()['name_region'])
                 loc_sub_code = list(self.geo.get_region_list()['code_region'])
             #loc_code = list(self.geo.get_data().loc[self.geo.get_data().name_subregion.isin(loc_sub)]['code_subregion'])

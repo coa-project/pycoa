@@ -215,6 +215,15 @@ def generic_info(namedb, keys):
             sci[k].append('https://epistat.sciensano.be/Data/COVID19BE_HOSP.csv')
             sci[k].append('https://epistat.wiv-isp.be/covid/')
         mydico = sci
+    elif namedb == 'phe':
+        url='https://api.coronavirus.data.gov.uk/v2/data?areaType=ltla&metric='
+        phe = {
+        'tot_deaths':['Total number of deaths (original name cumDeathsByDeathDate)',url+'cumDeathsByDeathDate'+'&format=csv'],\
+        'tot_cases':['Total number of cases (originale name cumCasesBySpecimenDate)',url+'cumCasesBySpecimenDate'+'&format=csv']
+        }
+        for k,v in phe.items():
+            phe[k].append('https://coronavirus.data.gov.uk/details/download')
+        mydico = phe
     else:
         raise CoaKeyError('Error in the database selected, please check !')
     if keys not in mydico:

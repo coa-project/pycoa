@@ -879,7 +879,6 @@ class CocoDisplay:
                 geopdwd_filter = pd.merge(geopdwd_filter, self.location_geometry, on='location')
                 dico['tile'] = CocoDisplay.get_tile(dico['tile'], func.__name__)
 
-
             if func.__name__ == 'inner' or func.__name__ == 'pycoa_histo':
                 pos = {}
                 new = pd.DataFrame(columns=geopdwd_filter.columns)
@@ -1060,8 +1059,8 @@ class CocoDisplay:
 
             locunique = geopdwd_filtered.location.unique()
             geopdwd_filter = geopdwd_filtered.copy()
-            if len(locunique) > 20:
-                geopdwd_filter = geopdwd_filter.loc[geopdwd_filter.location.isin(locunique[:20])]
+            if len(locunique) > 18:
+                geopdwd_filter = geopdwd_filter.loc[geopdwd_filter.location.isin(locunique[:18])]
 
             if func.__name__ == 'pycoa_horizonhisto' :
                 geopdwd_filter['bottom'] = geopdwd_filter.index
@@ -1074,8 +1073,9 @@ class CocoDisplay:
                                              geopdwd_filter.index.to_list()]
                 geopdwd_filter['bottom'] = [len(geopdwd_filter.index) - bthick / 2 - i for i in
                                                 geopdwd_filter.index.to_list()]
-                geopdwd_filter['posx'] = 0.1 +  geopdwd_filter['bottom'] + bthick / 2
-                geopdwd_filter['posy'] = 0.1 + geopdwd_filter['right']
+                geopdwd_filter['horihistotexty'] =  geopdwd_filter['bottom'] + (geopdwd_filter['top']-geopdwd_filter['bottom'])/2
+                geopdwd_filter['horihistotextx'] = 0.1 + geopdwd_filter['right']
+                geopdwd_filter['horihistotext'] = geopdwd_filter['right'].round(2)
                 #geopdwd_filter = geopdwd_filter.loc[geopdwd_filter['cases']>0]
 
             if func.__name__ == 'pycoa_pie' :
@@ -1253,12 +1253,22 @@ class CocoDisplay:
                             source_filter.data['bottom'] = bottom;
                             source_filter.data['left'] = left_quad;
                             source_filter.data['right'] = right_quad;
-                            source_filter.data['posx'] = 0.1 + source_filter.data['right']
-                            source_filter.data['posy'] = 0.1 + source_filter.data['bottom'] + (source_filter.data['top']-source_filter.data['bottom'])/2
+
+                            var mid =[];
+                            var ht = [];
+                            for(i=0; i<right_quad.length;i++){
+                                mid.push(bottom[i]+(top[i] - bottom[i])/2);
+                                ht.push(right_quad[i].toFixed(2).toString());
+                            }
+                            console.log(mid);
+                            source_filter.data['horihistotextxy'] =  mid;
+                            source_filter.data['horihistotextx'] =  right_quad
+                            source_filter.data['horihistotext'] =  ht
+
                             var maxx = Math.max.apply(Math, right_quad);
                             var minx = Math.min.apply(Math, left_quad);
 
-                            x_range.end =  1.05 * maxx;
+                            x_range.end =  1.2 * maxx;
                             x_range.start =  1.05 * minx;
                             if(x_axis_type==='log' && minx >= 0){
                                 x_range.start =  0.01;
@@ -1307,13 +1317,12 @@ class CocoDisplay:
                 top='top', bottom = 'bottom', left = 'left', right = 'right', color = 'colors', line_color = 'black',
                 line_width = 1, hover_line_width = 2)
 
-            #if maplabel :
-            #labels = LabelSet(
-            #        x = 'posx',
-            #        y = 'posy',
-            #        text = 'right',
-            #        source = srcfiltered,text_font_size='10px',text_color='black')
-            #fig.add_layout(labels)
+            labels = LabelSet(
+                    x = 'horihistotextx',
+                    y = 'horihistotexty',
+                    text = 'horihistotext',
+                    source = srcfiltered,text_font_size='10px',text_color='black')
+            fig.add_layout(labels)
 
             panel = Panel(child = fig, title = panels[i].title)
             new_panels.append(panel)

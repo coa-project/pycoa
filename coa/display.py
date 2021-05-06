@@ -872,7 +872,8 @@ class CocoDisplay:
 
             if func.__name__ == 'pycoa_mapfolium' or func.__name__ == 'pycoa_map' or func.__name__ == 'innerdecopycoageo':
                 self.all_location_indb = self.location_geometry.location.unique()
-                geopdwd_filter = geopdwd_filter.drop(columns=['name_subregion'])
+                if 'name_subregion' in geopdwd_filter.columns:
+                    geopdwd_filter = geopdwd_filter.drop(columns=['name_subregion'])
                 geopdwd_filter = pd.merge(geopdwd_filter, self.location_geometry, on='location')
                 dico['tile'] = CocoDisplay.get_tile(dico['tile'], func.__name__)
 

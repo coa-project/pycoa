@@ -872,8 +872,10 @@ class CocoDisplay:
 
             if func.__name__ == 'pycoa_mapfolium' or func.__name__ == 'pycoa_map' or func.__name__ == 'innerdecopycoageo':
                 self.all_location_indb = self.location_geometry.location.unique()
+                geopdwd_filter = geopdwd_filter.drop(columns=['name_subregion'])
                 geopdwd_filter = pd.merge(geopdwd_filter, self.location_geometry, on='location')
                 dico['tile'] = CocoDisplay.get_tile(dico['tile'], func.__name__)
+
 
             if func.__name__ == 'inner' or func.__name__ == 'pycoa_histo':
                 pos = {}
@@ -893,6 +895,7 @@ class CocoDisplay:
 
             if cursor_date is False:
                 date_slider = False
+
             return func(self, input_field, date_slider, maplabel, dico, geopdwd, geopdwd_filter)
         return generic_hm
 
@@ -1464,6 +1467,7 @@ class CocoDisplay:
             geopdwd_filtered = gpd.GeoDataFrame(geopdwd_filtered, geometry=geopdwd_filtered.geometry, crs="EPSG:4326")
             geopdwd = geopdwd.sort_values(by=['codelocation', 'date'], ascending = [True, False])
             geopdwd = geopdwd.drop(columns=['date'])
+
             geopdwd_filtered = geopdwd_filtered.sort_values(by=['codelocation', 'date'], ascending = [True, False]).drop(columns=['date', 'colors'])
             new_poly = []
             geolistmodified = dict()
@@ -1493,9 +1497,9 @@ class CocoDisplay:
             ng = pd.DataFrame(geolistmodified.items(), columns=['location', 'geometry'])
             geolistmodified = gpd.GeoDataFrame({'location': ng['location'], 'geometry': gpd.GeoSeries(ng['geometry'])},
                                                crs="epsg:3857")
-
             geopdwd_filtered = geopdwd_filtered.drop(columns='geometry')
             geopdwd_filtered = pd.merge(geolistmodified, geopdwd_filtered, on='location')
+
             return func(self,input_field, date_slider, maplabel, dico, geopdwd, geopdwd_filtered)
         return innerdecopycoageo
 
@@ -1666,6 +1670,70 @@ class CocoDisplay:
             standardfig = column(date_slider, standardfig)
 
         return standardfig
+
+
+    def pycoa_map2(self,input_field, geopdwd_filtered):
+
+        sourcemaplabel = ColumnDataSource(pd.DataFrame({'centroidx':[],'centroidy':[],'cases':[]}))
+        uniqloc = list(geopdwd_filtered.codelocation.unique())
+
+        if self.dbld[self.database_name] in ['FRA'] and all([len(i) == 2 for i in geopdwd_filtered.location.unique()]):
+            minx, miny, maxx, maxy = self.boundary_metropole
+        else:
+            minx, miny, maxx, maxy = self.boundary
+        (minx, miny) = CocoDisplay.wgs84_to_web_mercator((minx, miny))
+        (maxx, maxy) = CocoDisplay.wgs84_to_web_mercator((maxx, maxy))
+
+
+        copyrightposition = 'left'
+        if self.dbld[self.database_name] == 'ESP' :
+            copyrightposition='right'
+
+        standardfig = self.standardfig(x_range=(minx, maxx), y_range=(miny, maxy),
+                                       x_axis_type="mercator", y_axis_type="mercator",
+                                       copyrightposition = copyrightposition)
+        #standardfig.add_tile(wmt)
+        min_col, max_col = CocoDisplay.min_max_range(np.nanmin(geopdwd_filtered[input_field]),
+                                                     np.nanmax(geopdwd_filtered[input_field]))
+        invViridis256 = Viridis256[::-1]
+        color_mapper = LinearColorMapper(palette=invViridis256, low=min_col, high=max_col, nan_color='#ffffff')
+        color_bar = ColorBar(color_mapper=color_mapper, label_standoff=4,
+                             border_line_color=None, location=(0, 0), orientation='horizontal', ticker=BasicTicker())
+        color_bar.formatter = BasicTickFormatter(use_scientific=True, precision=1, power_limit_low=int(max_col))
+        standardfig.add_layout(color_bar, 'below')
+        geopdwd_filtered = geopdwd_filtered[['cases','geometry','location','codelocation','rolloverdisplay']]
+        if self.dbld[self.database_name] == 'BEL' :
+            reorder = list(geopdwd_filtered.location.unique())
+            reorder = [i for i in reorder[1:]]
+            reorder.append('00000')
+            geopdwd_filtered = geopdwd_filtered.set_index('location')
+            geopdwd_filtered = geopdwd_filtered.reindex(index = reorder)
+            geopdwd_filtered = geopdwd_filtered.reset_index()
+
+        json_data = json.dumps(json.loads(geopdwd_filtered.to_json()))
+        geopdwd_filtered = GeoJSONDataSource(geojson=json_data)
+
+        standardfig.xaxis.visible = False
+        standardfig.yaxis.visible = False
+        standardfig.xgrid.grid_line_color = None
+        standardfig.ygrid.grid_line_color = None
+        standardfig.patches('xs', 'ys', source = geopdwd_filtered,
+                            fill_color = {'field': 'cases', 'transform': color_mapper},
+                            line_color = 'black', line_width = 0.25, fill_alpha = 1)
+
+        cases_custom = CocoDisplay.rollerJS()
+        if len(uniqloc) > 1:
+            loctips = ('location', '@rolloverdisplay')
+        else:
+            loctips = ('location', '@codelocation')
+
+        standardfig.add_tools(HoverTool(
+            tooltips = [loctips, (input_field, '@{' + 'cases' + '}' + '{custom}'), ],
+            formatters = {'location': 'printf', '@{' + 'cases' + '}': cases_custom, },
+            point_policy = "follow_mouse"))  # ,PanTool())
+
+        return standardfig
+
     ##################### END HISTOS/MAPS##################
 
     #### NOT YET IMPLEMENTED WITH THIS CURRENT VERSION ... TO DO ...

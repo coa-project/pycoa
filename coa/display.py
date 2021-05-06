@@ -499,7 +499,8 @@ class CocoDisplay:
         when_end = df.date.max()
         boolval = True
         j = 0
-        while (boolval):
+        df = df.fillna(0)
+        while(boolval):
             boolval = all(v == 0. for v in df.loc[df.date == (when_end - dt.timedelta(days=j))][field].values)
             j += 1
         if j > 1:
@@ -866,6 +867,7 @@ class CocoDisplay:
             geopdwd_filter = geopdwd.copy()
             wanted_date = date_slider.value_as_datetime.date()
             geopdwd_filter = geopdwd_filter.loc[geopdwd_filter.date == wanted_date]
+
             # geopdwd_filter = geopdwd_filter.drop(columns=['date'])
             geopdwd_filter = geopdwd_filter.reset_index(drop = True)
             uniqcodeloc = geopdwd_filter.codelocation.unique()

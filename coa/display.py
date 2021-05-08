@@ -95,7 +95,7 @@ class CocoDisplay:
                 info = coge.GeoCountry(country, dense_geometry=False)
                 geopan = info.get_subregion_list()[['code_subregion', 'name_subregion', 'geometry']]
                 geopan = geopan.rename(columns={'code_subregion': 'location'})
-                if self.dbld[self.database_name] == 'BEL':
+                if self.dbld[self.database_name] == 'BEL' or self.dbld[self.database_name] == 'ITA':
                     geopan = info.get_region_list()[['code_region', 'name_region', 'geometry']]
                     geopan = geopan.rename(columns={'code_region': 'location'})
             else:
@@ -173,7 +173,7 @@ class CocoDisplay:
                 if not mypandassumall.empty:
                     copypandas = mypandassumall.copy()
                     new = mypandassumall.iloc[:1]
-                    for i in mypandassumall.codelocation.   unique():
+                    for i in mypandassumall.codelocation.unique():
                         sub = mypandassumall.loc[mypandassumall.codelocation == i]
                         copypandas = sub.copy()
                         if type(sub['location'].iloc[0]) == list:
@@ -193,7 +193,7 @@ class CocoDisplay:
                             mypandascountry = sub
                 mypandas = mypandascountry
             if self.dbld[self.database_name] != 'WW':
-                if self.dbld[self.database_name] == 'BEL':
+                if self.dbld[self.database_name] == 'BEL' or self.dbld[self.database_name] == 'ITA':
                     pd_name_displayed = self.geopan[['location', 'name_region']]
                 else:
                     pd_name_displayed = self.geopan[['location', 'name_subregion']]
@@ -205,7 +205,7 @@ class CocoDisplay:
                 if not mypandascountry.empty:
                     mypandascountry = pd.merge(mypandascountry, pd_name_displayed, on='location', how='inner')
                     mypandascountry = mypandascountry.drop(columns='rolloverdisplay')
-                    if self.dbld[self.database_name] == 'BEL':
+                    if self.dbld[self.database_name] == 'BEL' or self.dbld[self.database_name] == 'ITA':
                         mypandascountry['rolloverdisplay'] = mypandascountry['name_region']
                     else:
                         mypandascountry['rolloverdisplay'] = mypandascountry['name_subregion']
@@ -242,7 +242,6 @@ class CocoDisplay:
             input_dico['when_end'] = mypandas.dropna(subset=[which]).date.max()
         else:
             input_dico['when_end'] = mypandas.date.max()
-
 
         if when:
             input_dico['when_beg'], input_dico['when_end'] = extract_dates(when)
@@ -1692,44 +1691,29 @@ class CocoDisplay:
     def pycoa_map2(self,input_field, geopdwd_filtered):
 
         sourcemaplabel = ColumnDataSource(pd.DataFrame({'centroidx':[],'centroidy':[],'cases':[]}))
-        uniqloc = list(geopdwd_filtered.codelocation.unique())
+        uniqloc = list(geopdwd_filtered.name_subregion.unique())
+        boundary = geopdwd_filtered.loc[geopdwd_filtered.name_subregion.isin(uniqloc)]['geometry'].total_bounds
+        minx, miny, maxx, maxy = boundary
 
-        if self.dbld[self.database_name] in ['FRA'] and all([len(i) == 2 for i in geopdwd_filtered.location.unique()]):
-            minx, miny, maxx, maxy = self.boundary_metropole
-        else:
-            minx, miny, maxx, maxy = self.boundary
-        (minx, miny) = CocoDisplay.wgs84_to_web_mercator((minx, miny))
-        (maxx, maxy) = CocoDisplay.wgs84_to_web_mercator((maxx, maxy))
-
-
-        copyrightposition = 'left'
-        if self.dbld[self.database_name] == 'ESP' :
-            copyrightposition='right'
+        #(minx, miny) = CocoDisplay.wgs84_to_web_mercator((minx, miny))
+        #(maxx, maxy) = CocoDisplay.wgs84_to_web_mercator((maxx, maxy))
 
         standardfig = self.standardfig(x_range=(minx, maxx), y_range=(miny, maxy),
-                                       x_axis_type="mercator", y_axis_type="mercator",
-                                       copyrightposition = copyrightposition)
-        #standardfig.add_tile(wmt)
+                                       x_axis_type="mercator", y_axis_type="mercator")
+
         min_col, max_col = CocoDisplay.min_max_range(np.nanmin(geopdwd_filtered[input_field]),
-                                                     np.nanmax(geopdwd_filtered[input_field]))
+                                                         np.nanmax(geopdwd_filtered[input_field]))
+
         invViridis256 = Viridis256[::-1]
         color_mapper = LinearColorMapper(palette=invViridis256, low=min_col, high=max_col, nan_color='#ffffff')
         color_bar = ColorBar(color_mapper=color_mapper, label_standoff=4,
                              border_line_color=None, location=(0, 0), orientation='horizontal', ticker=BasicTicker())
         color_bar.formatter = BasicTickFormatter(use_scientific=True, precision=1, power_limit_low=int(max_col))
         standardfig.add_layout(color_bar, 'below')
-        geopdwd_filtered = geopdwd_filtered[['cases','geometry','location','codelocation','rolloverdisplay']]
-        if self.dbld[self.database_name] == 'BEL' :
-            reorder = list(geopdwd_filtered.location.unique())
-            reorder = [i for i in reorder[1:]]
-            reorder.append('00000')
-            geopdwd_filtered = geopdwd_filtered.set_index('location')
-            geopdwd_filtered = geopdwd_filtered.reindex(index = reorder)
-            geopdwd_filtered = geopdwd_filtered.reset_index()
 
+        geopdwd_filtered = geopdwd_filtered[['cases','geometry','location','codelocation','rolloverdisplay']]
         json_data = json.dumps(json.loads(geopdwd_filtered.to_json()))
         geopdwd_filtered = GeoJSONDataSource(geojson=json_data)
-
         standardfig.xaxis.visible = False
         standardfig.yaxis.visible = False
         standardfig.xgrid.grid_line_color = None
@@ -1738,18 +1722,74 @@ class CocoDisplay:
                             fill_color = {'field': 'cases', 'transform': color_mapper},
                             line_color = 'black', line_width = 0.25, fill_alpha = 1)
 
-        cases_custom = CocoDisplay.rollerJS()
-        if len(uniqloc) > 1:
-            loctips = ('location', '@rolloverdisplay')
-        else:
-            loctips = ('location', '@codelocation')
 
-        standardfig.add_tools(HoverTool(
-            tooltips = [loctips, (input_field, '@{' + 'cases' + '}' + '{custom}'), ],
-            formatters = {'location': 'printf', '@{' + 'cases' + '}': cases_custom, },
-            point_policy = "follow_mouse"))  # ,PanTool())
 
         return standardfig
+        def toto():
+
+
+            if self.dbld[self.database_name] in ['FRA'] and all([len(i) == 2 for i in geopdwd_filtered.location.unique()]):
+                minx, miny, maxx, maxy = self.boundary_metropole
+            else:
+                minx, miny, maxx, maxy = self.boundary
+            (minx, miny) = CocoDisplay.wgs84_to_web_mercator((minx, miny))
+            (maxx, maxy) = CocoDisplay.wgs84_to_web_mercator((maxx, maxy))
+
+            invViridis256 = Viridis256[::-1]
+            color_mapper = LinearColorMapper(palette=invViridis256, low=min_col, high=max_col, nan_color='#ffffff')
+            color_bar = ColorBar(color_mapper=color_mapper, label_standoff=4,
+                                 border_line_color=None, location=(0, 0), orientation='horizontal', ticker=BasicTicker())
+            color_bar.formatter = BasicTickFormatter(use_scientific=True, precision=1, power_limit_low=int(max_col))
+            standardfig.add_layout(color_bar, 'below')
+
+            copyrightposition = 'left'
+            if self.dbld[self.database_name] == 'ESP' :
+                copyrightposition='right'
+
+            standardfig = self.standardfig(x_range=(minx, maxx), y_range=(miny, maxy),
+                                           x_axis_type="mercator", y_axis_type="mercator",
+                                           copyrightposition = copyrightposition)
+            #standardfig.add_tile(wmt)
+            min_col, max_col = CocoDisplay.min_max_range(np.nanmin(geopdwd_filtered[input_field]),
+                                                         np.nanmax(geopdwd_filtered[input_field]))
+            invViridis256 = Viridis256[::-1]
+            color_mapper = LinearColorMapper(palette=invViridis256, low=min_col, high=max_col, nan_color='#ffffff')
+            color_bar = ColorBar(color_mapper=color_mapper, label_standoff=4,
+                                 border_line_color=None, location=(0, 0), orientation='horizontal', ticker=BasicTicker())
+            color_bar.formatter = BasicTickFormatter(use_scientific=True, precision=1, power_limit_low=int(max_col))
+            standardfig.add_layout(color_bar, 'below')
+            geopdwd_filtered = geopdwd_filtered[['cases','geometry','location','codelocation','rolloverdisplay']]
+            if self.dbld[self.database_name] == 'BEL' :
+                reorder = list(geopdwd_filtered.location.unique())
+                reorder = [i for i in reorder[1:]]
+                reorder.append('00000')
+                geopdwd_filtered = geopdwd_filtered.set_index('location')
+                geopdwd_filtered = geopdwd_filtered.reindex(index = reorder)
+                geopdwd_filtered = geopdwd_filtered.reset_index()
+
+            json_data = json.dumps(json.loads(geopdwd_filtered.to_json()))
+            geopdwd_filtered = GeoJSONDataSource(geojson=json_data)
+
+            standardfig.xaxis.visible = False
+            standardfig.yaxis.visible = False
+            standardfig.xgrid.grid_line_color = None
+            standardfig.ygrid.grid_line_color = None
+            standardfig.patches('xs', 'ys', source = geopdwd_filtered,
+                                fill_color = {'field': 'cases', 'transform': color_mapper},
+                                line_color = 'black', line_width = 0.25, fill_alpha = 1)
+
+            cases_custom = CocoDisplay.rollerJS()
+            if len(uniqloc) > 1:
+                loctips = ('location', '@rolloverdisplay')
+            else:
+                loctips = ('location', '@codelocation')
+
+            standardfig.add_tools(HoverTool(
+                tooltips = [loctips, (input_field, '@{' + 'cases' + '}' + '{custom}'), ],
+                formatters = {'location': 'printf', '@{' + 'cases' + '}': cases_custom, },
+                point_policy = "follow_mouse"))  # ,PanTool())
+
+
 
     ##################### END HISTOS/MAPS##################
 

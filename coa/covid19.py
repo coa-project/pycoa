@@ -66,7 +66,7 @@ class DataBase(object):
                     self.db_world = False
                     self.geo = coge.GeoCountry(get_db_list_dict()[self.db])
                     self.geo_all = self.geo.get_subregion_list()['code_subregion'].to_list()
-                    if self.db == 'sciensano':
+                    if self.db == 'sciensano' or self.db == 'dpc':
                         self.geo_all = self.geo.get_region_list()['code_region'].to_list()
 
                 # specific reading of data according to the db
@@ -78,10 +78,12 @@ class DataBase(object):
                     self.return_jhu_pandas()
                 elif self.db == 'dpc': #ITA
                     info('ITA, Dipartimento della Protezione Civile database selected ...')
-                    rename_dict = {'data': 'date', 'sigla_provincia': 'location', 'totale_casi': 'tot_casi'}
-                    dpc1 = self.csv2pandas("https://github.com/pcm-dpc/COVID-19/raw/master/dati-province/dpc-covid19-ita-province.csv",\
-                        rename_columns = rename_dict, separator=',')
-                    columns_keeped = ['tot_casi']
+                    drop_field = {'denominazione_regione':['Valle d\'Aosta','P.A. Trento','P.A. Bolzano','Friuli Venezia Giulia']}
+                    rename_dict = {'data': 'date', 'denominazione_regione': 'location', 'totale_casi': 'cases','deceduti':'deaths'}
+                    dpc1 = self.csv2pandas('https://raw.githubusercontent.com/pcm-dpc/COVID-19/master/dati-regioni/dpc-covid19-ita-regioni.csv',\
+                    drop_field=drop_field, rename_columns = rename_dict, separator=',')
+                    #dpc1 = self.csv2pandas("https://github.com/pcm-dpc/COVID-19/raw/master/dati-province/dpc-covid19-ita-province.csv",\
+                    columns_keeped = ['cases','deaths']
                     self.return_structured_pandas(dpc1, columns_keeped=columns_keeped)
                 elif self.db == 'rki': # DEU
                     info('DEU, Robert Koch Institut data selected ...')
@@ -715,16 +717,14 @@ class DataBase(object):
         else:
             loc_sub_name  = list(self.geo.get_subregion_list()['name_subregion'])
             loc_sub_code = list(self.geo.get_subregion_list()['code_subregion'])
-            if self.db == 'sciensano':
+            if self.db == 'sciensano' or self.db == 'dpc':
                 loc_sub_name  = list(self.geo.get_region_list()['name_region'])
                 loc_sub_code = list(self.geo.get_region_list()['code_region'])
-            #loc_code = list(self.geo.get_data().loc[self.geo.get_data().name_subregion.isin(loc_sub)]['code_subregion'])
             self.slocation = loc_sub_code
             oldloc = loc_sub_name
             newloc = loc_sub_code
             toremove = [x for x in uniqloc if x not in loc_sub_name]
             codedico={i:j for i,j in zip(loc_sub_code,newloc)}
-
         tmp = pd.DataFrame()
 
         not_un_nation_dict={'Kosovo':'Serbia','Northern Cyprus':'Cyprus'}
@@ -744,6 +744,7 @@ class DataBase(object):
             raise CoaKeyError('Seems to be an iso3 problem behaviour ...')
         mypandas = mypandas.replace(oldloc,newloc)
         mypandas = mypandas.groupby(['location','date']).sum(min_count=1).reset_index() # summing in case of multiple dates (e.g. in opencovid19 data). But keep nan if any
+
         mypandas['codelocation'] = mypandas['location'].map(codedico)
         self.mainpandas = fill_missing_dates(mypandas)
         self.dates  = self.mainpandas['date']

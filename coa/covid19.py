@@ -83,7 +83,7 @@ class DataBase(object):
                     dpc1 = self.csv2pandas('https://raw.githubusercontent.com/pcm-dpc/COVID-19/master/dati-regioni/dpc-covid19-ita-regioni.csv',\
                     drop_field=drop_field, rename_columns = rename_dict, separator=',')
                     #dpc1 = self.csv2pandas("https://github.com/pcm-dpc/COVID-19/raw/master/dati-province/dpc-covid19-ita-province.csv",\
-                    columns_keeped = ['cases','deaths']
+                    columns_keeped = ['tot_cases','tot_deaths']
                     self.return_structured_pandas(dpc1, columns_keeped=columns_keeped)
                 elif self.db == 'rki': # DEU
                     info('DEU, Robert Koch Institut data selected ...')

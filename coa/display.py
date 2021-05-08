@@ -250,7 +250,7 @@ class CocoDisplay:
                 input_dico['when_beg'] = mypandas['date'].min()
 
             if input_dico['when_end'] == '':
-                input_dico['when_end'] = when_end_change
+                input_dico['when_end'] = mypandas['date'].max()
 
             if not isinstance(input_dico['when_beg'], dt.date):
                 raise CoaNoData("With your current cuts, there are no data to plot.")
@@ -259,8 +259,8 @@ class CocoDisplay:
                 print('Requested date below available one, take', input_dico['when_beg'])
                 input_dico['when_end'] = input_dico['when_beg']
 
-        #when_end_change = CocoDisplay.changeto_nonan_date(mypandas, input_dico['when_end'], var_displayed)
-        when_end_change = CocoDisplay.changeto_nonull_date(mypandas, var_displayed)
+#        when_end_change = CocoDisplay.changeto_nonan_date(mypandas, input_dico['when_end'], var_displayed)
+        when_end_change = CocoDisplay.changeto_nonull_date(mypandas, input_dico['when_end'], var_displayed)
 
         if when_end_change != input_dico['when_end']:
             input_dico['when_end'] = when_end_change
@@ -495,18 +495,24 @@ class CocoDisplay:
         return when_end - dt.timedelta(days=j - 1)
 
     @staticmethod
-    def changeto_nonull_date(df=None, field=None):
-        when_end = df.date.max()
+    def changeto_nonull_date(df=None,when_end = None, field=None):
+        if not isinstance(when_end, dt.date):
+            raise CoaTypeError(' Not a valide data ... ')
         boolval = True
         j = 0
-        df = df.fillna(0)
-        while(boolval):
-            boolval = all(v == 0. for v in df.loc[df.date == (when_end - dt.timedelta(days=j))][field].values)
-            j += 1
-        if j > 1:
-            verb(str(when_end) + ': all the value seems to be 0! I will find an other previous date.\n' +
-                 'Here the date I will take: ' + str(when_end - dt.timedelta(days=j - 1)))
-        return when_end - dt.timedelta(days=j - 1)
+        #df = df.fillna(0)
+        if all(df[field] == 0):
+            print('all value is null for all date !'')
+            return when_end
+        else:
+            while(boolval):
+                boolval = all(v == 0. or v==np.NaN for v in df.loc[df.date == (when_end - dt.timedelta(days=j))][field].values)
+                print(df.loc[df.date == (when_end - dt.timedelta(days=j))][field].values)
+                j += 1
+            if j > 1:
+                verb(str(when_end) + ': all the value seems to be 0! I will find an other previous date.\n' +
+                     'Here the date I will take: ' + str(when_end - dt.timedelta(days=j - 1)))
+            return when_end - dt.timedelta(days=j - 1)
 
 
     @staticmethod

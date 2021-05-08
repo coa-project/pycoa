@@ -447,7 +447,7 @@ class DataBase(object):
         This is recommended to avoid mismatch in labeled figures
        '''
        datab = DataBase(db_name)
-       return  datab,datab.get_display()
+       return  datab, datab.get_display()
 
    def set_display(self,db):
        ''' Set the CocoDisplay '''
@@ -900,6 +900,7 @@ class DataBase(object):
                 if not all(isinstance(c, list) for c in origclistlist):
                     raise CoaWhereError("In the case of national DB, all locations must have the same types i.e\
                     list or string but both is not accepted, could be confusing")
+
                 devorigclist = [ self.geo.get_subregions_from_list_of_region_names(i) if not len(i[0])<3 and len(i[0])>=2 else i for i in origclistlist ]
                 if origclistlist == [['Métropole']]:
                     all_region= self.geo.get_region_list()
@@ -1052,6 +1053,7 @@ class DataBase(object):
 
         unifiedposition=['location', 'date', kwargs['which'], 'daily', 'cumul', 'weekly', 'codelocation']
         pdfiltered = pdfiltered[unifiedposition]
+
         return pdfiltered
 
    ## https://www.kaggle.com/freealf/estimation-of-rt-from-cases

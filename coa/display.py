@@ -507,7 +507,6 @@ class CocoDisplay:
         else:
             while(boolval):
                 boolval = all(v == 0. or v==np.NaN for v in df.loc[df.date == (when_end - dt.timedelta(days=j))][field].values)
-                print(df.loc[df.date == (when_end - dt.timedelta(days=j))][field].values)
                 j += 1
             if j > 1:
                 verb(str(when_end) + ': all the value seems to be 0! I will find an other previous date.\n' +

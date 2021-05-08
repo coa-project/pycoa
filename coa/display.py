@@ -502,7 +502,7 @@ class CocoDisplay:
         j = 0
         #df = df.fillna(0)
         if all(df[field] == 0):
-            print('all value is null for all date !'')
+            print('all value is null for all date !')
             return when_end
         else:
             while(boolval):

@@ -175,7 +175,7 @@ def generic_info(namedb, keys):
         'deceduti':['tot_deaths:FILLIT']
         }
         for k,v in ita.items():
-            ita[k].append('https://raw.githubusercontent.com/pcm-dpc/COVID-19/master/dati-regioni/dpc-covid19-ita-regioni.csv'
+            ita[k].append('https://raw.githubusercontent.com/pcm-dpc/COVID-19/master/dati-regioni/dpc-covid19-ita-regioni.csv')
             ita[k].append('https://github.com/pcm-dpc/COVID-19')
         mydico = ita
     elif namedb == 'rki':

@@ -1063,8 +1063,9 @@ class CocoDisplay:
 
             locunique = geopdwd_filtered.location.unique()
             geopdwd_filter = geopdwd_filtered.copy()
-            if len(locunique) > 18:
-                geopdwd_filter = geopdwd_filter.loc[geopdwd_filter.location.isin(locunique[:18])]
+            nmaxdisplayed = 18
+            if len(locunique) >= nmaxdisplayed:
+                geopdwd_filter = geopdwd_filter.loc[geopdwd_filter.location.isin(locunique[:nmaxdisplayed])]
 
             if func.__name__ == 'pycoa_horizonhisto' :
                 geopdwd_filter['bottom'] = geopdwd_filter.index

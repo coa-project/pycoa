@@ -76,7 +76,7 @@ class CocoDisplay:
         self.location_geometry = None
 
         self.all_available_display_keys = ['where', 'which', 'what', 'when', 'title_temporal', 'plot_height',
-                                           'plot_width', 'title', 'bins', 'var_displayed',
+                                           'plot_width', 'title', 'bins', 'var_displayed','textcopyright',
                                            'option', 'input', 'input_field', 'visu', 'plot_last_date', 'tile',
                                            'orientation']
         self.tiles_listing = ['esri', 'openstreet', 'stamen', 'positron']
@@ -233,6 +233,8 @@ class CocoDisplay:
 
         title = kwargs.get('title', None)
         input_dico['title'] = title
+        textcopyright = kwargs.get('textcopyright', 'default')
+        input_dico['textcopyright'] = textcopyright
         when = kwargs.get('when', None)
         input_dico['when'] = when
         title_temporal = ''
@@ -314,7 +316,7 @@ class CocoDisplay:
         """ Return all the tiles available in Bokeh """
         return self.tiles_listing
 
-    def standardfig(self, dbname=None, copyrightposition='left', **kwargs):
+    def standardfig(self, dbname = None, copyrightposition = 'left', textcopyright = None, **kwargs):
         """
          Create a standard Bokeh figure, with pycoa.fr label, used in all the bokeh charts
          """
@@ -328,12 +330,16 @@ class CocoDisplay:
         else:
             CoaKeyError('copyrightposition argument not yet implemented ...')
 
-        textcopyright = '©pycoa.fr (data from: {})'.format(self.database_name)
-        self.logo_db_citation = Label(x=xpos * self.plot_width - len(textcopyright), y=0.01 * self.plot_height,
-                                      x_units='screen', y_units='screen',
-                                      text_font_size='1.5vh', background_fill_color='white', background_fill_alpha=.75,
-                                      text=textcopyright)
-        fig.add_layout(self.logo_db_citation)
+        if textcopyright:
+            if textcopyright == 'default':
+                textcopyright = '©pycoa.fr (data from: {})'.format(self.database_name)
+            else:
+                textcopyright == textcopyright
+            self.logo_db_citation = Label(x=xpos * self.plot_width - len(textcopyright), y=0.01 * self.plot_height,
+                                          x_units='screen', y_units='screen',
+                                          text_font_size='1.5vh', background_fill_color='white', background_fill_alpha=.75,
+                                          text=textcopyright)
+            fig.add_layout(self.logo_db_citation)
         return fig
 
     ###################### BEGIN Static Methods ##################
@@ -678,8 +684,9 @@ class CocoDisplay:
         panels = []
         cases_custom = CocoDisplay.rollerJS()
         for axis_type in ax_type:
-            standardfig = self.standardfig(x_axis_label=input_field[0],
-                                           y_axis_label=input_field[1], y_axis_type=axis_type, title=dico['titlebar'])
+            standardfig = self.standardfig(x_axis_label = input_field[0],
+                                           y_axis_label = input_field[1], y_axis_type = axis_type, title = dico['titlebar'],
+                                           textcopyright = dico['textcopyright'])
 
             standardfig.add_tools(HoverTool(
                 tooltips=[('Location', '@rolloverdisplay'), ('date', '@date{%F}'),
@@ -714,7 +721,8 @@ class CocoDisplay:
         panels = []
         cases_custom = CocoDisplay.rollerJS()
         for axis_type in ax_type:
-            standardfig = self.standardfig(y_axis_type = axis_type, x_axis_type = 'datetime', title = dico['titlebar'])
+            standardfig = self.standardfig(y_axis_type = axis_type, x_axis_type = 'datetime', title = dico['titlebar'],
+            textcopyright = dico['textcopyright'])
             standardfig.yaxis[0].formatter = PrintfTickFormatter(format = "%4.2e")
             i = 0
             r_list=[]

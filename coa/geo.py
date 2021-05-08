@@ -685,7 +685,8 @@ class GeoCountry():
                     'IND':'https://raw.githubusercontent.com/deldersveld/topojson/master/countries/india/india-states.json',\
                     'DEU':'https://github.com/jgehrcke/covid-19-germany-gae/raw/master/geodata/DE-counties.geojson',\
                     'ESP':'https://public.opendatasoft.com/explore/dataset/provincias-espanolas/download/?format=shp&timezone=Europe/Berlin&lang=en',\
-                    'GBR':'https://opendata.arcgis.com/datasets/69dc11c7386943b4ad8893c45648b1e1_0.zip?geometry=%7B%22xmin%22%3A-44.36%2C%22ymin%22%3A51.099%2C%22xmax%22%3A39.487%2C%22ymax%22%3A59.78%2C%22type%22%3A%22extent%22%2C%22spatialReference%22%3A%7B%22wkid%22%3A4326%7D%7D&outSR=%7B%22latestWkid%22%3A27700%2C%22wkid%22%3A27700%7D',\
+                    # missing some counties 'GBR':'https://opendata.arcgis.com/datasets/69dc11c7386943b4ad8893c45648b1e1_0.zip?geometry=%7B%22xmin%22%3A-44.36%2C%22ymin%22%3A51.099%2C%22xmax%22%3A39.487%2C%22ymax%22%3A59.78%2C%22type%22%3A%22extent%22%2C%22spatialReference%22%3A%7B%22wkid%22%3A4326%7D%7D&outSR=%7B%22latestWkid%22%3A27700%2C%22wkid%22%3A27700%7D',\
+                    'GBR':'https://opendata.arcgis.com/datasets/3a4fa2ce68f642e399b4de07643eeed3_0.geojson',\
                     'BEL':'https://public.opendatasoft.com/explore/dataset/arrondissements-belges-2019/download/?format=shp&timezone=Europe/Berlin&lang=en,'\
                     }
 
@@ -927,11 +928,12 @@ class GeoCountry():
 
         # --- 'GBR' case ---------------------------------------------------------------------------------------
         elif self._country == 'GBR':
-            self._country_data = gpd.read_file('zip://'+get_local_from_url(url,0,'.zip'),encoding='utf-8') # this is shapefile file
+            self._country_data = gpd.read_file(get_local_from_url(url,0))
             self._country_data.rename(columns={\
-                'LAD20NM':'name_subregion',\
-                'LAD20CD':'code_subregion'},inplace=True)
-            self._country_data=self._country_data[['name_subregion','code_subregion','geometry']]
+                'lad19nm':'name_subregion',\
+                'lad19cd':'code_subregion',\
+                'lad19nmw':'name_region'},inplace=True)
+            self._country_data=self._country_data[['name_subregion','code_subregion','geometry','name_region']]
             self._country_data['code_region']=self._country_data.code_subregion.str.slice(stop=1)
             dict_region={\
                 'E':'England',\
@@ -939,10 +941,8 @@ class GeoCountry():
                 'S':'Scotland',\
                 'N':'Northern Ireland'\
                 }
-            self._country_data['name_region']=[dict_region[x] for x in self._country_data.code_region]
             # modifying projection
             self._country_data['geometry']=self._country_data.geometry.to_crs('epsg:4326')
-
         # --- 'BEL' case --------------------------------------------------------------------------------------------
         elif self._country == 'BEL':
             self._country_data = gpd.read_file('zip://'+get_local_from_url(url,0,'.zip'),encoding='utf-8') # this is shapefile file

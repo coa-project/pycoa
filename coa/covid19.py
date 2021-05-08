@@ -79,7 +79,7 @@ class DataBase(object):
                 elif self.db == 'dpc': #ITA
                     info('ITA, Dipartimento della Protezione Civile database selected ...')
                     drop_field = {'denominazione_regione':['Valle d\'Aosta','P.A. Trento','P.A. Bolzano','Friuli Venezia Giulia']}
-                    rename_dict = {'data': 'date', 'denominazione_regione': 'location', 'totale_casi': 'cases','deceduti':'deaths'}
+                    rename_dict = {'data': 'date', 'denominazione_regione': 'location', 'totale_casi': 'tot_cases','deceduti':'tot_deaths'}
                     dpc1 = self.csv2pandas('https://raw.githubusercontent.com/pcm-dpc/COVID-19/master/dati-regioni/dpc-covid19-ita-regioni.csv',\
                     drop_field=drop_field, rename_columns = rename_dict, separator=',')
                     #dpc1 = self.csv2pandas("https://github.com/pcm-dpc/COVID-19/raw/master/dati-province/dpc-covid19-ita-province.csv",\

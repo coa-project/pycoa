@@ -932,15 +932,17 @@ class GeoCountry():
             self._country_data.rename(columns={\
                 'lad19nm':'name_subregion',\
                 'lad19cd':'code_subregion',\
-                'lad19nmw':'name_region'},inplace=True)
-            self._country_data=self._country_data[['name_subregion','code_subregion','geometry','name_region']]
+                #'lad19nmw':'name_region',\
+                },inplace=True)
             self._country_data['code_region']=self._country_data.code_subregion.str.slice(stop=1)
             dict_region={\
                 'E':'England',\
-                'W':'Whales',\
+                'W':'Wales',\
                 'S':'Scotland',\
                 'N':'Northern Ireland'\
                 }
+            self._country_data['name_region']=[dict_region[x] for x in self._country_data.code_region]
+            self._country_data=self._country_data[['name_subregion','code_subregion','geometry','code_region','name_region']]
             # modifying projection
             self._country_data['geometry']=self._country_data.geometry.to_crs('epsg:4326')
         # --- 'BEL' case --------------------------------------------------------------------------------------------

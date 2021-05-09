@@ -330,16 +330,17 @@ class CocoDisplay:
         else:
             CoaKeyError('copyrightposition argument not yet implemented ...')
 
-        if textcopyright:
-            if textcopyright == 'default':
+        if textcopyright == 'default':
                 textcopyright = '©pycoa.fr (data from: {})'.format(self.database_name)
-            else:
-                textcopyright == textcopyright
-            self.logo_db_citation = Label(x=xpos * self.plot_width - len(textcopyright), y=0.01 * self.plot_height,
+        else:
+                textcopyright = '©pycoa.fr ' + textcopyright        
+
+        self.logo_db_citation = Label(x=xpos * self.plot_width - len(textcopyright), y=0.01 * self.plot_height,
                                           x_units='screen', y_units='screen',
                                           text_font_size='1.5vh', background_fill_color='white', background_fill_alpha=.75,
                                           text=textcopyright)
-            fig.add_layout(self.logo_db_citation)
+
+        fig.add_layout(self.logo_db_citation)
         return fig
 
     ###################### BEGIN Static Methods ##################

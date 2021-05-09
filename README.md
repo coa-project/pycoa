@@ -72,6 +72,9 @@ Full documentation is on <a href="https://github.com/coa-project/pycoa/wiki/Home
 * Web page : [`www.pycoa.fr`](http://www.pycoa.fr)
 * On twitter : [`@pycoa_fr`](https://twitter.com/pycoa_fr)
 
+[contributors-shield]: https://img.shields.io/badge/Maintained%3F-yes-green.svg
 [contributors-url]: https://github.com/coa-project/pycoa/graphs/contributors
+[issues-shield]: https://img.shields.io/badge/Maintained%3F-yes-green.svg
 [issues-url]: https://github.com/coa-project/pycoa/issues
+[license-shield]: https://img.shields.io/badge/Maintained%3F-yes-green.svg
 [license-url]: https://github.com/coa-project/pycoa/blob/main/LICENSE

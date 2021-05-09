@@ -1,5 +1,8 @@
 #  PyCoA release v2 <img src="https://github.com/coa-project/coa-project.github.io/blob/main/fig/logo-anime.gif" width="140px" align=bottom > 
 
+[![forthebadge made-with-python](http://ForTheBadge.com/images/badges/made-with-python.svg)](https://www.python.org/)
+[![Made withJupyter](https://img.shields.io/badge/Made%20with-Jupyter-orange?style=for-the-badge&logo=Jupyter)](https://jupyter.org/try)
+
 [![Contributeurs][contributors-shield]][contributors-url]
 [![Issues][issues-shield]][issues-url]
 [![Licence][license-shield]][license-url]
@@ -72,9 +75,9 @@ Full documentation is on <a href="https://github.com/coa-project/pycoa/wiki/Home
 * Web page : [`www.pycoa.fr`](http://www.pycoa.fr)
 * On twitter : [`@pycoa_fr`](https://twitter.com/pycoa_fr)
 
-[contributors-shield]: https://img.shields.io/badge/contributors%3F-2-green.svg
+[contributors-shield]: https://img.shields.io/badge/CONTRIBUTORS-2-green.svg
 [contributors-url]: https://github.com/coa-project/pycoa/graphs/contributors
-[issues-shield]: https://img.shields.io/badge/Maintained%3F-yes-green.svg
+[issues-shield]: https://img.shields.io/badge/ISSUES%3F-yes-green.svg
 [issues-url]: https://github.com/coa-project/pycoa/issues
-[license-shield]: https://img.shields.io/badge/Maintained%3F-yes-green.svg
+[license-shield]:https://img.shields.io/pypi/l/ansicolortags.svg
 [license-url]: https://github.com/coa-project/pycoa/blob/main/LICENSE

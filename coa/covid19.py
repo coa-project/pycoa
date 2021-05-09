@@ -544,7 +544,8 @@ class DataBase(object):
             raise CoaDbError('Unknown JHU like db '+str(self.db))
 
         self.available_keys_words = jhu_files_ext
-
+        if self.db == 'rki':
+                self.available_keys_words = ['tot_deaths','tot_cases']
         pandas_list = []
         for ext in jhu_files_ext:
             fileName = base_name + ext + extension
@@ -568,6 +569,8 @@ class DataBase(object):
                 pandas_jhu_db = pandas_jhu_db.set_index('time_iso8601').T.reset_index().rename(columns={'index':'location'})
                 pandas_jhu_db = pandas_jhu_db.melt(id_vars=["location"],var_name="date",value_name=ext)
                 pandas_jhu_db['location'] = pandas_jhu_db.location.astype(str)
+                pandas_jhu_db = pandas_jhu_db.rename(columns={'deaths':'tot_deaths','cases':'tot_cases'})
+                print(pandas_jhu_db)
             else:
                 raise CoaTypeError('jhu nor jhu-usa database selected ... ')
 

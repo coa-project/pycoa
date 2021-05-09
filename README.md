@@ -1,5 +1,9 @@
 #  PyCoA release v2 <img src="https://github.com/coa-project/coa-project.github.io/blob/main/fig/logo-anime.gif" width="140px" align=bottom > 
 
+[![Contributeurs][contributors-shield]][contributors-url]
+[![Issues][issues-shield]][issues-url]
+[![Licence][license-shield]][license-url]
+
 _April 2020/March 2021_
 
 [<img src="https://github.com/coa-project/coa-project.github.io/raw/main/fig/UK.png" height="14px" alt="UK flag"> English  version ](https://github.com/coa-project/pycoa)
@@ -67,3 +71,7 @@ Full documentation is on <a href="https://github.com/coa-project/pycoa/wiki/Home
 * Email : [`support@pycoa.fr`](mailto:support@pycoa.fr)
 * Web page : [`www.pycoa.fr`](http://www.pycoa.fr)
 * On twitter : [`@pycoa_fr`](https://twitter.com/pycoa_fr)
+
+[contributors-url]: https://github.com/coa-project/pycoa/graphs/contributors
+[issues-url]: https://github.com/coa-project/pycoa/issues
+[license-url]: https://github.com/coa-project/pycoa/blob/main/LICENSE

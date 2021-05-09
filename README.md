@@ -2,8 +2,7 @@
 
 [![forthebadge made-with-python](http://ForTheBadge.com/images/badges/made-with-python.svg)](https://www.python.org/)
 [![Made withJupyter](https://img.shields.io/badge/Made%20with-Jupyter-orange?style=for-the-badge&logo=Jupyter)](https://jupyter.org/try)
-![GitHub contributors](https://img.shields.io/github/contributors/pycoa/coa?style=for-the-badge)
-![GitHub last commit](https://img.shields.io/github/last-commit/pycoa/coa?style=for-the-badge)
+![GitHub last commit](https://img.shields.io/github/last-commit/pycoa/coa/dev?style=for-the-badge)
 ![GitHub](https://img.shields.io/github/license/pycoa/coa?style=for-the-badge)
 
 _April 2020/March 2021_

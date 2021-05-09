@@ -77,7 +77,7 @@ Full documentation is on <a href="https://github.com/coa-project/pycoa/wiki/Home
 
 [contributors-shield]: https://img.shields.io/badge/CONTRIBUTORS-2-green.svg
 [contributors-url]: https://github.com/coa-project/pycoa/graphs/contributors
-[issues-shield]: https://img.shields.io/badge/ISSUES.svg?style=for-the-badge
+[issues-shield]: https://img.shields.io/github/issues/CovidTrackerFr/vitemadose.svg?style=for-the-badge
 [issues-url]: https://github.com/coa-project/pycoa/issues
 [license-shield]:https://img.shields.io/pypi/l/ansicolortags.svg
 [license-url]: https://github.com/coa-project/pycoa/blob/main/LICENSE

@@ -2,10 +2,9 @@
 
 [![forthebadge made-with-python](http://ForTheBadge.com/images/badges/made-with-python.svg)](https://www.python.org/)
 [![Made withJupyter](https://img.shields.io/badge/Made%20with-Jupyter-orange?style=for-the-badge&logo=Jupyter)](https://jupyter.org/try)
-
-[![Contributeurs][contributors-shield]][contributors-url]
-[![Issues][issues-shield]][issues-url]
-[![Licence][license-shield]][license-url]
+![GitHub contributors](https://img.shields.io/github/contributors/pycoa/coa?style=for-the-badge)
+![GitHub last commit](https://img.shields.io/github/last-commit/pycoa/coa?style=for-the-badge)
+![GitHub](https://img.shields.io/github/license/pycoa/coa?style=for-the-badge)
 
 _April 2020/March 2021_
 
@@ -74,10 +73,3 @@ Full documentation is on <a href="https://github.com/coa-project/pycoa/wiki/Home
 * Email : [`support@pycoa.fr`](mailto:support@pycoa.fr)
 * Web page : [`www.pycoa.fr`](http://www.pycoa.fr)
 * On twitter : [`@pycoa_fr`](https://twitter.com/pycoa_fr)
-
-[contributors-shield]: https://img.shields.io/badge/CONTRIBUTORS-2-green.svg
-[contributors-url]: https://github.com/coa-project/pycoa/graphs/contributors
-[issues-shield]: https://img.shields.io/github/issues/CovidTrackerFr/vitemadose.svg?style=for-the-badge
-[issues-url]: https://github.com/coa-project/pycoa/issues
-[license-shield]:https://img.shields.io/pypi/l/ansicolortags.svg
-[license-url]: https://github.com/coa-project/pycoa/blob/main/LICENSE

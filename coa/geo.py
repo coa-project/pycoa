@@ -929,19 +929,39 @@ class GeoCountry():
         # --- 'GBR' case ---------------------------------------------------------------------------------------
         elif self._country == 'GBR':
             self._country_data = gpd.read_file(get_local_from_url(url,0))
+            reg_england=pd.read_csv(get_local_from_url('http://geoportal1-ons.opendata.arcgis.com/datasets/0c3a9643cc7c4015bb80751aad1d2594_0.csv',0))
+            self._country_data=self._country_data.merge(reg_england,how='left',left_on='lad19cd',right_on='LAD18CD')
             self._country_data.rename(columns={\
                 'lad19nm':'name_subregion',\
                 'lad19cd':'code_subregion',\
-                #'lad19nmw':'name_region',\
+                'RGN18CD':'code_region',\
+                'RGN18NM':'name_region',\
                 },inplace=True)
-            self._country_data['code_region']=self._country_data.code_subregion.str.slice(stop=1)
+            self._country_data.loc[self._country_data.code_region.isnull(),'code_region'] = \
+                self._country_data[self._country_data.code_region.isnull()].code_subregion.str.slice(stop=1)
+            #self._country_data['code_region']=self._country_data.code_subregion.str.slice(stop=1)
             dict_region={\
                 'E':'England',\
                 'W':'Wales',\
                 'S':'Scotland',\
                 'N':'Northern Ireland'\
                 }
-            self._country_data['name_region']=[dict_region[x] for x in self._country_data.code_region]
+            self._country_data.loc[self._country_data.code_region.isin(list(dict_region.keys())),'name_region'] = \
+                [dict_region[x] for x in self._country_data.code_region if x in list(dict_region.keys())]
+            dict_england_unnamed_region={
+                'E12000001':'E1', 
+                'E12000002':'E2',
+                'E12000003':'E3',
+                'E12000004':'E4',
+                'E12000005':'E5',
+                'E12000006':'E6',                
+                'E12000007':'E7',
+                'E12000008':'E8',
+                'E12000009':'E9',
+                'E':'E0'
+            } 
+            self._country_data.loc[self._country_data.code_region.isin(list(dict_england_unnamed_region.keys())),'name_region'] = \
+                [dict_england_unnamed_region[x] for x in self._country_data[self._country_data.code_region.isin(list(dict_england_unnamed_region.keys()))].code_region]
             self._country_data=self._country_data[['name_subregion','code_subregion','geometry','code_region','name_region']]
             # modifying projection
             self._country_data['geometry']=self._country_data.geometry.to_crs('epsg:4326')

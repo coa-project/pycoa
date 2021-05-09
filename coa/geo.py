@@ -878,6 +878,9 @@ class GeoCountry():
                 'reg_istat_code':'code_region',\
                 },
                 inplace=True)
+            self._country_data['name_region'] = self._country_data['name_region'].replace({
+            'Valle d\'Aosta/Vallée d\'Aoste':'Valle d\'Aosta',
+            'Trentino-Alto Adige/Südtirol':'Trentino-Alto Adige', 'Friuli-Venezia Giulia':'Friuli Venezia Giulia'})
             self._country_data.drop(['prov_istat_code_num','reg_istat_code_num','prov_istat_code'],axis=1,inplace=True)
 
         # --- 'IND' case ---------------------------------------------------------------------------------------

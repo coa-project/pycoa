@@ -78,10 +78,9 @@ class DataBase(object):
                     self.return_jhu_pandas()
                 elif self.db == 'dpc': #ITA
                     info('ITA, Dipartimento della Protezione Civile database selected ...')
-                    drop_field = {'denominazione_regione':['Valle d\'Aosta','P.A. Trento','P.A. Bolzano','Friuli Venezia Giulia']}
                     rename_dict = {'data': 'date', 'denominazione_regione': 'location', 'totale_casi': 'tot_cases','deceduti':'tot_deaths'}
                     dpc1 = self.csv2pandas('https://raw.githubusercontent.com/pcm-dpc/COVID-19/master/dati-regioni/dpc-covid19-ita-regioni.csv',\
-                    drop_field=drop_field, rename_columns = rename_dict, separator=',')
+                    rename_columns = rename_dict, separator=',')
                     #dpc1 = self.csv2pandas("https://github.com/pcm-dpc/COVID-19/raw/master/dati-province/dpc-covid19-ita-province.csv",\
                     columns_keeped = ['tot_cases','tot_deaths']
                     self.return_structured_pandas(dpc1, columns_keeped=columns_keeped)
@@ -672,7 +671,6 @@ class DataBase(object):
             pandas_db = pandas_db.rename(columns={'semaine':'date'})
         pandas_db['date'] = pandas.to_datetime(pandas_db['date'],errors='coerce').dt.date
         #self.dates  = pandas_db['date']
-
         if self.db == 'spfnational':
             pandas_db['location'] = ['France']*len(pandas_db)
         pandas_db = pandas_db.sort_values(['location','date'])
@@ -696,6 +694,14 @@ class DataBase(object):
             columns_keeped = [x for x in mypandas.columns.values.tolist() if x not in columns_skipped + absolutlyneeded]
 
         mypandas = mypandas[absolutlyneeded + columns_keeped]
+
+        if self.db == 'dpc':
+            A=['P.A. Bolzano','P.A. Trento']
+            tmp=mypandas.loc[mypandas.location.isin(A)].groupby('date').sum()
+            tmp['location']='Trentino-Alto Adige'
+            mypandas = mypandas.loc[~mypandas.location.isin(A)]
+            tmp = tmp.reset_index()
+            mypandas = mypandas.append(tmp)
 
         self.available_keys_words = columns_keeped #+ absolutlyneeded
 
@@ -739,6 +745,8 @@ class DataBase(object):
                 cols = cols[0:1] + cols[-1:] + cols[1:-1]
                 tmp = tmp[cols]
                 mypandas = mypandas.append(tmp)
+
+
 
         if len(oldloc) != len(newloc):
             raise CoaKeyError('Seems to be an iso3 problem behaviour ...')
@@ -908,6 +916,8 @@ class DataBase(object):
                     all_codes=all_region.code_region.astype(int)
                     origclistlist = [[i] for i in all_region[(all_codes>10) & (all_codes<100)].name_region.to_list()]
                     devorigclist=[ self.geo.get_subregions_from_list_of_region_names(i) for i in origclistlist ]
+                if origclistlist == [['FRA']]:
+                    print(origclistlist)
                 #devorigclist = [ self.geo.get_subregions_from_list_of_region_names(i) if isinstance(i, list) else i for i in origclist ]
             if clist == ['FRA'] or clist == ['USA']:
                 clist=self.geo_all

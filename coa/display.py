@@ -316,7 +316,7 @@ class CocoDisplay:
         """ Return all the tiles available in Bokeh """
         return self.tiles_listing
 
-    def standardfig(self, dbname = None, copyrightposition = 'left', textcopyright = None, **kwargs):
+    def standardfig(self, dbname = None, copyrightposition = 'left', textcopyright = 'default', **kwargs):
         """
          Create a standard Bokeh figure, with pycoa.fr label, used in all the bokeh charts
          """
@@ -333,7 +333,7 @@ class CocoDisplay:
         if textcopyright == 'default':
                 textcopyright = '©pycoa.fr (data from: {})'.format(self.database_name)
         else:
-                textcopyright = '©pycoa.fr ' + textcopyright        
+                textcopyright = '©pycoa.fr ' + textcopyright
 
         self.logo_db_citation = Label(x=xpos * self.plot_width - len(textcopyright), y=0.01 * self.plot_height,
                                           x_units='screen', y_units='screen',
@@ -1087,8 +1087,8 @@ class CocoDisplay:
                                              geopdwd_filter.index.to_list()]
                 geopdwd_filter['bottom'] = [len(geopdwd_filter.index) - bthick / 2 - i for i in
                                                 geopdwd_filter.index.to_list()]
-                geopdwd_filter['horihistotexty'] =  geopdwd_filter['bottom'] + (geopdwd_filter['top']-geopdwd_filter['bottom'])/2
-                geopdwd_filter['horihistotextx'] = 0.1 + geopdwd_filter['right']
+                geopdwd_filter['horihistotexty'] =  geopdwd_filter['bottom'] + bthick/2
+                geopdwd_filter['horihistotextx'] = geopdwd_filter['right']
                 geopdwd_filter['horihistotext'] = geopdwd_filter['right'].round(2)
                 #geopdwd_filter = geopdwd_filter.loc[geopdwd_filter['cases']>0]
 

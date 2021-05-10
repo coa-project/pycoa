@@ -87,6 +87,13 @@ class DataBase(object):
                 elif self.db == 'rki': # DEU
                     info('DEU, Robert Koch Institut data selected ...')
                     self.return_jhu_pandas()
+                elif self.db == 'dgs': # DEU
+                    info('PRT, Direcção Geral de Saúde - Ministério da Saúde Português data selected ...')
+                    rename_dict = {'data': 'date','concelho':'location','confirmados_1':'tot_cases'}
+                    url='https://raw.githubusercontent.com/dssg-pt/covid19pt-data/master/data_concelhos_new.csv'
+                    prt_data=self.csv2pandas(url,separator=',',rename_columns = rename_dict)
+                    columns_keeped = ['tot_cases']
+                    self.return_structured_pandas(prt_data, columns_keeped=columns_keeped)
                 elif self.db == 'escovid19data': # ESP
                     info('ESP, EsCovid19Data ...')
                     rename_dict = {'ine_code': 'location',\
@@ -570,7 +577,6 @@ class DataBase(object):
                 pandas_jhu_db = pandas_jhu_db.melt(id_vars=["location"],var_name="date",value_name=ext)
                 pandas_jhu_db['location'] = pandas_jhu_db.location.astype(str)
                 pandas_jhu_db = pandas_jhu_db.rename(columns={'deaths':'tot_deaths','cases':'tot_cases'})
-                print(pandas_jhu_db)
             else:
                 raise CoaTypeError('jhu nor jhu-usa database selected ... ')
 
@@ -599,7 +605,6 @@ class DataBase(object):
                 newloc = loc_sub_code
                 toremove = [x for x in uniqloc if x not in loc_sub_name]
                 codedico={i:j for i,j in zip(uniqloc,newloc)}
-
         result = reduce(lambda x, y: pd.merge(x, y, on = ['location','date']), pandas_list)
         if toremove is not None:
             result = result.loc[~result.location.isin(toremove)]
@@ -677,7 +682,6 @@ class DataBase(object):
         if self.db == 'spfnational':
             pandas_db['location'] = ['France']*len(pandas_db)
         pandas_db = pandas_db.sort_values(['location','date'])
-
         if self.db == 'owid':
             pandas_db = pandas_db.loc[~pandas_db.iso_code.isnull()]
         return pandas_db
@@ -705,7 +709,15 @@ class DataBase(object):
             mypandas = mypandas.loc[~mypandas.location.isin(A)]
             tmp = tmp.reset_index()
             mypandas = mypandas.append(tmp)
-
+        if self.db == 'dgs':
+            mypandas = mypandas.reset_index(drop=True)
+            mypandas['location'] = mypandas['location'].apply(lambda x: x.title().replace('Do', 'do').replace('Da','da').replace('De','de'))
+            uniqloc = list(mypandas.location.unique())
+            #dist = self.geo.get_district(uniqloc)
+            loclow={x:self.geo.get_district(x)[0] for x in uniqloc if len(self.geo.get_district(x))==1}
+            mypandas['distric'] = mypandas['location'].map(loclow)    
+            tmp = mypandas.groupby(['distric','date']).sum().reset_index().rename(columns={'distric':'location'})
+            mypandas = tmp
         self.available_keys_words = columns_keeped #+ absolutlyneeded
 
         if 'iso_code' in self.available_keys_words:
@@ -734,6 +746,7 @@ class DataBase(object):
             newloc = loc_sub_code
             toremove = [x for x in uniqloc if x not in loc_sub_name]
             codedico={i:j for i,j in zip(loc_sub_code,newloc)}
+
         tmp = pd.DataFrame()
 
         not_un_nation_dict={'Kosovo':'Serbia','Northern Cyprus':'Cyprus'}
@@ -748,8 +761,6 @@ class DataBase(object):
                 cols = cols[0:1] + cols[-1:] + cols[1:-1]
                 tmp = tmp[cols]
                 mypandas = mypandas.append(tmp)
-
-
 
         if len(oldloc) != len(newloc):
             raise CoaKeyError('Seems to be an iso3 problem behaviour ...')
@@ -800,7 +811,6 @@ class DataBase(object):
                 clist=clist+self.geo.get_subregions_from_list_of_region_names(clist)
                 if clist == ['FRA'] or clist == ['USA'] or clist == ['ITA']:
                     clist=self.geo_all
-
             clist=list(set(clist)) # to suppress duplicate countries
             diff_locations = list(set(clist) - set(self.get_locations()))
             clist = [i for i in clist if i not in diff_locations]

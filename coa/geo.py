@@ -1120,7 +1120,7 @@ class GeoCountry():
                         outremer_codes=pr.code_region.astype(int)<10
 
                         pr_metropole=pr[pr.code_region.astype(int)>=10].copy()
-                        pr_metropole['code_region']='100'
+                        pr_metropole['code_region']='999'
                         pr_metropole['name_region']='Métropole'
                         pr_metropole['flag_region']=''
 

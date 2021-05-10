@@ -702,7 +702,7 @@ class GeoCountry():
                     'ESP':{'Basics':_country_info_dict['ESP']},\
                     'GBR':{'Basics':_country_info_dict['GBR'],'Regions':'http://geoportal1-ons.opendata.arcgis.com/datasets/0c3a9643cc7c4015bb80751aad1d2594_0.csv'},\
                     'BEL':{'Basics':_country_info_dict['BEL']},\
-                    'PRT':{'Basics':_country_info_dict['PRT'],'District':'https://raw.githubusercontent.com/JoaoFOliveira/portuguese-municipalities/master/municipalities.json'},\
+                    'PRT':{'Basics':_country_info_dict['PRT'],'Regions':'https://raw.githubusercontent.com/JoaoFOliveira/portuguese-municipalities/master/municipalities.json'},\
                     }
 
     def __init__(self,country=None,**kwargs):
@@ -734,7 +734,7 @@ class GeoCountry():
 
         self._country_data_region=None
         self._country_data_subregion=None
-        self._district=None
+        self._municipality_region=None
         url=self._country_info_dict[country]
         # country by country, adapt the read file informations
 
@@ -988,7 +988,7 @@ class GeoCountry():
         # --- 'PRT' case --------------------------------------------------------------------------------------------
         elif self._country == 'PRT':
             self._country_data = gpd.read_file('zip://'+get_local_from_url(url,0,'.zip'))
-            self._district=pd.read_json(self._source_dict['PRT']['District'])[['name','district']].dropna()
+            self._municipality_region=pd.read_json(self._source_dict['PRT']['Regions'])[['name','district']].dropna()
 
             self._country_data.rename(columns={\
                 'NAME_1':'name_subregion',\
@@ -1006,12 +1006,12 @@ class GeoCountry():
             self._country_data['name_region']=name_region
             self._country_data=self._country_data[['name_subregion','code_subregion','name_region','code_region','geometry']]
 
-    def get_district(self,lname):
-        """ for a lname list return the corresponding district
+    def get_region_from_municipality(self,lname):
+        """  Return region list from a municipality list
         """
         if not isinstance(lname, list):
             lname=[lname]
-        return self._district.loc[self._district.name.isin(lname)]['district'].to_list()
+        return self._municipality_region.loc[self._municipality_region.name.isin(lname)]['district'].to_list()
 
     def get_source(self):
         """ Return informations about URL sources

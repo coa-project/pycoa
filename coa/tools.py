@@ -59,7 +59,8 @@ _db_list_dict = {'jhu': 'WW',
     'escovid19data':'ESP',
     'phe':'GBR',
     'sciensano':'BEL',
-    'dgs':'PRT'}
+    'dgs':'PRT',
+    'obepine':'FRA'}
 
 # ----------------------------------------------------
 # --- Usefull functions for pycoa --------------------

@@ -94,6 +94,13 @@ class DataBase(object):
                     prt_data=self.csv2pandas(url,separator=',',rename_columns = rename_dict)
                     columns_keeped = ['tot_cases']
                     self.return_structured_pandas(prt_data, columns_keeped=columns_keeped)
+                elif self.db == 'obepine' : # FRA
+                    info('FRA, réseau Obepine, surveillance Sars-Cov-2 dans les eaux usées')
+                    url='https://www.data.gouv.fr/es/datasets/r/ba71be57-5932-4298-81ea-aff3a12a440c'
+                    rename_dict={'Code_Region':'location','Date':'date','Indicateur':'idx_obepine'}
+                    obepine_data=self.csv2pandas(url,separator=';',rename_columns=rename_dict)
+                    obepine_data['location']=obepine_data.location.astype(str)
+                    self.return_structured_pandas(obepine_data,columns_keeped=['idx_obepine'])
                 elif self.db == 'escovid19data': # ESP
                     info('ESP, EsCovid19Data ...')
                     rename_dict = {'ine_code': 'location',\
@@ -718,6 +725,17 @@ class DataBase(object):
             mypandas['distric'] = mypandas['location'].map(loclow)    
             tmp = mypandas.groupby(['distric','date']).sum().reset_index().rename(columns={'distric':'location'})
             mypandas = tmp
+        if self.db == 'obepine': # filling subregions.
+            l=[]
+            for x in mypandas.location:
+                try:
+                    l0=self.geo.get_subregions_from_region(code=x)
+                except CoaWhereError:
+                    l0='' # unknown region
+                l.append(l0)
+            mypandas['location']=l
+            mypandas = mypandas.explode('location')
+
         self.available_keys_words = columns_keeped #+ absolutlyneeded
 
         if 'iso_code' in self.available_keys_words:

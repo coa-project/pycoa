@@ -688,7 +688,6 @@ class GeoCountry():
                     # missing some counties 'GBR':'https://opendata.arcgis.com/datasets/69dc11c7386943b4ad8893c45648b1e1_0.zip?geometry=%7B%22xmin%22%3A-44.36%2C%22ymin%22%3A51.099%2C%22xmax%22%3A39.487%2C%22ymax%22%3A59.78%2C%22type%22%3A%22extent%22%2C%22spatialReference%22%3A%7B%22wkid%22%3A4326%7D%7D&outSR=%7B%22latestWkid%22%3A27700%2C%22wkid%22%3A27700%7D',\
                     'GBR':'https://opendata.arcgis.com/datasets/3a4fa2ce68f642e399b4de07643eeed3_0.geojson',\
                     'BEL':'https://public.opendatasoft.com/explore/dataset/arrondissements-belges-2019/download/?format=shp&timezone=Europe/Berlin&lang=en',\
-                    'PRT':'https://dados.gov.pt/en/datasets/r/59368d37-cbdb-426a-9472-5a04cf30fbe4',\
                     }
 
     _source_dict = {'FRA':{'Basics':_country_info_dict['FRA'],\
@@ -735,7 +734,7 @@ class GeoCountry():
 
         self._country_data_region=None
         self._country_data_subregion=None
-        self._district=None
+        self._municipality_region=None
         url=self._country_info_dict[country]
         # country by country, adapt the read file informations
 
@@ -992,27 +991,14 @@ class GeoCountry():
             #self._district=pd.read_json(self._source_dict['PRT']['District'])[['name','district']].dropna()
 
             self._country_data.rename(columns={\
-                'NAME_2':'name_subregion',\
-                'NAME_1':'name_region',\
-                'HASC_2':'code_subregion'},inplace=True)
-            self._country_data['code_region']=self._country_data.code_subregion.str.slice(stop=5)
-            # for i,r in self._country_data.iterrows():
-            #     if r.TYPE_1 == 'Distrito':
-            #         code_region.append('00')
-            #         name_region.append('Portugal continental')
-            #     else:
-            #         code_region.append('01')
-            #         name_region.append('Ilhas portuguesas')
-            # self._country_data['code_region']=code_region
-            # self._country_data['name_region']=name_region
             self._country_data=self._country_data[['name_subregion','code_subregion','name_region','code_region','geometry']]
 
-    def get_district(self,lname):
-        """ for a lname list return the corresponding district
+    def get_region_from_municipality(self,lname):
+        """  Return region list from a municipality list
         """
         if not isinstance(lname, list):
             lname=[lname]
-        return self._district.loc[self._district.name.isin(lname)]['district'].to_list()
+        return self._municipality_region.loc[self._municipality_region.name.isin(lname)]['district'].to_list()
 
     def get_source(self):
         """ Return informations about URL sources

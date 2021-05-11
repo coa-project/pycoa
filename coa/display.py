@@ -110,7 +110,6 @@ class CocoDisplay:
 
                 geom.set_standard(lstd)
                 # restore standard
-
                 geopan = info.add_field(field=['geometry'], input=geopan, geofield='location')
                 geopan = geopan[geopan.location != 'Antarctica']
         except:
@@ -119,11 +118,13 @@ class CocoDisplay:
         self.data = gpd.GeoDataFrame(geopan, crs="EPSG:4326")
         self.geopan = geopan
         self.boundary_metropole = ''
-        if self.dbld[self.database_name] in ['FRA','ESP']:
+        if self.dbld[self.database_name] in ['FRA','ESP','PRT']:
             if self.dbld[self.database_name] == 'FRA':
                 list_dep_metro = info.get_subregions_from_region(name='Métropole')
             elif self.dbld[self.database_name] == 'ESP':
                 list_dep_metro = info.get_subregions_from_region(name='España peninsular')
+            elif self.dbld[self.database_name] == 'PRT':
+                list_dep_metro = info.get_subregions_from_region(name='Portugal continental')
             self.boundary_metropole = self.data.loc[self.data.location.isin(list_dep_metro)]['geometry'].total_bounds
         self.boundary = self.data['geometry'].total_bounds
         self.location_geometry = self.data
@@ -1406,7 +1407,7 @@ class CocoDisplay:
         uniqloc = list(geopdwd_filtered.codelocation.unique())
         geopdwd_filtered = geopdwd_filtered.drop(columns=['date', 'colors'])
 
-        if self.dbld[self.database_name] in ['FRA','ESP'] and all([len(i) == 2 for i in geopdwd_filtered.location.unique()]):
+        if self.dbld[self.database_name] in ['FRA','ESP','PRT'] and all([len(i) == 2 for i in geopdwd_filtered.location.unique()]):
             minx, miny, maxx, maxy = self.boundary_metropole
             zoom = 3
         else:
@@ -1572,8 +1573,7 @@ class CocoDisplay:
             #dicocolors=pd.Series(geopdwd.colors.values,index=geopdwd.location.values).drop_duplicates().to_dict()
             #dfLabel['colors'] = dfLabel['location'].map(dicocolors)
             sourcemaplabel = ColumnDataSource(dfLabel)
-
-        if self.dbld[self.database_name] in ['FRA'] and all([len(i) == 2 for i in geopdwd_filtered.location.unique()]):
+        if self.dbld[self.database_name] in ['FRA','ESP','PRT'] and all([len(i) == 2 or len(i) == 5 for i in geopdwd_filtered.location.unique()]):
             minx, miny, maxx, maxy = self.boundary_metropole
         else:
             minx, miny, maxx, maxy = self.boundary
@@ -1738,7 +1738,7 @@ class CocoDisplay:
         def toto():
 
 
-            if self.dbld[self.database_name] in ['FRA'] and all([len(i) == 2 for i in geopdwd_filtered.location.unique()]):
+            if self.dbld[self.database_name] in ['FRA','ESP','PRT'] and all([len(i) == 2 for i in geopdwd_filtered.location.unique()]):
                 minx, miny, maxx, maxy = self.boundary_metropole
             else:
                 minx, miny, maxx, maxy = self.boundary

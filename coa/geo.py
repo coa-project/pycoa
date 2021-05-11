@@ -996,15 +996,6 @@ class GeoCountry():
                 'NAME_1':'name_region',\
                 'HASC_2':'code_subregion'},inplace=True)
             self._country_data['code_region']=self._country_data.code_subregion.str.slice(stop=5)
-            # for i,r in self._country_data.iterrows():
-            #     if r.TYPE_1 == 'Distrito':
-            #         code_region.append('00')
-            #         name_region.append('Portugal continental')
-            #     else:
-            #         code_region.append('01')
-            #         name_region.append('Ilhas portuguesas')
-            # self._country_data['code_region']=code_region
-            # self._country_data['name_region']=name_region
             self._country_data=self._country_data[['name_subregion','code_subregion','name_region','code_region','geometry']]
 
     # def get_region_from_municipality(self,lname):
@@ -1126,15 +1117,13 @@ class GeoCountry():
 
                     # Country specific management
                     if self.get_country()=='FRA': # manage pseudo 'FRA' regions 'Métropole' and 'Outre-mer'
-                        metropole_codes=pr.code_region.astype(int)>=10
-                        outremer_codes=pr.code_region.astype(int)<10
-
-                        pr_metropole=pr[pr.code_region.astype(int)>=10].copy()
+                        metropole_cut=pr.code_region.astype(int)>=10
+                        pr_metropole=pr[metropole_cut].copy()
                         pr_metropole['code_region']='999'
                         pr_metropole['name_region']='Métropole'
                         pr_metropole['flag_region']=''
 
-                        pr_outremer=pr[pr.code_region.astype(int)<10].copy()
+                        pr_outremer=pr[~metropole_cut].copy()
                         pr_outremer['code_region']='000'
                         pr_outremer['name_region']='Outre-mer'
                         pr_outremer['flag_region']=''
@@ -1142,20 +1131,32 @@ class GeoCountry():
                         pr=pr.append(pr_metropole,ignore_index=True).append(pr_outremer,ignore_index=True)
 
                     elif self.get_country()=='ESP' : # manage pseudo 'ESP' regions within and outside continent
-                        metropole_codes=pr.code_region.astype(int)>=10
-                        outremer_codes=pr.code_region.astype(int)<10
-
-                        pr_metropole=pr[~pr.code_region.astype(int).isin(['05'])].copy()
-                        pr_metropole['code_region']='00'
+                        islands_cut=pr.code_region.astype(int).isin(['05'])
+                        pr_metropole=pr[~islands_cut].copy()
+                        pr_metropole['code_region']='99'
                         pr_metropole['name_region']='España peninsular'
                         pr_metropole['flag_region']=''
 
-                        # pr_outremer=pr[pr.code_region.astype(int).isin(['05'])].copy()
-                        # pr_outremer['code_region']='99'
-                        # pr_outremer['name_region']='Islas españolas'
-                        # pr_outremer['flag_region']=''
+                        pr_outremer=pr[islands_cut].copy()
+                        pr_outremer['code_region']='00'
+                        pr_outremer['name_region']='Islas españolas'
+                        pr_outremer['flag_region']=''
 
-                        pr=pr.append(pr_metropole,ignore_index=True)#.append(pr_outremer,ignore_index=True)
+                        pr=pr.append(pr_metropole,ignore_index=True).append(pr_outremer,ignore_index=True)
+
+                    elif self.get_country()=='PRT' : # manage pseudo 'PRT' regions within and outside continent
+                        islands_cut=pr.code_region.isin(['PT.AC','PT.MA'])
+                        pr_metropole=pr[~islands_cut].copy()
+                        pr_metropole['code_region']='PT.99'
+                        pr_metropole['name_region']='Portugal continental'
+                        pr_metropole['flag_region']=''
+
+                        pr_outremer=pr[islands_cut].copy()
+                        pr_outremer['code_region']='PT.00'
+                        pr_outremer['name_region']='Ilhas portuguesas'
+                        pr_outremer['flag_region']=''
+
+                        pr=pr.append(pr_metropole,ignore_index=True).append(pr_outremer,ignore_index=True)
 
                     elif self.get_country()=='USA':
                         usa_col=pr.columns.tolist()

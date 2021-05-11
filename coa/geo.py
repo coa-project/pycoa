@@ -993,12 +993,12 @@ class GeoCountry():
             self._country_data.rename(columns={\
             self._country_data=self._country_data[['name_subregion','code_subregion','name_region','code_region','geometry']]
 
-    def get_region_from_municipality(self,lname):
-        """  Return region list from a municipality list
-        """
-        if not isinstance(lname, list):
-            lname=[lname]
-        return self._municipality_region.loc[self._municipality_region.name.isin(lname)]['district'].to_list()
+    # def get_region_from_municipality(self,lname):
+    #     """  Return region list from a municipality list
+    #     """
+    #     if not isinstance(lname, list):
+    #         lname=[lname]
+    #     return self._municipality_region.loc[self._municipality_region.name.isin(lname)]['district'].to_list()
 
     def get_source(self):
         """ Return informations about URL sources

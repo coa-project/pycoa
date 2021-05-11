@@ -688,7 +688,7 @@ class GeoCountry():
                     # missing some counties 'GBR':'https://opendata.arcgis.com/datasets/69dc11c7386943b4ad8893c45648b1e1_0.zip?geometry=%7B%22xmin%22%3A-44.36%2C%22ymin%22%3A51.099%2C%22xmax%22%3A39.487%2C%22ymax%22%3A59.78%2C%22type%22%3A%22extent%22%2C%22spatialReference%22%3A%7B%22wkid%22%3A4326%7D%7D&outSR=%7B%22latestWkid%22%3A27700%2C%22wkid%22%3A27700%7D',\
                     'GBR':'https://opendata.arcgis.com/datasets/3a4fa2ce68f642e399b4de07643eeed3_0.geojson',\
                     'BEL':'https://public.opendatasoft.com/explore/dataset/arrondissements-belges-2019/download/?format=shp&timezone=Europe/Berlin&lang=en',\
-                    'PRT':'https://dados.gov.pt/en/datasets/r/d57a2fd1-0a5b-43a2-bbd1-27f6cbcb5c48',\
+                    'PRT':'https://dados.gov.pt/en/datasets/r/59368d37-cbdb-426a-9472-5a04cf30fbe4',\
                     }
 
     _source_dict = {'FRA':{'Basics':_country_info_dict['FRA'],\
@@ -702,7 +702,8 @@ class GeoCountry():
                     'ESP':{'Basics':_country_info_dict['ESP']},\
                     'GBR':{'Basics':_country_info_dict['GBR'],'Regions':'http://geoportal1-ons.opendata.arcgis.com/datasets/0c3a9643cc7c4015bb80751aad1d2594_0.csv'},\
                     'BEL':{'Basics':_country_info_dict['BEL']},\
-                    'PRT':{'Basics':_country_info_dict['PRT'],'District':'https://raw.githubusercontent.com/JoaoFOliveira/portuguese-municipalities/master/municipalities.json'},\
+                    'PRT':{'Basics':_country_info_dict['PRT']},\
+                    #,'District':'https://raw.githubusercontent.com/JoaoFOliveira/portuguese-municipalities/master/municipalities.json'},\
                     }
 
     def __init__(self,country=None,**kwargs):
@@ -988,22 +989,22 @@ class GeoCountry():
         # --- 'PRT' case --------------------------------------------------------------------------------------------
         elif self._country == 'PRT':
             self._country_data = gpd.read_file('zip://'+get_local_from_url(url,0,'.zip'))
-            self._district=pd.read_json(self._source_dict['PRT']['District'])[['name','district']].dropna()
+            #self._district=pd.read_json(self._source_dict['PRT']['District'])[['name','district']].dropna()
 
             self._country_data.rename(columns={\
-                'NAME_1':'name_subregion',\
-                'HASC_1':'code_subregion'},inplace=True)
-            code_region = []
-            name_region = []
-            for i,r in self._country_data.iterrows():
-                if r.TYPE_1 == 'Distrito':
-                    code_region.append('00')
-                    name_region.append('Portugal continental')
-                else:
-                    code_region.append('01')
-                    name_region.append('Ilhas portuguesas')
-            self._country_data['code_region']=code_region
-            self._country_data['name_region']=name_region
+                'NAME_2':'name_subregion',\
+                'NAME_1':'name_region',\
+                'HASC_2':'code_subregion'},inplace=True)
+            self._country_data['code_region']=self._country_data.code_subregion.str.slice(stop=5)
+            # for i,r in self._country_data.iterrows():
+            #     if r.TYPE_1 == 'Distrito':
+            #         code_region.append('00')
+            #         name_region.append('Portugal continental')
+            #     else:
+            #         code_region.append('01')
+            #         name_region.append('Ilhas portuguesas')
+            # self._country_data['code_region']=code_region
+            # self._country_data['name_region']=name_region
             self._country_data=self._country_data[['name_subregion','code_subregion','name_region','code_region','geometry']]
 
     def get_district(self,lname):

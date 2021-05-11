@@ -726,15 +726,10 @@ class DataBase(object):
             tmp = mypandas.groupby(['distric','date']).sum().reset_index().rename(columns={'distric':'location'})
             mypandas = tmp
         if self.db == 'obepine': # filling subregions.
-            l=[]
-            for x in mypandas.location:
-                try:
-                    l0=self.geo.get_subregions_from_region(code=x)
-                except CoaWhereError:
-                    l0='' # unknown region
-                l.append(l0)
-            mypandas['location']=l
-            mypandas = mypandas.explode('location')
+            preg=self.geo.get_data(True)[['code_subregion','code_region']]
+            mypandas=mypandas.merge(preg,how='left',left_on='location',right_on='code_region')
+            mypandas = mypandas.explode('code_subregion')
+            mypandas['location'] = mypandas['code_subregion']
 
         self.available_keys_words = columns_keeped #+ absolutlyneeded
 

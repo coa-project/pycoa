@@ -991,6 +991,19 @@ class GeoCountry():
             #self._district=pd.read_json(self._source_dict['PRT']['District'])[['name','district']].dropna()
 
             self._country_data.rename(columns={\
+                'NAME_2':'name_subregion',\
+                'NAME_1':'name_region',\
+                'HASC_2':'code_subregion'},inplace=True)
+            self._country_data['code_region']=self._country_data.code_subregion.str.slice(stop=5)
+            # for i,r in self._country_data.iterrows():
+            #     if r.TYPE_1 == 'Distrito':
+            #         code_region.append('00')
+            #         name_region.append('Portugal continental')
+            #     else:
+            #         code_region.append('01')
+            #         name_region.append('Ilhas portuguesas')
+            # self._country_data['code_region']=code_region
+            # self._country_data['name_region']=name_region
             self._country_data=self._country_data[['name_subregion','code_subregion','name_region','code_region','geometry']]
 
     # def get_region_from_municipality(self,lname):

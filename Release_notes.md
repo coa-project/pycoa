@@ -5,16 +5,15 @@
 - maplabel added for bokeh map   
 - fix bug with smooth7 , in the case data non continious
 - add opencovid19national datase, remove ephad data for opencovid19 (only available for national)
-- add SPF variant
+- add SPF variant and SI-DEP school (var: ti & tp)
 - fix bug display: last date is lastest date with nonan in which columns
 - add new class rapport to give a rapport on a given keywords 
-- fixe color bug when 2 var. is displayed
+- fix color bug when 2 var. is displayed
 - self.dates move after fill_missing_dates
-- rki DEU database added
+- new national databases added : ESP, DEU, BEL, GBR, PRT
 - jhu-usa code modification db (codelocation=location)
-- could sumall for different sublist 
-- spain db in progress
-- spf7 added : SI-DEP school (var: ti & tp)
+- could sumall for different sublist
+- add Obepine french db
  
 ## v2.02 - march 2021 - Import decorators modifciation inside the display
 - New standard output is pandas dataframe

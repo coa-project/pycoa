@@ -87,7 +87,7 @@ class DataBase(object):
                 elif self.db == 'rki': # DEU
                     info('DEU, Robert Koch Institut data selected ...')
                     self.return_jhu_pandas()
-                elif self.db == 'dgs': # DEU
+                elif self.db == 'dgs': # PRT
                     info('PRT, Direcção Geral de Saúde - Ministério da Saúde Português data selected ...')
                     rename_dict = {'data': 'date','concelho':'location','confirmados_1':'tot_cases'}
                     url='https://raw.githubusercontent.com/dssg-pt/covid19pt-data/master/data_concelhos_new.csv'

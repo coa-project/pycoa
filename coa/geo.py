@@ -1057,12 +1057,16 @@ class GeoCountry():
     def get_subregions_from_region(self,**kwargs):
         """ Return the list of subregions within a specified region.
         Should give either the code or the name of the region as strings in kwarg : code=# or name=#
+        Output default is 'code' of subregions. Can be changer with output='name'. 
         """
-        kwargs_test(kwargs,['name','code'],'Should give either name or code of region.')
+        kwargs_test(kwargs,['name','code','output'],'Should give either name or code of region. Output can be changed with the output option.')
         code=kwargs.get("code",None)
         name=kwargs.get("name",None)
+        out=kwargs.get("output",'code')
         if not (code == None) ^ (name == None):
             raise CoaKeyError("Should give either code or name of region, not both.")
+        if not out in ['code','name']:
+            raise CoaKeyError("Should set output either as 'code' or 'name' for subregions.")
 
         if name != None:
             if not isinstance(name,str):
@@ -1078,17 +1082,18 @@ class GeoCountry():
                 raise CoaWhereError("The region "+code+" does not exist for country "+self.get_country()+". See get_region_list().")
             cut=(self.get_data(True)['code_region']==code)
 
-        return self.get_data(True)[cut]['code_subregion'].iloc[0]#.to_list()
+        return self.get_data(True)[cut][out+'_subregion'].iloc[0]#.to_list()
 
-    def get_subregions_from_list_of_region_names(self,l):
-        """ Return the list of subregions according to list of region names given
+    def get_subregions_from_list_of_region_names(self,l,output='code'):
+        """ Return the list of subregions according to list of region names given.
+        The output argument ('code' as default) is given to the get_subregions_from_region function.
         """
         if not isinstance(l,list):
             CoaTypeError("Should provide list as argument")
         s=[]
         for r in l:
             try:
-                s=s+self.get_subregions_from_region(name=r)
+                s=s+self.get_subregions_from_region(name=r,output=output)
             except CoaWhereError:
                 pass
         return s
@@ -1100,7 +1105,8 @@ class GeoCountry():
             return sorted(self._country_data.columns.to_list())
 
     def get_data(self,region_version=False):
-        """Return the whole geopandas data
+        """Return the whole geopandas data.
+        If region_version = True (not default), the pandas output is region based focalized. 
         """
         if self.test_is_init():
             if region_version:
@@ -1113,6 +1119,8 @@ class GeoCountry():
                             col.append(p)
                     if not 'code_subregion' in col:
                         col.append('code_subregion') # to get the list of subregion in region
+                    if not 'name_subregion' in col:
+                        col.append('name_subregion') # to get the list of subregion name in region
 
                     pr=self._country_data[col].copy()
 
@@ -1166,6 +1174,7 @@ class GeoCountry():
                         pr=pr[usa_col]
 
                     pr['code_subregion']=pr.code_subregion.apply(lambda x: [x])
+                    pr['name_subregion']=pr.name_subregion.apply(lambda x: [x])
                     self._country_data_region=pr.dissolve(by=col_reg,aggfunc='sum').sort_values(by='code_region').reset_index()
                 return self._country_data_region
             else:

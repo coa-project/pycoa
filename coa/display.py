@@ -596,7 +596,7 @@ class CocoDisplay:
                     if amplitude > 10 ** 4:
                         ax_type.reverse()
             #mypandas = mypandas.loc[mypandas.date>mypandas.date.min()+dt.timedelta(days=1)] # skype first day
-            mypandas.loc[:,input_field] = mypandas.groupby(['clustername']).apply(lambda x: x.bfill()).apply(lambda x: x.ffill())
+            #mypandas.loc[:,input_field] = mypandas.groupby(['clustername']).apply(lambda x: x.bfill()).apply(lambda x: x.ffill())
             hover_tool = HoverTool(tooltips=tooltips, formatters={'@date': 'datetime'})
             return func(self, mypandas, dico, input_field, hover_tool, ax_type, **kwargs)
 

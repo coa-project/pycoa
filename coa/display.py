@@ -17,7 +17,6 @@ An interface module to easily plot pycoa data with bokeh
 """
 
 from coa.tools import kwargs_test, extract_dates, verb, get_db_list_dict
-import coa.geo as coge
 from coa.error import *
 
 import math
@@ -53,7 +52,7 @@ from branca.colormap import LinearColormap
 from branca.element import Element, Figure
 import folium
 from PIL import Image
-
+import coa.geo as coge
 import matplotlib.pyplot as plt
 import datetime as dt
 import bisect
@@ -62,7 +61,7 @@ width_height_default = [500, 380]
 
 
 class CocoDisplay:
-    def __init__(self, db=None):
+    def __init__(self, db=None, geo = None):
         verb("Init of CocoDisplay() with db=" + str(db))
         self.database_name = db
         self.dbld = get_db_list_dict()
@@ -71,64 +70,48 @@ class CocoDisplay:
         self.plot_width = width_height_default[0]
         self.plot_height = width_height_default[1]
         self.geom = []
-
         self.geopan = gpd.GeoDataFrame()
         self.location_geometry = None
+        self.boundary_metropole = None
 
         self.all_available_display_keys = ['where', 'which', 'what', 'when', 'title_temporal', 'plot_height',
                                            'plot_width', 'title', 'bins', 'var_displayed','textcopyright',
                                            'option', 'input', 'input_field', 'visu', 'plot_last_date', 'tile',
                                            'orientation']
         self.tiles_listing = ['esri', 'openstreet', 'stamen', 'positron']
-        self.location_geometry = self.get_geodata()
-
-    def get_geodata(self):
-        """
-         Return a GeoDataFrame used in map display (see map and mapfolium)
-         The output format is the following :
-         geoid | location |  geometry (POLYGON or MULTIPOLYGON)
-        """
-        geopan = gpd.GeoDataFrame()
         try:
-            if self.dbld[self.database_name] != 'WW':
-                country = self.dbld[self.database_name]
-                info = coge.GeoCountry(country, dense_geometry=False)
-                geopan = info.get_subregion_list()[['code_subregion', 'name_subregion', 'geometry']]
-                geopan = geopan.rename(columns={'code_subregion': 'location'})
-                if self.dbld[self.database_name] == 'BEL' or self.dbld[self.database_name] == 'ITA':
-                    geopan = info.get_region_list()[['code_region', 'name_region', 'geometry']]
-                    geopan = geopan.rename(columns={'code_region': 'location'})
+            if self.dbld[self.database_name][0] != 'WW' :
+                country = self.dbld[self.database_name][0]
+                #self.boundary = geo['geometry'].total_bounds
+                if self.dbld[self.database_name][1] == 'region':
+                    self.location_geometry = geo.get_region_list()[['code_region', 'name_region', 'geometry']]
+                    self.location_geometry = self.location_geometry.rename(columns={'name_region': 'location'})
+                    if self.dbld[self.database_name][0] == 'PRT':
+                         tmp=self.location_geometry.rename(columns={'name_region': 'location'})
+                         tmp = tmp.loc[tmp.code_region=='PT.99']
+                         self.boundary_metropole =tmp['geometry'].total_bounds
+                elif self.dbld[self.database_name][1] == 'subregion':
+                    list_dep_metro = None
+                    self.location_geometry = geo.get_subregion_list()[['code_subregion', 'name_subregion', 'geometry']]
+                    self.location_geometry = self.location_geometry.rename(columns={'name_subregion': 'location'})
+                    if self.dbld[self.database_name][0] == 'FRA':
+                         list_dep_metro =  geo.get_subregions_from_region(name='Métropole')
+                    elif self.dbld[self.database_name][0] == 'ESP':
+                         list_dep_metro =  geo.get_subregions_from_region(name='España peninsular')
+                    if list_dep_metro:
+                        self.boundary_metropole = self.location_geometry.loc[self.location_geometry.code_subregion.isin(list_dep_metro)]['geometry'].total_bounds
             else:
-                info = coge.GeoInfo()
-
-                geom = info.get_GeoManager()
-                lstd = geom.get_standard()
-                geom.set_standard('name')
-
-                allcountries = geom.get_GeoRegion().get_countries_from_region('world')
-                geopan['location'] = [geom.to_standard(c)[0] for c in allcountries]
-
-                geom.set_standard(lstd)
-                # restore standard
-                geopan = info.add_field(field=['geometry'], input=geopan, geofield='location')
-                geopan = geopan[geopan.location != 'Antarctica']
+                   geopan = gpd.GeoDataFrame(crs="EPSG:4326")
+                   info = coge.GeoInfo()
+                   allcountries = geo.get_GeoRegion().get_countries_from_region('world')
+                   geopan['location'] = [geo.to_standard(c)[0] for c in allcountries]
+                   geopan = info.add_field(field=['geometry'],input=geopan ,geofield='location')
+                   geopan = geopan[geopan.location != 'Antarctica']
+                   geopan = geopan.dropna().reset_index(drop=True)
+                   self.location_geometry  = geopan
+                   #self.boundary = geopan['geometry'].total_bounds
         except:
             raise CoaTypeError('What data base are you looking for ?')
-        geopan = geopan.dropna().reset_index(drop=True)
-        self.data = gpd.GeoDataFrame(geopan, crs="EPSG:4326")
-        self.geopan = geopan
-        self.boundary_metropole = ''
-        if self.dbld[self.database_name] in ['FRA','ESP','PRT']:
-            if self.dbld[self.database_name] == 'FRA':
-                list_dep_metro = info.get_subregions_from_region(name='Métropole')
-            elif self.dbld[self.database_name] == 'ESP':
-                list_dep_metro = info.get_subregions_from_region(name='España peninsular')
-            elif self.dbld[self.database_name] == 'PRT':
-                list_dep_metro = info.get_subregions_from_region(name='Portugal continental')
-            self.boundary_metropole = self.data.loc[self.data.location.isin(list_dep_metro)]['geometry'].total_bounds
-        self.boundary = self.data['geometry'].total_bounds
-        self.location_geometry = self.data
-        return self.data
 
     def standard_input(self, mypandas, input_field=None, **kwargs):
         """
@@ -159,76 +142,15 @@ class CocoDisplay:
 
         what = kwargs.get('what', '')  # cumul is the default
         input_dico['what'] = what
-        input_dico['locsumall'] = False
+
         if 'location' in mypandas:
-            mypandas = mypandas.reset_index(drop = True)
-            mypandas['rolloverdisplay'] = mypandas['codelocation']
-            if mypandas['location'].apply(lambda x: True if type(x) == list else False).any():
-                # len(x) == 3 or len(x) == 2 : we suppose that codelocation is iso3 -len=3- or int for french code region
-                # For other nationnal db need to check !
-                input_dico['locsumall'] = True
-                maskcountries = mypandas['codelocation'].apply(
-                    lambda x: True if type(x) == int or len(x) == 3 else False)
-                mypandascountry = mypandas[maskcountries]
-                mypandassumall = mypandas[~maskcountries]
-                if not mypandassumall.empty:
-                    copypandas = mypandassumall.copy()
-                    new = mypandassumall.iloc[:1]
-                    for i in mypandassumall.codelocation.unique():
-                        sub = mypandassumall.loc[mypandassumall.codelocation == i]
-                        copypandas = sub.copy()
-                        if type(sub['location'].iloc[0]) == list:
-                            list_list_loc = [j for j in sub['location'].iloc[0]]
-                        else:
-                            list_list_loc = sub['location'].iloc[0]
-                        sub = sub.drop(columns=['location'])
-                        if type(list_list_loc) == str:
-                            list_list_loc = [list_list_loc]
-                        sub.insert(0, 'location', list_list_loc[0])
-                        for j in list_list_loc[1:]:
-                            copypandas['location'] = j
-                            sub = sub.append(copypandas)
-                        if not mypandascountry.empty:
-                            mypandascountry = mypandascountry.append(sub)
-                        else:
-                            mypandascountry = sub
-                mypandas = mypandascountry
-            if self.dbld[self.database_name] != 'WW':
-                if self.dbld[self.database_name] == 'BEL' or self.dbld[self.database_name] == 'ITA':
-                    pd_name_displayed = self.geopan[['location', 'name_region']]
-                else:
-                    pd_name_displayed = self.geopan[['location', 'name_subregion']]
-                maskcountries = mypandas['codelocation'].apply(
-                    lambda x: True if len(x) == 2 or len(x) == 3 or len(x) == 5 or len(x)==9 else False)
-
-                mypandassumall = mypandas[~maskcountries]
-                mypandascountry = mypandas[maskcountries]
-                if not mypandascountry.empty:
-                    mypandascountry = pd.merge(mypandascountry, pd_name_displayed, on='location', how='inner')
-                    mypandascountry = mypandascountry.drop(columns='rolloverdisplay')
-                    if self.dbld[self.database_name] == 'BEL' or self.dbld[self.database_name] == 'ITA':
-                        mypandascountry['rolloverdisplay'] = mypandascountry['name_region']
-                    else:
-                        mypandascountry['rolloverdisplay'] = mypandascountry['name_subregion']
-
-                    if not mypandassumall.empty:
-                        mypandascountry = mypandascountry.append(mypandassumall)
-                    mypandas = mypandascountry
-            else:
-                maskcountries = mypandas['codelocation'].apply(lambda x: True if len(x) == 3 else False)
-                mypandassumall = mypandas[~maskcountries]
-                mypandascountry = mypandas[maskcountries]
-                if not mypandascountry.empty:
-                    mypandascountry = mypandascountry.drop(columns='rolloverdisplay')
-                    mypandascountry['rolloverdisplay'] = mypandascountry['location']
-                    if not mypandassumall.empty:
-                        mypandascountry = mypandascountry.append(mypandassumall)
-                    mypandas = mypandascountry
-
             which = mypandas.columns[2]
         else:
             which = mypandas.columns[1]
 
+        mypandas = mypandas.explode('location')
+        mypandas['rolloverdisplay'] = mypandas['clustername']
+        mypandas['rolloverdisplay'] = mypandas['rolloverdisplay'].apply(lambda x: x if len(x)< 20 else x.split('-')[0]+'...'+x.split('-')[-1] )
         input_dico['which'] = which
         var_displayed = which
 
@@ -263,7 +185,6 @@ class CocoDisplay:
 
 #        when_end_change = CocoDisplay.changeto_nonan_date(mypandas, input_dico['when_end'], var_displayed)
         when_end_change = CocoDisplay.changeto_nonull_date(mypandas, input_dico['when_end'], var_displayed)
-
         if when_end_change != input_dico['when_end']:
             input_dico['when_end'] = when_end_change
             mypandas = mypandas[mypandas.date <= input_dico['when_end']]
@@ -311,6 +232,7 @@ class CocoDisplay:
         input_dico['titlebar'] = titlebar
         input_dico['var_displayed'] = var_displayed
         input_dico['data_base'] = self.database_name
+
         return mypandas, input_dico
 
     def get_tiles(self):
@@ -520,7 +442,6 @@ class CocoDisplay:
                      'Here the date I will take: ' + str(when_end - dt.timedelta(days=j - 1)))
             return when_end - dt.timedelta(days=j - 1)
 
-
     @staticmethod
     def get_utcdate(date):
         return (date - dt.date(1970, 1, 1)).total_seconds() * 1000.
@@ -631,51 +552,51 @@ class CocoDisplay:
             ax_type = ['linear', 'log']
             tooltips = 'Date: @date{%F} <br>  $name: @$name'
 
-            my_location = mypandas.location.unique()
-            if len(my_location) < 5:
+            uniqloc = mypandas.clustername.unique()
+            if len(uniqloc) < 5:
                 colors = self.scolors
             else:
                 colors = self.lcolors
             colors = itertools.cycle(colors)
-            dico_colors = {i: next(colors) for i in my_location}
-            country_col = pd.DataFrame(dico_colors.items(), columns=['location', 'colors'])
-            mypandas = (pd.merge(mypandas, country_col, on='location'))
+            dico_colors = {i: next(colors) for i in uniqloc}
+            mypandas = mypandas.copy()
+            mypandas.loc[:,'colors'] = mypandas['clustername'].map(dico_colors)#(pd.merge(mypandas, country_col, on='location'))
 
             if 'location' in mypandas.columns:
                 tooltips = 'Location: @codelocation <br> Date: @date{%F} <br>  $name: @$name'
-                uniqcodeloc = mypandas.codelocation.unique()
-
                 new = pd.DataFrame(columns = mypandas.columns)
-                for i in uniqcodeloc:
-                    pos = mypandas.loc[mypandas.codelocation == i].index
+                #for i in uniqcodeloc:
+                #        pos = mypandas.loc[mypandas.codelocation == i].index
+                #
+                #           if type(i) == int or len(i) == 3:
+                #            new = new.append(mypandas.iloc[pos])
+                #        else:
+                #            coun = mypandas.loc[mypandas.codelocation == i]['location'].unique()
+                #            new = new.append(mypandas.loc[(mypandas.codelocation == i) & (mypandas.location == coun[0])])
 
-                    if type(i) == int or len(i) == 3:
-                        new = new.append(mypandas.iloc[pos])
-                    else:
-                        coun = mypandas.loc[mypandas.codelocation == i]['location'].unique()
-                        new = new.append(mypandas.loc[(mypandas.codelocation == i) & (mypandas.location == coun[0])])
-
-                mypandas = new
+                #mypandas = new
                 location_ordered_byvalues = list(
                     mypandas.loc[mypandas.date == dico['when_end']].sort_values(by=input_field, ascending=False)[
-                        'codelocation'].unique())
+                        'clustername'].unique())
                 mypandas = mypandas.loc[(mypandas['date'] >= dico['when_beg']) & (mypandas['date'] <= dico['when_end'])]
                 mypandas = mypandas.copy()  # needed to avoid warning
-                mypandas.codelocation = pd.Categorical(mypandas.codelocation,
-                                                       categories=location_ordered_byvalues, ordered=True)
-                mypandas = mypandas.sort_values(by=['codelocation', 'date'])
-                if len(location_ordered_byvalues) > 12:
-                    mypandas = mypandas.loc[mypandas.codelocation.isin(location_ordered_byvalues[:12])]
 
+                mypandas.clustername = pd.Categorical(mypandas.clustername,
+                                                       categories=location_ordered_byvalues, ordered=True)
+                mypandas = mypandas.sort_values(by=['clustername', 'date']).reset_index()
+
+                if len(location_ordered_byvalues) > 12:
+                    mypandas = mypandas.loc[mypandas.clustername.isin(location_ordered_byvalues[:12])]
                 list_max = []
                 for i in input_field:
-                    list_max.append(max(mypandas.loc[mypandas.codelocation.isin(location_ordered_byvalues)][i]))
+                    list_max.append(max(mypandas.loc[mypandas.clustername.isin(location_ordered_byvalues)][i]))
 
                 if len([x for x in list_max if not np.isnan(x)]) > 0:
                     amplitude = (np.nanmax(list_max) - np.nanmin(list_max))
                     if amplitude > 10 ** 4:
                         ax_type.reverse()
-
+            #mypandas = mypandas.loc[mypandas.date>mypandas.date.min()+dt.timedelta(days=1)] # skype first day
+            mypandas.loc[:,input_field] = mypandas.groupby(['clustername']).apply(lambda x: x.bfill()).apply(lambda x: x.ffill())
             hover_tool = HoverTool(tooltips=tooltips, formatters={'@date': 'datetime'})
             return func(self, mypandas, dico, input_field, hover_tool, ax_type, **kwargs)
 
@@ -728,17 +649,17 @@ class CocoDisplay:
             standardfig.yaxis[0].formatter = PrintfTickFormatter(format = "%4.2e")
             i = 0
             r_list=[]
+
             for val in input_field:
                 line_style = ['solid', 'dashed', 'dotted', 'dotdash']
-                for loc in mypandas.codelocation.unique():
-                    mypandas_filter = mypandas.loc[mypandas.codelocation == loc].reset_index(drop = True)
-                    leg = CocoDisplay.dict_shorten_loc(mypandas_filter.codelocation[0])
+                for loc in list(mypandas.clustername.unique()):
+                    mypandas_filter = mypandas.loc[mypandas.clustername == loc].reset_index(drop = True)
+                    leg = CocoDisplay.dict_shorten_loc(mypandas_filter.clustername[0])
                     if len(input_field)>1:
-                        leg = CocoDisplay.dict_shorten_loc(mypandas_filter.codelocation[0]) + ', ' + val
+                        leg = CocoDisplay.dict_shorten_loc(mypandas_filter.clustername[0]) + ', ' + val
                         color = self.scolors[i]
                     else:
-                        color = mypandas_filter.colors.iloc[i]
-
+                        color = mypandas_filter.colors[i]
                     r = standardfig.line(x = 'date', y = val, source = ColumnDataSource(mypandas_filter),
                                      color = color, line_width = 3,
                                      legend_label = leg,
@@ -843,6 +764,7 @@ class CocoDisplay:
         """
         def generic_hm(self, mypandas, input_field = None, cursor_date = False, maplabel = False, **kwargs):
             mypandas, dico = self.standard_input(mypandas, input_field, **kwargs, plot_last_date=True)
+
             if type(input_field) is None.__class__ and dico['which'] is None.__class__:
                 input_field = mypandas.columns[2]
             else:
@@ -851,23 +773,21 @@ class CocoDisplay:
                 else:
                     input_field = dico['input_field'][0]
 
-            my_location = mypandas.location.unique()
-            dshort_loc = CocoDisplay.dict_shorten_loc(mypandas.codelocation.unique())
-            if len(my_location) < 5:
+            uniqloc = mypandas.clustername.unique()
+            if len(uniqloc) < 5:
                 colors = self.scolors
             else:
                 colors = self.lcolors
 
             colors = itertools.cycle(colors)
-            dico_colors = {i: next(colors) for i in my_location}
-            country_col = pd.DataFrame(dico_colors.items(), columns = ['location', 'colors'])
-            mypandas = pd.merge(mypandas, country_col, on = 'location')
+            dico_colors = {i: next(colors) for i in uniqloc}
 
+            mypandas['colors'] = mypandas['clustername'].map(dico_colors)
             geopdwd = mypandas
+
             geopdwd = geopdwd.sort_values(by = input_field, ascending=False)
             geopdwd = geopdwd.dropna(subset = [input_field])
             geopdwd = geopdwd.reset_index(drop = True)
-
             orientation = kwargs.get('orientation', 'vertical')
 
             if dico['when_end'] <= geopdwd.date.min():
@@ -884,13 +804,14 @@ class CocoDisplay:
 
             # geopdwd_filter = geopdwd_filter.drop(columns=['date'])
             geopdwd_filter = geopdwd_filter.reset_index(drop = True)
-            uniqcodeloc = geopdwd_filter.codelocation.unique()
-
             if func.__name__ == 'pycoa_mapfolium' or func.__name__ == 'pycoa_map' or func.__name__ == 'innerdecopycoageo':
-                self.all_location_indb = self.location_geometry.location.unique()
-                if 'name_subregion' in geopdwd_filter.columns:
-                    geopdwd_filter = geopdwd_filter.drop(columns=['name_subregion'])
-                geopdwd_filter = pd.merge(geopdwd_filter, self.location_geometry, on='location')
+                if isinstance(mypandas.location.to_list()[0],list):
+                    geom = self.location_geometry
+                    geodic={loc:geom.loc[geom.location==loc]['geometry'].values[0] for loc in geopdwd_filter.location.unique()}
+                    geopdwd_filter['geometry'] = geopdwd_filter['location'].map(geodic)
+                else:
+                    geopdwd_filter = pd.merge(geopdwd_filter, self.location_geometry, on='location')
+                geopdwd_filter = gpd.GeoDataFrame(geopdwd_filter, geometry=geopdwd_filter.geometry, crs="EPSG:4326")
                 dico['tile'] = CocoDisplay.get_tile(dico['tile'], func.__name__)
 
             if func.__name__ == 'inner' or func.__name__ == 'pycoa_histo':
@@ -898,17 +819,19 @@ class CocoDisplay:
                 new = pd.DataFrame(columns=geopdwd_filter.columns)
                 n = 0
 
-                for i in uniqcodeloc:
-                    pos = (geopdwd_filter.loc[geopdwd_filter.codelocation == i].index[0])
+                for i in uniqloc:
+                    pos = (geopdwd_filter.loc[geopdwd_filter.clustername == i].index[0])
                     new = new.append(geopdwd_filter.iloc[pos])
                     if type(i) == str and len(i) != 3:
                         new.iloc[n, 0] = i
                     n += 1
                 geopdwd_filter = new.reset_index(drop=True)
+
                 my_date = geopdwd.date.unique()
                 dico_utc = {i: DateSlider(value = i ).value for i in my_date}
                 geopdwd['date_utc'] = [dico_utc[i] for i in geopdwd.date]
-
+                geopdwd_filter=geopdwd_filter.sort_values(by=[input_field], ascending=False)
+            geopdwd_filter = geopdwd_filter.reset_index(drop=True)
             if cursor_date is False:
                 date_slider = False
 
@@ -1078,7 +1001,7 @@ class CocoDisplay:
                 geopdwd_filter = geopdwd_filter.loc[geopdwd_filter.location.isin(locunique[:nmaxdisplayed])]
 
             if func.__name__ == 'pycoa_horizonhisto' :
-                geopdwd_filter['bottom'] = geopdwd_filter.index
+                #geopdwd_filter['bottom'] = geopdwd_filter.index
                 geopdwd_filter['left'] = geopdwd_filter['cases']
                 geopdwd_filter['right'] = geopdwd_filter['cases']
                 geopdwd_filter['left'] = geopdwd_filter['left'].apply(lambda x: 0 if x > 0 else x)
@@ -1098,11 +1021,9 @@ class CocoDisplay:
                 geopdwd = CocoDisplay.add_columns_for_pie_chart(geopdwd,input_field)
 
             source = ColumnDataSource(data = geopdwd)
-
             #mypandas_filter = geopdwd_filter.sort_values(by = input_field, ascending = False)
             mypandas_filter = geopdwd_filter
             srcfiltered = ColumnDataSource(data = mypandas_filter)
-
             max_value = mypandas_filter[input_field].max()
             min_value = mypandas_filter[input_field].min()
             min_value_gt0 = mypandas_filter[mypandas_filter[input_field] > 0][input_field].min()
@@ -1150,7 +1071,7 @@ class CocoDisplay:
                             var date_slide = date_slider.value;
                             var dates = source.data['date_utc'];
                             var val = source.data['cases'];
-                            var loc = source.data['location'];
+                            var loc = source.data['clustername'];
                             var subregion = source.data['name_subregion'];
                             var codeloc = source.data['codelocation'];
                             var colors = source.data['colors'];
@@ -1171,7 +1092,7 @@ class CocoDisplay:
                                     newname_subregion.push(subregion[i]);
                                 }
                             }
-                            var len = source_filter.data['location'].length;
+                            var len = source_filter.data['clustername'].length;
                             var indices = new Array(len);
                             for (var i = 0; i < len; i++) indices[i] = i;
                             indices.sort(function (a, b) { return newval[a] > newval[b] ? -1 : newval[a] < newval[b] ? 1 : 0; });
@@ -1244,9 +1165,9 @@ class CocoDisplay:
                                 }
                             }
 
-                            source_filter.data['location'] = orderloc;
+                            source_filter.data['clustername'] = orderloc;
                             source_filter.data['codelocation'] = ordercodeloc;
-                            source_filter.data['colors'] = ordercolors;
+                            //source_filter.data['colors'] = ordercolors;
 
                             if(typeof subregion !== 'undefined')
                                 source_filter.data['rolloverdisplay'] = ordername_subregion;
@@ -1321,8 +1242,8 @@ class CocoDisplay:
     @decohistopie
     def pycoa_horizonhisto(self, srcfiltered, panels, date_slider):
         n = len(panels)
-        loc = srcfiltered.data['codelocation']
-        label_dict = {len(loc) - k: v for k, v in enumerate(loc)}
+        loc = srcfiltered.data['clustername']
+        label_dict = {(len(loc) - k) : (v if len(v)<8 else  v.split('-')[0]+'...'+v.split('-')[-1]) for k, v in enumerate(loc) }
         new_panels = []
         for i in range(n):
             fig = panels[i].child
@@ -1358,7 +1279,7 @@ class CocoDisplay:
         w=standardfig.annular_wedge(x = 0., y = 0, inner_radius = 0,
                          outer_radius = 0.9,
                          start_angle = 'starts', end_angle = 'ends',
-                         line_color = 'white', color = 'colors', legend_label = 'codelocation', source = srcfiltered)
+                         line_color = 'white', color = 'colors', legend_label = 'clustername', source = srcfiltered)
         standardfig.legend.visible = False
         srcfiltered.data['textdisplayed'] = srcfiltered.data['codelocation'] + srcfiltered.data['textdisplayed']
         txt1 = Text(x = 'text_x', y = 'text_y', text = 'textdisplayed', angle = 'text_angle',
@@ -1394,7 +1315,7 @@ class CocoDisplay:
         Known issue: format for scale can not be changed. When data value are important
         overlaped display appear
         """
-        geopdwd_filtered = gpd.GeoDataFrame(geopdwd_filtered, geometry=geopdwd_filtered.geometry, crs="EPSG:4326")
+        #geopdwd_filtered = gpd.GeoDataFrame(geopdwd_filtered, geometry=geopdwd_filtered.geometry, crs="EPSG:4326")
 
         geopdwd['cases'] = geopdwd[input_field]
         geopdwd_filtered['cases'] = geopdwd_filtered[input_field]
@@ -1407,7 +1328,7 @@ class CocoDisplay:
         uniqloc = list(geopdwd_filtered.codelocation.unique())
         geopdwd_filtered = geopdwd_filtered.drop(columns=['date', 'colors'])
 
-        if self.dbld[self.database_name] in ['FRA','ESP','PRT'] and all([len(i) == 2 for i in geopdwd_filtered.location.unique()]):
+        if self.dbld[self.database_name] in ['FRA','ESP','PRT']:
             minx, miny, maxx, maxy = self.boundary_metropole
             zoom = 3
         else:
@@ -1459,11 +1380,11 @@ class CocoDisplay:
             else:
                 return color_scale(value)
 
-        if len(uniqloc) > 1:
-            displayed = 'rolloverdisplay'
-        else:
-            displayed = 'codelocation'
-
+        #if len(uniqloc) > 1:
+        #    displayed = 'rolloverdisplay'
+        #else:
+        #    displayed = 'codelocation'
+        displayed = 'rolloverdisplay'
         folium.GeoJson(
             geopdwd_filtered,
             style_function=lambda x:
@@ -1492,10 +1413,10 @@ class CocoDisplay:
             geopdwd['cases'] = geopdwd[input_field]
             geopdwd_filtered['cases'] = geopdwd_filtered[input_field]
             geopdwd_filtered = gpd.GeoDataFrame(geopdwd_filtered, geometry=geopdwd_filtered.geometry, crs="EPSG:4326")
-            geopdwd = geopdwd.sort_values(by=['codelocation', 'date'], ascending = [True, False])
+            geopdwd = geopdwd.sort_values(by=['clustername', 'date'], ascending = [True, False])
             geopdwd = geopdwd.drop(columns=['date'])
 
-            geopdwd_filtered = geopdwd_filtered.sort_values(by=['codelocation', 'date'], ascending = [True, False]).drop(columns=['date', 'colors'])
+            geopdwd_filtered = geopdwd_filtered.sort_values(by=['clustername', 'date'], ascending = [True, False]).drop(columns=['date', 'colors'])
             new_poly = []
             geolistmodified = dict()
             if date_slider:
@@ -1526,7 +1447,6 @@ class CocoDisplay:
                                                crs="epsg:3857")
             geopdwd_filtered = geopdwd_filtered.drop(columns='geometry')
             geopdwd_filtered = pd.merge(geolistmodified, geopdwd_filtered, on='location')
-
             return func(self,input_field, date_slider, maplabel, dico, geopdwd, geopdwd_filtered)
         return innerdecopycoageo
 
@@ -1555,36 +1475,39 @@ class CocoDisplay:
         Known issue: can not avoid to display value when there are Nan values
         """
         sourcemaplabel = ColumnDataSource(pd.DataFrame({'centroidx':[],'centroidy':[],'cases':[]}))
-        uniqloc = list(geopdwd_filtered.codelocation.unique())
+        uniqloc = list(geopdwd_filtered.clustername.unique())
+
         if maplabel:
             #dicocolors=geopdwd[['location','colors']].drop_duplicates().to_dict('records')
             geopdwd_filtered['centroidx'] = geopdwd_filtered['geometry'].apply('centroid').x
             geopdwd_filtered['centroidy'] = geopdwd_filtered['geometry'].apply('centroid').y
             if dico['locsumall']:
-                locsum = geopdwd_filtered.codelocation.unique()
+                locsum = geopdwd_filtered.clustername.unique()
                 for i in locsum:
-                    cases = geopdwd_filtered.loc[geopdwd_filtered.codelocation == i]['cases'].values[0]
-                    centrosx = geopdwd_filtered.loc[geopdwd_filtered.codelocation == i]['centroidx'].mean()
-                    centrosy = geopdwd_filtered.loc[geopdwd_filtered.codelocation == i]['centroidy'].mean()
-                    geopdwd_filtered.loc[geopdwd_filtered.codelocation == i,'centroidx'] = centrosx
-                    geopdwd_filtered.loc[geopdwd_filtered.codelocation == i,'centroidy'] = centrosy
+                    cases = geopdwd_filtered.loc[geopdwd_filtered.clustername == i]['cases'].values[0]
+                    centrosx = geopdwd_filtered.loc[geopdwd_filtered.clustername == i]['centroidx'].mean()
+                    centrosy = geopdwd_filtered.loc[geopdwd_filtered.clustername == i]['centroidy'].mean()
+                    geopdwd_filtered.loc[geopdwd_filtered.clustername == i,'centroidx'] = centrosx
+                    geopdwd_filtered.loc[geopdwd_filtered.clustername == i,'centroidy'] = centrosy
             dfLabel=pd.DataFrame(geopdwd_filtered[['location','centroidx','centroidy','cases']])
             dfLabel['cases'] = dfLabel['cases'].round(2)
             #dicocolors=pd.Series(geopdwd.colors.values,index=geopdwd.location.values).drop_duplicates().to_dict()
             #dfLabel['colors'] = dfLabel['location'].map(dicocolors)
             sourcemaplabel = ColumnDataSource(dfLabel)
-        if self.dbld[self.database_name] in ['FRA','ESP','PRT'] and all([len(i) == 2 or len(i) == 5 for i in geopdwd_filtered.location.unique()]):
+
+        if self.dbld[self.database_name][0] in ['FRA','ESP','PRT']:
             minx, miny, maxx, maxy = self.boundary_metropole
+            (minx, miny) = CocoDisplay.wgs84_to_web_mercator((minx, miny))
+            (maxx, maxy) = CocoDisplay.wgs84_to_web_mercator((maxx, maxy))
+
         else:
-            minx, miny, maxx, maxy = self.boundary
-        (minx, miny) = CocoDisplay.wgs84_to_web_mercator((minx, miny))
-        (maxx, maxy) = CocoDisplay.wgs84_to_web_mercator((maxx, maxy))
+            minx, miny, maxx, maxy =  geopdwd_filtered['geometry'].total_bounds #self.boundary
 
         wmt = WMTSTileSource(
             url=dico['tile']
         )
         copyrightposition = 'left'
-        if self.dbld[self.database_name] == 'ESP' :
+        if self.dbld[self.database_name][0] == 'ESP' :
             copyrightposition='right'
 
         standardfig = self.standardfig(x_range=(minx, maxx), y_range=(miny, maxy),
@@ -1599,7 +1522,9 @@ class CocoDisplay:
                              border_line_color=None, location=(0, 0), orientation='horizontal', ticker=BasicTicker())
         color_bar.formatter = BasicTickFormatter(use_scientific=True, precision=1, power_limit_low=int(max_col))
         standardfig.add_layout(color_bar, 'below')
+
         geopdwd_filtered = geopdwd_filtered[['cases','geometry','location','codelocation','rolloverdisplay']]
+
         if self.dbld[self.database_name] == 'BEL' :
             reorder = list(geopdwd_filtered.location.unique())
             reorder = [i for i in reorder[1:]]
@@ -1610,6 +1535,7 @@ class CocoDisplay:
 
         json_data = json.dumps(json.loads(geopdwd_filtered.to_json()))
         geopdwd_filtered = GeoJSONDataSource(geojson=json_data)
+
         if date_slider:
             allcases_location, allcases_dates = pd.DataFrame(), pd.DataFrame()
             allcases_location = geopdwd.groupby('location')['cases'].apply(list)
@@ -1680,13 +1606,12 @@ class CocoDisplay:
                 source = sourcemaplabel,text_font_size='10px',text_color='white',background_fill_color='grey',background_fill_alpha=0.05)
             standardfig.add_layout(labels)
 
-
         cases_custom = CocoDisplay.rollerJS()
-        if len(uniqloc) > 1:
-            loctips = ('location', '@rolloverdisplay')
-        else:
-            loctips = ('location', '@codelocation')
-
+        #if len(uniqloc) > 1:
+        #    loctips = ('location', '@location')
+        #else:
+            #loctips = ('location', '@codelocation')
+        loctips = ('location', '@rolloverdisplay')
         standardfig.add_tools(HoverTool(
             tooltips = [loctips, (input_field, '@{' + 'cases' + '}' + '{custom}'), ],
             formatters = {'location': 'printf', '@{' + 'cases' + '}': cases_custom, },
@@ -1738,7 +1663,7 @@ class CocoDisplay:
         def toto():
 
 
-            if self.dbld[self.database_name] in ['FRA','ESP','PRT'] and all([len(i) == 2 for i in geopdwd_filtered.location.unique()]):
+            if self.dbld[self.database_name] in ['FRA','ESP','PRT']:
                 minx, miny, maxx, maxy = self.boundary_metropole
             else:
                 minx, miny, maxx, maxy = self.boundary
@@ -1789,11 +1714,11 @@ class CocoDisplay:
                                 line_color = 'black', line_width = 0.25, fill_alpha = 1)
 
             cases_custom = CocoDisplay.rollerJS()
-            if len(uniqloc) > 1:
-                loctips = ('location', '@rolloverdisplay')
-            else:
-                loctips = ('location', '@codelocation')
-
+            #if len(uniqloc) > 1:
+            #    loctips = ('location', '@rolloverdisplay')
+            #else:
+            #    loctips = ('location', '@codelocation')
+            loctips = ('location', '@rolloverdisplay')
             standardfig.add_tools(HoverTool(
                 tooltips = [loctips, (input_field, '@{' + 'cases' + '}' + '{custom}'), ],
                 formatters = {'location': 'printf', '@{' + 'cases' + '}': cases_custom, },

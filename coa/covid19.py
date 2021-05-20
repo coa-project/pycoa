@@ -30,6 +30,7 @@ from coa.error import *
 from scipy import stats as sps
 import random
 from functools import reduce
+import collections
 
 class DataBase(object):
    """
@@ -43,13 +44,13 @@ class DataBase(object):
         """
         verb("Init of covid19.DataBase()")
         self.database_name = list(get_db_list_dict().keys())
+        self.database_type = get_db_list_dict()
         self.available_options = ['nonneg', 'nofillnan', 'smooth7', 'sumall']
         self.available_keys_words = []
         self.dates = []
         self.database_columns_not_computed = {}
         self.db = db_name
         self.geo_all = ''
-        self.set_display(self.db)
         self.database_url = []
         self.db_world=None
         self.geoinfo = report
@@ -57,17 +58,20 @@ class DataBase(object):
             raise CoaDbError('Unknown ' + self.db + '. Available database so far in PyCoa are : ' + str(self.database_name), file=sys.stderr)
         else:
             try:
-
-                if get_db_list_dict()[self.db] == 'WW': # world wide db
+                if get_db_list_dict()[self.db][1] == 'nation': # world wide db
                     self.db_world = True
                     self.geo = coge.GeoManager('name')
                     self.geo_all = 'world'
                 else: # local db
                     self.db_world = False
-                    self.geo = coge.GeoCountry(get_db_list_dict()[self.db])
-                    self.geo_all = self.geo.get_subregion_list()['code_subregion'].to_list()
-                    if self.db == 'sciensano' or self.db == 'dpc':
-                        self.geo_all = self.geo.get_region_list()['code_region'].to_list()
+                    self.geo = coge.GeoCountry(get_db_list_dict()[self.db][0])
+                    if get_db_list_dict()[self.db][1] == 'region':
+                        self.geo_all = self.geo.get_region_list()
+                    elif get_db_list_dict()[self.db][1] == 'subregion':
+                        self.geo_all = self.geo.get_subregion_list()
+                    else:
+                        CoaError('Granularity problem, neither region or subregion')
+                self.set_display(self.db,self.geo)
 
                 # specific reading of data according to the db
                 if self.db == 'jhu':
@@ -94,13 +98,6 @@ class DataBase(object):
                     prt_data=self.csv2pandas(url,separator=',',rename_columns = rename_dict)
                     columns_keeped = ['tot_cases']
                     self.return_structured_pandas(prt_data, columns_keeped=columns_keeped)
-                elif self.db == 'obepine' : # FRA
-                    info('FRA, réseau Obepine, surveillance Sars-Cov-2 dans les eaux usées')
-                    url='https://www.data.gouv.fr/es/datasets/r/ba71be57-5932-4298-81ea-aff3a12a440c'
-                    rename_dict={'Code_Region':'location','Date':'date','Indicateur':'idx_obepine'}
-                    obepine_data=self.csv2pandas(url,separator=';',rename_columns=rename_dict)
-                    obepine_data['location']=obepine_data.location.astype(str)
-                    self.return_structured_pandas(obepine_data,columns_keeped=['idx_obepine'])
                 elif self.db == 'escovid19data': # ESP
                     info('ESP, EsCovid19Data ...')
                     rename_dict = {'ine_code': 'location',\
@@ -464,9 +461,9 @@ class DataBase(object):
        datab = DataBase(db_name)
        return  datab, datab.get_display()
 
-   def set_display(self,db):
+   def set_display(self,db,geo):
        ''' Set the CocoDisplay '''
-       self.codisp = codisplay.CocoDisplay(db)
+       self.codisp = codisplay.CocoDisplay(db, geo)
 
    def get_display(self):
        ''' Return the instance of CocoDisplay initialized by factory'''
@@ -570,6 +567,7 @@ class DataBase(object):
                 pandas_jhu_db = pandas_jhu_db.rename(columns={'Country/Region':'location'})
                 pandas_jhu_db = pandas_jhu_db.drop(columns=['Province/State','Lat','Long'])
                 pandas_jhu_db = pandas_jhu_db.melt(id_vars=["location"],var_name="date",value_name=ext)
+                pandas_jhu_db = pandas_jhu_db.loc[~pandas_jhu_db.location.isin(['Diamond Princess'])]
             elif self.db == 'jhu-usa':
                 pandas_jhu_db = pandas_jhu_db.rename(columns={'Province_State':'location'})
                 pandas_jhu_db = pandas_jhu_db.drop(columns=['UID','iso2','iso3','code3','FIPS',
@@ -578,6 +576,9 @@ class DataBase(object):
                     pandas_jhu_db = pandas_jhu_db.melt(id_vars=["location",'Population'],var_name="date",value_name=ext)
                 else:
                     pandas_jhu_db = pandas_jhu_db.melt(id_vars=["location"],var_name="date",value_name=ext)
+                removethose=['American Samoa','Diamond Princess','Grand Princess','Guam',
+                'Northern Mariana Islands','Puerto Rico','Virgin Islands']
+                pandas_jhu_db = pandas_jhu_db.loc[~pandas_jhu_db.location.isin(removethose)]
             elif self.db == 'rki':
                 pandas_jhu_db = pandas_jhu_db.drop(columns=['sum_'+ext])
                 pandas_jhu_db = pandas_jhu_db.set_index('time_iso8601').T.reset_index().rename(columns={'index':'location'})
@@ -590,58 +591,89 @@ class DataBase(object):
             pandas_jhu_db=pandas_jhu_db.groupby(['location','date']).sum().reset_index()
             pandas_list.append(pandas_jhu_db)
 
-        uniqloc = pandas_list[0]['location'].unique()
+        uniqloc = list(pandas_list[0]['location'].unique())
         oldloc = uniqloc
         codedico={}
         toremove = None
         newloc = None
+        location_is_code = False
         if self.db_world:
-            d_loc_s = self.geo.to_standard(list(uniqloc),output='list',db=self.get_db(),interpret_region=True)
-            self.slocation = d_loc_s
-            newloc = d_loc_s
-            toremove = ['']
+            d_loc_s = collections.OrderedDict(zip(uniqloc,self.geo.to_standard(uniqloc,output='list',db=self.get_db(),interpret_region=True)))
+            self.slocation = list(d_loc_s.values())
             g=coge.GeoManager('iso3')
-            codedico={i:str(g.to_standard(i,db=self.get_db(),interpret_region=True)[0]) for i in newloc}
+            codename = collections.OrderedDict(zip(self.slocation,g.to_standard(self.slocation,output='list',db=self.get_db(),interpret_region=True)))
         else:
-            loc_sub_name  = list(self.geo.get_subregion_list()['name_subregion'])
-            loc_sub_code = list(self.geo.get_subregion_list()['code_subregion'])
-            #loc_code = list(self.geo.get_data().loc[self.geo.get_data().name_subregion.isin(loc_sub)]['code_subregion'])
-            self.slocation = loc_sub_code
-            if self.db == 'jhu-usa':
-                oldloc = loc_sub_name
-                newloc = loc_sub_code
-                toremove = [x for x in uniqloc if x not in loc_sub_name]
-                codedico={i:j for i,j in zip(uniqloc,newloc)}
+            if self.database_type[self.db][1] == 'subregion':
+                pdcodename = self.geo.get_subregion_list()
+                self.slocation = uniqloc
+                codename = collections.OrderedDict(zip(self.slocation,list(pdcodename.loc[pdcodename.code_subregion.isin(self.slocation)]['name_subregion'])))
+                if self.db == 'jhu-usa':
+                    d_loc_s = collections.OrderedDict(zip(uniqloc,list(pdcodename.loc[pdcodename.name_subregion.isin(uniqloc)]['code_subregion'])))
+                    self.slocation = list(d_loc_s.keys())
+                    codename = d_loc_s
+                if self.db == 'rki':
+                    d_loc_s = collections.OrderedDict(zip(uniqloc,list(pdcodename.loc[pdcodename.code_subregion.isin(uniqloc)]['name_subregion'])))
+                    self.slocation = list(d_loc_s.values())
+                    codename = d_loc_s
+                    location_is_code = True
+                    count_values=collections.Counter(d_loc_s.values())
+                    duplicates_location = list({k:v for k,v in count_values.items() if v>1}.keys())
+                    def findkeywithvalue(dico,what):
+                        a=[]
+                        for k,v in dico.items():
+                            if v == what:
+                                a.append(k)
+                        return a
+                    codetosum=[findkeywithvalue(d_loc_s,i) for i in duplicates_location]
+                    #codename = collections.OrderedDict(zip(self.slocation,list(pdcodename.loc[pdcodename.code_subregion.isin(self.slocation)]['name_subregion'])))
+                    #oldloc = loc_sub_name
+                    #newloc = loc_sub_code
+                    #toremove = [x for x in uniqloc if x not in loc_sub_name]
+                    #codedico={i:j for i,j in zip(uniqloc,newloc)}
+                    #location_is_code = False
+
         result = reduce(lambda x, y: pd.merge(x, y, on = ['location','date']), pandas_list)
-        if toremove is not None:
-            result = result.loc[~result.location.isin(toremove)]
+        if  self.db == 'rki':
+            #1001 & 1002 return Flensburg
+            #loc = duplicates_location.keys()
+            for subcode in codetosum:
+                tmp=(result.loc[result.location.isin(subcode)]).groupby('date').sum().reset_index()
+                tmp['location'] = d_loc_s[subcode]*len(tmp)
+                tmp['codelocation'] = subcode*len(tmp)
+                kw = [i for i in self.available_keys_words]
+                colpos=['location', 'date'] + kw + ['codelocation']
+                tmp = tmp[colpos]
+                result = result.loc[~result.location.isin(subcode)]
+                result = result.append(tmp)
+
+
+        if location_is_code:
+            result['codelocation'] = result['location']
+            result['location'] = result['location'].map(codename)
+        else:
+            if self.db == 'jhu':
+                result['location'] = result['location'].map(d_loc_s)
+            result['codelocation'] = result['location'].map(codename)
+        result = result.loc[result.location.isin(self.slocation)]
+
 
         tmp = pd.DataFrame()
-        if 'Kosovo' in oldloc:
-            tmp=(result.loc[result.location.isin(['Kosovo','Serbia'])].groupby('date').sum())
-            tmp['location']='Serbia'
-            result = result.loc[~result.location.isin(['Kosovo','Serbia'])]
-            tmp = tmp.reset_index()
-            cols = tmp.columns.tolist()
-            cols = cols[0:1] + cols[-1:] + cols[1:-1]
-            tmp = tmp[cols]
+        if 'Kosovo' in uniqloc:
+            #Kosovo is Serbia ! with geo.to_standard
+            tmp=(result.loc[result.location.isin(['Serbia'])]).groupby('date').sum().reset_index()
+            tmp['location'] = 'Serbia'
+            tmp['codelocation'] = 'SRB'
+            kw = [i for i in self.available_keys_words]
+            colpos=['location', 'date'] + kw + ['codelocation']
+            tmp = tmp[colpos]
+            result = result.loc[~result.location.isin(['Serbia'])]
             result = result.append(tmp)
 
-        if newloc is not None:
-            result = result.replace(oldloc,newloc)
-
-        #if self.db == 'jhu-usa':
-        #    result['codelocation'] = result['location'].map(codedico)
-        #else:
-        result['codelocation'] = result['location']
         result['date'] = pd.to_datetime(result['date'],errors='coerce').dt.date
+        result = result.sort_values(by=['location','date'])
+        result = result.reset_index(drop=True)
 
-        result=result.sort_values(['location','date'])
-        #self.mainpandas = result
-        if self.db != 'rki':
-            self.mainpandas = fill_missing_dates(result)
-        else:
-            self.mainpandas = result
+        self.mainpandas = fill_missing_dates(result)
         self.dates  = self.mainpandas['date']
 
    def csv2pandas(self,url,**kwargs):
@@ -709,6 +741,24 @@ class DataBase(object):
 
         mypandas = mypandas[absolutlyneeded + columns_keeped]
 
+        self.available_keys_words = columns_keeped #+ absolutlyneeded
+        not_un_nation_dict={'Kosovo':'Serbia','Northern Cyprus':'Cyprus'}
+        for subpart_country, main_country in not_un_nation_dict.items() :
+            tmp=(mypandas.loc[mypandas.location.isin([subpart_country,main_country])].groupby('date').sum())
+            tmp['location']=main_country
+            mypandas = mypandas.loc[~mypandas.location.isin([subpart_country,main_country])]
+            tmp = tmp.reset_index()
+            cols = tmp.columns.tolist()
+            cols = cols[0:1] + cols[-1:] + cols[1:-1]
+            tmp = tmp[cols]
+            mypandas = mypandas.append(tmp)
+        if 'iso_code' in mypandas.columns:
+            mypandas['iso_code'] = mypandas['iso_code'].dropna().astype(str)
+            strangeiso3tokick=[i for i in mypandas['iso_code'].dropna().unique() if not len(i)==3 ]
+            mypandas = mypandas.loc[~mypandas.iso_code.isin(strangeiso3tokick)]
+            self.available_keys_words.remove('iso_code')
+            mypandas = mypandas.drop(columns=['location'])
+            mypandas = mypandas.rename(columns={'iso_code':'location'})
         if self.db == 'dpc':
             A=['P.A. Bolzano','P.A. Trento']
             tmp=mypandas.loc[mypandas.location.isin(A)].groupby('date').sum()
@@ -717,71 +767,71 @@ class DataBase(object):
             tmp = tmp.reset_index()
             mypandas = mypandas.append(tmp)
         if self.db == 'dgs':
+            gd = self.geo.get_data()[['name_subregion','name_region']]
             mypandas = mypandas.reset_index(drop=True)
             mypandas['location'] = mypandas['location'].apply(lambda x: x.title().replace('Do', 'do').replace('Da','da').replace('De','de'))
-            uniqloc = list(mypandas.location.unique())
-            #dist = self.geo.get_district(uniqloc)
-            loclow={x:self.geo.get_district(x)[0] for x in uniqloc if len(self.geo.get_district(x))==1}
-            mypandas['distric'] = mypandas['location'].map(loclow)    
-            tmp = mypandas.groupby(['distric','date']).sum().reset_index().rename(columns={'distric':'location'})
-            mypandas = tmp
-        if self.db == 'obepine': # filling subregions.
-            preg=self.geo.get_data(True)[['code_subregion','code_region']]
-            mypandas=mypandas.merge(preg,how='left',left_on='location',right_on='code_region')
-            mypandas = mypandas.explode('code_subregion')
-            mypandas['location'] = mypandas['code_subregion']
+            uniqloc = list(mypandas['location'].unique())
+            sub2reg = collections.OrderedDict(zip(uniqloc,list(gd.loc[gd.name_subregion.isin(uniqloc)]['name_region'])))
+            mypandas['location'] = mypandas['location'].map(sub2reg)
+            mypandas = mypandas.loc[~mypandas.location.isnull()]
 
-        self.available_keys_words = columns_keeped #+ absolutlyneeded
-
-        if 'iso_code' in self.available_keys_words:
-            strangeiso3tokick=[i for i in mypandas['iso_code'].unique() if not len(i)==3]
-            mypandas = mypandas.loc[~mypandas.iso_code.isin(strangeiso3tokick)]
-            self.available_keys_words.remove('iso_code')
-
+        codename = None
+        location_is_code = False
         uniqloc = list(mypandas['location'].unique())
-        oldloc = uniqloc
-        codedico={}
         if self.db_world:
-            d_loc_s=self.geo.to_standard(uniqloc,output='list',db=self.get_db(),interpret_region=True)
-            self.slocation=d_loc_s
-            newloc = d_loc_s
-            toremove=['']
-            g=coge.GeoManager('iso3')
-            codedico={i:str(g.to_standard(i,db=self.get_db(),interpret_region=True)[0]) for i in newloc}
+            codename = collections.OrderedDict(zip(uniqloc,self.geo.to_standard(uniqloc,output='list',db=self.get_db(),interpret_region=True)))
+            self.slocation = list(codename.values())
+            location_is_code = True
         else:
-            loc_sub_name  = list(self.geo.get_subregion_list()['name_subregion'])
-            loc_sub_code = list(self.geo.get_subregion_list()['code_subregion'])
-            if self.db == 'sciensano' or self.db == 'dpc':
-                loc_sub_name  = list(self.geo.get_region_list()['name_region'])
-                loc_sub_code = list(self.geo.get_region_list()['code_region'])
-            self.slocation = loc_sub_code
-            oldloc = loc_sub_name
-            newloc = loc_sub_code
-            toremove = [x for x in uniqloc if x not in loc_sub_name]
-            codedico={i:j for i,j in zip(loc_sub_code,newloc)}
+            if self.database_type[self.db][1] == 'region':
+                if self.db == 'covid19india':
+                    mypandas = mypandas.loc[~mypandas.location.isnull()]
+                    uniqloc = list(mypandas['location'].unique())
+                temp = self.geo.get_region_list()[['code_region','name_region']]
+                codename = collections.OrderedDict(zip(uniqloc,list(temp.loc[temp.name_region.isin(uniqloc)]['code_region'])))
+                self.slocation = uniqloc
 
-        tmp = pd.DataFrame()
+            elif self.database_type[self.db][1] == 'subregion':
+                temp = self.geo_all[['code_subregion','name_subregion']]
+                codename = collections.OrderedDict(zip(uniqloc,list(temp.loc[temp.name_subregion.isin(uniqloc)]['code_subregion'])))
+                self.slocation = uniqloc
+                if self.db in ['phe','covidtracking','spf','escovid19data']:
+                    codename = collections.OrderedDict(zip(uniqloc,list(temp.loc[temp.code_subregion.isin(uniqloc)]['name_subregion'])))
+                    self.slocation = list(codename.values())
+                    location_is_code = True
+            else:
+                CoaDbError('Granularity problem , neither region nor sub_region ...')
+            #self.slocation = loc_sub_code
+            #oldloc = loc_sub_name
+            #newloc = loc_sub_code
+            #toremove = [x for x in uniqloc if x not in loc_sub_name]
+            #codedico={i:j for i,j in zip(loc_sub_code,newloc)}
+        #tmp = pd.DataFrame()
 
-        not_un_nation_dict={'Kosovo':'Serbia','Northern Cyprus':'Cyprus'}
+        if self.db == 'dgs':
+            mypandas = mypandas.reset_index(drop=True)
+            #mypandas['location'] = mypandas['location'].apply(lambda x: x.title().replace('Do', 'do').replace('Da','da').replace('De','de'))
+            #uniqloc = list(mypandas.location.unique())
+            #a=self.geo.get_data()
+            #subreg=a.loc[a.name_subregion.isin(uniqloc)][['name_subregion','name_region']].rename(columns={'name_subregion':'location'})
+            #mypandas['region'] = mypandas['location'].map(dict(zip(subreg.location, subreg.name_region)))
+            #mypandas = mypandas.drop(columns=['location'])
+            #mypandas = mypandas.rename(columns={'region':'location'})
+        #if len(oldloc) != len(newloc):
+        #    raise CoaKeyError('Seems to be an iso3 problem behaviour ...')
+        #mypandas = mypandas.replace(oldloc,newloc)
 
-        for subpart_country, main_country in not_un_nation_dict.items() :
-            if subpart_country in oldloc:
-                tmp=(mypandas.loc[mypandas.location.isin([subpart_country,main_country])].groupby('date').sum())
-                tmp['location']=main_country
-                mypandas = mypandas.loc[~mypandas.location.isin([subpart_country,main_country])]
-                tmp = tmp.reset_index()
-                cols = tmp.columns.tolist()
-                cols = cols[0:1] + cols[-1:] + cols[1:-1]
-                tmp = tmp[cols]
-                mypandas = mypandas.append(tmp)
-
-        if len(oldloc) != len(newloc):
-            raise CoaKeyError('Seems to be an iso3 problem behaviour ...')
-        mypandas = mypandas.replace(oldloc,newloc)
         mypandas = mypandas.groupby(['location','date']).sum(min_count=1).reset_index() # summing in case of multiple dates (e.g. in opencovid19 data). But keep nan if any
+        mypandas = fill_missing_dates(mypandas)
 
-        mypandas['codelocation'] = mypandas['location'].map(codedico)
-        self.mainpandas = fill_missing_dates(mypandas)
+        if location_is_code:
+            if self.db != 'dgs':
+                mypandas['codelocation'] =  mypandas['location'].astype(str)
+            mypandas['location'] = mypandas['location'].map(codename)
+            mypandas = mypandas.loc[~mypandas.location.isnull()]
+        else:
+            mypandas['codelocation'] =  mypandas['location'].map(codename).astype(str)
+        self.mainpandas  = mypandas
         self.dates  = self.mainpandas['date']
 
    def get_mainpandas(self,**kwargs):
@@ -822,8 +872,8 @@ class DataBase(object):
                 clist=self.geo.to_standard(clist,output='list', interpret_region=True)
             else:
                 clist=clist+self.geo.get_subregions_from_list_of_region_names(clist)
-                if clist == ['FRA'] or clist == ['USA'] or clist == ['ITA']:
-                    clist=self.geo_all
+                if clist == ['FRA'] or clist == ['USA'] or clist == ['ITA'] :
+                    clist=self.geo_all['code_subregion'].to_list()
             clist=list(set(clist)) # to suppress duplicate countries
             diff_locations = list(set(clist) - set(self.get_locations()))
             clist = [i for i in clist if i not in diff_locations]
@@ -844,7 +894,6 @@ class DataBase(object):
             l.insert(0, 'location')
             filtered_pandas = filtered_pandas[l]
             return filtered_pandas
-
        self.mainpandas = self.mainpandas.reset_index(drop=True)
        return self.mainpandas
 
@@ -852,8 +901,11 @@ class DataBase(object):
         ''' Flatten list function used in covid19 methods'''
         flatten_matrix = []
         for sublist in matrix:
-            for val in sublist:
-                flatten_matrix.append(val)
+            if isinstance(sublist,list):
+                for val in sublist:
+                    flatten_matrix.append(val)
+            else:
+                flatten_matrix.append(sublist)
         return flatten_matrix
 
    def get_dates(self):
@@ -899,83 +951,91 @@ class DataBase(object):
         kwargs_test(kwargs,['location','which','option'],
             'Bad args used in the get_stats() function.')
 
-        if not 'location' in kwargs or kwargs['location'] is None.__class__ or kwargs['location']==None:
-            kwargs['location']=self.geo_all
+        if not 'location' in kwargs or kwargs['location'] is None.__class__ or kwargs['location'] == None:
+            if get_db_list_dict()[self.db][0] == 'WW':
+                kwargs['location'] = 'world'
+            else:
+                kwargs['location'] = self.slocation #self.geo_all['code_subregion'].to_list()
         else:
-            kwargs['location']=kwargs['location']
+            kwargs['location'] = kwargs['location']
 
-        doublelist = None
-        devorigclist = None
-        origclistlist = None
-        if not isinstance(kwargs['location'], list):
-            clist = ([kwargs['location']]).copy()
-            origclist = clist
-        else:
-            clist = (kwargs['location']).copy()
-            origclist = clist
-            if any(isinstance(c, list) for c in clist):
-                origclistlist = clist
-                clist = [ c[0] if isinstance(c, list) else c for c in clist]
-        if not all(isinstance(c, str) for c in clist):
-            raise CoaWhereError("Location via the where keyword should be given as strings. ")
 
         if kwargs['which'] not in self.get_available_keys_words() :
             raise CoaKeyError(kwargs['which']+' is not a available for ' + self.db + ' database name. '
             'See get_available_keys_words() for the full list.')
 
-        if self.db_world:
-            self.geo.set_standard('name')
-            clist=self.geo.to_standard(clist,output='list',interpret_region=True)
-            if origclistlist != None:
-                fulllist = [ i if isinstance(i, list) else [i] for i in origclist ]
-                devorigclist = [ self.geo.to_standard(i,output='list',interpret_region=True) for i in fulllist ]
+        devorigclist = None
+        origclistlist = None
+        origlistlistloc = None
+        if not isinstance(kwargs['location'], list):
+            listloc = ([kwargs['location']]).copy()
+            if not all(isinstance(c, str) for c in listloc):
+                raise CoaWhereError("Location via the where keyword should be given as strings. ")
+            origclist = listloc
         else:
-            clist=clist+self.geo.get_subregions_from_list_of_region_names(clist)
-            if origclistlist != None:
-                if not all(isinstance(c, list) for c in origclistlist):
+            listloc = (kwargs['location']).copy()
+            origclist = listloc
+            if any(isinstance(c, list) for c in listloc):
+                if all(isinstance(c, list) for c in listloc):
+                    origlistlistloc = listloc
+                else:
                     raise CoaWhereError("In the case of national DB, all locations must have the same types i.e\
                     list or string but both is not accepted, could be confusing")
 
-                devorigclist = [ self.geo.get_subregions_from_list_of_region_names(i) if not len(i[0])<3 and len(i[0])>=2 else i for i in origclistlist ]
-                if origclistlist == [['Métropole']]:
-                    all_region= self.geo.get_region_list()
-                    all_codes=all_region.code_region.astype(int)
+        if self.db_world:
+            self.geo.set_standard('name')
+            if origlistlistloc != None:
+                fulllist = [ i if isinstance(i, list) else [i] for i in origclist ]
+                location_exploded = [ self.geo.to_standard(i,output='list',interpret_region=True) for i in fulllist ]
+            else:
+                location_exploded = self.geo.to_standard(listloc,output='list',interpret_region=True)
+        else:
+            if origlistlistloc != None:
+                location_exploded = [ self.geo.get_subregions_from_list_of_region_names(i,output='name') \
+                            if len(self.geo.get_subregions_from_list_of_region_names(i,output='name'))>0 else i \
+                            for i in origlistlistloc ]
+                if origlistlistloc == [['Métropole']]:
+                    all_region = self.geo.get_region_list()
+                    all_codes = all_region.code_region.astype(int)
+
                     origclistlist = [[i] for i in all_region[(all_codes>10) & (all_codes<100)].name_region.to_list()]
-                    devorigclist=[ self.geo.get_subregions_from_list_of_region_names(i) for i in origclistlist ]
-                if origclistlist == [['FRA']]:
-                    print(origclistlist)
-                #devorigclist = [ self.geo.get_subregions_from_list_of_region_names(i) if isinstance(i, list) else i for i in origclist ]
-            if clist == ['FRA'] or clist == ['USA']:
-                clist=self.geo_all
+                    dicolocation_exploded = { i[0]:self.geo.get_subregions_from_list_of_region_names(i,output='name') for i in origclistlist }
+                    location_exploded = list(dicolocation_exploded.values())
+                    name_regions = list(dicolocation_exploded.keys())
+            else:
+                location_exploded = [ self.geo.get_subregions_from_list_of_region_names([i],output='name')\
+                            if len(self.geo.get_subregions_from_list_of_region_names([i],output='name'))>0 else i \
+                            for i in listloc]
+                location_exploded = self.flat_list(location_exploded)
 
-        clist=list(set(clist)) # to suppress duplicate countries
-        diff_locations = list(set(clist) - set(self.get_locations()))
-        clist = [i for i in clist if i not in diff_locations]
-        if len(clist) == 0:
-            raise CoaWhereError('No correct subregion found according to the where option given.')
+        def sticky(lname):
+            if len(lname)>0:
+                tmp=''
+                for i in lname:
+                    tmp+=i+'-'
+                lname=tmp[:-1]
+            return [lname]
 
-        pdfiltered = self.get_mainpandas().loc[self.get_mainpandas().location.isin(clist)]
-        #if 'Serbia' in clist:
-        #    ptot=self.get_mainpandas().loc[self.get_mainpandas().location=='Serbia'].\
-        #        groupby(['date','location'])[self.get_available_keys_words()].sum().reset_index()
-        #    for col in ptot.columns:
-        #        if col.startswith('cur_idx_'):
-        #            ptot[col]=ptot[col]/2
-        #    clist.remove('Serbia')
-        #    pdfiltered = self.get_mainpandas().loc[self.get_mainpandas().location.isin(clist)].reset_index()
-        #    pdfiltered = pd.concat([pdfiltered,ptot])
-        pdfiltered = pdfiltered[['location','date','codelocation',kwargs['which']]]
+        pdcluster = pd.DataFrame()
+        j=0
+        if origlistlistloc != None:
+            for i in location_exploded:
+                tmp = self.get_mainpandas().loc[self.get_mainpandas().location.isin(i)]
+                if origlistlistloc == [['Métropole']]:
+                    tmp['clustername'] = [name_regions[j]]*len(tmp)
+                else:
+                    tmp['clustername'] = sticky(origlistlistloc[j])*len(tmp)
 
-        # insert dates at the end for each country if necessary
-        maxdate=pdfiltered['date'].max()
-        for loca in pdfiltered.location.unique(): # not clist because it may happen that some location does not exist in actual pandas
-            lmaxdate=pdfiltered.loc[ pdfiltered.location == loca ]['date'].max()
-            if lmaxdate != maxdate:
-                pdfiltered = pdfiltered.append(pd.DataFrame({'location':loca,
-                    'date':pd.date_range(start=lmaxdate,end=maxdate,closed='right').date,
-                    kwargs['which']:np.nan}) )
-        pdfiltered.reset_index(level=0,drop=True,inplace=True)
-
+                if pdcluster.empty:
+                    pdcluster = tmp
+                else:
+                    pdcluster = pdcluster.append(tmp)
+                j+=1
+            pdfiltered = pdcluster[['location','date','codelocation',kwargs['which'],'clustername']]
+        else:
+            pdfiltered = self.get_mainpandas().loc[self.get_mainpandas().location.isin(location_exploded)]
+            pdfiltered = pdfiltered[['location','date','codelocation',kwargs['which']]]
+            pdfiltered['clustername'] = pdfiltered['location'].copy()
         # deal with options now
         option = kwargs.get('option', '')
         fillnan = True # default
@@ -986,9 +1046,9 @@ class DataBase(object):
             if o == 'nonneg':
                 if kwargs['which'].startswith('cur_'):
                     raise CoaKeyError('The option nonneg cannot be used with instantaneous data, such as cur_ which variables.')
-                for loca in clist:
+                for loca in location_exploded:
                     # modify values in order that diff values is never negative
-                    pdloc=pdfiltered.loc[ pdfiltered.location == loca ][kwargs['which']]
+                    pdloc=pdfiltered.loc[ pdfiltered.clustername == loca ][kwargs['which']]
                     y0=pdloc.values[0] # integrated offset at t=0
                     if np.isnan(y0):
                         y0=0
@@ -1017,11 +1077,11 @@ class DataBase(object):
             elif o == 'nofillnan':
                 fillnan=False
             elif o == 'smooth7':
-                pdfiltered[kwargs['which']] = pdfiltered.groupby(['location'])[kwargs['which']].fillna(method='ffill')
-                pdfiltered = pdfiltered.fillna(0)
-                pdfiltered[kwargs['which']] = pdfiltered.groupby(['location'])[kwargs['which']].rolling(7,min_periods=7,center=True).mean().reset_index(level=0,drop=True)
+                #pdfiltered[kwargs['which']] = pdfiltered.groupby(['clustername'])[kwargs['which']].fillna(method='ffill')
+                #pdfiltered = pdfiltered.fillna(0)
+                pdfiltered[kwargs['which']] = pdfiltered.groupby(['clustername'])[kwargs['which']].rolling(7,min_periods=7,center=True).mean().reset_index(level=0,drop=True)
                 #pdfiltered[kwargs['which']] = pdfiltered[kwargs['which']].fillna(0) # causes bug with fillnan procedure below
-                pdfiltered = pdfiltered.groupby('location').apply(lambda x : x[3:-3]).reset_index(drop=True) # remove out of bound dates.
+                pdfiltered = pdfiltered.groupby('clustername').apply(lambda x : x[3:-3]).reset_index(drop=True) # remove out of bound dates.
                 fillnan = False
             elif o == 'sumall':
                 sumall = True
@@ -1029,66 +1089,66 @@ class DataBase(object):
                     print('Warning this data is from rolling value, ended date may be not correct ...')
             elif o != None and o != '':
                 raise CoaKeyError('The option '+o+' is not recognized in get_stats. See get_available_options() for list.')
-
+        pdfiltered = pdfiltered.reset_index(drop=True)
         if fillnan: # which is the default. Use nofillnan option instead.
             # fill with previous value
-            #pdfiltered[kwargs['which']] = pdfiltered.groupby(['location'])[kwargs['which']].fillna(method='ffill')
-            pdfiltered[kwargs['which']] = pdfiltered.groupby(['location'])[kwargs['which']].fillna(method='bfill')
+            pdfiltered = pdfiltered.copy()
+            #if self.db_world:
+            #pdfiltered[kwargs['which']] = pdfiltered.groupby(['clustername'])[kwargs['which']].fillna(method='bfill')
+            pdfiltered.loc[:,kwargs['which']] = pdfiltered.groupby(['clustername'])[kwargs['which']].\
+            apply(lambda x: x.bfill())
             # fill remaining nan with zeros
             pdfiltered = pdfiltered.fillna(0)
 
         # if sumall set, return only integrate val
         tmppandas=pd.DataFrame()
         if sumall:
-            if devorigclist != None:
-               k=0
-               for i in devorigclist:
-                   if isinstance(i, list):
-                       tmp = pdfiltered.loc[pdfiltered.location.isin(i)]
-                       tmp = tmp.drop(columns=['location','codelocation'])
-                       tmp = tmp.groupby('date').sum().reset_index()
-                       tmp['location'] = [i]*len(tmp)
-                       tmp['codelocation'] = [str(origclistlist[k])]*len(tmp)
-                   else:
-                        tmp = pdfiltered.loc[pdfiltered.location==i]
+            if origlistlistloc != None:
+               uniqcluster = pdfiltered.clustername.unique()
+               tmp = pdfiltered.loc[pdfiltered.clustername.isin(uniqcluster)].\
+                        groupby(['clustername','date']).sum().reset_index()
 
-                   ntot = len(i)
-                   for col in pdfiltered.columns:
-                       if col.startswith('cur_idx_'):
-                           tmp[col] /= ntot
+               #dicocode = {i:list(pdfiltered.loc[pdfiltered.clustername.isin(i)]['codelocation']) for i in uniqcluster}
+               codescluster={i:list(pdfiltered.loc[pdfiltered.clustername==i]['codelocation'].unique()) for i in uniqcluster}
+               namescluster={i:list(pdfiltered.loc[pdfiltered.clustername==i]['location'].unique()) for i in uniqcluster}
+               tmp['codelocation'] = tmp['clustername'].map(codescluster)
+               tmp['location'] = tmp['clustername'].map(namescluster)
 
-                   if tmppandas.empty:
-                        tmppandas = tmp
-                   else:
-                       tmppandas = tmppandas.append(tmp)
-                   k+=1
-               pdfiltered = tmppandas
+               if kwargs['which'].startswith('cur_idx_'):
+                    tmp[kwargs['which']] = tmp.loc[tmp.clustername.isin(uniqcluster)].\
+                    apply(lambda x: x[kwargs['which']]/len(x.location) ,axis=1)
+               pdfiltered = tmp
 
+            # computing daily, cumul and weekly
             else:
-               pdfiltered = pdfiltered.drop(['location','codelocation'],axis=1,)
-               pdfiltered = pdfiltered.groupby('date').sum().reset_index()
-               pdfiltered['location'] = [clist]*len(pdfiltered)
-               pdfiltered['codelocation'] = [str(origclist)]*len(pdfiltered)
-               ntot=len(clist)
-               # mean for some columns, about index and not sum of values.
-               for col in pdfiltered.columns:
-                   if col.startswith('cur_idx_'):
-                       pdfiltered[col] /= ntot
+                tmp = pdfiltered.groupby(['date']).sum().reset_index()
+                uniqloc = list(pdfiltered.location.unique())
+                uniqcodeloc = list(pdfiltered.codelocation.unique())
+                tmp.loc[:,'location'] = ['dummy']*len(tmp)
+                tmp.loc[:,'codelocation'] = ['dummy']*len(tmp)
+                tmp.loc[:,'clustername'] = ['dummy']*len(tmp)
 
-            pdfiltered['daily'] = pdfiltered[kwargs['which']].diff()
-            pdfiltered['cumul'] = pdfiltered[kwargs['which']].cumsum()
-            pdfiltered['weekly'] = pdfiltered[kwargs['which']].diff(7)
-        # computing daily, cumul and weekly
+                for i in range(len(tmp)):
+                    tmp.at[i,'location'] = sticky(uniqloc)
+                    tmp.at[i,'codelocation'] = sticky(uniqcodeloc)
+                    tmp.at[i,'clustername'] =  sticky(uniqloc)[0]
+                pdfiltered = tmp
         else:
-            if type(kwargs['location']) == str:
-                kwargs['location']= [kwargs['location']]
-            pdfiltered['daily'] = pdfiltered.groupby(['location'])[kwargs['which']].diff()
-            pdfiltered['cumul'] = pdfiltered.groupby(['location'])[kwargs['which']].cumsum()
-            pdfiltered['weekly'] = pdfiltered.groupby(['location'])[kwargs['which']].diff(7)
+            pdfiltered['clustername'] = pdfiltered['location']
+
+        pdfiltered['daily'] = pdfiltered[kwargs['which']].diff()
+        inx = pdfiltered.groupby('clustername').head(1).index
+        #First value of diff is always NaN
+        pdfiltered.loc[inx, 'daily'] = pdfiltered[kwargs['which']].iloc[inx]
+        pdfiltered['cumul'] = pdfiltered[kwargs['which']].cumsum()
+        pdfiltered['weekly'] = pdfiltered[kwargs['which']].diff(7)
+        inx7=pdfiltered.groupby('clustername').head(7).index
+        pdfiltered.loc[inx7, 'weekly'] = pdfiltered[kwargs['which']].iloc[inx7]
+
         if fillnan:
             pdfiltered = pdfiltered.fillna(0) # for diff if needed
 
-        unifiedposition=['location', 'date', kwargs['which'], 'daily', 'cumul', 'weekly', 'codelocation']
+        unifiedposition=['location', 'date', kwargs['which'], 'daily', 'cumul', 'weekly', 'codelocation','clustername']
         pdfiltered = pdfiltered[unifiedposition]
 
         return pdfiltered

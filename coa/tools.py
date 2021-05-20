@@ -45,22 +45,22 @@ if _coacache_module_info != None:
 _verbose_mode = 1 # default
 
 # Known db
-_db_list_dict = {'jhu': 'WW',
-    'owid': 'WW',
-    'jhu-usa': 'USA',
-    'spf': 'FRA',
-    'spfnational': 'WW',
-    'opencovid19': 'FRA',
-    'opencovid19national': 'WW',
-    'dpc': 'ITA',
-    'covidtracking': 'USA',
-    'covid19india': 'IND',
-    'rki':'DEU',
-    'escovid19data':'ESP',
-    'phe':'GBR',
-    'sciensano':'BEL',
-    'dgs':'PRT',
-    'obepine':'FRA'}
+_db_list_dict = {'jhu': ['WW','nation'],
+    'owid': ['WW','nation'],
+    'jhu-usa': ['USA','subregion'],
+    'spf': ['FRA','subregion'],
+    'spfnational': ['spfnat','nation'],
+    'opencovid19': ['FRA','subregion'],
+    'opencovid19national': ['WW','nation'],
+    'dpc': ['ITA','subregion'],
+    'covidtracking': ['USA','subregion'],
+    'covid19india': ['IND','region'],
+    'rki':['DEU','subregion'],
+    'escovid19data':['ESP','subregion'],
+    'phe':['GBR','subregion'],
+    'sciensano':['BEL','region'],
+    'dgs':['PRT','region'],
+    'obepine':['FRA','region']}
 
 # ----------------------------------------------------
 # --- Usefull functions for pycoa --------------------
@@ -69,6 +69,7 @@ _db_list_dict = {'jhu': 'WW',
 def get_db_list_dict():
     """Return db list dict"""
     return _db_list_dict
+
 
 def get_verbose_mode():
     """Return the verbose mode
@@ -138,7 +139,6 @@ def fill_missing_dates(p, date_field='date', loc_field='location', d1=None, d2=N
     idx = idx.date
 
     all_loc=list(p[loc_field].unique())
-
     pfill=pandas.DataFrame()
     for l in all_loc:
         pp=p[p[loc_field]==l]
@@ -146,8 +146,8 @@ def fill_missing_dates(p, date_field='date', loc_field='location', d1=None, d2=N
         pp2.index = pandas.DatetimeIndex(pp2.index)
         pp3 = pp2.reindex(idx,fill_value=numpy.nan)#pandas.NA)
         pp3['location'] = pp3['location'].fillna(l)  #pp3['location'].fillna(method='bfill')
-        pp3['codelocation'] = pp3['codelocation'].fillna(method='bfill')
-        pp3['codelocation'] = pp3['codelocation'].fillna(method='ffill')
+        #pp3['codelocation'] = pp3['codelocation'].fillna(method='bfill')
+        #pp3['codelocation'] = pp3['codelocation'].fillna(method='ffill')
         pfill=pandas.concat([pfill, pp3])
     pfill.reset_index(inplace=True)
     return pfill

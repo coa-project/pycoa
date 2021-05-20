@@ -215,12 +215,12 @@ def getinfo(which):
     """
         Return keyword_definition for the db selected
     """
-    if not which:
-        which = listwhich()[0]
-        print('Load default which:',which)
-    elif which not in listwhich():
-        raise CoaKeyError('Which option ' + which + ' not supported. '
-                                                    'See listwhich() for list.')
+    #if not which:
+        #which = listwhich()[0]
+    #    print('Load default which:',which)
+    #elif which not in listwhich():
+    #    raise CoaKeyError('Which option ' + which + ' not supported. '
+    #                                                'See listwhich() for list.')
     print(_db.get_keyword_definition(which),'\nurl:', _db.get_keyword_url(which)[0],'\n(more info ',_db.get_keyword_url(which)[1],')')
 
 # ----------------------------------------------------------------------
@@ -389,8 +389,8 @@ def decoplot(func):
         if isinstance(input_arg, pd.DataFrame):
             t = input_arg
             input_field = kwargs.get('input_field', listwhich()[0])
-            if not all([i in t.columns for i in input_field]):
-            #if input_field not in t.columns:
+            #if not all([i in t.columns for i in input_field]):
+            if input_field not in t.columns:
                 raise CoaKeyError("Cannot find " + str(input_field) + " field in the pandas data. "
                                                                       "Set a proper input_field key.")
             if 'option' in kwargs:

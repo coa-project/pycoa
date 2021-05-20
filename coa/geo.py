@@ -1057,7 +1057,7 @@ class GeoCountry():
     def get_subregions_from_region(self,**kwargs):
         """ Return the list of subregions within a specified region.
         Should give either the code or the name of the region as strings in kwarg : code=# or name=#
-        Output default is 'code' of subregions. Can be changer with output='name'. 
+        Output default is 'code' of subregions. Can be changer with output='name'.
         """
         kwargs_test(kwargs,['name','code','output'],'Should give either name or code of region. Output can be changed with the output option.')
         code=kwargs.get("code",None)
@@ -1106,7 +1106,7 @@ class GeoCountry():
 
     def get_data(self,region_version=False):
         """Return the whole geopandas data.
-        If region_version = True (not default), the pandas output is region based focalized. 
+        If region_version = True (not default), the pandas output is region based focalized.
         """
         if self.test_is_init():
             if region_version:

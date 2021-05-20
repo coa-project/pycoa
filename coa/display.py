@@ -1481,14 +1481,14 @@ class CocoDisplay:
             #dicocolors=geopdwd[['location','colors']].drop_duplicates().to_dict('records')
             geopdwd_filtered['centroidx'] = geopdwd_filtered['geometry'].apply('centroid').x
             geopdwd_filtered['centroidy'] = geopdwd_filtered['geometry'].apply('centroid').y
-            if dico['locsumall']:
-                locsum = geopdwd_filtered.clustername.unique()
-                for i in locsum:
-                    cases = geopdwd_filtered.loc[geopdwd_filtered.clustername == i]['cases'].values[0]
-                    centrosx = geopdwd_filtered.loc[geopdwd_filtered.clustername == i]['centroidx'].mean()
-                    centrosy = geopdwd_filtered.loc[geopdwd_filtered.clustername == i]['centroidy'].mean()
-                    geopdwd_filtered.loc[geopdwd_filtered.clustername == i,'centroidx'] = centrosx
-                    geopdwd_filtered.loc[geopdwd_filtered.clustername == i,'centroidy'] = centrosy
+            #if dico['locsumall']:
+            locsum = geopdwd_filtered.clustername.unique()
+            for i in locsum:
+                cases = geopdwd_filtered.loc[geopdwd_filtered.clustername == i]['cases'].values[0]
+                centrosx = geopdwd_filtered.loc[geopdwd_filtered.clustername == i]['centroidx'].mean()
+                centrosy = geopdwd_filtered.loc[geopdwd_filtered.clustername == i]['centroidy'].mean()
+                geopdwd_filtered.loc[geopdwd_filtered.clustername == i,'centroidx'] = centrosx
+                geopdwd_filtered.loc[geopdwd_filtered.clustername == i,'centroidy'] = centrosy
             dfLabel=pd.DataFrame(geopdwd_filtered[['location','centroidx','centroidy','cases']])
             dfLabel['cases'] = dfLabel['cases'].round(2)
             #dicocolors=pd.Series(geopdwd.colors.values,index=geopdwd.location.values).drop_duplicates().to_dict()

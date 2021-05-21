@@ -818,13 +818,14 @@ class CocoDisplay:
                 pos = {}
                 new = pd.DataFrame(columns=geopdwd_filter.columns)
                 n = 0
-
                 for i in uniqloc:
-                    pos = (geopdwd_filter.loc[geopdwd_filter.clustername == i].index[0])
-                    new = new.append(geopdwd_filter.iloc[pos])
-                    if type(i) == str and len(i) != 3:
-                        new.iloc[n, 0] = i
-                    n += 1
+                    perloc = geopdwd_filter.loc[geopdwd_filter.clustername == i]
+                    if all(perloc != 0):
+                        pos = perloc.index[0]
+                        new = new.append(geopdwd_filter.iloc[pos])
+                        if type(i) == str and len(i) != 3:
+                            new.iloc[n, 0] = i
+                        n += 1
                 geopdwd_filter = new.reset_index(drop=True)
 
                 my_date = geopdwd.date.unique()

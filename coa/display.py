@@ -148,6 +148,7 @@ class CocoDisplay:
         else:
             which = mypandas.columns[1]
 
+
         mypandas = mypandas.explode('location')
         mypandas['rolloverdisplay'] = mypandas['clustername']
         mypandas['rolloverdisplay'] = mypandas['rolloverdisplay'].apply(lambda x: x if len(x)< 20 else x.split('-')[0]+'...'+x.split('-')[-1] )

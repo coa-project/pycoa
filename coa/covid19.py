@@ -749,12 +749,16 @@ class DataBase(object):
             mypandas = mypandas.drop(columns=['location'])
             mypandas = mypandas.rename(columns={'iso_code':'location'})
         if self.db == 'dpc':
+            gd = self.geo.get_data()[['code_region','name_subregion']]
             A=['P.A. Bolzano','P.A. Trento']
             tmp=mypandas.loc[mypandas.location.isin(A)].groupby('date').sum()
             tmp['location']='Trentino-Alto Adige'
             mypandas = mypandas.loc[~mypandas.location.isin(A)]
             tmp = tmp.reset_index()
             mypandas = mypandas.append(tmp)
+            uniqloc = list(mypandas['location'].unique())
+            sub2reg = collections.OrderedDict(zip(uniqloc,list(gd.loc[gd.name_subregion.isin(uniqloc)]['code_region'])))
+            mypandas['codelocation'] = mypandas['location'].map(sub2reg)
         if self.db == 'dgs':
             gd = self.geo.get_data()[['name_subregion','name_region']]
             mypandas = mypandas.reset_index(drop=True)
@@ -1005,6 +1009,8 @@ class DataBase(object):
                 location_exploded = [ self.geo.get_subregions_from_list_of_region_names([i],output='name')\
                             if len(self.geo.get_subregions_from_list_of_region_names([i],output='name'))>0 else i \
                             for i in listloc]
+                if self.db == 'dpc':
+                    location_exploded = listloc   
                 location_exploded = self.flat_list(location_exploded)
 
         def sticky(lname):

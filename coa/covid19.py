@@ -1009,8 +1009,8 @@ class DataBase(object):
                 location_exploded = [ self.geo.get_subregions_from_list_of_region_names([i],output='name')\
                             if len(self.geo.get_subregions_from_list_of_region_names([i],output='name'))>0 else i \
                             for i in listloc]
-                if self.db == 'dpc':
-                    location_exploded = listloc   
+                if self.db == 'dpc' or self.db == 'sciensano':
+                    location_exploded = listloc
                 location_exploded = self.flat_list(location_exploded)
 
         def sticky(lname):

@@ -180,8 +180,8 @@ def generic_info(namedb, keys):
         mydico = ita
     elif namedb == 'rki':
         rki = {
-        'deaths':['deaths:FILLIT','https://github.com/jgehrcke/covid-19-germany-gae/raw/master/deaths-rki-by-ags.csv'],
-        'cases':['cases:FILLIT','https://github.com/jgehrcke/covid-19-germany-gae/raw/master/deaths-rki-by-ags.csv'],
+        'tot_deaths':['tot_deaths:FILLIT','https://github.com/jgehrcke/covid-19-germany-gae/raw/master/deaths-rki-by-ags.csv'],
+        'tot_cases':['tot_cases:FILLIT','https://github.com/jgehrcke/covid-19-germany-gae/raw/master/deaths-rki-by-ags.csv'],
         }
         for k,v in rki.items():
             rki[k].append('https://github.com/jgehrcke/covid-19-germany-gae')

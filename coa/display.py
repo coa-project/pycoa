@@ -1244,7 +1244,7 @@ class CocoDisplay:
     def pycoa_horizonhisto(self, srcfiltered, panels, date_slider):
         n = len(panels)
         loc = srcfiltered.data['clustername']
-        label_dict = {(len(loc) - k) : (v if len(v)<8 else  v.split('-')[0]+'...'+v.split('-')[-1]) for k, v in enumerate(loc) }
+        label_dict = {(len(loc) - k) : (v if len(v)<20 else  v.split('-')[0]+'...'+v.split('-')[-1]) for k, v in enumerate(loc) }
         new_panels = []
         for i in range(n):
             fig = panels[i].child

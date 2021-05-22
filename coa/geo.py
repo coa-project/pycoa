@@ -285,6 +285,8 @@ class GeoManager():
                     "Micronesia (Country)":"FSM",\
                     "Northern Cyprus":"CYP",\
                     "Curacao":"CUW",\
+                    "Faeroe Islands":"FRO",\
+                    "Vatican":"VAT"
                 })
         return [translation_dict.get(k,k) for k in w]
 
@@ -922,6 +924,10 @@ class GeoCountry():
             self._country_data=self._country_data.merge(h_deu,how='left',left_on='code_region',right_on='id')
             self._country_data['code_subregion']=self._country_data.code_subregion.astype(int).astype(str)
             self._country_data=self._country_data[['name_subregion','code_subregion','name_region','code_region','geometry']]
+            disso = self._country_data[['name_subregion','geometry']].dissolve(by='name_subregion', aggfunc='sum').reset_index()
+            # aggregate geometry with the same subregion name # some code subregion is lost somehow
+            self._country_data = self._country_data.drop_duplicates(subset = ['name_subregion'])
+            self._country_data = pd.merge(self._country_data.drop(columns=['geometry']),disso, on='name_subregion')
 
         # --- 'ESP' case ---------------------------------------------------------------------------------------
         elif self._country == 'ESP':

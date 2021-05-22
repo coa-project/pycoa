@@ -98,6 +98,13 @@ class DataBase(object):
                     prt_data=self.csv2pandas(url,separator=',',rename_columns = rename_dict)
                     columns_keeped = ['tot_cases']
                     self.return_structured_pandas(prt_data, columns_keeped=columns_keeped)
+                elif self.db == 'obepine' : # FRA
+                    info('FRA, réseau Obepine, surveillance Sars-Cov-2 dans les eaux usées')
+                    url='https://www.data.gouv.fr/es/datasets/r/ba71be57-5932-4298-81ea-aff3a12a440c'
+                    rename_dict={'Code_Region':'location','Date':'date','Indicateur':'idx_obepine'}
+                    obepine_data=self.csv2pandas(url,separator=';',rename_columns=rename_dict)
+                    obepine_data['location']=obepine_data.location.astype(str)
+                    self.return_structured_pandas(obepine_data,columns_keeped=['idx_obepine'])
                 elif self.db == 'escovid19data': # ESP
                     info('ESP, EsCovid19Data ...')
                     rename_dict = {'ine_code': 'location',\
@@ -616,36 +623,18 @@ class DataBase(object):
                     self.slocation = list(d_loc_s.values())
                     codename = d_loc_s
                     location_is_code = True
-                    count_values=collections.Counter(d_loc_s.values())
-                    duplicates_location = list({k:v for k,v in count_values.items() if v>1}.keys())
-                    def findkeywithvalue(dico,what):
-                        a=[]
-                        for k,v in dico.items():
-                            if v == what:
-                                a.append(k)
-                        return a
-                    codetosum=[findkeywithvalue(d_loc_s,i) for i in duplicates_location]
-                    #codename = collections.OrderedDict(zip(self.slocation,list(pdcodename.loc[pdcodename.code_subregion.isin(self.slocation)]['name_subregion'])))
-                    #oldloc = loc_sub_name
-                    #newloc = loc_sub_code
-                    #toremove = [x for x in uniqloc if x not in loc_sub_name]
-                    #codedico={i:j for i,j in zip(uniqloc,newloc)}
-                    #location_is_code = False
+                    def notuse():
+                        count_values=collections.Counter(d_loc_s.values())
+                        duplicates_location = list({k:v for k,v in count_values.items() if v>1}.keys())
+                        def findkeywithvalue(dico,what):
+                            a=[]
+                            for k,v in dico.items():
+                                if v == what:
+                                    a.append(k)
+                            return a
+                        codedupli={i:findkeywithvalue(d_loc_s,i) for i in duplicates_location}
 
         result = reduce(lambda x, y: pd.merge(x, y, on = ['location','date']), pandas_list)
-        if  self.db == 'rki':
-            #1001 & 1002 return Flensburg
-            #loc = duplicates_location.keys()
-            for subcode in codetosum:
-                tmp=(result.loc[result.location.isin(subcode)]).groupby('date').sum().reset_index()
-                tmp['location'] = d_loc_s[subcode]*len(tmp)
-                tmp['codelocation'] = subcode*len(tmp)
-                kw = [i for i in self.available_keys_words]
-                colpos=['location', 'date'] + kw + ['codelocation']
-                tmp = tmp[colpos]
-                result = result.loc[~result.location.isin(subcode)]
-                result = result.append(tmp)
-
 
         if location_is_code:
             result['codelocation'] = result['location']
@@ -774,6 +763,16 @@ class DataBase(object):
             sub2reg = collections.OrderedDict(zip(uniqloc,list(gd.loc[gd.name_subregion.isin(uniqloc)]['name_region'])))
             mypandas['location'] = mypandas['location'].map(sub2reg)
             mypandas = mypandas.loc[~mypandas.location.isnull()]
+        if self.db == 'obepine': # filling subregions.
+            gd = self.geo.get_data()[['code_subregion','name_region']]
+            #preg=self.geo.get_data(True)[['code_subregion','code_region']]
+            uniqloc = list(mypandas['location'].unique())
+            sub2reg = collections.OrderedDict(zip(uniqloc,list(gd.loc[gd.code_subregion.isin(uniqloc)]['name_region'])))
+            #mypandas=mypandas.merge(preg,how='left',left_on='location',right_on='code_region')
+            #mypandas = mypandas.explode('code_subregion')
+            #mypandas['location'] = mypandas['code_subregion']
+            mypandas['location'] = mypandas['location'].map(sub2reg)
+            mypandas = mypandas.loc[~mypandas.location.isnull()]
 
         codename = None
         location_is_code = False
@@ -795,7 +794,7 @@ class DataBase(object):
                 temp = self.geo_all[['code_subregion','name_subregion']]
                 codename = collections.OrderedDict(zip(uniqloc,list(temp.loc[temp.name_subregion.isin(uniqloc)]['code_subregion'])))
                 self.slocation = uniqloc
-                if self.db in ['phe','covidtracking','spf','escovid19data']:
+                if self.db in ['phe','covidtracking','spf','escovid19data','obepine']:
                     codename = collections.OrderedDict(zip(uniqloc,list(temp.loc[temp.code_subregion.isin(uniqloc)]['name_subregion'])))
                     self.slocation = list(codename.values())
                     location_is_code = True

@@ -645,7 +645,6 @@ class DataBase(object):
             result['codelocation'] = result['location'].map(codename)
         result = result.loc[result.location.isin(self.slocation)]
 
-
         tmp = pd.DataFrame()
         if 'Kosovo' in uniqloc:
             #Kosovo is Serbia ! with geo.to_standard
@@ -796,12 +795,13 @@ class DataBase(object):
 
             elif self.database_type[self.db][1] == 'subregion':
                 temp = self.geo_all[['code_subregion','name_subregion']]
-                codename = collections.OrderedDict(zip(uniqloc,list(temp.loc[temp.name_subregion.isin(uniqloc)]['code_subregion'])))
-                self.slocation = uniqloc
                 if self.db in ['phe','covidtracking','spf','escovid19data','obepine']:
                     codename = collections.OrderedDict(zip(uniqloc,list(temp.loc[temp.code_subregion.isin(uniqloc)]['name_subregion'])))
                     self.slocation = list(codename.values())
                     location_is_code = True
+                else:
+                    codename = collections.OrderedDict(zip(uniqloc,list(temp.loc[temp.name_subregion.isin(uniqloc)]['code_subregion'])))
+                    self.slocation = uniqloc
             else:
                 CoaDbError('Granularity problem , neither region nor sub_region ...')
             #self.slocation = loc_sub_code
@@ -993,25 +993,42 @@ class DataBase(object):
             else:
                 location_exploded = self.geo.to_standard(listloc,output='list',interpret_region=True)
         else:
+            def codetoname(listloc):
+                convertname = []
+                a=self.geo.get_data()
+                for i in listloc:
+                    if not isinstance(i,list):
+                        i=[i]
+                    if i[0].isdigit():
+                        convertname.append(list(a.loc[a.code_subregion.isin(i)]['name_subregion']))
+                    else:
+                        convertname.append(i)
+                return convertname
+
             if origlistlistloc != None:
+                origlistlistloc = codetoname(origlistlistloc)
                 location_exploded = [ self.geo.get_subregions_from_list_of_region_names(i,output='name') \
                             if len(self.geo.get_subregions_from_list_of_region_names(i,output='name'))>0 else i \
                             for i in origlistlistloc ]
+
                 if origlistlistloc == [['Métropole']]:
                     all_region = self.geo.get_region_list()
                     all_codes = all_region.code_region.astype(int)
-
                     origclistlist = [[i] for i in all_region[(all_codes>10) & (all_codes<100)].name_region.to_list()]
                     dicolocation_exploded = { i[0]:self.geo.get_subregions_from_list_of_region_names(i,output='name') for i in origclistlist }
                     location_exploded = list(dicolocation_exploded.values())
                     name_regions = list(dicolocation_exploded.keys())
+
             else:
+                listloc = codetoname(listloc)
+                listloc = self.flat_list(listloc)
                 location_exploded = [ self.geo.get_subregions_from_list_of_region_names([i],output='name')\
                             if len(self.geo.get_subregions_from_list_of_region_names([i],output='name'))>0 else i \
                             for i in listloc]
                 if self.db == 'dpc' or self.db == 'sciensano':
                     location_exploded = listloc
                 location_exploded = self.flat_list(location_exploded)
+
 
         def sticky(lname):
             if len(lname)>0:

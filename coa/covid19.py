@@ -1098,6 +1098,8 @@ class DataBase(object):
                     pdfiltered.loc[ind,kwargs['which']]=np.cumsum(yy)+y0 # do not forget the offset
             elif o == 'nofillnan':
                 fillnan=False
+            elif o == 'fillnan':
+                fillnan=True
             elif o == 'smooth7':
                 #pdfiltered[kwargs['which']] = pdfiltered.groupby(['clustername'])[kwargs['which']].fillna(method='ffill')
                 #pdfiltered = pdfiltered.fillna(0)
@@ -1118,9 +1120,9 @@ class DataBase(object):
             #if self.db_world:
             #pdfiltered[kwargs['which']] = pdfiltered.groupby(['clustername'])[kwargs['which']].fillna(method='bfill')
             pdfiltered.loc[:,kwargs['which']] = pdfiltered.groupby(['clustername'])[kwargs['which']].\
-            apply(lambda x: x.bfill())
+            apply(lambda x: x.bfill().ffill())
             # fill remaining nan with zeros
-            pdfiltered = pdfiltered.fillna(0)
+            #pdfiltered = pdfiltered.fillna(0)
 
         # if sumall set, return only integrate val
         tmppandas=pd.DataFrame()
@@ -1167,8 +1169,8 @@ class DataBase(object):
         inx7=pdfiltered.groupby('clustername').head(7).index
         pdfiltered.loc[inx7, 'weekly'] = pdfiltered[kwargs['which']].iloc[inx7]
 
-        if fillnan:
-            pdfiltered = pdfiltered.fillna(0) # for diff if needed
+        #if fillnan:
+        #    pdfiltered = pdfiltered.fillna(0) # for diff if needed
 
         unifiedposition=['location', 'date', kwargs['which'], 'daily', 'cumul', 'weekly', 'codelocation','clustername']
         pdfiltered = pdfiltered[unifiedposition]

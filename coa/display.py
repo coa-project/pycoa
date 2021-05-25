@@ -518,7 +518,6 @@ class CocoDisplay:
         df = df.copy()
         column_sum = df[column_name].sum()
         df['percentage'] = (df[column_name]/column_sum)
-        df['textdisplayed'] = df['codelocation']+df[column_name].apply(lambda x: '\n(N='+str(x)+')')
         #(( df['percentage'] * 100 ).astype(np.double).round(2)).apply(lambda x: str(x)+'%')
         percentages = [0]  + df['percentage'].cumsum().tolist()
         df['starts'] = [p * 2 * np.pi for p in percentages[:-1]]
@@ -533,7 +532,10 @@ class CocoDisplay:
         df['text_size'] = [str(10)+'pt' if i > 0.08*(2 * np.pi) else '4pt' for i in df['diff']]
         df['text_angle'] = 0.
         df.loc[:, 'percentage'] = (( df['percentage'] * 100 ).astype(np.double).round(2)).apply(lambda x: str(x))
-        df.loc[df['diff']<= np.pi/4,'textdisplayed']=''
+
+        df['textdisplayed'] = df['codelocation']#+df[column_name].apply(lambda x: '\n(N='+str(round(x,2))+')')
+        df.loc[df['diff']<= np.pi/10,'textdisplayed']=''
+
         return df
     ###################### END Static Methods ##################
     ###################### BEGIN Plots ##################

@@ -106,7 +106,7 @@ class CocoDisplay:
                    allcountries = geo.get_GeoRegion().get_countries_from_region('world')
                    geopan['location'] = [geo.to_standard(c)[0] for c in allcountries]
                    geopan = info.add_field(field=['geometry'],input=geopan ,geofield='location')
-                   geopan['geometry'] = geopan.to_crs('epsg:4326')
+                   geopan['geometry'] = geopan.geometry.to_crs('epsg:4326')
                    geopan = geopan[geopan.location != 'Antarctica']
                    geopan = geopan.dropna().reset_index(drop=True)
 

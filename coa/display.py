@@ -101,13 +101,15 @@ class CocoDisplay:
                     if list_dep_metro:
                         self.boundary_metropole = self.location_geometry.loc[self.location_geometry.code_subregion.isin(list_dep_metro)]['geometry'].total_bounds
             else:
-                   geopan = gpd.GeoDataFrame(crs="EPSG:4326")
+                   geopan = gpd.GeoDataFrame()#crs="EPSG:4326")
                    info = coge.GeoInfo()
                    allcountries = geo.get_GeoRegion().get_countries_from_region('world')
                    geopan['location'] = [geo.to_standard(c)[0] for c in allcountries]
                    geopan = info.add_field(field=['geometry'],input=geopan ,geofield='location')
+                   geopan['geometry'] = geopan.to_crs('epsg:4326')
                    geopan = geopan[geopan.location != 'Antarctica']
                    geopan = geopan.dropna().reset_index(drop=True)
+
                    self.location_geometry  = geopan
                    #self.boundary = geopan['geometry'].total_bounds
         except:

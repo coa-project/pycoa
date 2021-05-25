@@ -226,6 +226,24 @@ def generic_info(namedb, keys):
         for k,v in phe.items():
             phe[k].append('https://coronavirus.data.gov.uk/details/download')
         mydico = phe
+    elif namedb == 'covidtracking':
+        url='https://covidtracking.com/data/download/all-states-history.csv'
+        cotra = {
+            'tot_death': ['Cumulative deaths tot_death (original name death)'],\
+            'tot_hosp': ['Cumulative hospitalized (original name hospitalizedCumulative)'],\
+            'cur_hosp': ['Current hospitalized (original name hospitalizedCurrently)'],\
+            'tot_icu': ['(original name inIcuCumulative)'],\
+            'cur_icu': ['(original inIcuCurrently)'],\
+            'tot_neg_test': ['(original negative)'],\
+            'tot_pos_test': ['(original positive)'],\
+            'tot_onVentilator': ['(original onVentilatorCumulative)'],\
+            'cur_onVentilator': ['(original onVentilatorCurrently)'],\
+            'tot_test': ['(original totalTestResults)'],\
+        }
+        for k,v in cotra.items():
+            cotra[k].append(url)
+            cotra[k].append('https://covidtracking.com/analysis-updates/five-major-metrics-covid-19-data')
+        mydico = cotra
     else:
         raise CoaKeyError('Error in the database selected, please check !')
     if keys not in mydico:

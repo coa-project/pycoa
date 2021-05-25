@@ -999,13 +999,14 @@ class DataBase(object):
                 for i in listloc:
                     if not isinstance(i,list):
                         i=[i]
-                    if i[0].isdigit():
+                    if i[0].isdigit() or i[0] in ['2A','2B']:
                         convertname.append(list(a.loc[a.code_subregion.isin(i)]['name_subregion']))
                     else:
                         convertname.append(i)
                 return convertname
-
+            name_regions = []
             if origlistlistloc != None:
+                name_regions  = origlistlistloc
                 origlistlistloc = codetoname(origlistlistloc)
                 location_exploded = [ self.geo.get_subregions_from_list_of_region_names(i,output='name') \
                             if len(self.geo.get_subregions_from_list_of_region_names(i,output='name'))>0 else i \
@@ -1120,7 +1121,7 @@ class DataBase(object):
             #if self.db_world:
             #pdfiltered[kwargs['which']] = pdfiltered.groupby(['clustername'])[kwargs['which']].fillna(method='bfill')
             pdfiltered.loc[:,kwargs['which']] = pdfiltered.groupby(['clustername'])[kwargs['which']].\
-            apply(lambda x: x.bfill().ffill())
+            apply(lambda x: x.ffill().bfill())
             # fill remaining nan with zeros
             #pdfiltered = pdfiltered.fillna(0)
 
@@ -1129,6 +1130,7 @@ class DataBase(object):
         if sumall:
             if origlistlistloc != None:
                uniqcluster = pdfiltered.clustername.unique()
+
                tmp = pdfiltered.loc[pdfiltered.clustername.isin(uniqcluster)].\
                         groupby(['clustername','date']).sum().reset_index()
 
@@ -1140,12 +1142,15 @@ class DataBase(object):
 
                if kwargs['which'].startswith('cur_idx_'):
                     tmp[kwargs['which']] = tmp.loc[tmp.clustername.isin(uniqcluster)].\
-                    apply(lambda x: x[kwargs['which']]/len(x.location) ,axis=1)
+                    apply(lambda x: x[kwargs['which']]/len(x.clustername),axis=1)
                pdfiltered = tmp
 
             # computing daily, cumul and weekly
             else:
-                tmp = pdfiltered.groupby(['date']).sum().reset_index()
+                if kwargs['which'].startswith('cur_idx_'):
+                  tmp = pdfiltered.groupby(['date']).mean().reset_index()
+                else:
+                    tmp = pdfiltered.groupby(['date']).sum().reset_index()
                 uniqloc = list(pdfiltered.location.unique())
                 uniqcodeloc = list(pdfiltered.codelocation.unique())
                 tmp.loc[:,'location'] = ['dummy']*len(tmp)
@@ -1153,8 +1158,8 @@ class DataBase(object):
                 tmp.loc[:,'clustername'] = ['dummy']*len(tmp)
 
                 for i in range(len(tmp)):
-                    tmp.at[i,'location'] = sticky(uniqloc)
-                    tmp.at[i,'codelocation'] = sticky(uniqcodeloc)
+                    tmp.at[i,'location'] = uniqloc #sticky(uniqloc)
+                    tmp.at[i,'codelocation'] = uniqcodeloc #sticky(uniqcodeloc)
                     tmp.at[i,'clustername'] =  sticky(uniqloc)[0]
                 pdfiltered = tmp
         else:

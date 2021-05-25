@@ -185,6 +185,7 @@ class CocoDisplay:
                 input_dico['when_end'] = input_dico['when_beg']
 
 #        when_end_change = CocoDisplay.changeto_nonan_date(mypandas, input_dico['when_end'], var_displayed)
+
         when_end_change = CocoDisplay.changeto_nonull_date(mypandas, input_dico['when_end'], var_displayed)
         if when_end_change != input_dico['when_end']:
             input_dico['when_end'] = when_end_change
@@ -788,7 +789,7 @@ class CocoDisplay:
             geopdwd = mypandas
 
             geopdwd = geopdwd.sort_values(by = input_field, ascending=False)
-            geopdwd = geopdwd.dropna(subset = [input_field])
+            #geopdwd = geopdwd.dropna(subset = [input_field])
             geopdwd = geopdwd.reset_index(drop = True)
             orientation = kwargs.get('orientation', 'vertical')
 
@@ -806,6 +807,7 @@ class CocoDisplay:
 
             # geopdwd_filter = geopdwd_filter.drop(columns=['date'])
             geopdwd_filter = geopdwd_filter.reset_index(drop = True)
+
             if func.__name__ == 'pycoa_mapfolium' or func.__name__ == 'pycoa_map' or func.__name__ == 'innerdecopycoageo':
                 if isinstance(mypandas.location.to_list()[0],list):
                     geom = self.location_geometry
@@ -837,7 +839,6 @@ class CocoDisplay:
             geopdwd_filter = geopdwd_filter.reset_index(drop=True)
             if cursor_date is False:
                 date_slider = False
-
             return func(self, input_field, date_slider, maplabel, dico, geopdwd, geopdwd_filter)
         return generic_hm
 

@@ -645,7 +645,6 @@ class DataBase(object):
             result['codelocation'] = result['location'].map(codename)
         result = result.loc[result.location.isin(self.slocation)]
 
-
         tmp = pd.DataFrame()
         if 'Kosovo' in uniqloc:
             #Kosovo is Serbia ! with geo.to_standard
@@ -796,12 +795,13 @@ class DataBase(object):
 
             elif self.database_type[self.db][1] == 'subregion':
                 temp = self.geo_all[['code_subregion','name_subregion']]
-                codename = collections.OrderedDict(zip(uniqloc,list(temp.loc[temp.name_subregion.isin(uniqloc)]['code_subregion'])))
-                self.slocation = uniqloc
                 if self.db in ['phe','covidtracking','spf','escovid19data','obepine']:
                     codename = collections.OrderedDict(zip(uniqloc,list(temp.loc[temp.code_subregion.isin(uniqloc)]['name_subregion'])))
                     self.slocation = list(codename.values())
                     location_is_code = True
+                else:
+                    codename = collections.OrderedDict(zip(uniqloc,list(temp.loc[temp.name_subregion.isin(uniqloc)]['code_subregion'])))
+                    self.slocation = uniqloc
             else:
                 CoaDbError('Granularity problem , neither region nor sub_region ...')
             #self.slocation = loc_sub_code
@@ -993,25 +993,43 @@ class DataBase(object):
             else:
                 location_exploded = self.geo.to_standard(listloc,output='list',interpret_region=True)
         else:
+            def codetoname(listloc):
+                convertname = []
+                a=self.geo.get_data()
+                for i in listloc:
+                    if not isinstance(i,list):
+                        i=[i]
+                    if i[0].isdigit() or i[0] in ['2A','2B']:
+                        convertname.append(list(a.loc[a.code_subregion.isin(i)]['name_subregion']))
+                    else:
+                        convertname.append(i)
+                return convertname
+            name_regions = []
             if origlistlistloc != None:
+                name_regions  = origlistlistloc
+                origlistlistloc = codetoname(origlistlistloc)
                 location_exploded = [ self.geo.get_subregions_from_list_of_region_names(i,output='name') \
                             if len(self.geo.get_subregions_from_list_of_region_names(i,output='name'))>0 else i \
                             for i in origlistlistloc ]
+
                 if origlistlistloc == [['Métropole']]:
                     all_region = self.geo.get_region_list()
                     all_codes = all_region.code_region.astype(int)
-
                     origclistlist = [[i] for i in all_region[(all_codes>10) & (all_codes<100)].name_region.to_list()]
                     dicolocation_exploded = { i[0]:self.geo.get_subregions_from_list_of_region_names(i,output='name') for i in origclistlist }
                     location_exploded = list(dicolocation_exploded.values())
                     name_regions = list(dicolocation_exploded.keys())
+
             else:
+                listloc = codetoname(listloc)
+                listloc = self.flat_list(listloc)
                 location_exploded = [ self.geo.get_subregions_from_list_of_region_names([i],output='name')\
                             if len(self.geo.get_subregions_from_list_of_region_names([i],output='name'))>0 else i \
                             for i in listloc]
                 if self.db == 'dpc' or self.db == 'sciensano':
                     location_exploded = listloc
                 location_exploded = self.flat_list(location_exploded)
+
 
         def sticky(lname):
             if len(lname)>0:
@@ -1081,6 +1099,8 @@ class DataBase(object):
                     pdfiltered.loc[ind,kwargs['which']]=np.cumsum(yy)+y0 # do not forget the offset
             elif o == 'nofillnan':
                 fillnan=False
+            elif o == 'fillnan':
+                fillnan=True
             elif o == 'smooth7':
                 #pdfiltered[kwargs['which']] = pdfiltered.groupby(['clustername'])[kwargs['which']].fillna(method='ffill')
                 #pdfiltered = pdfiltered.fillna(0)
@@ -1101,15 +1121,16 @@ class DataBase(object):
             #if self.db_world:
             #pdfiltered[kwargs['which']] = pdfiltered.groupby(['clustername'])[kwargs['which']].fillna(method='bfill')
             pdfiltered.loc[:,kwargs['which']] = pdfiltered.groupby(['clustername'])[kwargs['which']].\
-            apply(lambda x: x.bfill())
+            apply(lambda x: x.ffill().bfill())
             # fill remaining nan with zeros
-            pdfiltered = pdfiltered.fillna(0)
+            #pdfiltered = pdfiltered.fillna(0)
 
         # if sumall set, return only integrate val
         tmppandas=pd.DataFrame()
         if sumall:
             if origlistlistloc != None:
                uniqcluster = pdfiltered.clustername.unique()
+
                tmp = pdfiltered.loc[pdfiltered.clustername.isin(uniqcluster)].\
                         groupby(['clustername','date']).sum().reset_index()
 
@@ -1121,12 +1142,15 @@ class DataBase(object):
 
                if kwargs['which'].startswith('cur_idx_'):
                     tmp[kwargs['which']] = tmp.loc[tmp.clustername.isin(uniqcluster)].\
-                    apply(lambda x: x[kwargs['which']]/len(x.location) ,axis=1)
+                    apply(lambda x: x[kwargs['which']]/len(x.clustername),axis=1)
                pdfiltered = tmp
 
             # computing daily, cumul and weekly
             else:
-                tmp = pdfiltered.groupby(['date']).sum().reset_index()
+                if kwargs['which'].startswith('cur_idx_'):
+                  tmp = pdfiltered.groupby(['date']).mean().reset_index()
+                else:
+                    tmp = pdfiltered.groupby(['date']).sum().reset_index()
                 uniqloc = list(pdfiltered.location.unique())
                 uniqcodeloc = list(pdfiltered.codelocation.unique())
                 tmp.loc[:,'location'] = ['dummy']*len(tmp)
@@ -1134,8 +1158,8 @@ class DataBase(object):
                 tmp.loc[:,'clustername'] = ['dummy']*len(tmp)
 
                 for i in range(len(tmp)):
-                    tmp.at[i,'location'] = sticky(uniqloc)
-                    tmp.at[i,'codelocation'] = sticky(uniqcodeloc)
+                    tmp.at[i,'location'] = uniqloc #sticky(uniqloc)
+                    tmp.at[i,'codelocation'] = uniqcodeloc #sticky(uniqcodeloc)
                     tmp.at[i,'clustername'] =  sticky(uniqloc)[0]
                 pdfiltered = tmp
         else:
@@ -1150,8 +1174,8 @@ class DataBase(object):
         inx7=pdfiltered.groupby('clustername').head(7).index
         pdfiltered.loc[inx7, 'weekly'] = pdfiltered[kwargs['which']].iloc[inx7]
 
-        if fillnan:
-            pdfiltered = pdfiltered.fillna(0) # for diff if needed
+        #if fillnan:
+        #    pdfiltered = pdfiltered.fillna(0) # for diff if needed
 
         unifiedposition=['location', 'date', kwargs['which'], 'daily', 'cumul', 'weekly', 'codelocation','clustername']
         pdfiltered = pdfiltered[unifiedposition]

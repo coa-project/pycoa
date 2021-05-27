@@ -101,13 +101,16 @@ class CocoDisplay:
                     if list_dep_metro:
                         self.boundary_metropole = self.location_geometry.loc[self.location_geometry.code_subregion.isin(list_dep_metro)]['geometry'].total_bounds
             else:
-                   geopan = gpd.GeoDataFrame(crs="EPSG:4326")
+                   geopan = gpd.GeoDataFrame()#crs="EPSG:4326")
                    info = coge.GeoInfo()
                    allcountries = geo.get_GeoRegion().get_countries_from_region('world')
                    geopan['location'] = [geo.to_standard(c)[0] for c in allcountries]
                    geopan = info.add_field(field=['geometry'],input=geopan ,geofield='location')
+                   geopan = gpd.GeoDataFrame(geopan, geometry=geopan.geometry, crs="EPSG:4326")
+
                    geopan = geopan[geopan.location != 'Antarctica']
                    geopan = geopan.dropna().reset_index(drop=True)
+
                    self.location_geometry  = geopan
                    #self.boundary = geopan['geometry'].total_bounds
         except:
@@ -185,6 +188,7 @@ class CocoDisplay:
                 input_dico['when_end'] = input_dico['when_beg']
 
 #        when_end_change = CocoDisplay.changeto_nonan_date(mypandas, input_dico['when_end'], var_displayed)
+
         when_end_change = CocoDisplay.changeto_nonull_date(mypandas, input_dico['when_end'], var_displayed)
         if when_end_change != input_dico['when_end']:
             input_dico['when_end'] = when_end_change
@@ -517,7 +521,6 @@ class CocoDisplay:
         df = df.copy()
         column_sum = df[column_name].sum()
         df['percentage'] = (df[column_name]/column_sum)
-        df['textdisplayed'] = df[column_name].apply(lambda x: '\n(N='+str(x)+')')
         #(( df['percentage'] * 100 ).astype(np.double).round(2)).apply(lambda x: str(x)+'%')
         percentages = [0]  + df['percentage'].cumsum().tolist()
         df['starts'] = [p * 2 * np.pi for p in percentages[:-1]]
@@ -532,6 +535,10 @@ class CocoDisplay:
         df['text_size'] = [str(10)+'pt' if i > 0.08*(2 * np.pi) else '4pt' for i in df['diff']]
         df['text_angle'] = 0.
         df.loc[:, 'percentage'] = (( df['percentage'] * 100 ).astype(np.double).round(2)).apply(lambda x: str(x))
+
+        df['textdisplayed'] = df['codelocation']#+df[column_name].apply(lambda x: '\n(N='+str(round(x,2))+')')
+        df.loc[df['diff']<= np.pi/10,'textdisplayed']=''
+
         return df
     ###################### END Static Methods ##################
     ###################### BEGIN Plots ##################
@@ -787,7 +794,7 @@ class CocoDisplay:
             geopdwd = mypandas
 
             geopdwd = geopdwd.sort_values(by = input_field, ascending=False)
-            geopdwd = geopdwd.dropna(subset = [input_field])
+            #geopdwd = geopdwd.dropna(subset = [input_field])
             geopdwd = geopdwd.reset_index(drop = True)
             orientation = kwargs.get('orientation', 'vertical')
 
@@ -805,6 +812,7 @@ class CocoDisplay:
 
             # geopdwd_filter = geopdwd_filter.drop(columns=['date'])
             geopdwd_filter = geopdwd_filter.reset_index(drop = True)
+
             if func.__name__ == 'pycoa_mapfolium' or func.__name__ == 'pycoa_map' or func.__name__ == 'innerdecopycoageo':
                 if isinstance(mypandas.location.to_list()[0],list):
                     geom = self.location_geometry
@@ -836,7 +844,6 @@ class CocoDisplay:
             geopdwd_filter = geopdwd_filter.reset_index(drop=True)
             if cursor_date is False:
                 date_slider = False
-
             return func(self, input_field, date_slider, maplabel, dico, geopdwd, geopdwd_filter)
         return generic_hm
 
@@ -1051,7 +1058,8 @@ class CocoDisplay:
                         #if min_value >= 0:
                         #    min_range_val = 10 ** np.floor(np.log10(min_value_gt0))
                         if func.__name__ == 'pycoa_horizonhisto' :
-                            srcfiltered.data['left'] = [0.001] * len(srcfiltered.data['right'])
+                            standardfig.x_range = Range1d(0.01, 50 * max_value)
+                            srcfiltered.data['left'] = [0.01] * len(srcfiltered.data['right'])
 
                 if func.__name__ == 'pycoa_pie' :
                     if not mypandas_filter[mypandas_filter[input_field] < 0.].empty:
@@ -1245,7 +1253,13 @@ class CocoDisplay:
     def pycoa_horizonhisto(self, srcfiltered, panels, date_slider):
         n = len(panels)
         loc = srcfiltered.data['clustername']
-        label_dict = {(len(loc) - k) : (v if len(v)<20 else  v.split('-')[0]+'...'+v.split('-')[-1]) for k, v in enumerate(loc) }
+        chars = [' ','-']
+        returnchars = [x for x in loc if x in chars]
+        label_dict = {}
+        if returnchars == '-':
+                label_dict = {(len(loc) - k) : (v if len(v)<10 else v.split(returnchars)[0]+'...'+v.split(returnchars)[-1]) for k, v in enumerate(loc) }
+        else:
+            label_dict = {(len(loc) - k) : (v if len(v)<12 else v[:6]+'...'+v[-6:]) for k, v in enumerate(loc) }
         new_panels = []
         for i in range(n):
             fig = panels[i].child
@@ -1283,7 +1297,6 @@ class CocoDisplay:
                          start_angle = 'starts', end_angle = 'ends',
                          line_color = 'white', color = 'colors', legend_label = 'clustername', source = srcfiltered)
         standardfig.legend.visible = False
-        srcfiltered.data['textdisplayed'] = srcfiltered.data['codelocation'] + srcfiltered.data['textdisplayed']
         txt1 = Text(x = 'text_x', y = 'text_y', text = 'textdisplayed', angle = 'text_angle',
               text_align = 'center', text_font_size = 'text_size')
         #txt2 = Text(x = 'text_x', y = 'text_y2', text = 'percentage', angle = 'text_angle',

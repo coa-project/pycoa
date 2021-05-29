@@ -249,10 +249,10 @@ class DataBase(object):
                         # 'sexe' == 0 male + female
                         cast = {'dep': 'string'}
                         rename = {'jour': 'date', 'dep': 'location'}
+                        cast.update({'HospConv':'string','SSR_USLD':'string','autres':'string'})
                         constraints = {'sexe': 0}
                         spf1 = self.csv2pandas("https://www.data.gouv.fr/fr/datasets/r/63352e38-d353-4b54-bfd1-f1b3ee1cabd7",
                                       rename_columns = rename, constraints = constraints, cast = cast)
-
                         # https://www.data.gouv.fr/fr/datasets/donnees-hospitalieres-relatives-a-lepidemie-de-covid-19/
                         # All data are incidence. → integrated later in the code
                         # incid_hosp	string 	Nombre quotidien de personnes nouvellement hospitalisées
@@ -261,14 +261,12 @@ class DataBase(object):
                         # incid_rad	integer	Nombre quotidien de nouveaux retours à domicile
                         spf2 = self.csv2pandas("https://www.data.gouv.fr/fr/datasets/r/6fadff46-9efd-4c53-942a-54aca783c30c",
                                       rename_columns = rename, cast = cast)
-
                         # https://www.data.gouv.fr/fr/datasets/donnees-relatives-aux-resultats-des-tests-virologiques-covid-19/
                         # T       Number of tests performed daily → integrated later
                         # P       Number of positive tests daily → integrated later
                         constraints = {'cl_age90': 0}
                         spf3 = self.csv2pandas("https://www.data.gouv.fr/fr/datasets/r/406c6a23-e283-4300-9484-54e78c8ae675",
                                       rename_columns = rename, constraints = constraints, cast = cast)
-
                         # https://www.data.gouv.fr/fr/datasets/donnees-relatives-aux-personnes-vaccinees-contre-la-covid-19-1
                         # Les données issues du système d’information Vaccin Covid permettent de dénombrer en temps quasi réel
                         # (J-1), le nombre de personnes ayant reçu une injection de vaccin anti-covid en tenant compte du nombre
@@ -278,7 +276,6 @@ class DataBase(object):
                         # previously : https://www.data.gouv.fr/fr/datasets/r/4f39ec91-80d7-4602-befb-4b522804c0af
                         spf5 = self.csv2pandas("https://www.data.gouv.fr/fr/datasets/r/535f8686-d75d-43d9-94b3-da8cdf850634",
                             rename_columns = rename, constraints = constraints, separator = ';', encoding = "ISO-8859-1", cast = cast)
-
                         # https://www.data.gouv.fr/fr/datasets/indicateurs-de-suivi-de-lepidemie-de-covid-19/#_
                         # tension hospitaliere
                         #'date', 'location', 'region', 'libelle_reg', 'libelle_dep', 'tx_incid',

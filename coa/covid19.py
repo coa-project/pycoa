@@ -86,7 +86,7 @@ class DataBase(object):
                     dpc1 = self.csv2pandas('https://raw.githubusercontent.com/pcm-dpc/COVID-19/master/dati-regioni/dpc-covid19-ita-regioni.csv',\
                     rename_columns = rename_dict, separator=',')
                     #dpc1 = self.csv2pandas("https://github.com/pcm-dpc/COVID-19/raw/master/dati-province/dpc-covid19-ita-province.csv",\
-                    columns_keeped = ['tot_deaths','tot_cases']
+                    columns_keeped = ['tot_cases','tot_deaths']
                     self.return_structured_pandas(dpc1, columns_keeped=columns_keeped)
                 elif self.db == 'rki': # DEU
                     info('DEU, Robert Koch Institut data selected ...')
@@ -315,27 +315,25 @@ class DataBase(object):
                         constraints = {'age_18ans': 0}
                         spf7 =  self.csv2pandas("https://www.data.gouv.fr/fr/datasets/r/c0f59f00-3ab2-4f31-8a05-d317b43e9055",
                                     constraints = constraints, rename_columns = rename, separator=';', cast=cast)
-
                         list_spf=[spf1, spf2, spf3, spf4, spf5, spf6, spf7]
 
                         for i in list_spf:
                             i['date'] = pd.to_datetime(i['date']).apply(lambda x: x if not pd.isnull(x) else '')
 
-                        min_date=min([s.date.min() for s in list_spf])
-                        max_date=max([s.date.max() for s in list_spf])
-                        spf1, spf2, spf3, spf4, spf5, spf6, spf7 = spf1.set_index(['date', 'location']),\
-                                                    spf2.set_index(['date', 'location']),\
-                                                    spf3.set_index(['date', 'location']),\
-                                                    spf4.set_index(['date', 'location']),\
-                                                    spf5.set_index(['date', 'location']),\
-                                                    spf6.set_index(['date', 'location']),\
-                                                    spf7.set_index(['date', 'location'])
+                        def notneeded():
+                            min_date=min([s.date.min() for s in list_spf])
+                            max_date=max([s.date.max() for s in list_spf])
+                            spf1, spf2, spf3, spf4, spf5, spf6, spf7 = spf1.set_index(['date', 'location']),\
+                                                        spf2.set_index(['date', 'location']),\
+                                                        spf3.set_index(['date', 'location']),\
+                                                        spf4.set_index(['date', 'location']),\
+                                                        spf5.set_index(['date', 'location']),\
+                                                        spf6.set_index(['date', 'location']),\
+                                                        spf7.set_index(['date', 'location'])
 
-                        list_spf = [spf1, spf2, spf3, spf4, spf5, spf6,spf7]
-
+                        dfs = [df.set_index(['date', 'location']) for df in list_spf]
                         result = reduce(lambda left, right: pd.merge(left, right, on = ['date','location'],
                                                     how = 'outer'), list_spf)
-                        result = result.reset_index()
 
                         #print(merged)
                         #result = reduce(lambda x, y: x.merge(x, y, on = ['location','date']), [spf1, spf2,spf3,spf4,spf5])
@@ -375,12 +373,12 @@ class DataBase(object):
                             'hosp': 'cur_hosp',
                             'rad': 'tot_rad',
                             'rea': 'cur_rea',
+                            'tot_n_dose1': 'tot_vacc',
+                            'tot_n_dose2': 'tot_vacc2',
                             'tx_incid': 'cur_idx_tx_incid',
                             'R': 'cur_idx_R',
                             'taux_occupation_sae': 'cur_idx_taux_occupation_sae',
                             'tx_pos': 'cur_idx_tx_pos',
-                            'tot_n_dose1': 'tot_vacc',
-                            'tot_n_dose2': 'tot_vacc2',
                             'Prc_tests_PCR_TA_crible':'cur_idx_Prc_tests_PCR_TA_crible',
                             'Prc_susp_501Y_V1':'cur_idx_Prc_susp_501Y_V1',
                             'Prc_susp_501Y_V2_3':'cur_idx_Prc_susp_501Y_V2_3',
@@ -389,8 +387,9 @@ class DataBase(object):
                             'ti':'cur_idx_ti',
                             'tp':'cur_idx_tp',
                             }
-
                         result = result.rename(columns=rename_dict)
+                        #coltocast=list(rename_dict.values())[:5]
+                        #result[coltocast] = result[coltocast].astype('Int64')
                         columns_keeped  = list(rename_dict.values())+['tot_incid_hosp', 'tot_incid_rea', 'tot_incid_rad', 'tot_incid_dc', 'tot_P', 'tot_T']
                         self.return_structured_pandas(result,columns_keeped=columns_keeped) # with 'tot_dc' first
                 elif self.db == 'opencovid19' or  self.db == 'opencovid19national':
@@ -700,6 +699,7 @@ class DataBase(object):
                 pandas_db = pandas_db.rename(columns={key:val})
         if 'semaine' in  pandas_db.columns:
             pandas_db['semaine'] = [ week_to_date(i) for i in pandas_db['semaine'] ]
+            pandas_db['semaine'] = pandas_db['semaine'].drop_duplicates()
             pandas_db = pandas_db.rename(columns={'semaine':'date'})
         pandas_db['date'] = pandas.to_datetime(pandas_db['date'],errors='coerce').dt.date
         #self.dates  = pandas_db['date']
@@ -820,7 +820,6 @@ class DataBase(object):
         #if len(oldloc) != len(newloc):
         #    raise CoaKeyError('Seems to be an iso3 problem behaviour ...')
         #mypandas = mypandas.replace(oldloc,newloc)
-
         mypandas = mypandas.groupby(['location','date']).sum(min_count=1).reset_index() # summing in case of multiple dates (e.g. in opencovid19 data). But keep nan if any
         mypandas = fill_missing_dates(mypandas)
 

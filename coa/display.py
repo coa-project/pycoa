@@ -663,6 +663,8 @@ class CocoDisplay:
                 for loc in list(mypandas.clustername.unique()):
                     mypandas_filter = mypandas.loc[mypandas.clustername == loc].reset_index(drop = True)
                     leg = CocoDisplay.dict_shorten_loc(mypandas_filter.clustername[0])
+                    if len(leg)>10:
+                        leg=leg[:5]+'...'+leg[-5:]
                     if len(input_field)>1:
                         leg = CocoDisplay.dict_shorten_loc(mypandas_filter.clustername[0]) + ', ' + val
                         color = self.scolors[i]

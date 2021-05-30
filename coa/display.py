@@ -151,10 +151,9 @@ class CocoDisplay:
         else:
             which = mypandas.columns[1]
 
-
-        mypandas = mypandas.explode('location')
+        mypandas['codelocation'] =mypandas['codelocation'].apply(lambda x: x if len(x)< 20 else x[0]+'...'+x[-1] )
+        mypandas['clustername'] =mypandas['clustername'].apply(lambda x: x if len(x)< 20 else x.split('-')[0]+'...'+x.split('-')[-1] )
         mypandas['rolloverdisplay'] = mypandas['clustername']
-        mypandas['rolloverdisplay'] = mypandas['rolloverdisplay'].apply(lambda x: x if len(x)< 20 else x.split('-')[0]+'...'+x.split('-')[-1] )
         input_dico['which'] = which
         var_displayed = which
 
@@ -773,8 +772,9 @@ class CocoDisplay:
         Decorator function used for histogram and map
         """
         def generic_hm(self, mypandas, input_field = None, cursor_date = False, maplabel = False, **kwargs):
-            mypandas, dico = self.standard_input(mypandas, input_field, **kwargs, plot_last_date=True)
 
+            mypandas, dico = self.standard_input(mypandas, input_field, **kwargs, plot_last_date=True)
+            mypandas = mypandas.explode('location')
             if type(input_field) is None.__class__ and dico['which'] is None.__class__:
                 input_field = mypandas.columns[2]
             else:

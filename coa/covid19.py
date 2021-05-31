@@ -86,7 +86,7 @@ class DataBase(object):
                     dpc1 = self.csv2pandas('https://raw.githubusercontent.com/pcm-dpc/COVID-19/master/dati-regioni/dpc-covid19-ita-regioni.csv',\
                     rename_columns = rename_dict, separator=',')
                     #dpc1 = self.csv2pandas("https://github.com/pcm-dpc/COVID-19/raw/master/dati-province/dpc-covid19-ita-province.csv",\
-                    columns_keeped = ['tot_deaths','tot_cases']
+                    columns_keeped = ['tot_cases','tot_deaths']
                     self.return_structured_pandas(dpc1, columns_keeped=columns_keeped)
                 elif self.db == 'rki': # DEU
                     info('DEU, Robert Koch Institut data selected ...')
@@ -249,10 +249,10 @@ class DataBase(object):
                         # 'sexe' == 0 male + female
                         cast = {'dep': 'string'}
                         rename = {'jour': 'date', 'dep': 'location'}
+                        cast.update({'HospConv':'string','SSR_USLD':'string','autres':'string'})
                         constraints = {'sexe': 0}
                         spf1 = self.csv2pandas("https://www.data.gouv.fr/fr/datasets/r/63352e38-d353-4b54-bfd1-f1b3ee1cabd7",
                                       rename_columns = rename, constraints = constraints, cast = cast)
-
                         # https://www.data.gouv.fr/fr/datasets/donnees-hospitalieres-relatives-a-lepidemie-de-covid-19/
                         # All data are incidence. → integrated later in the code
                         # incid_hosp	string 	Nombre quotidien de personnes nouvellement hospitalisées
@@ -261,14 +261,12 @@ class DataBase(object):
                         # incid_rad	integer	Nombre quotidien de nouveaux retours à domicile
                         spf2 = self.csv2pandas("https://www.data.gouv.fr/fr/datasets/r/6fadff46-9efd-4c53-942a-54aca783c30c",
                                       rename_columns = rename, cast = cast)
-
                         # https://www.data.gouv.fr/fr/datasets/donnees-relatives-aux-resultats-des-tests-virologiques-covid-19/
                         # T       Number of tests performed daily → integrated later
                         # P       Number of positive tests daily → integrated later
                         constraints = {'cl_age90': 0}
                         spf3 = self.csv2pandas("https://www.data.gouv.fr/fr/datasets/r/406c6a23-e283-4300-9484-54e78c8ae675",
                                       rename_columns = rename, constraints = constraints, cast = cast)
-
                         # https://www.data.gouv.fr/fr/datasets/donnees-relatives-aux-personnes-vaccinees-contre-la-covid-19-1
                         # Les données issues du système d’information Vaccin Covid permettent de dénombrer en temps quasi réel
                         # (J-1), le nombre de personnes ayant reçu une injection de vaccin anti-covid en tenant compte du nombre
@@ -278,7 +276,6 @@ class DataBase(object):
                         # previously : https://www.data.gouv.fr/fr/datasets/r/4f39ec91-80d7-4602-befb-4b522804c0af
                         spf5 = self.csv2pandas("https://www.data.gouv.fr/fr/datasets/r/535f8686-d75d-43d9-94b3-da8cdf850634",
                             rename_columns = rename, constraints = constraints, separator = ';', encoding = "ISO-8859-1", cast = cast)
-
                         # https://www.data.gouv.fr/fr/datasets/indicateurs-de-suivi-de-lepidemie-de-covid-19/#_
                         # tension hospitaliere
                         #'date', 'location', 'region', 'libelle_reg', 'libelle_dep', 'tx_incid',
@@ -318,27 +315,25 @@ class DataBase(object):
                         constraints = {'age_18ans': 0}
                         spf7 =  self.csv2pandas("https://www.data.gouv.fr/fr/datasets/r/c0f59f00-3ab2-4f31-8a05-d317b43e9055",
                                     constraints = constraints, rename_columns = rename, separator=';', cast=cast)
-
                         list_spf=[spf1, spf2, spf3, spf4, spf5, spf6, spf7]
 
                         for i in list_spf:
                             i['date'] = pd.to_datetime(i['date']).apply(lambda x: x if not pd.isnull(x) else '')
 
-                        min_date=min([s.date.min() for s in list_spf])
-                        max_date=max([s.date.max() for s in list_spf])
-                        spf1, spf2, spf3, spf4, spf5, spf6, spf7 = spf1.set_index(['date', 'location']),\
-                                                    spf2.set_index(['date', 'location']),\
-                                                    spf3.set_index(['date', 'location']),\
-                                                    spf4.set_index(['date', 'location']),\
-                                                    spf5.set_index(['date', 'location']),\
-                                                    spf6.set_index(['date', 'location']),\
-                                                    spf7.set_index(['date', 'location'])
+                        def notneeded():
+                            min_date=min([s.date.min() for s in list_spf])
+                            max_date=max([s.date.max() for s in list_spf])
+                            spf1, spf2, spf3, spf4, spf5, spf6, spf7 = spf1.set_index(['date', 'location']),\
+                                                        spf2.set_index(['date', 'location']),\
+                                                        spf3.set_index(['date', 'location']),\
+                                                        spf4.set_index(['date', 'location']),\
+                                                        spf5.set_index(['date', 'location']),\
+                                                        spf6.set_index(['date', 'location']),\
+                                                        spf7.set_index(['date', 'location'])
 
-                        list_spf = [spf1, spf2, spf3, spf4, spf5, spf6,spf7]
-
+                        dfs = [df.set_index(['date', 'location']) for df in list_spf]
                         result = reduce(lambda left, right: pd.merge(left, right, on = ['date','location'],
                                                     how = 'outer'), list_spf)
-                        result = result.reset_index()
 
                         #print(merged)
                         #result = reduce(lambda x, y: x.merge(x, y, on = ['location','date']), [spf1, spf2,spf3,spf4,spf5])
@@ -378,12 +373,12 @@ class DataBase(object):
                             'hosp': 'cur_hosp',
                             'rad': 'tot_rad',
                             'rea': 'cur_rea',
+                            'tot_n_dose1': 'tot_vacc',
+                            'tot_n_dose2': 'tot_vacc2',
                             'tx_incid': 'cur_idx_tx_incid',
                             'R': 'cur_idx_R',
                             'taux_occupation_sae': 'cur_idx_taux_occupation_sae',
                             'tx_pos': 'cur_idx_tx_pos',
-                            'tot_n_dose1': 'tot_vacc',
-                            'tot_n_dose2': 'tot_vacc2',
                             'Prc_tests_PCR_TA_crible':'cur_idx_Prc_tests_PCR_TA_crible',
                             'Prc_susp_501Y_V1':'cur_idx_Prc_susp_501Y_V1',
                             'Prc_susp_501Y_V2_3':'cur_idx_Prc_susp_501Y_V2_3',
@@ -392,8 +387,9 @@ class DataBase(object):
                             'ti':'cur_idx_ti',
                             'tp':'cur_idx_tp',
                             }
-
                         result = result.rename(columns=rename_dict)
+                        #coltocast=list(rename_dict.values())[:5]
+                        #result[coltocast] = result[coltocast].astype('Int64')
                         columns_keeped  = list(rename_dict.values())+['tot_incid_hosp', 'tot_incid_rea', 'tot_incid_rad', 'tot_incid_dc', 'tot_P', 'tot_T']
                         self.return_structured_pandas(result,columns_keeped=columns_keeped) # with 'tot_dc' first
                 elif self.db == 'opencovid19' or  self.db == 'opencovid19national':
@@ -703,6 +699,7 @@ class DataBase(object):
                 pandas_db = pandas_db.rename(columns={key:val})
         if 'semaine' in  pandas_db.columns:
             pandas_db['semaine'] = [ week_to_date(i) for i in pandas_db['semaine'] ]
+            pandas_db['semaine'] = pandas_db['semaine'].drop_duplicates()
             pandas_db = pandas_db.rename(columns={'semaine':'date'})
         pandas_db['date'] = pandas.to_datetime(pandas_db['date'],errors='coerce').dt.date
         #self.dates  = pandas_db['date']
@@ -823,7 +820,6 @@ class DataBase(object):
         #if len(oldloc) != len(newloc):
         #    raise CoaKeyError('Seems to be an iso3 problem behaviour ...')
         #mypandas = mypandas.replace(oldloc,newloc)
-
         mypandas = mypandas.groupby(['location','date']).sum(min_count=1).reset_index() # summing in case of multiple dates (e.g. in opencovid19 data). But keep nan if any
         mypandas = fill_missing_dates(mypandas)
 

@@ -225,13 +225,13 @@ def week_to_date(whenstr):
         if format is Y-M-D-Y-M-D: return middle dates
     - One week data Wnumber: return monday correction to the week number
     """
-    conservation=0
+    convertion = 0
     if len(whenstr) == 21:
         firstday = datetime.date(int(whenstr.split('-')[0]),int(whenstr.split('-')[1]),int(whenstr.split('-')[2]))
         lastday  = datetime.date(int(whenstr.split('-')[3]),int(whenstr.split('-')[4]),int(whenstr.split('-')[5]))
         convertion = firstday + (lastday - firstday)/2
     else:
-        convertion = datetime.datetime.strptime(whenstr + '-1', "%Y-S%W-%w") + datetime.timedelta(days=7)
+        convertion = datetime.datetime.strptime(whenstr  + '-1' , "%G-S%V-%u")
     return convertion
 
 def get_local_from_url(url,expiration_time=0,suffix=''):

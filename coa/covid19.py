@@ -102,8 +102,8 @@ class DataBase(object):
                     info('FRA, réseau Obepine, surveillance Sars-Cov-2 dans les eaux usées')
                     url='https://www.data.gouv.fr/es/datasets/r/ba71be57-5932-4298-81ea-aff3a12a440c'
                     rename_dict={'Code_Region':'location','Date':'date','Indicateur':'idx_obepine'}
-                    obepine_data=self.csv2pandas(url,separator=';',rename_columns=rename_dict)
-                    obepine_data['location']=obepine_data.location.astype(str)
+                    cast={'location':'string'}
+                    obepine_data=self.csv2pandas(url,separator=';',rename_columns=rename_dict,cast=cast)
                     self.return_structured_pandas(obepine_data,columns_keeped=['idx_obepine'])
                 elif self.db == 'escovid19data': # ESP
                     info('ESP, EsCovid19Data ...')
@@ -771,15 +771,12 @@ class DataBase(object):
             sub2reg = collections.OrderedDict(zip(uniqloc,list(gd.loc[gd.name_subregion.isin(uniqloc)]['name_region'])))
             mypandas['location'] = mypandas['location'].map(sub2reg)
             mypandas = mypandas.loc[~mypandas.location.isnull()]
-        if self.db == 'obepine': # filling subregions.
-            gd = self.geo.get_data()[['code_subregion','name_region']]
-            #preg=self.geo.get_data(True)[['code_subregion','code_region']]
+
+         # filling subregions.
+            gd = self.geo.get_data()[['code_region','name_region']]
+
             uniqloc = list(mypandas['location'].unique())
-            sub2reg = collections.OrderedDict(zip(uniqloc,list(gd.loc[gd.code_subregion.isin(uniqloc)]['name_region'])))
-            #mypandas=mypandas.merge(preg,how='left',left_on='location',right_on='code_region')
-            #mypandas = mypandas.explode('code_subregion')
-            #mypandas['location'] = mypandas['code_subregion']
-            mypandas['location'] = mypandas['location'].map(sub2reg)
+            name2code = collections.OrderedDict(zip(uniqloc,list(gd.loc[gd.name_region.isin(uniqloc)]['code_region'])))
             mypandas = mypandas.loc[~mypandas.location.isnull()]
 
         codename = None
@@ -790,17 +787,24 @@ class DataBase(object):
             self.slocation = list(codename.values())
             location_is_code = True
         else:
-            if self.database_type[self.db][1] == 'region':
+            if self.database_type[self.db][1] == 'region' and self.db != 'obepine':
                 if self.db == 'covid19india':
                     mypandas = mypandas.loc[~mypandas.location.isnull()]
                     uniqloc = list(mypandas['location'].unique())
                 temp = self.geo.get_region_list()[['code_region','name_region']]
                 codename = collections.OrderedDict(zip(uniqloc,list(temp.loc[temp.name_region.isin(uniqloc)]['code_region'])))
                 self.slocation = uniqloc
+            elif  self.database_type[self.db][1] == 'region' and self.db == 'obepine':
+                 temp = self.geo.get_region_list()[['code_region','name_region']]
+                 mypandas['location'] = mypandas['location'].astype(str)
+                 uniqloc = list(mypandas['location'].unique())
+                 codename = collections.OrderedDict(zip(uniqloc,list(temp.loc[temp.code_region.isin(uniqloc)]['name_region'])))
+                 self.slocation = list(codename.values())
+                 location_is_code = True
 
             elif self.database_type[self.db][1] == 'subregion':
                 temp = self.geo_all[['code_subregion','name_subregion']]
-                if self.db in ['phe','covidtracking','spf','escovid19data','obepine']:
+                if self.db in ['phe','covidtracking','spf','escovid19data']:
                     codename = collections.OrderedDict(zip(uniqloc,list(temp.loc[temp.code_subregion.isin(uniqloc)]['name_subregion'])))
                     self.slocation = list(codename.values())
                     location_is_code = True
@@ -809,25 +813,10 @@ class DataBase(object):
                     self.slocation = uniqloc
             else:
                 CoaDbError('Granularity problem , neither region nor sub_region ...')
-            #self.slocation = loc_sub_code
-            #oldloc = loc_sub_name
-            #newloc = loc_sub_code
-            #toremove = [x for x in uniqloc if x not in loc_sub_name]
-            #codedico={i:j for i,j in zip(loc_sub_code,newloc)}
-        #tmp = pd.DataFrame()
 
         if self.db == 'dgs':
             mypandas = mypandas.reset_index(drop=True)
-            #mypandas['location'] = mypandas['location'].apply(lambda x: x.title().replace('Do', 'do').replace('Da','da').replace('De','de'))
-            #uniqloc = list(mypandas.location.unique())
-            #a=self.geo.get_data()
-            #subreg=a.loc[a.name_subregion.isin(uniqloc)][['name_subregion','name_region']].rename(columns={'name_subregion':'location'})
-            #mypandas['region'] = mypandas['location'].map(dict(zip(subreg.location, subreg.name_region)))
-            #mypandas = mypandas.drop(columns=['location'])
-            #mypandas = mypandas.rename(columns={'region':'location'})
-        #if len(oldloc) != len(newloc):
-        #    raise CoaKeyError('Seems to be an iso3 problem behaviour ...')
-        #mypandas = mypandas.replace(oldloc,newloc)
+
         mypandas = mypandas.groupby(['location','date']).sum(min_count=1).reset_index() # summing in case of multiple dates (e.g. in opencovid19 data). But keep nan if any
         mypandas = fill_missing_dates(mypandas)
 
@@ -1035,7 +1024,6 @@ class DataBase(object):
                 if self.db == 'dpc' or self.db == 'sciensano' or self.db == 'obepine':
                     location_exploded = listloc
                 location_exploded = self.flat_list(location_exploded)
-
         def sticky(lname):
             if len(lname)>0:
                 tmp=''

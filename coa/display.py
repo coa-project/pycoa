@@ -90,6 +90,11 @@ class CocoDisplay:
                          tmp=self.location_geometry.rename(columns={'name_region': 'location'})
                          tmp = tmp.loc[tmp.code_region=='PT.99']
                          self.boundary_metropole =tmp['geometry'].total_bounds
+                    if self.dbld[self.database_name][0] == 'FRA':
+                         tmp=self.location_geometry.rename(columns={'name_region': 'location'})
+                         tmp = tmp.loc[tmp.code_region=='999']
+                         self.boundary_metropole =tmp['geometry'].total_bounds
+
                 elif self.dbld[self.database_name][1] == 'subregion':
                     list_dep_metro = None
                     self.location_geometry = geo.get_subregion_list()[['code_subregion', 'name_subregion', 'geometry']]

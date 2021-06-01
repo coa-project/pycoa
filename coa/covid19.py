@@ -182,7 +182,6 @@ class DataBase(object):
                     gbrvar[varname]=gbrvar.loc[gbrvar.Lineage==varname]['Count'].cumsum()
                     gbrvar=gbrvar.drop(columns='Count').rename(columns={'WeekEndDate':'date','LTLA':'location'})
                     gbrvar['date']= [ week_to_date(i) for i in gbrvar['date'] ]
-                    
                     gbrvar['date'] = pd.to_datetime(gbrvar['date'],errors='coerce').dt.date
 
                     gbr_data = pd.merge(gbr_data,gbrvar,on=['location','date']).drop(columns='Lineage')
@@ -998,6 +997,7 @@ class DataBase(object):
             else:
                 location_exploded = self.geo.to_standard(listloc,output='list',interpret_region=True)
         else:
+
             def codetoname(listloc):
                 convertname = []
                 a=self.geo.get_data()
@@ -1009,6 +1009,7 @@ class DataBase(object):
                     else:
                         convertname.append(i)
                 return convertname
+
             name_regions = []
             if origlistlistloc != None:
                 name_regions  = origlistlistloc
@@ -1031,10 +1032,9 @@ class DataBase(object):
                 location_exploded = [ self.geo.get_subregions_from_list_of_region_names([i],output='name')\
                             if len(self.geo.get_subregions_from_list_of_region_names([i],output='name'))>0 else i \
                             for i in listloc]
-                if self.db == 'dpc' or self.db == 'sciensano':
+                if self.db == 'dpc' or self.db == 'sciensano' or self.db == 'obepine':
                     location_exploded = listloc
                 location_exploded = self.flat_list(location_exploded)
-
 
         def sticky(lname):
             if len(lname)>0:
@@ -1060,10 +1060,13 @@ class DataBase(object):
                     pdcluster = pdcluster.append(tmp)
                 j+=1
             pdfiltered = pdcluster[['location','date','codelocation',kwargs['which'],'clustername']]
+
         else:
             pdfiltered = self.get_mainpandas().loc[self.get_mainpandas().location.isin(location_exploded)]
             pdfiltered = pdfiltered[['location','date','codelocation',kwargs['which']]]
             pdfiltered['clustername'] = pdfiltered['location'].copy()
+
+
         # deal with options now
         option = kwargs.get('option', '')
         fillnan = True # default

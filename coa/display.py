@@ -1542,7 +1542,7 @@ class CocoDisplay:
 
         geopdwd_filtered = geopdwd_filtered[['cases','geometry','location','codelocation','rolloverdisplay']]
 
-        if self.dbld[self.database_name] == 'BEL' :
+        if self.dbld[self.database_name][0] == 'BEL' :
             reorder = list(geopdwd_filtered.location.unique())
             reorder = [i for i in reorder[1:]]
             reorder.append('00000')
@@ -1555,10 +1555,12 @@ class CocoDisplay:
 
         if date_slider:
             allcases_location, allcases_dates = pd.DataFrame(), pd.DataFrame()
+            if self.dbld[self.database_name][0] == 'GBR' :
+                geopdwd = geopdwd.loc[~geopdwd.cases.isnull()]
             allcases_location = geopdwd.groupby('location')['cases'].apply(list)
-
             geopdwd_tmp = geopdwd.drop_duplicates(subset = ['location']).drop(columns = 'cases')
             geopdwd_tmp = pd.merge(geopdwd_tmp, allcases_location, on = 'location')
+
             geopdwd_tmp = ColumnDataSource(geopdwd_tmp)
 
             callback = CustomJS(args =  dict(source = geopdwd_tmp, source_filter = geopdwd_filtered,

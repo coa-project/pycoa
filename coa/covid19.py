@@ -175,12 +175,21 @@ class DataBase(object):
                         if w not in ['areaCode']:
                             url=url+'&metric='+w
                     url=url+'&format=csv'
-
                     gbr_data=self.csv2pandas(url,separator=',',rename_columns=rename_dict)
+
+                    gbrvar = pd.read_csv('https://covid-surveillance-data.cog.sanger.ac.uk/download/lineages_by_ltla_and_week.tsv',sep='\t')
+                    varname =  'B.1.617.2'
+                    gbrvar[varname]=gbrvar.loc[gbrvar.Lineage==varname]['Count'].cumsum()
+                    gbrvar=gbrvar.drop(columns='Count').rename(columns={'WeekEndDate':'date','LTLA':'location'})
+                    gbrvar['date']= [ week_to_date(i) for i in gbrvar['date'] ]
+                    
+                    gbrvar['date'] = pd.to_datetime(gbrvar['date'],errors='coerce').dt.date
+
+                    gbr_data = pd.merge(gbr_data,gbrvar,on=['location','date']).drop(columns='Lineage')
                     columns_keeped = list(rename_dict.values())
+                    columns_keeped.append(varname)
                     columns_keeped.remove('location')
                     self.return_structured_pandas(gbr_data,columns_keeped=columns_keeped)
-
                 elif self.db == 'covid19india': # IND
                     info('COVID19India database selected ...')
                     rename_dict = {'Date': 'date', 'State': 'location'}

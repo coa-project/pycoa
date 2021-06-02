@@ -49,9 +49,15 @@ _db_list_dict = {'jhu': ['WW','nation'],
     'owid': ['WW','nation'],
     'jhu-usa': ['USA','subregion'],
     'spf': ['FRA','subregion'],
+<<<<<<< HEAD
     'spfnational': ['WW','nation'],
     'opencovid19': ['FRA','subregion'],
     'opencovid19national': ['WW','nation'],
+=======
+    #'spfnational': ['spfnat','nation'],
+    #'opencovid19': ['FRA','subregion'],
+    #'opencovid19national': ['WW','nation'],
+>>>>>>> efe4ca3b8a679785552ad551b160ce3457f0373c
     'dpc': ['ITA','region'],
     'covidtracking': ['USA','subregion'],
     'covid19india': ['IND','region'],

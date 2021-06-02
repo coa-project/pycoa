@@ -230,6 +230,9 @@ def week_to_date(whenstr):
         firstday = datetime.date(int(whenstr.split('-')[0]),int(whenstr.split('-')[1]),int(whenstr.split('-')[2]))
         lastday  = datetime.date(int(whenstr.split('-')[3]),int(whenstr.split('-')[4]),int(whenstr.split('-')[5]))
         convertion = firstday + (lastday - firstday)/2
+    elif len(whenstr) == 10:
+        firstday = datetime.date(int(whenstr.split('-')[0]),int(whenstr.split('-')[1]),int(whenstr.split('-')[2]))
+        convertion = firstday+datetime.timedelta(days=3)
     else:
         convertion = datetime.datetime.strptime(whenstr  + '-1' , "%G-S%V-%u")
     return convertion

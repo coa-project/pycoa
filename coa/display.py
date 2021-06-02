@@ -90,6 +90,11 @@ class CocoDisplay:
                          tmp=self.location_geometry.rename(columns={'name_region': 'location'})
                          tmp = tmp.loc[tmp.code_region=='PT.99']
                          self.boundary_metropole =tmp['geometry'].total_bounds
+                    if self.dbld[self.database_name][0] == 'FRA':
+                         tmp=self.location_geometry.rename(columns={'name_region': 'location'})
+                         tmp = tmp.loc[tmp.code_region=='999']
+                         self.boundary_metropole =tmp['geometry'].total_bounds
+
                 elif self.dbld[self.database_name][1] == 'subregion':
                     list_dep_metro = None
                     self.location_geometry = geo.get_subregion_list()[['code_subregion', 'name_subregion', 'geometry']]
@@ -1542,7 +1547,7 @@ class CocoDisplay:
 
         geopdwd_filtered = geopdwd_filtered[['cases','geometry','location','codelocation','rolloverdisplay']]
 
-        if self.dbld[self.database_name] == 'BEL' :
+        if self.dbld[self.database_name][0] == 'BEL' :
             reorder = list(geopdwd_filtered.location.unique())
             reorder = [i for i in reorder[1:]]
             reorder.append('00000')
@@ -1555,10 +1560,12 @@ class CocoDisplay:
 
         if date_slider:
             allcases_location, allcases_dates = pd.DataFrame(), pd.DataFrame()
+            if self.dbld[self.database_name][0] == 'GBR' :
+                geopdwd = geopdwd.loc[~geopdwd.cases.isnull()]
             allcases_location = geopdwd.groupby('location')['cases'].apply(list)
-
             geopdwd_tmp = geopdwd.drop_duplicates(subset = ['location']).drop(columns = 'cases')
             geopdwd_tmp = pd.merge(geopdwd_tmp, allcases_location, on = 'location')
+
             geopdwd_tmp = ColumnDataSource(geopdwd_tmp)
 
             callback = CustomJS(args =  dict(source = geopdwd_tmp, source_filter = geopdwd_filtered,

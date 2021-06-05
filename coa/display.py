@@ -634,11 +634,11 @@ class CocoDisplay:
             if len(input_field) != 2:
                 raise CoaTypeError('Two variables are needed to be plotted ... ')
 
-            for loc in mypandas.location.unique():
-                pandaloc = mypandas.loc[mypandas.location == loc].sort_values(by='date', ascending='True')
+            for loc in mypandas.clustername.unique():
+                pandaloc = mypandas.loc[mypandas.clustername == loc].sort_values(by='date', ascending='True')
                 pandaloc.rename(columns={input_field[0]: 'casesx', input_field[1]: 'casesy'}, inplace=True)
                 standardfig.line(x='casesx', y='casesy',
-                                 source=ColumnDataSource(pandaloc), legend_label=pandaloc.codelocation.iloc[0],
+                                 source=ColumnDataSource(pandaloc), legend_label=pandaloc.clustername.iloc[0],
                                  color=pandaloc.colors.iloc[0], line_width=3, hover_line_width=4)
 
             standardfig.legend.label_text_font_size = "12px"

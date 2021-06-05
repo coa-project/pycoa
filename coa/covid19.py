@@ -327,7 +327,7 @@ class DataBase(object):
                         rename = {'dep': 'location'}
                         constraints = {'cl_age90': 0}
                         spf6 =  self.csv2pandas("https://www.data.gouv.fr/fr/datasets/r/16f4fd03-797f-4616-bca9-78ff212d06e8",
-                                    constraints = constraints, rename_columns = rename, separator=';', cast=cast)
+                                     rename_columns = rename, separator=';', cast=cast)
                         #result = pd.concat([spf1, spf2,spf3,spf4,spf5], axis=1, sort=False)
                         constraints = {'age_18ans': 0}
                         spf7 =  self.csv2pandas("https://www.data.gouv.fr/fr/datasets/r/c0f59f00-3ab2-4f31-8a05-d317b43e9055",
@@ -336,32 +336,13 @@ class DataBase(object):
 
                         for i in list_spf:
                             i['date'] = pd.to_datetime(i['date']).apply(lambda x: x if not pd.isnull(x) else '')
-
-                        def notneeded():
-                            min_date=min([s.date.min() for s in list_spf])
-                            max_date=max([s.date.max() for s in list_spf])
-                            spf1, spf2, spf3, spf4, spf5, spf6, spf7 = spf1.set_index(['date', 'location']),\
-                                                        spf2.set_index(['date', 'location']),\
-                                                        spf3.set_index(['date', 'location']),\
-                                                        spf4.set_index(['date', 'location']),\
-                                                        spf5.set_index(['date', 'location']),\
-                                                        spf6.set_index(['date', 'location']),\
-                                                        spf7.set_index(['date', 'location'])
-
                         dfs = [df.set_index(['date', 'location']) for df in list_spf]
-                        result = reduce(lambda left, right: pd.merge(left, right, on = ['date','location'],
-                                                    how = 'outer'), list_spf)
 
-                        #print(merged)
-                        #result = reduce(lambda x, y: x.merge(x, y, on = ['location','date']), [spf1, spf2,spf3,spf4,spf5])
-                        #print(result)
-                        # ['location', 'date', 'hosp', 'rea', 'rad', 'dc', 'incid_hosp',
-                           # 'incid_rea', 'incid_dc', 'incid_rad', 'P', 'T', 'pop', 'region',
-                           # 'libelle_reg', 'libelle_dep', 'tx_incid', 'R', 'taux_occupation_sae',
-                           # 'tx_pos', 'tx_incid_couleur', 'R_couleur',
-                           # 'taux_occupation_sae_couleur', 'tx_pos_couleur', 'nb_orange',
-                           # 'nb_rouge']
-                        #min_date=result['date'].min()
+                        result = reduce(lambda left, right: pd.merge(left, right, how = 'outer'), list_spf)
+                        #result = reduce(lambda left, right: pd.merge(left, right, on = ['date','location'],
+                        #                            how = 'outer'), list_spf)
+                        #print("result",result.loc[(result.location=='01') & ~result.Prc_susp_501Y_V2_3.isnull()])
+                        #result = pd.concat(dfs , how = 'outer',axis=1).reset_index()
                         for w in ['incid_hosp', 'incid_rea', 'incid_rad', 'incid_dc', 'P', 'T', 'n_dose1', 'n_dose2']:
                             result[w]=pd.to_numeric(result[w], errors = 'coerce')
                             if w.startswith('incid_'):
@@ -375,15 +356,17 @@ class DataBase(object):
                                 #result['offset_'+w] = 0
                             result['tot_'+w]=result.groupby(['location'])[w].cumsum()#+result['offset_'+w]
                         #
-                        for col in result.columns:
-                            if col.startswith('Prc'):
-                                result[col] /= 100.
-                        for col in result.columns:
-                            if col.startswith('ti'):
-                                result[col] /= 7. #par
-                        for col in result.columns:
-                            if col.startswith('tp'):
-                                result[col] /= 7. #par
+
+                        def dontneeeded():
+                            for col in result.columns:
+                                if col.startswith('Prc'):
+                                    result[col] /= 100.
+                            for col in result.columns:
+                                if col.startswith('ti'):
+                                    result[col] /= 7. #par
+                            for col in result.columns:
+                                if col.startswith('tp'):
+                                    result[col] /= 7. #par
 
                         rename_dict={
                             'dc': 'tot_dc',
@@ -405,6 +388,7 @@ class DataBase(object):
                             'tp':'cur_idx_tp',
                             }
                         result = result.rename(columns=rename_dict)
+
                         #coltocast=list(rename_dict.values())[:5]
                         #result[coltocast] = result[coltocast].astype('Int64')
                         columns_keeped  = list(rename_dict.values())+['tot_incid_hosp', 'tot_incid_rea', 'tot_incid_rad', 'tot_incid_dc', 'tot_P', 'tot_T']
@@ -697,6 +681,7 @@ class DataBase(object):
             encoding = encoding
         pandas_db = pandas.read_csv(get_local_from_url(url,7200),sep=separator,dtype=dico_cast, encoding = encoding,
             keep_default_na=False,na_values='') # cached for 2 hours
+
         #pandas_db = pandas.read_csv(self.database_url,sep=separator,dtype=dico_cast, encoding = encoding )
         constraints = kwargs.get('constraints', None)
         rename_columns = kwargs.get('rename_columns', None)
@@ -713,9 +698,10 @@ class DataBase(object):
         if rename_columns:
             for key,val in rename_columns.items():
                 pandas_db = pandas_db.rename(columns={key:val})
+
         if 'semaine' in  pandas_db.columns:
-            pandas_db['semaine'] = [ week_to_date(i) for i in pandas_db['semaine'] ]
-            pandas_db['semaine'] = pandas_db['semaine'].drop_duplicates()
+            pandas_db['semaine'] = [ week_to_date(i) for i in pandas_db['semaine']]
+            #pandas_db = pandas_db.drop_duplicates(subset=['semaine'])
             pandas_db = pandas_db.rename(columns={'semaine':'date'})
         pandas_db['date'] = pandas.to_datetime(pandas_db['date'],errors='coerce').dt.date
         #self.dates  = pandas_db['date']
@@ -787,6 +773,7 @@ class DataBase(object):
             name2code = collections.OrderedDict(zip(uniqloc,list(gd.loc[gd.name_region.isin(uniqloc)]['code_region'])))
             mypandas = mypandas.loc[~mypandas.location.isnull()]
 
+
         codename = None
         location_is_code = False
         uniqloc = list(mypandas['location'].unique())
@@ -802,7 +789,7 @@ class DataBase(object):
                 temp = self.geo.get_region_list()[['code_region','name_region']]
                 codename = collections.OrderedDict(zip(uniqloc,list(temp.loc[temp.name_region.isin(uniqloc)]['code_region'])))
                 self.slocation = uniqloc
-            elif  self.database_type[self.db][1] == 'region' and self.db == 'obepine':
+            elif self.database_type[self.db][1] == 'region' and self.db == 'obepine':
                  temp = self.geo.get_region_list()[['code_region','name_region']]
                  mypandas['location'] = mypandas['location'].astype(str)
                  uniqloc = list(mypandas['location'].unique())
@@ -819,6 +806,7 @@ class DataBase(object):
                 else:
                     codename = collections.OrderedDict(zip(uniqloc,list(temp.loc[temp.name_subregion.isin(uniqloc)]['code_subregion'])))
                     self.slocation = uniqloc
+
             else:
                 CoaDbError('Granularity problem , neither region nor sub_region ...')
 
@@ -1061,7 +1049,6 @@ class DataBase(object):
             pdfiltered = self.get_mainpandas().loc[self.get_mainpandas().location.isin(location_exploded)]
             pdfiltered = pdfiltered[['location','date','codelocation',kwargs['which']]]
             pdfiltered['clustername'] = pdfiltered['location'].copy()
-
 
         # deal with options now
         option = kwargs.get('option', '')

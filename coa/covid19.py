@@ -341,7 +341,7 @@ class DataBase(object):
                         #    print(i.loc[i.date==d1])
                         #dfs = [df.set_index(['date', 'location']) for df in list_spf]
                         result = reduce(lambda left, right: left.merge(right, how = 'outer', on=['location','date']), list_spf)
-
+                        result = result.loc[~result['location'].isin(['00'])]
                         result = result.sort_values(by=['location','date'])
                         for w in ['incid_hosp', 'incid_rea', 'incid_rad', 'incid_dc', 'P', 'T', 'n_dose1', 'n_dose2']:
                             result[w]=pd.to_numeric(result[w], errors = 'coerce')
@@ -776,6 +776,7 @@ class DataBase(object):
         codename = None
         location_is_code = False
         uniqloc = list(mypandas['location'].unique())
+
         if self.db_world:
             codename = collections.OrderedDict(zip(uniqloc,self.geo.to_standard(uniqloc,output='list',db=self.get_db(),interpret_region=True)))
             self.slocation = list(codename.values())
@@ -799,11 +800,13 @@ class DataBase(object):
             elif self.database_type[self.db][1] == 'subregion':
                 temp = self.geo_all[['code_subregion','name_subregion']]
                 if self.db in ['phe','covidtracking','spf','escovid19data','opencovid19']:
-                    codename = collections.OrderedDict(zip(uniqloc,list(temp.loc[temp.code_subregion.isin(uniqloc)]['name_subregion'])))
+                    codename={i:list(temp.loc[temp.code_subregion.isin([i])]['name_subregion'])[0] for i in uniqloc if not temp.loc[temp.code_subregion.isin([i])]['name_subregion'].empty }
+                    #codename = collections.OrderedDict(zip(uniqloc,list(temp.loc[temp.code_subregion.isin(uniqloc)]['name_subregion'])))
                     self.slocation = list(codename.values())
                     location_is_code = True
                 else:
-                    codename = collections.OrderedDict(zip(uniqloc,list(temp.loc[temp.name_subregion.isin(uniqloc)]['code_subregion'])))
+                    codename={i:list(temp.loc[temp.code_subregion.isin([i])]['code_subregion'])[0] for i in uniqloc if not temp.loc[temp.code_subregion.isin([i])]['code_subregion'].empty }
+                    #codename = collections.OrderedDict(zip(uniqloc,list(temp.loc[temp.name_subregion.isin(uniqloc)]['code_subregion'])))
                     self.slocation = uniqloc
 
             else:

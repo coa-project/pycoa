@@ -293,6 +293,8 @@ class DataBase(object):
                         # previously : https://www.data.gouv.fr/fr/datasets/r/4f39ec91-80d7-4602-befb-4b522804c0af
                         spf5 = self.csv2pandas("https://www.data.gouv.fr/fr/datasets/r/535f8686-d75d-43d9-94b3-da8cdf850634",
                             rename_columns = rename, constraints = constraints, separator = ';', encoding = "ISO-8859-1", cast = cast)
+
+                        #print(spf5)
                         # https://www.data.gouv.fr/fr/datasets/indicateurs-de-suivi-de-lepidemie-de-covid-19/#_
                         # tension hospitaliere
                         #'date', 'location', 'region', 'libelle_reg', 'libelle_dep', 'tx_incid',
@@ -327,22 +329,20 @@ class DataBase(object):
                         rename = {'dep': 'location'}
                         constraints = {'cl_age90': 0}
                         spf6 =  self.csv2pandas("https://www.data.gouv.fr/fr/datasets/r/16f4fd03-797f-4616-bca9-78ff212d06e8",
-                                     rename_columns = rename, separator=';', cast=cast)
-                        #result = pd.concat([spf1, spf2,spf3,spf4,spf5], axis=1, sort=False)
+                                     constraints = constraints,rename_columns = rename, separator=';', cast=cast)
+
                         constraints = {'age_18ans': 0}
                         spf7 =  self.csv2pandas("https://www.data.gouv.fr/fr/datasets/r/c0f59f00-3ab2-4f31-8a05-d317b43e9055",
                                     constraints = constraints, rename_columns = rename, separator=';', cast=cast)
-                        list_spf=[spf1, spf2, spf3, spf4, spf5, spf6, spf7]
+                        list_spf=[spf1,spf2, spf3, spf4, spf5, spf6, spf7]
 
-                        for i in list_spf:
-                            i['date'] = pd.to_datetime(i['date']).apply(lambda x: x if not pd.isnull(x) else '')
-                        dfs = [df.set_index(['date', 'location']) for df in list_spf]
+                        #for i in list_spf:
+                        #    i['date'] = pd.to_datetime(i['date']).apply(lambda x: x if not pd.isnull(x) else '')
+                        #    print(i.loc[i.date==d1])
+                        #dfs = [df.set_index(['date', 'location']) for df in list_spf]
+                        result = reduce(lambda left, right: left.merge(right, how = 'outer', on=['location','date']), list_spf)
 
-                        result = reduce(lambda left, right: pd.merge(left, right, how = 'outer'), list_spf)
-                        #result = reduce(lambda left, right: pd.merge(left, right, on = ['date','location'],
-                        #                            how = 'outer'), list_spf)
-                        #print("result",result.loc[(result.location=='01') & ~result.Prc_susp_501Y_V2_3.isnull()])
-                        #result = pd.concat(dfs , how = 'outer',axis=1).reset_index()
+                        result = result.sort_values(by=['location','date'])
                         for w in ['incid_hosp', 'incid_rea', 'incid_rad', 'incid_dc', 'P', 'T', 'n_dose1', 'n_dose2']:
                             result[w]=pd.to_numeric(result[w], errors = 'coerce')
                             if w.startswith('incid_'):
@@ -773,7 +773,6 @@ class DataBase(object):
             name2code = collections.OrderedDict(zip(uniqloc,list(gd.loc[gd.name_region.isin(uniqloc)]['code_region'])))
             mypandas = mypandas.loc[~mypandas.location.isnull()]
 
-
         codename = None
         location_is_code = False
         uniqloc = list(mypandas['location'].unique())
@@ -1139,7 +1138,7 @@ class DataBase(object):
             # computing daily, cumul and weekly
             else:
                 if kwargs['which'].startswith('cur_idx_'):
-                  tmp = pdfiltered.groupby(['date']).mean().reset_index()
+                    tmp = pdfiltered.groupby(['date']).mean().reset_index()
                 else:
                     tmp = pdfiltered.groupby(['date']).sum().reset_index()
                 uniqloc = list(pdfiltered.location.unique())
@@ -1147,7 +1146,6 @@ class DataBase(object):
                 tmp.loc[:,'location'] = ['dummy']*len(tmp)
                 tmp.loc[:,'codelocation'] = ['dummy']*len(tmp)
                 tmp.loc[:,'clustername'] = ['dummy']*len(tmp)
-
                 for i in range(len(tmp)):
                     tmp.at[i,'location'] = uniqloc #sticky(uniqloc)
                     tmp.at[i,'codelocation'] = uniqcodeloc #sticky(uniqcodeloc)

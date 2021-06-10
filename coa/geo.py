@@ -312,9 +312,12 @@ class GeoInfo():
         'urban_rate':'https://www.worldometers.info/world-population/population-by-country/',\
         #'geometry':'https://github.com/johan/world.geo.json/',\
         'geometry':'http://thematicmapping.org/downloads/world_borders.php and https://github.com/johan/world.geo.json/',\
-        'region_code_list':'https://en.wikipedia.org/wiki/List_of_countries_by_United_Nations_geoscheme',\
-        'region_name_list':'https://en.wikipedia.org/wiki/List_of_countries_by_United_Nations_geoscheme',\
-        'capital':'https://en.wikipedia.org/wiki/List_of_countries_by_United_Nations_geoscheme',\
+        'region_code_list':'https://en.wikipedia.org/w/index.php?title=List_of_countries_by_United_Nations_geoscheme&oldid=1008989486',\
+        #https://en.wikipedia.org/wiki/List_of_countries_by_United_Nations_geoscheme',\
+        'region_name_list':'https://en.wikipedia.org/w/index.php?title=List_of_countries_by_United_Nations_geoscheme&oldid=1008989486',\
+        #https://en.wikipedia.org/wiki/List_of_countries_by_United_Nations_geoscheme',\
+        'capital':'https://en.wikipedia.org/w/index.php?title=List_of_countries_by_United_Nations_geoscheme&oldid=1008989486',\
+        #https://en.wikipedia.org/wiki/List_of_countries_by_United_Nations_geoscheme',\
         'flag':'https://github.com/linssen/country-flag-icons/blob/master/countries.json',\
         }
 
@@ -539,7 +542,7 @@ class GeoRegion():
     """
 
     _source_dict={"UN_M49":"https://en.wikipedia.org/w/index.php?title=UN_M49&oldid=986603718", # pointing the previous correct ref . https://en.wikipedia.org/wiki/UN_M49",\
-        "GeoScheme":"https://en.wikipedia.org/wiki/List_of_countries_by_United_Nations_geoscheme",
+        "GeoScheme":"https://en.wikipedia.org/w/index.php?title=List_of_countries_by_United_Nations_geoscheme&oldid=1008989486", #pointing the previous correct ref. https://en.wikipedia.org/wiki/List_of_countries_by_United_Nations_geoscheme",
         "European Union":"https://europa.eu/european-union/about-eu/countries/member-countries_en",
         "G7":"https://en.wikipedia.org/wiki/Group_of_Seven",
         "G8":"https://en.wikipedia.org/wiki/Group_of_Eight",

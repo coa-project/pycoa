@@ -1065,7 +1065,10 @@ class DataBase(object):
                 for loca in location_exploded:
                     # modify values in order that diff values is never negative
                     pdloc=pdfiltered.loc[ pdfiltered.clustername == loca ][kwargs['which']]
-                    y0=pdloc.values[0] # integrated offset at t=0
+                    try:
+                        y0=pdloc.values[0] # integrated offset at t=0
+                    except:
+                        y0=0    
                     if np.isnan(y0):
                         y0=0
                     pa = pdloc.diff()

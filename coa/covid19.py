@@ -1174,6 +1174,12 @@ class DataBase(object):
 
         return pdfiltered
 
+   def merger(self,**kwargs):
+        if not isinstance(kwargs['stats'], list) or len(kwargs['stats'])<=1:
+            raise CoaKeyError('stats value should be at least a list of 2 elements ... ')
+        else:
+            print("--->",kwargs['stats'])
+
    ## https://www.kaggle.com/freealf/estimation-of-rt-from-cases
    def smooth_cases(self,cases):
         new_cases = cases

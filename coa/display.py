@@ -661,7 +661,6 @@ class CocoDisplay:
             standardfig.yaxis[0].formatter = PrintfTickFormatter(format = "%4.2e")
             i = 0
             r_list=[]
-
             for val in input_field:
                 line_style = ['solid', 'dashed', 'dotted', 'dotdash']
                 for loc in list(mypandas.clustername.unique()):
@@ -829,7 +828,6 @@ class CocoDisplay:
                     geopdwd_filter = pd.merge(geopdwd_filter, self.location_geometry, on='location')
                 geopdwd_filter = gpd.GeoDataFrame(geopdwd_filter, geometry=geopdwd_filter.geometry, crs="EPSG:4326")
                 dico['tile'] = CocoDisplay.get_tile(dico['tile'], func.__name__)
-
             if func.__name__ == 'inner' or func.__name__ == 'pycoa_histo':
                 pos = {}
                 new = pd.DataFrame(columns=geopdwd_filter.columns)
@@ -851,6 +849,7 @@ class CocoDisplay:
             geopdwd_filter = geopdwd_filter.reset_index(drop=True)
             if cursor_date is False:
                 date_slider = False
+
             return func(self, input_field, date_slider, maplabel, dico, geopdwd, geopdwd_filter)
         return generic_hm
 
@@ -923,6 +922,7 @@ class CocoDisplay:
         HoverTool is available it returns position of the middle of the bin and the value.
         """
         mypandas = geopdwd_filtered.rename(columns = {'cases': input_field})
+
         if 'location' in mypandas.columns:
             uniqloc = list(mypandas.codelocation.unique())
 
@@ -1005,7 +1005,6 @@ class CocoDisplay:
             title_fig = input_field
             geopdwd['cases'] = geopdwd[input_field]
             geopdwd_filtered['cases'] = geopdwd_filtered[input_field]
-
             my_date = geopdwd.date.unique()
             dico_utc = {i: DateSlider(value=i).value for i in my_date}
             geopdwd['date_utc'] = [dico_utc[i] for i in geopdwd.date]
@@ -1015,7 +1014,6 @@ class CocoDisplay:
             nmaxdisplayed = 18
             if len(locunique) >= nmaxdisplayed:
                 geopdwd_filter = geopdwd_filter.loc[geopdwd_filter.location.isin(locunique[:nmaxdisplayed])]
-
             if func.__name__ == 'pycoa_horizonhisto' :
                 #geopdwd_filter['bottom'] = geopdwd_filter.index
                 geopdwd_filter['left'] = geopdwd_filter['cases']

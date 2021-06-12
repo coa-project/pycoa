@@ -20,6 +20,8 @@ import pandas
 from collections import defaultdict
 import numpy as np
 import pandas as pd
+import pandas_flavor as pf
+
 import sys
 from coa.tools import info, verb, kwargs_test, get_local_from_url, fill_missing_dates, check_valid_date, week_to_date, get_db_list_dict
 
@@ -912,6 +914,7 @@ class DataBase(object):
         '''
         return self.slocation
 
+
    def get_stats(self, **kwargs):
         '''
         Return the pandas pandas_datase
@@ -1068,7 +1071,7 @@ class DataBase(object):
                     try:
                         y0=pdloc.values[0] # integrated offset at t=0
                     except:
-                        y0=0    
+                        y0=0
                     if np.isnan(y0):
                         y0=0
                     pa = pdloc.diff()
@@ -1177,11 +1180,32 @@ class DataBase(object):
 
         return pdfiltered
 
+   @pf.register_dataframe_method
+   def get_which(df):
+       return df.columns[2]
+
    def merger(self,**kwargs):
+        '''
+        Merge two or more pandas retrieve from get_stats operation
+        'stats': list (min 2D) of pandas from stats
+        'forwhich': one or more columns values to aggregate
+                    by default forwhich if all the what values from the stats list
+        '''
+        stats=[]
+        forwhich='what'
         if not isinstance(kwargs['stats'], list) or len(kwargs['stats'])<=1:
             raise CoaKeyError('stats value should be at least a list of 2 elements ... ')
         else:
-            print("--->",kwargs['stats'])
+            stats = kwargs['stats']
+        if not isinstance(kwargs['what'], list):
+            what = [kwargs['what']]
+
+        base = stats[0].copy()
+
+        for i in stats[1:]:
+            if what[0] in i.columns:
+                base[what[0]+'_'+i.to_string()] = i[what[0]]
+        return base
 
    ## https://www.kaggle.com/freealf/estimation-of-rt-from-cases
    def smooth_cases(self,cases):

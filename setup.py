@@ -43,6 +43,7 @@ setup(
         'scipy',\
         'shapely',\
         'pytest >=5.0',\
+        'pandas-flavor',\
         ],
     # The license can be anything you like
     license='MIT',

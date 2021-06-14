@@ -805,11 +805,15 @@ class CocoDisplay:
             geopdwd = geopdwd.reset_index(drop = True)
             orientation = kwargs.get('orientation', 'horizontal')
 
+            if dico['when_beg']:
+                started = dico['when_beg']
+            else:
+                started = geopdwd.date.min()
+
             if dico['when_end'] <= geopdwd.date.min():
                 started = geopdwd.date.min()
                 ended = geopdwd.date.min() + dt.timedelta(days=1)
             else:
-                started = geopdwd.date.min()
                 ended = dico['when_end']
             date_slider = DateSlider(title = "Date: ", start = started, end = ended,
                                      value = ended, step=24 * 60 * 60 * 1000, orientation = orientation)
@@ -1400,7 +1404,7 @@ class CocoDisplay:
 
         def get_color(feature):
             value = map_dict.get(feature['properties']['location'])
-            if value is None:
+            if value is None or np.isnan(value):
                 return '#8c8c8c'  # MISSING -> gray
             else:
                 return color_scale(value)

@@ -1191,21 +1191,54 @@ class DataBase(object):
         'forwhich': one or more columns values to aggregate
                     by default forwhich if all the what values from the stats list
         '''
-        stats=[]
-        forwhich='what'
+        pdstats = []
+        what = ''
         if not isinstance(kwargs['stats'], list) or len(kwargs['stats'])<=1:
             raise CoaKeyError('stats value should be at least a list of 2 elements ... ')
         else:
-            stats = kwargs['stats']
-        if not isinstance(kwargs['what'], list):
-            what = [kwargs['what']]
+            pdstats = kwargs['stats']
+        if not 'what' in kwargs:
+            what = [ i.columns[2] for i in pdstats]
+        else:
+            if not isinstance(kwargs['what'], list) or len(kwargs['what'])==1:
+                what = len(pdstats)*[kwargs['what']]
+                print(what)
 
-        base = stats[0].copy()
-
-        for i in stats[1:]:
-            if what[0] in i.columns:
-                base[what[0]+'_'+i.to_string()] = i[what[0]]
+        base = pdstats[0].copy()
+        k=1
+        for p,w in zip(pdstats[1:],what[1:]):
+            p=p[['date','location','clustername',w]]
+            if w in base.columns:
+                p=p.rename(columns={w:w+'_'+pdstats[k].columns[2]})
+                print(w,'has change to :',w+'_'+pdstats[k].columns[2], ' to avoid same columns in the same pandas')
+            base=pd.merge(base,p,on=['date','location','clustername'])
+            k+=1
         return base
+   def export(self,**kwargs):
+       '''
+       Export pycoas pandas as an  output file selected by output argument
+       'output': excel or csv
+       '''
+       possibleformat=['excel','csv']
+       format = 'excel'
+       name = 'pycoaout'
+       pandyori = ''
+       if 'format' in kwargs:
+            format = kwargs['format']
+       if format not in possibleformat:
+           raise CoaKeyError('Output option '+format+' is not recognized.')
+       if 'name' in kwargs:
+          name = kwargs['name']
+       if not 'pandas' in kwargs:
+          raise CoaKeyError('Absolute needed variable : the pandas desired ')
+       else:
+          pandyori = kwargs['pandas']
+       pandy = pandyori.copy()
+       pandy['date']=pandy['date'].apply(lambda x: x.strftime('%Y-%m-%d'))
+       if format == 'excel':
+           pandy.to_excel(name+'.xlsx',index=False)
+       elif format == 'csv':
+           pandy.to_csv(name+'.csv', encoding='utf-8', index=False, float_format='%.4f')
 
    ## https://www.kaggle.com/freealf/estimation-of-rt-from-cases
    def smooth_cases(self,cases):

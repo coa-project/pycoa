@@ -156,8 +156,8 @@ class CocoDisplay:
         else:
             which = mypandas.columns[1]
 
-        mypandas['codelocation'] =mypandas['codelocation'].apply(lambda x: x if len(x)< 20 else x[0]+'...'+x[-1] )
-        mypandas['clustername'] =mypandas['clustername'].apply(lambda x: x if len(x)< 20 else x.split('-')[0]+'...'+x.split('-')[-1] )
+        mypandas['codelocation'] = mypandas['codelocation'].apply(lambda x: str(x).replace('[', '').replace(']', '') if len(x)< 6 else x[0]+'...'+x[-1] )
+        mypandas['clustername'] = mypandas['clustername'].apply(lambda x: x if len(x)< 20 else x.split('-')[0]+'...'+x.split('-')[-1] )
         mypandas['rolloverdisplay'] = mypandas['clustername']
         input_dico['which'] = which
         var_displayed = which
@@ -1133,7 +1133,7 @@ class CocoDisplay:
                                 if(typeof subregion !== 'undefined')
                                     ordername_subregion.push(newname_subregion[i]);
                                 ordercolors.push(newcolors[indices[i]]);
-                                labeldic[len-indices[i]] = ordercodeloc[indices[i]];
+                                labeldic[len-indices[i]] = orderloc[indices[i]];
                             }
 
 
@@ -1253,7 +1253,7 @@ class CocoDisplay:
                         point_policy="follow_mouse"))  # ,PanTool())
                 else:
                     standardfig.add_tools(HoverTool(
-                        tooltips=[('Location', '@rolloverdisplay'), (input_field, '@{' + 'cases' + '}' + '{custom}'), ],
+                        tooltips=[('Location', '@codelocation'), (input_field, '@{' + 'cases' + '}' + '{custom}'), ],
                         formatters={'location': 'printf', '@{' + 'cases' + '}': cases_custom, },
                         point_policy="follow_mouse"))  # ,PanTool())
                 panel = Panel(child = standardfig, title = axis_type)
@@ -1265,7 +1265,7 @@ class CocoDisplay:
     @decohistopie
     def pycoa_horizonhisto(self, srcfiltered, panels, date_slider):
         n = len(panels)
-        loc = srcfiltered.data['codelocation']#srcfiltered.data['clustername']
+        loc = srcfiltered.data['clustername']#srcfiltered.data['codelocation']
         chars = [' ','-']
         returnchars = [x for x in loc if x in chars]
         label_dict = {}
@@ -1554,8 +1554,8 @@ class CocoDisplay:
 
         if self.dbld[self.database_name][0] == 'BEL' :
             reorder = list(geopdwd_filtered.location.unique())
-            reorder = [i for i in reorder[1:]]
-            reorder.append('00000')
+            #reorder = [i for i in reorder[1:]]
+            #reorder.append('00000')
             geopdwd_filtered = geopdwd_filtered.set_index('location')
             geopdwd_filtered = geopdwd_filtered.reindex(index = reorder)
             geopdwd_filtered = geopdwd_filtered.reset_index()

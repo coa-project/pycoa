@@ -1120,7 +1120,7 @@ class DataBase(object):
             #if self.db_world:
             #pdfiltered[kwargs['which']] = pdfiltered.groupby(['clustername'])[kwargs['which']].fillna(method='bfill')
             pdfiltered.loc[:,kwargs['which']] = pdfiltered.groupby(['clustername'])[kwargs['which']].\
-            apply(lambda x: x.ffill().bfill())
+            apply(lambda x: x.bfill().ffill())
             # fill remaining nan with zeros
             #pdfiltered = pdfiltered.fillna(0)
 

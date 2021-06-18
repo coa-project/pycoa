@@ -804,15 +804,11 @@ class CocoDisplay:
             geopdwd = geopdwd.reset_index(drop = True)
             orientation = kwargs.get('orientation', 'horizontal')
 
-            if dico['when_beg']:
-                started = dico['when_beg']
-            else:
-                started = geopdwd.date.min()
-
             if dico['when_end'] <= geopdwd.date.min():
                 started = geopdwd.date.min()
                 ended = geopdwd.date.min() + dt.timedelta(days=1)
             else:
+                started = geopdwd.date.min()
                 ended = dico['when_end']
             date_slider = DateSlider(title = "Date: ", start = started, end = ended,
                                      value = ended, step=24 * 60 * 60 * 1000, orientation = orientation)
@@ -1029,6 +1025,8 @@ class CocoDisplay:
                                              geopdwd_filter.index.to_list()]
                 geopdwd_filter['bottom'] = [len(geopdwd_filter.index) - bthick / 2 - i for i in
                                                 geopdwd_filter.index.to_list()]
+                geopdwd_filter['horihistotexty'] =  geopdwd_filter['bottom'] + bthick/2
+                geopdwd_filter['horihistotextx'] = geopdwd_filter['right']
                 geopdwd_filter['horihistotext'] = geopdwd_filter['right'].round(2)
                 #geopdwd_filter = geopdwd_filter.loc[geopdwd_filter['cases']>0]
 
@@ -1219,9 +1217,11 @@ class CocoDisplay:
                             var ht = [];
                             for(i=0; i<right_quad.length;i++){
                                 mid.push(bottom[i]+(top[i] - bottom[i])/2);
-                                ht.push(Math.floor(right_quad[i]).toString());
+                                ht.push(right_quad[i].toFixed(2).toString());
                             }
 
+                            source_filter.data['horihistotextxy'] =  mid;
+                            source_filter.data['horihistotextx'] =  right_quad
                             source_filter.data['horihistotext'] =  ht
 
                             var maxx = Math.max.apply(Math, right_quad);
@@ -1283,9 +1283,8 @@ class CocoDisplay:
                 line_width = 1, hover_line_width = 2)
 
             labels = LabelSet(
-                    x = 'right',
-                    y = 'bottom',
-                    x_offset=10, y_offset=2,
+                    x = 'horihistotextx',
+                    y = 'horihistotexty',
                     text = 'horihistotext',
                     source = srcfiltered,text_font_size='10px',text_color='black')
             fig.add_layout(labels)
@@ -1402,7 +1401,7 @@ class CocoDisplay:
 
         def get_color(feature):
             value = map_dict.get(feature['properties']['location'])
-            if value is None or np.isnan(value):
+            if value is None:
                 return '#8c8c8c'  # MISSING -> gray
             else:
                 return color_scale(value)

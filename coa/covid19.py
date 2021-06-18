@@ -1202,7 +1202,6 @@ class DataBase(object):
         else:
             if not isinstance(kwargs['what'], list) or len(kwargs['what'])==1:
                 what = len(pdstats)*[kwargs['what']]
-                print(what)
 
         base = pdstats[0].copy()
         k=1
@@ -1236,9 +1235,9 @@ class DataBase(object):
        pandy = pandyori.copy()
        pandy['date']=pandy['date'].apply(lambda x: x.strftime('%Y-%m-%d'))
        if format == 'excel':
-           pandy.to_excel(name+'.xlsx',index=False)
+           pandy.to_excel(name+'.xlsx',index=False, na_rep='NAN')
        elif format == 'csv':
-           pandy.to_csv(name+'.csv', encoding='utf-8', index=False, float_format='%.4f')
+           pandy.to_csv(name+'.csv', encoding='utf-8', index=False, float_format='%.4f',na_rep='NAN')
 
    ## https://www.kaggle.com/freealf/estimation-of-rt-from-cases
    def smooth_cases(self,cases):

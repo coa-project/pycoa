@@ -164,8 +164,8 @@ class DataBase(object):
                 elif self.db == 'phe': # GBR from https://coronavirus.data.gov.uk/details/download
                     info('GBR, Public Health England data ...')
                     rename_dict = { 'areaCode':'location',\
-                        'cumDeathsByDeathDate':'cur_deaths',\
-                        'cumCasesBySpecimenDate':'cur_cases',\
+                        'cumDeathsByDeathDate':'tot_deaths',\
+                        'cumCasesBySpecimenDate':'tot_cases',\
                         #'covidOccupiedMVBeds':'cur_icu',\
                         #'cumPeopleVaccinatedFirstDoseByVaccinationDate':'tot_dose1',\
                         #'cumPeopleVaccinatedSecondDoseByVaccinationDate':'tot_dose2',\
@@ -1216,7 +1216,8 @@ class DataBase(object):
    def export(self,**kwargs):
        '''
        Export pycoas pandas as an  output file selected by output argument
-       'output': excel or csv
+       'pandas': pycoa pandas
+       'format': excel or csv (default excel)
        '''
        possibleformat=['excel','csv']
        format = 'excel'

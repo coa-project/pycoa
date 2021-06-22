@@ -171,23 +171,20 @@ class DataBase(object):
                         #'cumPeopleVaccinatedSecondDoseByVaccinationDate':'tot_dose2',\
                         #'hospitalCases':'cur_hosp',\
                         }
-                    url='https://api.coronavirus.data.gov.uk/v2/data?areaType=ltla'
+                    url = 'https://api.coronavirus.data.gov.uk/v2/data?areaType=ltla'
                     for w in rename_dict.keys():
                         if w not in ['areaCode']:
                             url=url+'&metric='+w
-                    url=url+'&format=csv'
-                    gbr_data=self.csv2pandas(url,separator=',',rename_columns=rename_dict)
-
-                    gbrvar = pd.read_csv('https://covid-surveillance-data.cog.sanger.ac.uk/download/lineages_by_ltla_and_week.tsv',sep='\t')
+                    url = url+'&format=csv'
+                    gbr_data = self.csv2pandas(url,separator=',',rename_columns=rename_dict)
+                    constraints = {'Lineage': 'B.1.617.2'}
+                    url = 'https://covid-surveillance-data.cog.sanger.ac.uk/download/lineages_by_ltla_and_week.tsv'
+                    gbrvar = self.csv2pandas(url,separator='\t',constraints=constraints,rename_columns = {'WeekEndDate': 'date','LTLA':'location'})
                     varname =  'B.1.617.2'
-                    gbrvar[varname]=gbrvar.loc[gbrvar.Lineage==varname]['Count'].cumsum()
-                    gbrvar=gbrvar.drop(columns='Count').rename(columns={'WeekEndDate':'date','LTLA':'location'})
-                    gbrvar['date']= [ week_to_date(i) for i in gbrvar['date'] ]
-                    gbrvar['date'] = pd.to_datetime(gbrvar['date'],errors='coerce').dt.date
-
-                    gbr_data = pd.merge(gbr_data,gbrvar,on=['location','date']).drop(columns='Lineage')
+                    gbr_data = pd.merge(gbr_data,gbrvar,how="outer",on=['location','date'])
+                    gbr_data = gbr_data.rename(columns={'Count':'cur_'+varname})
                     columns_keeped = list(rename_dict.values())
-                    columns_keeped.append(varname)
+                    columns_keeped.append('cur_'+varname)
                     columns_keeped.remove('location')
                     self.return_structured_pandas(gbr_data,columns_keeped=columns_keeped)
                 elif self.db == 'covid19india': # IND
@@ -770,7 +767,6 @@ class DataBase(object):
 
          # filling subregions.
             gd = self.geo.get_data()[['code_region','name_region']]
-
             uniqloc = list(mypandas['location'].unique())
             name2code = collections.OrderedDict(zip(uniqloc,list(gd.loc[gd.name_region.isin(uniqloc)]['code_region'])))
             mypandas = mypandas.loc[~mypandas.location.isnull()]
@@ -1208,8 +1204,8 @@ class DataBase(object):
         for p,w in zip(pdstats[1:],what[1:]):
             p=p[['date','location','clustername',w]]
             if w in base.columns:
-                p=p.rename(columns={w:w+'_'+pdstats[k].columns[2]})
-                print(w,'has change to :',w+'_'+pdstats[k].columns[2], ' to avoid same columns in the same pandas')
+                p=p.rename(columns={w:w+'_'+str(k)})
+                print(w,'has change to :',w+'_'+str(k), ' to avoid same columns in the same pandas')
             base=pd.merge(base,p,on=['date','location','clustername'])
             k+=1
         return base

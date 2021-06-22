@@ -164,8 +164,8 @@ class DataBase(object):
                 elif self.db == 'phe': # GBR from https://coronavirus.data.gov.uk/details/download
                     info('GBR, Public Health England data ...')
                     rename_dict = { 'areaCode':'location',\
-                        'cumDeathsByDeathDate':'tot_deaths',\
-                        'cumCasesBySpecimenDate':'tot_cases',\
+                        'cumDeathsByDeathDate':'cur_deaths',\
+                        'cumCasesBySpecimenDate':'cur_cases',\
                         #'covidOccupiedMVBeds':'cur_icu',\
                         #'cumPeopleVaccinatedFirstDoseByVaccinationDate':'tot_dose1',\
                         #'cumPeopleVaccinatedSecondDoseByVaccinationDate':'tot_dose2',\

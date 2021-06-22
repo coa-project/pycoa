@@ -1559,13 +1559,15 @@ class CocoDisplay:
             geopdwd_filtered = geopdwd_filtered.reindex(index = reorder)
             geopdwd_filtered = geopdwd_filtered.reset_index()
 
+        if self.dbld[self.database_name][0] == 'GBR' :
+            geopdwd = geopdwd.loc[~geopdwd.cases.isnull()]
+            geopdwd_filtered  = geopdwd_filtered.loc[~geopdwd_filtered.cases.isnull()]
+
         json_data = json.dumps(json.loads(geopdwd_filtered.to_json()))
         geopdwd_filtered = GeoJSONDataSource(geojson=json_data)
 
         if date_slider:
             allcases_location, allcases_dates = pd.DataFrame(), pd.DataFrame()
-            if self.dbld[self.database_name][0] == 'GBR' :
-                geopdwd = geopdwd.loc[~geopdwd.cases.isnull()]
             allcases_location = geopdwd.groupby('location')['cases'].apply(list)
             geopdwd_tmp = geopdwd.drop_duplicates(subset = ['location']).drop(columns = 'cases')
             geopdwd_tmp = pd.merge(geopdwd_tmp, allcases_location, on = 'location')
@@ -1591,7 +1593,6 @@ class CocoDisplay:
                                 new_cases.push(source.data['cases'][i][ind_date_max-ind_date]);
                                 new_location.push(source.data['location'][i][ind_date_max-ind_date]);
                         }
-
                         if(source.get_length() == 1 && iloop>1)
                             for(var i = 0; i < iloop; i++)
                                 for(var j = 0; j < new_cases.length; j++)
@@ -1751,7 +1752,6 @@ class CocoDisplay:
                 tooltips = [loctips, (input_field, '@{' + 'cases' + '}' + '{custom}'), ],
                 formatters = {'location': 'printf', '@{' + 'cases' + '}': cases_custom, },
                 point_policy = "follow_mouse"))  # ,PanTool())
-
 
 
     ##################### END HISTOS/MAPS##################

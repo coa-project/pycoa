@@ -1061,9 +1061,18 @@ class DataBase(object):
             if o == 'nonneg':
                 if kwargs['which'].startswith('cur_'):
                     raise CoaKeyError('The option nonneg cannot be used with instantaneous data, such as cur_ which variables.')
-                for loca in location_exploded:
+
+                if not isinstance(location_exploded[0],list):
+                    loopover = location_exploded
+                else:
+                    loopover = list(pdfiltered.location.unique())
+
+                for loca in loopover:
                     # modify values in order that diff values is never negative
-                    pdloc=pdfiltered.loc[ pdfiltered.clustername == loca ][kwargs['which']]
+                    if not isinstance(location_exploded[0],list):
+                        pdloc = pdfiltered.loc[ pdfiltered.clustername == loca ][kwargs['which']]
+                    else:
+                        pdloc = pdfiltered.loc[ pdfiltered.location == loca ][kwargs['which']]
                     try:
                         y0=pdloc.values[0] # integrated offset at t=0
                     except:
@@ -1091,7 +1100,9 @@ class DataBase(object):
                             yy[0:k] = np.nan*np.ones(k)
                         else:
                             yy[0:k] = yy[0:k]*(1-float(val_to_repart)/s)
-                    pdfiltered.loc[ind,kwargs['which']]=np.cumsum(yy)+y0 # do not forget the offset
+                    pdfilteredcopy=pdfiltered.copy()
+                    pdfilteredcopy.loc[ind,kwargs['which']]=np.cumsum(yy)+y0 # do not forget the offset
+                    pdfiltered=pdfilteredcopy
             elif o == 'nofillnan':
                 fillnan=False
             elif o == 'fillnan':
@@ -1202,11 +1213,11 @@ class DataBase(object):
         base = pdstats[0].copy()
         k=1
         for p,w in zip(pdstats[1:],what[1:]):
-            p=p[['date','location','clustername',w]]
+            p=p[['date','clustername',w]]
             if w in base.columns:
                 p=p.rename(columns={w:w+'_'+str(k)})
                 print(w,'has change to :',w+'_'+str(k), ' to avoid same columns in the same pandas')
-            base=pd.merge(base,p,on=['date','location','clustername'])
+            base=pd.merge(base,p,on=['date','clustername'])
             k+=1
         return base
    def export(self,**kwargs):

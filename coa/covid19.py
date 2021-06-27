@@ -1112,7 +1112,7 @@ class DataBase(object):
                 pdfiltered[kwargs['which']] = pdfiltered.groupby(['location'])[kwargs['which']].rolling(7,min_periods=7,center=True).mean().reset_index(level=0,drop=True)
                 #pdfiltered[kwargs['which']] = pdfiltered[kwargs['which']].fillna(0) # causes bug with fillnan procedure below
                 pdfiltered = pdfiltered.groupby('location').apply(lambda x : x[3:-3]).reset_index(drop=True) # remove out of bound dates.
-                fillnan = False
+                fillnan = True
             elif o == 'sumall':
                 sumall = True
                 if kwargs['which'].startswith('cur_idx_Prc'):

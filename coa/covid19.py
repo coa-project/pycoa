@@ -442,6 +442,8 @@ class DataBase(object):
                     # renaming some columns
                     col_to_rename=['reproduction_rate','icu_patients','hosp_patients','positive_rate']
                     renamed_cols=['cur_'+c if c != 'positive_rate' else 'cur_idx_'+c for c in col_to_rename]
+                    col_to_rename+=['people_fully_vaccinated_per_hundred']
+                    renamed_cols +=['total_people_fully_vaccinated_per_hundred']
                     columns_keeped=['iso_code','total_deaths','total_cases','total_tests','total_vaccinations']
                     columns_keeped+=['total_cases_per_million','total_deaths_per_million','total_vaccinations_per_hundred']
                     self.return_structured_pandas(owid.rename(columns=dict(zip(col_to_rename,renamed_cols))),columns_keeped=columns_keeped+renamed_cols)

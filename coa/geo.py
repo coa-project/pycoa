@@ -249,6 +249,7 @@ class GeoManager():
                 "Iran":"IRN",\
                 "Diamond Princess":"",\
                 "Ms Zaandam":"",\
+                "Summer Olympics 2020":"",\
                 "Micronesia":"FSM",\
                     })  # last two are names of boats
         elif db=='worldometers':

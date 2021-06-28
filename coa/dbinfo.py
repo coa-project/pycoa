@@ -124,6 +124,7 @@ def generic_info(namedb, keys):
         'total_cases':['total_cases:FILLIT'],
         'total_tests':['total_tests: FILLIT'],
         'total_vaccinations':['total_vaccinations:FILLIT'],
+        'total_people_fully_vaccinated_per_hundred':['total_people_fully_vaccinated_per_hundred:FILLIT'],
         'total_cases_per_million':['total_cases_per_million:FILLIT'],
         'total_deaths_per_million':['total_deaths_per_million:FILLIT'],
         'total_vaccinations_per_hundred':['total_vaccinations_per_hundred: COVID19 vaccine doses administered per 100 people'],

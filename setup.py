@@ -43,6 +43,8 @@ setup(
         'scipy',\
         'shapely',\
         'pytest >=5.0',\
+        'pandas-flavor',\
+        'openpyxl',\
         ],
     # The license can be anything you like
     license='MIT',

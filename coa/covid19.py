@@ -20,6 +20,8 @@ import pandas
 from collections import defaultdict
 import numpy as np
 import pandas as pd
+import pandas_flavor as pf
+
 import sys
 from coa.tools import info, verb, kwargs_test, get_local_from_url, fill_missing_dates, check_valid_date, week_to_date, get_db_list_dict
 
@@ -162,30 +164,27 @@ class DataBase(object):
                 elif self.db == 'phe': # GBR from https://coronavirus.data.gov.uk/details/download
                     info('GBR, Public Health England data ...')
                     rename_dict = { 'areaCode':'location',\
-                        'cumDeathsByDeathDate':'cur_deaths',\
-                        'cumCasesBySpecimenDate':'cur_cases',\
+                        'cumDeathsByDeathDate':'tot_deaths',\
+                        'cumCasesBySpecimenDate':'tot_cases',\
                         #'covidOccupiedMVBeds':'cur_icu',\
                         #'cumPeopleVaccinatedFirstDoseByVaccinationDate':'tot_dose1',\
                         #'cumPeopleVaccinatedSecondDoseByVaccinationDate':'tot_dose2',\
                         #'hospitalCases':'cur_hosp',\
                         }
-                    url='https://api.coronavirus.data.gov.uk/v2/data?areaType=ltla'
+                    url = 'https://api.coronavirus.data.gov.uk/v2/data?areaType=ltla'
                     for w in rename_dict.keys():
                         if w not in ['areaCode']:
                             url=url+'&metric='+w
-                    url=url+'&format=csv'
-                    gbr_data=self.csv2pandas(url,separator=',',rename_columns=rename_dict)
-
-                    gbrvar = pd.read_csv('https://covid-surveillance-data.cog.sanger.ac.uk/download/lineages_by_ltla_and_week.tsv',sep='\t')
+                    url = url+'&format=csv'
+                    gbr_data = self.csv2pandas(url,separator=',',rename_columns=rename_dict)
+                    constraints = {'Lineage': 'B.1.617.2'}
+                    url = 'https://covid-surveillance-data.cog.sanger.ac.uk/download/lineages_by_ltla_and_week.tsv'
+                    gbrvar = self.csv2pandas(url,separator='\t',constraints=constraints,rename_columns = {'WeekEndDate': 'date','LTLA':'location'})
                     varname =  'B.1.617.2'
-                    gbrvar[varname]=gbrvar.loc[gbrvar.Lineage==varname]['Count'].cumsum()
-                    gbrvar=gbrvar.drop(columns='Count').rename(columns={'WeekEndDate':'date','LTLA':'location'})
-                    gbrvar['date']= [ week_to_date(i) for i in gbrvar['date'] ]
-                    gbrvar['date'] = pd.to_datetime(gbrvar['date'],errors='coerce').dt.date
-
-                    gbr_data = pd.merge(gbr_data,gbrvar,on=['location','date']).drop(columns='Lineage')
+                    gbr_data = pd.merge(gbr_data,gbrvar,how="outer",on=['location','date'])
+                    gbr_data = gbr_data.rename(columns={'Count':'cur_'+varname})
                     columns_keeped = list(rename_dict.values())
-                    columns_keeped.append(varname)
+                    columns_keeped.append('cur_'+varname)
                     columns_keeped.remove('location')
                     self.return_structured_pandas(gbr_data,columns_keeped=columns_keeped)
                 elif self.db == 'covid19india': # IND
@@ -443,6 +442,8 @@ class DataBase(object):
                     # renaming some columns
                     col_to_rename=['reproduction_rate','icu_patients','hosp_patients','positive_rate']
                     renamed_cols=['cur_'+c if c != 'positive_rate' else 'cur_idx_'+c for c in col_to_rename]
+                    col_to_rename+=['people_fully_vaccinated_per_hundred']
+                    renamed_cols +=['total_people_fully_vaccinated_per_hundred']
                     columns_keeped=['iso_code','total_deaths','total_cases','total_tests','total_vaccinations']
                     columns_keeped+=['total_cases_per_million','total_deaths_per_million','total_vaccinations_per_hundred']
                     self.return_structured_pandas(owid.rename(columns=dict(zip(col_to_rename,renamed_cols))),columns_keeped=columns_keeped+renamed_cols)
@@ -768,7 +769,6 @@ class DataBase(object):
 
          # filling subregions.
             gd = self.geo.get_data()[['code_region','name_region']]
-
             uniqloc = list(mypandas['location'].unique())
             name2code = collections.OrderedDict(zip(uniqloc,list(gd.loc[gd.name_region.isin(uniqloc)]['code_region'])))
             mypandas = mypandas.loc[~mypandas.location.isnull()]
@@ -911,6 +911,7 @@ class DataBase(object):
             Using the geo method standardization
         '''
         return self.slocation
+
 
    def get_stats(self, **kwargs):
         '''
@@ -1062,10 +1063,22 @@ class DataBase(object):
             if o == 'nonneg':
                 if kwargs['which'].startswith('cur_'):
                     raise CoaKeyError('The option nonneg cannot be used with instantaneous data, such as cur_ which variables.')
-                for loca in location_exploded:
+
+                if not isinstance(location_exploded[0],list):
+                    loopover = location_exploded
+                else:
+                    loopover = list(pdfiltered.location.unique())
+
+                for loca in loopover:
                     # modify values in order that diff values is never negative
-                    pdloc=pdfiltered.loc[ pdfiltered.clustername == loca ][kwargs['which']]
-                    y0=pdloc.values[0] # integrated offset at t=0
+                    if not isinstance(location_exploded[0],list):
+                        pdloc = pdfiltered.loc[ pdfiltered.clustername == loca ][kwargs['which']]
+                    else:
+                        pdloc = pdfiltered.loc[ pdfiltered.location == loca ][kwargs['which']]
+                    try:
+                        y0=pdloc.values[0] # integrated offset at t=0
+                    except:
+                        y0=0
                     if np.isnan(y0):
                         y0=0
                     pa = pdloc.diff()
@@ -1089,18 +1102,19 @@ class DataBase(object):
                             yy[0:k] = np.nan*np.ones(k)
                         else:
                             yy[0:k] = yy[0:k]*(1-float(val_to_repart)/s)
-                    pdfiltered.loc[ind,kwargs['which']]=np.cumsum(yy)+y0 # do not forget the offset
+                    pdfilteredcopy=pdfiltered.copy()
+                    pdfilteredcopy.loc[ind,kwargs['which']]=np.cumsum(yy)+y0 # do not forget the offset
+                    pdfiltered=pdfilteredcopy
             elif o == 'nofillnan':
                 fillnan=False
             elif o == 'fillnan':
                 fillnan=True
             elif o == 'smooth7':
-                #pdfiltered[kwargs['which']] = pdfiltered.groupby(['clustername'])[kwargs['which']].fillna(method='ffill')
-                #pdfiltered = pdfiltered.fillna(0)
-                pdfiltered[kwargs['which']] = pdfiltered.groupby(['clustername'])[kwargs['which']].rolling(7,min_periods=7,center=True).mean().reset_index(level=0,drop=True)
+                #pdfiltered[kwargs['which']] = pdfiltered.groupby(['clustername'])[kwargs['which']].rolling(7,min_periods=7,center=True).mean().reset_index(level=0,drop=True)
+                pdfiltered[kwargs['which']] = pdfiltered.groupby(['location'])[kwargs['which']].rolling(7,min_periods=7,center=True).mean().reset_index(level=0,drop=True)
                 #pdfiltered[kwargs['which']] = pdfiltered[kwargs['which']].fillna(0) # causes bug with fillnan procedure below
-                pdfiltered = pdfiltered.groupby('clustername').apply(lambda x : x[3:-3]).reset_index(drop=True) # remove out of bound dates.
-                fillnan = False
+                pdfiltered = pdfiltered.groupby('location').apply(lambda x : x[3:-3]).reset_index(drop=True) # remove out of bound dates.
+                fillnan = True
             elif o == 'sumall':
                 sumall = True
                 if kwargs['which'].startswith('cur_idx_Prc'):
@@ -1114,7 +1128,7 @@ class DataBase(object):
             #if self.db_world:
             #pdfiltered[kwargs['which']] = pdfiltered.groupby(['clustername'])[kwargs['which']].fillna(method='bfill')
             pdfiltered.loc[:,kwargs['which']] = pdfiltered.groupby(['clustername'])[kwargs['which']].\
-            apply(lambda x: x.ffill().bfill())
+            apply(lambda x: x.bfill().ffill())
             # fill remaining nan with zeros
             #pdfiltered = pdfiltered.fillna(0)
 
@@ -1173,6 +1187,66 @@ class DataBase(object):
         pdfiltered = pdfiltered[unifiedposition]
 
         return pdfiltered
+
+   @pf.register_dataframe_method
+   def get_which(df):
+       return df.columns[2]
+
+   def merger(self,**kwargs):
+        '''
+        Merge two or more pandas retrieve from get_stats operation
+        'stats': list (min 2D) of pandas from stats
+        'forwhich': one or more columns values to aggregate
+                    by default forwhich if all the what values from the stats list
+        '''
+        pdstats = []
+        what = ''
+        if not isinstance(kwargs['stats'], list) or len(kwargs['stats'])<=1:
+            raise CoaKeyError('stats value should be at least a list of 2 elements ... ')
+        else:
+            pdstats = kwargs['stats']
+        if not 'what' in kwargs:
+            what = [ i.columns[2] for i in pdstats]
+        else:
+            if not isinstance(kwargs['what'], list) or len(kwargs['what'])==1:
+                what = len(pdstats)*[kwargs['what']]
+
+        base = pdstats[0].copy()
+        k=1
+        for p,w in zip(pdstats[1:],what[1:]):
+            p=p[['date','clustername',w]]
+            if w in base.columns:
+                p=p.rename(columns={w:w+'_'+str(k)})
+                print(w,'has change to :',w+'_'+str(k), ' to avoid same columns in the same pandas')
+            base=pd.merge(base,p,on=['date','clustername'])
+            k+=1
+        return base
+   def export(self,**kwargs):
+       '''
+       Export pycoas pandas as an  output file selected by output argument
+       'pandas': pycoa pandas
+       'format': excel or csv (default excel)
+       '''
+       possibleformat=['excel','csv']
+       format = 'excel'
+       name = 'pycoaout'
+       pandyori = ''
+       if 'format' in kwargs:
+            format = kwargs['format']
+       if format not in possibleformat:
+           raise CoaKeyError('Output option '+format+' is not recognized.')
+       if 'name' in kwargs:
+          name = kwargs['name']
+       if not 'pandas' in kwargs:
+          raise CoaKeyError('Absolute needed variable : the pandas desired ')
+       else:
+          pandyori = kwargs['pandas']
+       pandy = pandyori.copy()
+       pandy['date']=pandy['date'].apply(lambda x: x.strftime('%Y-%m-%d'))
+       if format == 'excel':
+           pandy.to_excel(name+'.xlsx',index=False, na_rep='NAN')
+       elif format == 'csv':
+           pandy.to_csv(name+'.csv', encoding='utf-8', index=False, float_format='%.4f',na_rep='NAN')
 
    ## https://www.kaggle.com/freealf/estimation-of-rt-from-cases
    def smooth_cases(self,cases):

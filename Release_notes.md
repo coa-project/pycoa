@@ -14,6 +14,7 @@
 - jhu-usa code modification db (codelocation=location)
 - could sumall for different sublist
 - add Obepine french db
+- add export and merger method
  
 ## v2.02 - march 2021 - Import decorators modifciation inside the display
 - New standard output is pandas dataframe

@@ -334,6 +334,18 @@ def get(**kwargs):
         raise CoaKeyError('Unknown output.')
     return casted_data
 
+def export(**kwargs):
+    '''
+    Export pycoas pandas as an output file selected by output argument
+    'pandas': pycoa pandas
+    'format': excel or csv
+    '''
+    global _db
+    kwargs_test(kwargs, ['format','pandas'])
+    pandy = kwargs.get('pandas', listwhat()[0])
+    format = kwargs.get('format', 'excel')
+    _db.export(pandas=pandy,format=format)
+
 
 # ----------------------------------------------------------------------
 # --- plot(**kwargs) ---------------------------------------------------

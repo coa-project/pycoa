@@ -156,8 +156,8 @@ class CocoDisplay:
         else:
             which = mypandas.columns[1]
 
-        mypandas['codelocation'] =mypandas['codelocation'].apply(lambda x: x if len(x)< 20 else x[0]+'...'+x[-1] )
-        mypandas['clustername'] =mypandas['clustername'].apply(lambda x: x if len(x)< 20 else x.split('-')[0]+'...'+x.split('-')[-1] )
+        mypandas['codelocation'] = mypandas['codelocation'].apply(lambda x: str(x).replace('[', '').replace(']', '') if len(x)< 10 else x[0]+'...'+x[-1] )
+        mypandas['clustername'] = mypandas['clustername'].apply(lambda x: x if len(x)< 20 else x.split('-')[0]+'...'+x.split('-')[-1] )
         mypandas['rolloverdisplay'] = mypandas['clustername']
         input_dico['which'] = which
         var_displayed = which
@@ -661,7 +661,6 @@ class CocoDisplay:
             standardfig.yaxis[0].formatter = PrintfTickFormatter(format = "%4.2e")
             i = 0
             r_list=[]
-
             for val in input_field:
                 line_style = ['solid', 'dashed', 'dotted', 'dotdash']
                 for loc in list(mypandas.clustername.unique()):
@@ -829,7 +828,6 @@ class CocoDisplay:
                     geopdwd_filter = pd.merge(geopdwd_filter, self.location_geometry, on='location')
                 geopdwd_filter = gpd.GeoDataFrame(geopdwd_filter, geometry=geopdwd_filter.geometry, crs="EPSG:4326")
                 dico['tile'] = CocoDisplay.get_tile(dico['tile'], func.__name__)
-
             if func.__name__ == 'inner' or func.__name__ == 'pycoa_histo':
                 pos = {}
                 new = pd.DataFrame(columns=geopdwd_filter.columns)
@@ -851,6 +849,7 @@ class CocoDisplay:
             geopdwd_filter = geopdwd_filter.reset_index(drop=True)
             if cursor_date is False:
                 date_slider = False
+
             return func(self, input_field, date_slider, maplabel, dico, geopdwd, geopdwd_filter)
         return generic_hm
 
@@ -923,6 +922,7 @@ class CocoDisplay:
         HoverTool is available it returns position of the middle of the bin and the value.
         """
         mypandas = geopdwd_filtered.rename(columns = {'cases': input_field})
+
         if 'location' in mypandas.columns:
             uniqloc = list(mypandas.codelocation.unique())
 
@@ -1005,7 +1005,6 @@ class CocoDisplay:
             title_fig = input_field
             geopdwd['cases'] = geopdwd[input_field]
             geopdwd_filtered['cases'] = geopdwd_filtered[input_field]
-
             my_date = geopdwd.date.unique()
             dico_utc = {i: DateSlider(value=i).value for i in my_date}
             geopdwd['date_utc'] = [dico_utc[i] for i in geopdwd.date]
@@ -1015,7 +1014,6 @@ class CocoDisplay:
             nmaxdisplayed = 18
             if len(locunique) >= nmaxdisplayed:
                 geopdwd_filter = geopdwd_filter.loc[geopdwd_filter.location.isin(locunique[:nmaxdisplayed])]
-
             if func.__name__ == 'pycoa_horizonhisto' :
                 #geopdwd_filter['bottom'] = geopdwd_filter.index
                 geopdwd_filter['left'] = geopdwd_filter['cases']
@@ -1133,7 +1131,7 @@ class CocoDisplay:
                                 if(typeof subregion !== 'undefined')
                                     ordername_subregion.push(newname_subregion[i]);
                                 ordercolors.push(newcolors[indices[i]]);
-                                labeldic[len-indices[i]] = ordercodeloc[indices[i]];
+                                labeldic[len-indices[i]] = orderloc[indices[i]];
                             }
 
 
@@ -1255,7 +1253,7 @@ class CocoDisplay:
                         point_policy="follow_mouse"))  # ,PanTool())
                 else:
                     standardfig.add_tools(HoverTool(
-                        tooltips=[('Location', '@rolloverdisplay'), (input_field, '@{' + 'cases' + '}' + '{custom}'), ],
+                        tooltips=[('Location', '@codelocation'), (input_field, '@{' + 'cases' + '}' + '{custom}'), ],
                         formatters={'location': 'printf', '@{' + 'cases' + '}': cases_custom, },
                         point_policy="follow_mouse"))  # ,PanTool())
                 panel = Panel(child = standardfig, title = axis_type)
@@ -1267,7 +1265,7 @@ class CocoDisplay:
     @decohistopie
     def pycoa_horizonhisto(self, srcfiltered, panels, date_slider):
         n = len(panels)
-        loc = srcfiltered.data['codelocation']#srcfiltered.data['clustername']
+        loc = srcfiltered.data['clustername']#srcfiltered.data['codelocation']
         chars = [' ','-']
         returnchars = [x for x in loc if x in chars]
         label_dict = {}
@@ -1555,19 +1553,21 @@ class CocoDisplay:
 
         if self.dbld[self.database_name][0] == 'BEL' :
             reorder = list(geopdwd_filtered.location.unique())
-            reorder = [i for i in reorder[1:]]
-            reorder.append('00000')
+            #reorder = [i for i in reorder[1:]]
+            #reorder.append('00000')
             geopdwd_filtered = geopdwd_filtered.set_index('location')
             geopdwd_filtered = geopdwd_filtered.reindex(index = reorder)
             geopdwd_filtered = geopdwd_filtered.reset_index()
+
+        if self.dbld[self.database_name][0] == 'GBR' :
+            geopdwd = geopdwd.loc[~geopdwd.cases.isnull()]
+            geopdwd_filtered  = geopdwd_filtered.loc[~geopdwd_filtered.cases.isnull()]
 
         json_data = json.dumps(json.loads(geopdwd_filtered.to_json()))
         geopdwd_filtered = GeoJSONDataSource(geojson=json_data)
 
         if date_slider:
             allcases_location, allcases_dates = pd.DataFrame(), pd.DataFrame()
-            if self.dbld[self.database_name][0] == 'GBR' :
-                geopdwd = geopdwd.loc[~geopdwd.cases.isnull()]
             allcases_location = geopdwd.groupby('location')['cases'].apply(list)
             geopdwd_tmp = geopdwd.drop_duplicates(subset = ['location']).drop(columns = 'cases')
             geopdwd_tmp = pd.merge(geopdwd_tmp, allcases_location, on = 'location')
@@ -1593,7 +1593,6 @@ class CocoDisplay:
                                 new_cases.push(source.data['cases'][i][ind_date_max-ind_date]);
                                 new_location.push(source.data['location'][i][ind_date_max-ind_date]);
                         }
-
                         if(source.get_length() == 1 && iloop>1)
                             for(var i = 0; i < iloop; i++)
                                 for(var j = 0; j < new_cases.length; j++)
@@ -1753,7 +1752,6 @@ class CocoDisplay:
                 tooltips = [loctips, (input_field, '@{' + 'cases' + '}' + '{custom}'), ],
                 formatters = {'location': 'printf', '@{' + 'cases' + '}': cases_custom, },
                 point_policy = "follow_mouse"))  # ,PanTool())
-
 
 
     ##################### END HISTOS/MAPS##################

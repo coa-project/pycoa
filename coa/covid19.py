@@ -20,7 +20,6 @@ import pandas
 from collections import defaultdict
 import numpy as np
 import pandas as pd
-import pandas_flavor as pf
 
 import sys
 from coa.tools import info, verb, kwargs_test, get_local_from_url, fill_missing_dates, check_valid_date, week_to_date, get_db_list_dict
@@ -1057,6 +1056,16 @@ class DataBase(object):
         option = kwargs.get('option', '')
         fillnan = True # default
         sumall = False # default
+
+        if fillnan: # which is the default. Use nofillnan option instead.
+            # fill with previous value
+            pdfiltered = pdfiltered.copy()
+            #if self.db_world:
+            #pdfiltered[kwargs['which']] = pdfiltered.groupby(['clustername'])[kwargs['which']].fillna(method='bfill')
+            pdfiltered.loc[:,kwargs['which']] = pdfiltered.groupby(['clustername'])[kwargs['which']].\
+            apply(lambda x: x.bfill())
+            # fill remaining nan with zeros
+            #pdfiltered = pdfiltered.fillna(0)
         if not isinstance(option,list):
             option=[option]
         for o in option:
@@ -1122,15 +1131,7 @@ class DataBase(object):
             elif o != None and o != '':
                 raise CoaKeyError('The option '+o+' is not recognized in get_stats. See get_available_options() for list.')
         pdfiltered = pdfiltered.reset_index(drop=True)
-        if fillnan: # which is the default. Use nofillnan option instead.
-            # fill with previous value
-            pdfiltered = pdfiltered.copy()
-            #if self.db_world:
-            #pdfiltered[kwargs['which']] = pdfiltered.groupby(['clustername'])[kwargs['which']].fillna(method='bfill')
-            pdfiltered.loc[:,kwargs['which']] = pdfiltered.groupby(['clustername'])[kwargs['which']].\
-            apply(lambda x: x.bfill().ffill())
-            # fill remaining nan with zeros
-            #pdfiltered = pdfiltered.fillna(0)
+
 
         # if sumall set, return only integrate val
         tmppandas=pd.DataFrame()
@@ -1187,10 +1188,6 @@ class DataBase(object):
         pdfiltered = pdfiltered[unifiedposition]
 
         return pdfiltered
-
-   @pf.register_dataframe_method
-   def get_which(df):
-       return df.columns[2]
 
    def merger(self,**kwargs):
         '''

@@ -171,10 +171,11 @@ class CocoDisplay:
         title_temporal = ''
         input_dico['when_beg'] = mypandas.date.min()
 
-        if mypandas[which].isnull().values.any():
-            input_dico['when_end'] = mypandas.dropna(subset=[which]).date.max()
+        if mypandas[which].isnull().all():
+            raise CoaTypeError("Sorry all data are NaN for " + which)
         else:
-            input_dico['when_end'] = mypandas.date.max()
+            input_dico['when_end'] = mypandas.dropna(subset=[which]).date.max()
+            #input_dico['when_end'] = mypandas.date.max()
 
         if when:
             input_dico['when_beg'], input_dico['when_end'] = extract_dates(when)
@@ -192,7 +193,6 @@ class CocoDisplay:
                 input_dico['when_end'] = input_dico['when_beg']
 
 #        when_end_change = CocoDisplay.changeto_nonan_date(mypandas, input_dico['when_end'], var_displayed)
-
         when_end_change = CocoDisplay.changeto_nonull_date(mypandas, input_dico['when_end'], var_displayed)
         if when_end_change != input_dico['when_end']:
             input_dico['when_end'] = when_end_change

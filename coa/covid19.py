@@ -332,7 +332,14 @@ class DataBase(object):
                         constraints = {'age_18ans': 0}
                         spf7 =  self.csv2pandas("https://www.data.gouv.fr/fr/datasets/r/c0f59f00-3ab2-4f31-8a05-d317b43e9055",
                                     constraints = constraints, rename_columns = rename, separator=';', cast=cast)
-                        list_spf=[spf1,spf2, spf3, spf4, spf5, spf6, spf7]
+                        #Mutation d'intérêt :
+                        #A = E484K
+                        #B = E484Q
+                        #C = L452R
+                        spf8 = self.csv2pandas("https://www.data.gouv.fr/fr/datasets/r/4d3e5a8b-9649-4c41-86ec-5420eb6b530c",
+                        rename_columns = rename, separator=';',cast=cast)
+                        spf8keeped = list(spf8.columns)[2:]
+                        list_spf=[spf1, spf2, spf3, spf4, spf5, spf6, spf7,spf8]
 
                         #for i in list_spf:
                         #    i['date'] = pd.to_datetime(i['date']).apply(lambda x: x if not pd.isnull(x) else '')
@@ -389,7 +396,7 @@ class DataBase(object):
 
                         #coltocast=list(rename_dict.values())[:5]
                         #result[coltocast] = result[coltocast].astype('Int64')
-                        columns_keeped  = list(rename_dict.values())+['tot_incid_hosp', 'tot_incid_rea', 'tot_incid_rad', 'tot_incid_dc', 'tot_P', 'tot_T']
+                        columns_keeped  = list(rename_dict.values())+['tot_incid_hosp', 'tot_incid_rea', 'tot_incid_rad', 'tot_incid_dc', 'tot_P', 'tot_T']+spf8keeped
                         self.return_structured_pandas(result,columns_keeped=columns_keeped) # with 'tot_dc' first
                 elif self.db == 'opencovid19' or  self.db == 'opencovid19national':
                     rename={'maille_code':'location'}

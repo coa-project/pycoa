@@ -77,7 +77,7 @@ class CocoDisplay:
         self.all_available_display_keys = ['where', 'which', 'what', 'when', 'title_temporal', 'plot_height',
                                            'plot_width', 'title', 'bins', 'var_displayed','textcopyright',
                                            'option', 'input', 'input_field', 'visu', 'plot_last_date', 'tile',
-                                           'orientation']
+                                           'orientation','mode']
         self.tiles_listing = ['esri', 'openstreet', 'stamen', 'positron']
         try:
             if self.dbld[self.database_name][0] != 'WW' :
@@ -655,6 +655,11 @@ class CocoDisplay:
     def pycoa_date_plot(self, mypandas, dico, input_field, hover_tool, ax_type, **kwargs):
         panels = []
         cases_custom = CocoDisplay.rollerJS()
+
+        mode = kwargs.get('mode', 'mouse')
+        allmode=['mouse','vline','hline']
+        if mode not in allmode:
+            raise CoaKeyError("Bokeh hover tool displays error not in :",allmode)
         for axis_type in ax_type:
             standardfig = self.standardfig(y_axis_type = axis_type, x_axis_type = 'datetime', title = dico['titlebar'],
             textcopyright = dico['textcopyright'])
@@ -684,7 +689,7 @@ class CocoDisplay:
                 tooltips = [('Location', '@rolloverdisplay'), ('date', '@date{%F}'), (r.name, '@$name')]
                 formatters = {'location': 'printf', '@date': 'datetime', '@name': 'printf'}
                 hover=HoverTool(tooltips = tooltips, formatters = formatters,
-                                            point_policy = "follow_mouse",renderers=[r])  # ,PanTool())
+                                            point_policy = "follow_mouse",mode=mode,renderers=[r])  # ,PanTool())
                 standardfig.add_tools(hover)
 
             standardfig.legend.label_text_font_size = "12px"

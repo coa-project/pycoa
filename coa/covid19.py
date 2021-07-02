@@ -165,6 +165,8 @@ class DataBase(object):
                     rename_dict = { 'areaCode':'location',\
                         'cumDeaths28DaysByDeathDate':'tot_deaths',\
                         'cumCasesBySpecimenDate':'tot_cases',\
+                        'cumPeopleVaccinatedFirstDoseByVaccinationDate':'tot_vacc1',\
+                        'cumPeopleVaccinatedSecondDoseByVaccinationDate':'tot_vacc2',\
                         #'covidOccupiedMVBeds':'cur_icu',\
                         #'cumPeopleVaccinatedFirstDoseByVaccinationDate':'tot_dose1',\
                         #'cumPeopleVaccinatedSecondDoseByVaccinationDate':'tot_dose2',\

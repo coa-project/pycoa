@@ -1025,11 +1025,13 @@ class DataBase(object):
             else:
                 listloc = codetoname(listloc)
                 listloc = self.flat_list(listloc)
-                location_exploded = [ self.geo.get_subregions_from_list_of_region_names([i],output='name')\
-                            if len(self.geo.get_subregions_from_list_of_region_names([i],output='name'))>0 else i \
-                            for i in listloc]
-                if self.db == 'dpc' or self.db == 'sciensano' or self.db == 'obepine':
+
+                if self.db == 'dpc' or self.db == 'sciensano' or self.db == 'obepine' or self.db == 'rki':
                     location_exploded = listloc
+                else:
+                    location_exploded = [ self.geo.get_subregions_from_list_of_region_names([i],output='name')\
+                           if len(self.geo.get_subregions_from_list_of_region_names([i],output='name'))>0 else i \
+                            for i in listloc]
                 location_exploded = self.flat_list(location_exploded)
         def sticky(lname):
             if len(lname)>0:

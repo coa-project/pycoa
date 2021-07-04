@@ -1079,6 +1079,9 @@ class DataBase(object):
             #pdfiltered = pdfiltered.fillna(0)
         if not isinstance(option,list):
             option=[option]
+        if 'nonneg' in option:
+            option.remove('nonneg')
+            option.insert(0, 'nonneg')
         for o in option:
             if o == 'nonneg':
                 if kwargs['which'].startswith('cur_'):

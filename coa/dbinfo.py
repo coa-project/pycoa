@@ -222,7 +222,10 @@ def generic_info(namedb, keys):
         url='https://api.coronavirus.data.gov.uk/v2/data?areaType=ltla&metric='
         phe = {
         'tot_deaths':['Total number of deaths (original name cumDeathsByDeathDate)',url+'cumDeathsByDeathDate'+'&format=csv'],\
-        'tot_cases':['Total number of cases (originale name cumCasesBySpecimenDate)',url+'cumCasesBySpecimenDate'+'&format=csv']
+        'tot_cases':['Total number of cases (originale name cumCasesBySpecimenDate)',url+'cumCasesBySpecimenDate'+'&format=csv'],
+        'tot_vacc1':['Total number of cases (originale name cumCasesBySpecimenDate)',url+'cumPeopleVaccinatedFirstDoseByVaccinationDate'+'&format=csv'],
+        'tot_vacc2':['Total number of cases (originale name cumCasesBySpecimenDate)',url+'cumPeopleVaccinatedSecondDoseByVaccinationDate'+'&format=csv'],
+        'cur_B.1.617.2':['Current variant B.1.617.2' +'https://covid-surveillance-data.cog.sanger.ac.uk/download/lineages_by_ltla_and_week.tsv'],
         }
         for k,v in phe.items():
             phe[k].append('https://coronavirus.data.gov.uk/details/download')

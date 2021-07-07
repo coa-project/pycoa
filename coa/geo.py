@@ -1093,7 +1093,7 @@ class GeoCountry():
                 raise CoaWhereError("The region "+code+" does not exist for country "+self.get_country()+". See get_region_list().")
             cut=(self.get_data(True)['code_region']==code)
 
-        return self.get_data(True)[cut][out+'_subregion'].iloc[0]#.to_list()
+        return self.get_data(True)[cut][out+'_subregion'].iloc[0]#to_list()
 
     def get_subregions_from_list_of_region_names(self,l,output='code'):
         """ Return the list of subregions according to list of region names given.
@@ -1142,7 +1142,6 @@ class GeoCountry():
                         pr_metropole['code_region']='999'
                         pr_metropole['name_region']='Métropole'
                         pr_metropole['flag_region']=''
-
                         pr_outremer=pr[~metropole_cut].copy()
                         pr_outremer['code_region']='000'
                         pr_outremer['name_region']='Outre-mer'
@@ -1186,7 +1185,7 @@ class GeoCountry():
 
                     pr['code_subregion']=pr.code_subregion.apply(lambda x: [x])
                     pr['name_subregion']=pr.name_subregion.apply(lambda x: [x])
-                    self._country_data_region=pr.dissolve(by=col_reg,aggfunc='sum').sort_values(by='code_region').reset_index()
+                    self._country_data_region=pr.dissolve(by=col_reg,aggfunc=(lambda x: x.sum())).sort_values(by='code_region').reset_index()
                 return self._country_data_region
             else:
                 if not isinstance(self._country_data_subregion,pd.DataFrame): #i.e. is None

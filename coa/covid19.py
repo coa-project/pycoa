@@ -984,7 +984,6 @@ class DataBase(object):
         else:
             kwargs['location'] = kwargs['location']
 
-        print('--->',kwargs['location'])    
         if kwargs['which'] not in self.get_available_keys_words() :
             raise CoaKeyError(kwargs['which']+' is not a available for ' + self.db + ' database name. '
             'See get_available_keys_words() for the full list.')

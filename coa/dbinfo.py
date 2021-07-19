@@ -23,6 +23,7 @@ def generic_info(namedb, keys):
         urlmaster4='https://www.data.gouv.fr/fr/datasets/indicateurs-de-suivi-de-lepidemie-de-covid-19/'
         urlmaster6='https://www.data.gouv.fr/fr/datasets/donnees-de-laboratoires-pour-le-depistage-indicateurs-sur-les-variants/'
         urlmaster7='https://www.data.gouv.fr/fr/datasets/donnees-de-laboratoires-pour-le-depistage-focus-par-niveau-scolaire/'
+        urlmaster8='https://www.data.gouv.fr/fr/datasets/donnees-de-laboratoires-pour-le-depistage-indicateurs-sur-les-mutations/'
         url1='https://www.data.gouv.fr/fr/datasets/r/63352e38-d353-4b54-bfd1-f1b3ee1cabd7'
         url2='https://www.data.gouv.fr/fr/datasets/r/6fadff46-9efd-4c53-942a-54aca783c30c'
         url3='https://www.data.gouv.fr/fr/datasets/r/406c6a23-e283-4300-9484-54e78c8ae675'
@@ -30,6 +31,7 @@ def generic_info(namedb, keys):
         url5='https://www.data.gouv.fr/fr/datasets/r/32a16487-3dd3-4326-9d2b-317e5a3b2daf'
         url6='https://www.data.gouv.fr/fr/datasets/r/16f4fd03-797f-4616-bca9-78ff212d06e8'
         url7='https://www.data.gouv.fr/fr/datasets/r/c0f59f00-3ab2-4f31-8a05-d317b43e9055'
+        url8='https://www.data.gouv.fr/fr/datasets/r/4d3e5a8b-9649-4c41-86ec-5420eb6b530c'
         spfdic = {
         'tot_dc':
         ['tot_dc:FILLIT',url1,urlmaster1],
@@ -81,7 +83,19 @@ def generic_info(namedb, keys):
         'cur_idx_ti':
         ['ti : taux d\'incidence hebdomadaire rapporté à la population pour 100 000 habitants , par semaine calendaire (en milieu scolaire)',url7,urlmaster7],
         'cur_idx_tp':
-        ['tp :Le taux de positivité hebdomadaire rapporté 100 tests réalisés, par semaine calendaire (en milieu scolaire)',url7,urlmaster7]
+        ['tp :Le taux de positivité hebdomadaire rapporté 100 tests réalisés, par semaine calendaire (en milieu scolaire)',url7,urlmaster7],
+        'nb_crib' : ['Nombre de tests criblés',url8,urlmaster8],
+        'nb_pos' : ['Nombre de tests positifs',url8,urlmaster8],
+        'tx_crib' : ['Taux tests criblés',url8,urlmaster8],
+        'nb_A0' : ['Nombre des tests positifs pour lesquels la recherche de mutation A est négatif (A = E484K)',url8,urlmaster8],
+        'nb_A1' : ['Nombre des tests positifs pour lesquels la recherche de mutation A est positif (A = E484K)',url8,urlmaster8],
+        'tx_A1' : ['Taux de présence mutation A (A = E484K)',url8,urlmaster8],
+        'nb_B0' : ['Nombre des tests positifs pour lesquels la recherche de mutation B est négatif (B = E484Q)',url8,urlmaster8],
+        'nb_B1' : ['Nombre des tests positifs pour lesquels la recherche de mutation B est positif (B = E484Q)',url8,urlmaster8],
+        'tx_B1' : ['Taux de présence mutation B (B = E484Q)',url8,urlmaster8],
+        'nb_C0' : ['Nombre des tests positifs pour lesquels la recherche de mutation C est négatif (C = L452R)',url8,urlmaster8],
+        'nb_C1' : ['Nombre des tests positifs pour lesquels la recherche de mutation C est positif (C = L452R)',url8,urlmaster8],
+        'tx_C1' : ['Taux de présence mutation C (C = L452R)',url8,urlmaster8],
         }
         mydico = spfdic
     elif namedb == 'opencovid19':

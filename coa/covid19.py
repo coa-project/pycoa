@@ -20,6 +20,7 @@ import pandas
 from collections import defaultdict
 import numpy as np
 import pandas as pd
+import datetime as dt
 
 import sys
 from coa.tools import info, verb, kwargs_test, get_local_from_url, fill_missing_dates, check_valid_date, week_to_date, get_db_list_dict
@@ -160,7 +161,7 @@ class DataBase(object):
                     beldata["location"].replace(cvsloc2jsonloc, inplace=True)
                     beldata['date'] = pandas.to_datetime(beldata['date'],errors='coerce').dt.date
                     self.return_structured_pandas(beldata,columns_keeped=columns_keeped)
-                elif self.db == 'phe': # GBR from https://coronavirus.data.gov.uk/details/download
+                elif self.db == 'phe': # GBR from owid
                     info('GBR, Public Health England data ...')
                     rename_dict = { 'areaCode':'location',\
                         'cumDeaths28DaysByDeathDate':'tot_deaths',\
@@ -193,7 +194,7 @@ class DataBase(object):
                     rename_dict = {'Date': 'date', 'State': 'location'}
                     drop_field  = {'State': ['India', 'State Unassigned']}
                     indi = self.csv2pandas("https://api.covid19india.org/csv/latest/states.csv",drop_field=drop_field,rename_columns=rename_dict,separator=',')
-                    columns_keeped = ['Deceased', 'Confirmed', 'Recovered', 'Tested'] # Removing 'Other' data, not identified
+                    columns_keeped = ['Deceased', 'Confirmed', 'Recovered', 'Tested',] # Removing 'Other' data, not identified
                     indi['location'] = indi['location'].apply(lambda x: x.replace('Andaman and Nicobar Islands','Andaman and Nicobar'))
                     locationvariant = self.geo.get_subregion_list()['variation_name_subregion'].to_list()
                     locationgeo = self.geo.get_subregion_list()['name_subregion'].to_list()
@@ -340,7 +341,7 @@ class DataBase(object):
                         #C = L452R
                         spf8 = self.csv2pandas("https://www.data.gouv.fr/fr/datasets/r/4d3e5a8b-9649-4c41-86ec-5420eb6b530c",
                         rename_columns = rename, separator=';',cast=cast)
-                        spf8keeped = list(spf8.columns)[2:]
+                        #spf8keeped = list(spf8.columns)[2:]
                         list_spf=[spf1, spf2, spf3, spf4, spf5, spf6, spf7,spf8]
 
                         #for i in list_spf:
@@ -393,11 +394,16 @@ class DataBase(object):
                             'Prc_susp_ABS':'cur_idx_Prc_susp_ABS',
                             'ti':'cur_idx_ti',
                             'tp':'cur_idx_tp',
+                            'tx_crib' : 'cur_taux_crib',
+                            'tx_A1':'cur_idx_tx_A1',
+                            'tx_B1':'cur_idx_tx_B1',
+                            'tx_C1':'cur_idx_tx_C1'
                             }
                         result = result.rename(columns=rename_dict)
 
                         #coltocast=list(rename_dict.values())[:5]
                         #result[coltocast] = result[coltocast].astype('Int64')
+                        spf8keeped = ['nb_A0','nb_A1', 'nb_B0', 'nb_B1', 'nb_C0', 'nb_C1']
                         columns_keeped  = list(rename_dict.values())+['tot_incid_hosp', 'tot_incid_rea', 'tot_incid_rad', 'tot_incid_dc', 'tot_P', 'tot_T']+spf8keeped
                         self.return_structured_pandas(result,columns_keeped=columns_keeped) # with 'tot_dc' first
                 elif self.db == 'opencovid19' or  self.db == 'opencovid19national':
@@ -444,7 +450,7 @@ class DataBase(object):
                     self.return_structured_pandas(opencovid19.rename(columns=dict_columns_keeped),columns_keeped=list(dict_columns_keeped.values())+['tot_'+c for c in column_to_integrate])
                 elif self.db == 'owid':
                     info('OWID aka \"Our World in Data\" database selected ...')
-                    drop_field = {'location':['International','World']}
+                    drop_field = {'location':['International']}#, 'World']}
                     owid = self.csv2pandas("https://raw.githubusercontent.com/owid/covid-19-data/master/public/data/owid-covid-data.csv",
                     separator=',',drop_field=drop_field)
                     # renaming some columns
@@ -453,7 +459,7 @@ class DataBase(object):
                     col_to_rename+=['people_fully_vaccinated_per_hundred']
                     renamed_cols +=['total_people_fully_vaccinated_per_hundred']
                     columns_keeped=['iso_code','total_deaths','total_cases','total_tests','total_vaccinations']
-                    columns_keeped+=['total_cases_per_million','total_deaths_per_million','total_vaccinations_per_hundred']
+                    columns_keeped+=['total_cases_per_million','total_deaths_per_million','total_vaccinations_per_hundred','population']
                     self.return_structured_pandas(owid.rename(columns=dict(zip(col_to_rename,renamed_cols))),columns_keeped=columns_keeped+renamed_cols)
             except:
                 raise CoaDbError("An error occured while parsing data of "+self.get_db()+". This may be due to a data format modification. "
@@ -665,7 +671,6 @@ class DataBase(object):
         result['date'] = pd.to_datetime(result['date'],errors='coerce').dt.date
         result = result.sort_values(by=['location','date'])
         result = result.reset_index(drop=True)
-
         self.mainpandas = fill_missing_dates(result)
         self.dates  = self.mainpandas['date']
 
@@ -718,7 +723,7 @@ class DataBase(object):
             pandas_db['location'] = 'France'
         pandas_db = pandas_db.sort_values(['location','date'])
         if self.db == 'owid':
-            pandas_db = pandas_db.loc[~pandas_db.iso_code.isnull()]
+            pandas_db = pandas_db.loc[(~pandas_db.iso_code.isnull())]
         return pandas_db
 
    def return_structured_pandas(self,mypandas,**kwargs):
@@ -750,11 +755,18 @@ class DataBase(object):
             mypandas = mypandas.append(tmp)
         if 'iso_code' in mypandas.columns:
             mypandas['iso_code'] = mypandas['iso_code'].dropna().astype(str)
-            strangeiso3tokick=[i for i in mypandas['iso_code'].dropna().unique() if not len(i)==3 ]
-            mypandas = mypandas.loc[~mypandas.iso_code.isin(strangeiso3tokick)]
+            mypandasori=mypandas.copy()
+            strangeiso3tokick = [i for i in mypandasori['iso_code'].dropna().unique() if not len(i)==3 ]
+            mypandasori = mypandas.loc[~mypandas.iso_code.isin(strangeiso3tokick)]
             self.available_keys_words.remove('iso_code')
-            mypandas = mypandas.drop(columns=['location'])
-            mypandas = mypandas.rename(columns={'iso_code':'location'})
+            mypandasori = mypandasori.drop(columns=['location'])
+            mypandasori = mypandasori.rename(columns={'iso_code':'location'})
+            if self.db == 'owid':
+                onlyowid = mypandas.loc[mypandas.iso_code.isin(strangeiso3tokick)]
+                onlyowid = onlyowid.copy()
+                onlyowid.loc[:,'location'] = onlyowid['location'].apply(lambda x : 'owid_'+x)
+            mypandas = mypandasori
+
         if self.db == 'dpc':
             gd = self.geo.get_data()[['code_region','name_subregion']]
             A=['P.A. Bolzano','P.A. Trento']
@@ -786,6 +798,7 @@ class DataBase(object):
         uniqloc = list(mypandas['location'].unique())
 
         if self.db_world:
+            uniqloc = [s for s in uniqloc if 'OWID_' not in s]
             codename = collections.OrderedDict(zip(uniqloc,self.geo.to_standard(uniqloc,output='list',db=self.get_db(),interpret_region=True)))
             self.slocation = list(codename.values())
             location_is_code = True
@@ -833,6 +846,9 @@ class DataBase(object):
             mypandas = mypandas.loc[~mypandas.location.isnull()]
         else:
             mypandas['codelocation'] =  mypandas['location'].map(codename).astype(str)
+        if self.db == 'owid':
+            onlyowid['codelocation'] = onlyowid['location']
+            mypandas = mypandas.append(onlyowid)
         self.mainpandas  = mypandas
         self.dates  = self.mainpandas['date']
 
@@ -871,6 +887,9 @@ class DataBase(object):
                 raise CoaWhereError("Location via the where keyword should be given as strings. ")
             if self.db_world:
                 self.geo.set_standard('name')
+                if self.db == 'owid':
+                    owid_name = [c for c in clist if c.startswith('owid_')]
+                    clist = [c for c in clist if not c.startswith('owid_')]
                 clist=self.geo.to_standard(clist,output='list', interpret_region=True)
             else:
                 clist=clist+self.geo.get_subregions_from_list_of_region_names(clist)
@@ -880,8 +899,10 @@ class DataBase(object):
             diff_locations = list(set(clist) - set(self.get_locations()))
             clist = [i for i in clist if i not in diff_locations]
             filtered_pandas = self.mainpandas.copy()
-            if len(clist) == 0:
-                raise CoaWhereError('No correct subregion found according to the where option given.')
+            if len(clist) == 0 and len(owid_name) == 0:
+                raise CoaWhereError('Not a correct location found according to the where option given.')
+            if self.db == 'owid':
+                clist+=owid_name
             filtered_pandas = filtered_pandas.loc[filtered_pandas.location.isin(clist)]
             if watch_date:
                 check_valid_date(watch_date)
@@ -899,7 +920,8 @@ class DataBase(object):
        self.mainpandas = self.mainpandas.reset_index(drop=True)
        return self.mainpandas
 
-   def flat_list(self, matrix):
+   @staticmethod
+   def flat_list(matrix):
         ''' Flatten list function used in covid19 methods'''
         flatten_matrix = []
         for sublist in matrix:
@@ -962,7 +984,7 @@ class DataBase(object):
         else:
             kwargs['location'] = kwargs['location']
 
-
+        print('--->',kwargs['location'])    
         if kwargs['which'] not in self.get_available_keys_words() :
             raise CoaKeyError(kwargs['which']+' is not a available for ' + self.db + ' database name. '
             'See get_available_keys_words() for the full list.')
@@ -987,11 +1009,15 @@ class DataBase(object):
 
         if self.db_world:
             self.geo.set_standard('name')
+            owid_name = [c for c in origclist if c.startswith('owid_')]
+            clist = [c for c in origclist if not c.startswith('owid_')]
             if origlistlistloc != None:
                 fulllist = [ i if isinstance(i, list) else [i] for i in origclist ]
                 location_exploded = [ self.geo.to_standard(i,output='list',interpret_region=True) for i in fulllist ]
             else:
                 location_exploded = self.geo.to_standard(listloc,output='list',interpret_region=True)
+            if len(owid_name) !=0 :
+                location_exploded += owid_name
         else:
 
             def codetoname(listloc):
@@ -1024,7 +1050,7 @@ class DataBase(object):
 
             else:
                 listloc = codetoname(listloc)
-                listloc = self.flat_list(listloc)
+                listloc = DataBase.flat_list(listloc)
 
                 if self.db == 'dpc' or self.db == 'sciensano' or self.db == 'obepine' or self.db == 'rki':
                     location_exploded = listloc
@@ -1032,7 +1058,7 @@ class DataBase(object):
                     location_exploded = [ self.geo.get_subregions_from_list_of_region_names([i],output='name')\
                            if len(self.geo.get_subregions_from_list_of_region_names([i],output='name'))>0 else i \
                             for i in listloc]
-                location_exploded = self.flat_list(location_exploded)
+                location_exploded = DataBase.flat_list(location_exploded)
         def sticky(lname):
             if len(lname)>0:
                 tmp=''
@@ -1057,28 +1083,29 @@ class DataBase(object):
                     pdcluster = pdcluster.append(tmp)
                 j+=1
             pdfiltered = pdcluster[['location','date','codelocation',kwargs['which'],'clustername']]
-
         else:
             pdfiltered = self.get_mainpandas().loc[self.get_mainpandas().location.isin(location_exploded)]
             pdfiltered = pdfiltered[['location','date','codelocation',kwargs['which']]]
             pdfiltered['clustername'] = pdfiltered['location'].copy()
 
         # deal with options now
-        option = kwargs.get('option', '')
+        option = kwargs.get('option', 'fillnan')
         fillnan = True # default
         sumall = False # default
 
-        if fillnan: # which is the default. Use nofillnan option instead.
+        #if fillnan: # which is the default. Use nofillnan option instead.
             # fill with previous value
-            pdfiltered = pdfiltered.copy()
+        #    pdfiltered = pdfiltered.copy()
             #if self.db_world:
             #pdfiltered[kwargs['which']] = pdfiltered.groupby(['clustername'])[kwargs['which']].fillna(method='bfill')
-            pdfiltered.loc[:,kwargs['which']] = pdfiltered.groupby(['clustername'])[kwargs['which']].\
-            apply(lambda x: x.bfill())
+        #    pdfiltered.loc[:,kwargs['which']] = pdfiltered.groupby(['clustername'])[kwargs['which']].\
+        #    apply(lambda x: x.bfill())
             # fill remaining nan with zeros
             #pdfiltered = pdfiltered.fillna(0)
         if not isinstance(option,list):
             option=[option]
+        if 'fillnan' not in option and 'nofillnan' not in option:
+            option.insert(0, 'fillnan')
         if 'nonneg' in option:
             option.remove('nonneg')
             option.insert(0, 'nonneg')
@@ -1132,11 +1159,22 @@ class DataBase(object):
                 fillnan=False
             elif o == 'fillnan':
                 fillnan=True
+                # fill with previous value
+                pdfiltered = pdfiltered.copy()
+                #pdfiltered.loc[pdfiltered.date<=pdfiltered.date.max()-dt.timedelta(days=0),kwargs['which']] =\
+                #pdfiltered.groupby(['clustername'])[kwargs['which']].apply(lambda x: x.bfill())
+                pdfiltered.loc[:,kwargs['which']] =\
+                pdfiltered.groupby(['clustername'])[kwargs['which']].apply(lambda x: x.bfill())
+                if kwargs['which'].startswith('total_') or kwargs['which'].startswith('tot_'):
+                    pdfiltered.loc[:,kwargs['which']] = pdfiltered.groupby(['clustername'])[kwargs['which']].apply(lambda x: x.ffill())
+
             elif o == 'smooth7':
                 #pdfiltered[kwargs['which']] = pdfiltered.groupby(['clustername'])[kwargs['which']].rolling(7,min_periods=7,center=True).mean().reset_index(level=0,drop=True)
-                pdfiltered[kwargs['which']] = pdfiltered.groupby(['location'])[kwargs['which']].rolling(7,min_periods=7,center=True).mean().reset_index(level=0,drop=True)
+                #pdfiltered[kwargs['which']] = pdfiltered.groupby(['location'])[kwargs['which']].rolling(7,min_periods=7,center=True).mean().reset_index(level=0,drop=True)
+                pdfiltered[kwargs['which']] = pdfiltered.groupby(['location'])[kwargs['which']].rolling(7,min_periods=7).mean().reset_index(level=0,drop=True)
+
                 #pdfiltered[kwargs['which']] = pdfiltered[kwargs['which']].fillna(0) # causes bug with fillnan procedure below
-                pdfiltered = pdfiltered.groupby('location').apply(lambda x : x[3:-3]).reset_index(drop=True) # remove out of bound dates.
+                #pdfiltered = pdfiltered.groupby('location').apply(lambda x : x[3:-3]).reset_index(drop=True) # remove out of bound dates.
                 fillnan = True
             elif o == 'sumall':
                 sumall = True
@@ -1146,16 +1184,13 @@ class DataBase(object):
                 raise CoaKeyError('The option '+o+' is not recognized in get_stats. See get_available_options() for list.')
         pdfiltered = pdfiltered.reset_index(drop=True)
 
-
         # if sumall set, return only integrate val
         tmppandas=pd.DataFrame()
         if sumall:
             if origlistlistloc != None:
                uniqcluster = pdfiltered.clustername.unique()
-
                tmp = pdfiltered.loc[pdfiltered.clustername.isin(uniqcluster)].\
                         groupby(['clustername','date']).sum().reset_index()
-
                #dicocode = {i:list(pdfiltered.loc[pdfiltered.clustername.isin(i)]['codelocation']) for i in uniqcluster}
                codescluster={i:list(pdfiltered.loc[pdfiltered.clustername==i]['codelocation'].unique()) for i in uniqcluster}
                namescluster={i:list(pdfiltered.loc[pdfiltered.clustername==i]['location'].unique()) for i in uniqcluster}
@@ -1205,10 +1240,8 @@ class DataBase(object):
 
    def merger(self,**kwargs):
         '''
-        Merge two or more pandas retrieve from get_stats operation
+        Merge two or more pycoa pandas retrieve from get_stats operation
         'stats': list (min 2D) of pandas from stats
-        'forwhich': one or more columns values to aggregate
-                    by default forwhich if all the what values from the stats list
         '''
         pdstats = []
         what = ''
@@ -1223,15 +1256,21 @@ class DataBase(object):
                 what = len(pdstats)*[kwargs['what']]
 
         base = pdstats[0].copy()
-        k=1
-        for p,w in zip(pdstats[1:],what[1:]):
-            p=p[['date','clustername',w]]
-            if w in base.columns:
-                p=p.rename(columns={w:w+'_'+str(k)})
-                print(w,'has change to :',w+'_'+str(k), ' to avoid same columns in the same pandas')
+        name=DataBase.flat_list(pdstats[0].columns.values.tolist()[3:6])
+        changename={i:i+'_'+pdstats[0].columns[2] for i in name}
+        base=base.rename(columns=changename)
+
+        for p in pdstats[1:]:
+            keep=DataBase.flat_list(p.columns.values.tolist()[2:6])
+            variable=keep[0]
+            keep[0:0]=['date','clustername']
+            p=p[keep]
+            changename={i:i+'_'+keep[2] for i in keep[3:]}
+            p=p.rename(columns=changename)
             base=pd.merge(base,p,on=['date','clustername'])
-            k+=1
+
         return base
+
    def export(self,**kwargs):
        '''
        Export pycoas pandas as an  output file selected by output argument

@@ -170,7 +170,6 @@ class GeoManager():
 
         if db:
             w=self.first_db_translation(w,db)
-
         n=[] # will contain standardized name of countries (if possible)
 
         #for c in w:
@@ -191,7 +190,11 @@ class GeoManager():
                         n0=pc.countries.lookup(c)
                     except LookupError:
                         try:
-                            nf=pc.countries.search_fuzzy(c)
+                            if c.startswith('Owid_'):
+                                nf=['owid_*']
+                                n1='OWID_*'
+                            else:
+                                nf=pc.countries.search_fuzzy(c)
                             if len(nf)>1:
                                 warnings.warn('Caution. More than one country match the key "'+\
                                 c+'" : '+str([ (k.name+', ') for k in nf])+\
@@ -204,17 +207,18 @@ class GeoManager():
                     except Exception as e2:
                         raise CoaNotManagedError('Not managed error'+type(e1))
 
-                    if self._standard=='iso2':
-                        n1=n0.alpha_2
-                    elif self._standard=='iso3':
-                        n1=n0.alpha_3
-                    elif self._standard=='name':
-                        n1=n0.name
-                    elif self._standard=='num':
-                        n1=n0.numeric
-                    else:
-                        raise CoaKeyError('Current standard is '+self._standard+\
-                            ' which is not managed. Error.')
+                    if n0 != 'owid_*':
+                        if self._standard=='iso2':
+                            n1=n0.alpha_2
+                        elif self._standard=='iso3':
+                            n1=n0.alpha_3
+                        elif self._standard=='name':
+                            n1=n0.name
+                        elif self._standard=='num':
+                            n1=n0.numeric
+                        else:
+                            raise CoaKeyError('Current standard is '+self._standard+\
+                                ' which is not managed. Error.')
 
                 n.append(n1)
 

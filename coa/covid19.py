@@ -1166,7 +1166,7 @@ class DataBase(object):
                 #    pdfiltered.loc[:,kwargs['which']] = pdfiltered.groupby(['clustername'])[kwargs['which']].apply(lambda x: x.ffill())
                 if pdfiltered.loc[pdfiltered.date == pdfiltered.date.max()][kwargs['which']].isnull().values.any():
                     print(kwargs['which'], "has been selected. Some missing data has been interpolated from previous data.")
-                    print("This warning appear right now due to some missing values at the latest date ", pdfiltered.date.max())
+                    print("This warning appear right now due to some missing values at the latest date ", pdfiltered.date.max(),".")
                     print("Use the option='nofillnan' if you want to only display the original data")
                     pdfiltered.loc[:,kwargs['which']] = pdfiltered.groupby(['clustername'])[kwargs['which']].apply(lambda x: x.ffill())
             elif o == 'smooth7':

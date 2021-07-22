@@ -1160,18 +1160,19 @@ class DataBase(object):
                 fillnan=True
                 # fill with previous value
                 pdfiltered = pdfiltered.copy()
-                #pdfiltered.loc[pdfiltered.date<=pdfiltered.date.max()-dt.timedelta(days=0),kwargs['which']] =\
-                #pdfiltered.groupby(['clustername'])[kwargs['which']].apply(lambda x: x.bfill())
                 pdfiltered.loc[:,kwargs['which']] =\
                 pdfiltered.groupby(['clustername'])[kwargs['which']].apply(lambda x: x.bfill())
-                if kwargs['which'].startswith('total_') or kwargs['which'].startswith('tot_'):
+                #if kwargs['which'].startswith('total_') or kwargs['which'].startswith('tot_'):
+                #    pdfiltered.loc[:,kwargs['which']] = pdfiltered.groupby(['clustername'])[kwargs['which']].apply(lambda x: x.ffill())
+                if pdfiltered.loc[pdfiltered.date == pdfiltered.date.max()][kwargs['which']].isnull().values.any():
+                    print(kwargs['which'], "has been selected. Some missing data has been interpolated from previous data.")
+                    print("This warning appear right now due to some missing values at the latest date ", pdfiltered.date.max())
+                    print("Use the option='nofillnan' if you want to only display the original data")
                     pdfiltered.loc[:,kwargs['which']] = pdfiltered.groupby(['clustername'])[kwargs['which']].apply(lambda x: x.ffill())
-
             elif o == 'smooth7':
                 #pdfiltered[kwargs['which']] = pdfiltered.groupby(['clustername'])[kwargs['which']].rolling(7,min_periods=7,center=True).mean().reset_index(level=0,drop=True)
                 #pdfiltered[kwargs['which']] = pdfiltered.groupby(['location'])[kwargs['which']].rolling(7,min_periods=7,center=True).mean().reset_index(level=0,drop=True)
                 pdfiltered[kwargs['which']] = pdfiltered.groupby(['location'])[kwargs['which']].rolling(7,min_periods=7).mean().reset_index(level=0,drop=True)
-
                 #pdfiltered[kwargs['which']] = pdfiltered[kwargs['which']].fillna(0) # causes bug with fillnan procedure below
                 #pdfiltered = pdfiltered.groupby('location').apply(lambda x : x[3:-3]).reset_index(drop=True) # remove out of bound dates.
                 fillnan = True

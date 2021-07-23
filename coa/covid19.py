@@ -102,7 +102,7 @@ class DataBase(object):
                     self.return_structured_pandas(prt_data, columns_keeped=columns_keeped)
                 elif self.db == 'obepine' : # FRA
                     info('FRA, réseau Obepine, surveillance Sars-Cov-2 dans les eaux usées')
-                    url='https://www.data.gouv.fr/es/datasets/r/ba71be57-5932-4298-81ea-aff3a12a440c'
+                    url='https://www.data.gouv.fr/en/datasets/r/da7810b7-455a-406e-b5ab-6df157e37d11'
                     rename_dict={'Code_Region':'location','Date':'date','Indicateur':'idx_obepine'}
                     obepine_data=self.csv2pandas(url,separator=';',rename_columns=rename_dict)
                     self.return_structured_pandas(obepine_data,columns_keeped=['idx_obepine'])
@@ -1178,8 +1178,8 @@ class DataBase(object):
                 fillnan = True
             elif o == 'sumall':
                 sumall = True
-                if kwargs['which'].startswith('cur_idx_Prc'):
-                    print('Warning this data is from rolling value, ended date may be not correct ...')
+                #if kwargs['which'].startswith('cur_idx_Prc'):
+                #    print('Warning this data is from rolling value, ended date may be not correct ...')
             elif o != None and o != '':
                 raise CoaKeyError('The option '+o+' is not recognized in get_stats. See get_available_options() for list.')
         pdfiltered = pdfiltered.reset_index(drop=True)

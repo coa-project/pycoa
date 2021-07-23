@@ -132,6 +132,13 @@ def generic_info(namedb, keys):
               op19nat[k].append('https://raw.githubusercontent.com/opencovid19-fr/data/master/dist/chiffres-cles.csv')
               op19nat[k].append('https://github.com/opencovid19-fr/data')
         mydico = op19nat
+    elif namedb == 'obepine':
+        obe = {
+         'idx_obepine':['tot_deces: total cumulé du nombre de décès']}
+        for k,v in obe.items():
+              obe[k].append('https://www.data.gouv.fr/en/datasets/r/da7810b7-455a-406e-b5ab-6df157e37d11')
+              obe[k].append('https://www.data.gouv.fr/en/datasets/surveillance-du-sars-cov-2-dans-les-eaux-usees-1')
+        mydico = obe
     elif namedb == 'owid':
         owid={
         'total_deaths':['total_deaths:FILLIT'],

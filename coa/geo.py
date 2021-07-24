@@ -697,6 +697,7 @@ class GeoCountry():
                     'BEL':'https://public.opendatasoft.com/explore/dataset/arrondissements-belges-2019/download/?format=shp&timezone=Europe/Berlin&lang=en',\
                     'PRT':'https://github.com/coa-project/coadata/raw/main/coastore/concelhos.zip',\
                     # (simplification of 'https://github.com/coa-project/coadata/raw/main'https://dados.gov.pt/en/datasets/r/59368d37-cbdb-426a-9472-5a04cf30fbe4',\
+                    'MYS':'https://stacks.stanford.edu/file/druid:zd362bc5680/data.zip',\
                     }
 
     _source_dict = {'FRA':{'Basics':_country_info_dict['FRA'],\
@@ -712,6 +713,7 @@ class GeoCountry():
                     'BEL':{'Basics':_country_info_dict['BEL']},\
                     'PRT':{'Basics':_country_info_dict['PRT']},\
                     #,'District':'https://raw.githubusercontent.com/JoaoFOliveira/portuguese-municipalities/master/municipalities.json'},\
+                    'MYS':{'Basics':_country_info_dict['MYS']},\
                     }
 
     def __init__(self,country=None,**kwargs):
@@ -1008,6 +1010,22 @@ class GeoCountry():
                 'NAME_1':'name_region',\
                 'HASC_2':'code_subregion'},inplace=True)
             self._country_data['code_region']=self._country_data.code_subregion.str.slice(stop=5)
+            self._country_data=self._country_data[['name_subregion','code_subregion','name_region','code_region','geometry']]
+        # --- 'MYS' case --------------------------------------------------------------------------------------------
+        elif self._country == 'MYS':
+            self._country_data = gpd.read_file('zip://'+get_local_from_url(url,0,'.zip')).dissolve(by='nam').reset_index()
+            self._country_data['name_subregion']=[n.title() for n in self._country_data.nam]
+            self._country_data['code_subregion']=self._country_data.name_subregion
+            self._country_data['code_region']='MYS'
+            self._country_data['name_region']='Malaysia'
+            self._country_data['code_subregion']=self._country_data.code_subregion
+            # to help the join procedure with current covid data, some translation
+            dict_subregion={\
+                'Wilayah Persekutuan Labuan':'W.P. Labuan',\
+                'Wilayah Persekutuan':'W.P. Kuala Lumpur',\
+                }
+            self._country_data.loc[self._country_data.code_subregion.isin(list(dict_subregion.keys())),'code_subregion'] = \
+                [dict_subregion[x] for x in self._country_data.code_subregion if x in list(dict_subregion.keys())]
             self._country_data=self._country_data[['name_subregion','code_subregion','name_region','code_region','geometry']]
 
     # def get_region_from_municipality(self,lname):

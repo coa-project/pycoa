@@ -15,7 +15,9 @@
 - could sumall for different sublist
 - add Obepine french db
 - add export and merger method
- 
+- change flat_list from covdi19 to staticmethod i.e remove self not needed
+- keep owid : world field -> change to owid_* & population value
+  
 ## v2.02 - march 2021 - Import decorators modifciation inside the display
 - New standard output is pandas dataframe
 - Bug solved for a SPF database which has changed

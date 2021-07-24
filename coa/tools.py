@@ -60,7 +60,9 @@ _db_list_dict = {'jhu': ['WW','nation'],
     'phe':['GBR','subregion'],
     'sciensano':['BEL','region'],
     'dgs':['PRT','region'],
-    'obepine':['FRA','region']}
+    'obepine':['FRA','region'],
+    'moh':['MYS','subregion'],
+    }
 
 # ----------------------------------------------------
 # --- Usefull functions for pycoa --------------------

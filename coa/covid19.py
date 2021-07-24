@@ -189,6 +189,17 @@ class DataBase(object):
                     columns_keeped.append('cur_'+varname)
                     columns_keeped.remove('location')
                     self.return_structured_pandas(gbr_data,columns_keeped=columns_keeped)
+                elif self.db == 'moh': # MYS
+                    info('Malaysia moh covid19-public database selected ...')
+                    rename_dict = {'state': 'location'}
+                    moh1 = self.csv2pandas("https://raw.githubusercontent.com/MoH-Malaysia/covid19-public/main/epidemic/cases_state.csv",rename_columns=rename_dict,separator=',')
+                    moh2 = self.csv2pandas("https://raw.githubusercontent.com/MoH-Malaysia/covid19-public/main/epidemic/hospital.csv",rename_columns=rename_dict,separator=',')
+                    moh3 = self.csv2pandas("https://raw.githubusercontent.com/CITF-Malaysia/citf-public/main/vaccination/vax_state.csv",rename_columns=rename_dict,separator=',')
+                    list_moh = [moh1,moh2,moh3]
+
+                    result = reduce(lambda left, right: left.merge(right, how = 'outer', on=['location','date']), list_moh)
+                    columns_keeped = ['cases_new','hosp_covid','dose1_daily','dose2_daily']
+                    self.return_structured_pandas(result, columns_keeped = columns_keeped)
                 elif self.db == 'covid19india': # IND
                     info('COVID19India database selected ...')
                     rename_dict = {'Date': 'date', 'State': 'location'}
@@ -198,7 +209,6 @@ class DataBase(object):
                     indi['location'] = indi['location'].apply(lambda x: x.replace('Andaman and Nicobar Islands','Andaman and Nicobar'))
                     locationvariant = self.geo.get_subregion_list()['variation_name_subregion'].to_list()
                     locationgeo = self.geo.get_subregion_list()['name_subregion'].to_list()
-
                     def fusion(pan, new, old):
                         tmp = (pan.loc[pan.location.isin([new, old])].groupby('date').sum())
                         tmp['location'] = old

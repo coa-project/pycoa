@@ -180,6 +180,17 @@ def generic_info(namedb, keys):
         for k,v in jhuusa.items():
             jhuusa[k].append("https://github.com/CSSEGISandData/COVID-19")
         mydico = jhuusa
+    elif namedb == 'moh':
+        moh = {
+        'cases_new':['cases_new: cases new'],\
+        'hosp_covid':['hosp_covid: hosp_covid'],\
+        'dose1_daily':['dose1_daily: dose1_daily'],\
+        'dose2_daily':['dose2_daily: dose2_daily'],\
+        }
+        for k,v in moh.items():
+            moh[k].append("https://raw.githubusercontent.com/MoH-Malaysia/covid19-public/main/epidemic/cases_state.csv")
+            moh[k].append("https://github.com/MoH-Malaysia/covid19-public")
+        mydico = moh
     elif namedb == 'covid19india':
         india = {
         'Deceased':'Deceased:FILLIT',

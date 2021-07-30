@@ -62,6 +62,7 @@ _db_list_dict = {'jhu': ['WW','nation'],
     'dgs':['PRT','region'],
     'obepine':['FRA','region'],
     'moh':['MYS','subregion'],
+    'minciencia':['CHL','subregion']
     }
 
 # ----------------------------------------------------

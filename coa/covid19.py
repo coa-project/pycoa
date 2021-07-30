@@ -166,6 +166,7 @@ class DataBase(object):
                     rename_dict = { 'areaCode':'location',\
                         'cumDeaths28DaysByDeathDate':'tot_deaths',\
                         'cumCasesBySpecimenDate':'tot_cases',\
+                        'cumLFDTests':'tot_tests',\
                         'cumPeopleVaccinatedFirstDoseByVaccinationDate':'tot_vacc1',\
                         'cumPeopleVaccinatedSecondDoseByVaccinationDate':'tot_vacc2',\
                         #'covidOccupiedMVBeds':'cur_icu',\
@@ -194,12 +195,20 @@ class DataBase(object):
                     rename_dict = {'state': 'location'}
                     moh1 = self.csv2pandas("https://raw.githubusercontent.com/MoH-Malaysia/covid19-public/main/epidemic/cases_state.csv",rename_columns=rename_dict,separator=',')
                     moh2 = self.csv2pandas("https://raw.githubusercontent.com/MoH-Malaysia/covid19-public/main/epidemic/hospital.csv",rename_columns=rename_dict,separator=',')
-                    moh3 = self.csv2pandas("https://raw.githubusercontent.com/CITF-Malaysia/citf-public/main/vaccination/vax_state.csv",rename_columns=rename_dict,separator=',')
-                    list_moh = [moh1,moh2,moh3]
+                    moh3 = self.csv2pandas("https://raw.githubusercontent.com/MoH-Malaysia/covid19-public/main/epidemic/icu.csv",rename_columns=rename_dict,separator=',')
+                    moh4 = self.csv2pandas("https://raw.githubusercontent.com/CITF-Malaysia/citf-public/main/vaccination/vax_state.csv",rename_columns=rename_dict,separator=',')
 
+                    list_moh = [moh1,moh2,moh3,moh4]
                     result = reduce(lambda left, right: left.merge(right, how = 'outer', on=['location','date']), list_moh)
-                    columns_keeped = ['cases_new','hosp_covid','dose1_daily','dose2_daily']
+                    columns_keeped = ['cases_new','hosp_covid','dose1_daily','dose2_daily','icu_covid','bed_icu_covid']
                     self.return_structured_pandas(result, columns_keeped = columns_keeped)
+                elif self.db == 'minciencia': # CHL
+                    info('Chile Ministerio de Ciencia, Tecnología, Conocimiento, e Innovación database selected ...')
+                    cast = {'Codigo comuna': 'string'}
+                    rename_dict = {'Codigo comuna':'location','Poblacion':'population','Fecha':'date','Casos confirmados':'cases'}
+                    ciencia = self.csv2pandas("https://raw.githubusercontent.com/MinCiencia/Datos-COVID19/master/output/producto1/Covid-19_std.csv",cast=cast,rename_columns=rename_dict,separator=',')
+                    columns_keeped = ['cases']
+                    self.return_structured_pandas(ciencia, columns_keeped = columns_keeped)
                 elif self.db == 'covid19india': # IND
                     info('COVID19India database selected ...')
                     rename_dict = {'Date': 'date', 'State': 'location'}
@@ -396,7 +405,7 @@ class DataBase(object):
                             'tx_incid': 'cur_idx_tx_incid',
                             'R': 'cur_idx_R',
                             'taux_occupation_sae': 'cur_idx_taux_occupation_sae',
-                            'tx_pos': 'cur_idx_tx_pos',
+                            'tx_pos': 'gidx_tx_pos',
                             'Prc_tests_PCR_TA_crible':'cur_idx_Prc_tests_PCR_TA_crible',
                             'Prc_susp_501Y_V1':'cur_idx_Prc_susp_501Y_V1',
                             'Prc_susp_501Y_V2_3':'cur_idx_Prc_susp_501Y_V2_3',
@@ -805,7 +814,7 @@ class DataBase(object):
 
         codename = None
         location_is_code = False
-        uniqloc = list(mypandas['location'].unique())
+        uniqloc = list(mypandas['location'].unique()) # if possible location from csv are codelocation
 
         if self.db_world:
             uniqloc = [s for s in uniqloc if 'OWID_' not in s]
@@ -830,7 +839,7 @@ class DataBase(object):
 
             elif self.database_type[self.db][1] == 'subregion':
                 temp = self.geo_all[['code_subregion','name_subregion']]
-                if self.db in ['phe','covidtracking','spf','escovid19data','opencovid19']:
+                if self.db in ['phe','covidtracking','spf','escovid19data','opencovid19','minciencia']:
                     codename={i:list(temp.loc[temp.code_subregion.isin([i])]['name_subregion'])[0] for i in uniqloc if not temp.loc[temp.code_subregion.isin([i])]['name_subregion'].empty }
                     #codename = collections.OrderedDict(zip(uniqloc,list(temp.loc[temp.code_subregion.isin(uniqloc)]['name_subregion'])))
                     self.slocation = list(codename.values())
@@ -839,7 +848,6 @@ class DataBase(object):
                     codename={i:list(temp.loc[temp.code_subregion.isin([i])]['code_subregion'])[0] for i in uniqloc if not temp.loc[temp.code_subregion.isin([i])]['code_subregion'].empty }
                     #codename = collections.OrderedDict(zip(uniqloc,list(temp.loc[temp.name_subregion.isin(uniqloc)]['code_subregion'])))
                     self.slocation = uniqloc
-
             else:
                 CoaDbError('Granularity problem , neither region nor sub_region ...')
 
@@ -952,6 +960,23 @@ class DataBase(object):
         '''
         return self.slocation
 
+   def return_nonan_dates_pandas(self, df = None, field = None):
+         ''' Check if for last date all values are nan, if yes check previous date and loop until false'''
+         watchdate = df.date.max()
+         boolval = True
+         j = 0
+         while (boolval):
+             boolval = df.loc[df.date == (watchdate - dt.timedelta(days=j))][field].dropna().empty
+             j += 1
+         df = df.loc[df.date <= watchdate - dt.timedelta(days=j - 1)]
+         boolval = True
+         j = 0
+         watchdate = df.date.min()
+         while (boolval):
+             boolval = df.loc[df.date == (watchdate + dt.timedelta(days=j))][field].dropna().empty
+             j += 1
+         df = df.loc[df.date >= watchdate - dt.timedelta(days=j - 1)]
+         return df
 
    def get_stats(self, **kwargs):
         '''
@@ -997,6 +1022,9 @@ class DataBase(object):
         if kwargs['which'] not in self.get_available_keys_words() :
             raise CoaKeyError(kwargs['which']+' is not a available for ' + self.db + ' database name. '
             'See get_available_keys_words() for the full list.')
+
+        #while for last date all values are nan previous date
+        mainpandas = self.return_nonan_dates_pandas(self.get_mainpandas(),kwargs['which'])
 
         devorigclist = None
         origclistlist = None
@@ -1080,7 +1108,7 @@ class DataBase(object):
         j=0
         if origlistlistloc != None:
             for i in location_exploded:
-                tmp = self.get_mainpandas().loc[self.get_mainpandas().location.isin(i)]
+                tmp = mainpandas.loc[mainpandas.location.isin(i)]
                 if origlistlistloc == [['Métropole']]:
                     tmp['clustername'] = [name_regions[j]]*len(tmp)
                 else:
@@ -1093,7 +1121,7 @@ class DataBase(object):
                 j+=1
             pdfiltered = pdcluster[['location','date','codelocation',kwargs['which'],'clustername']]
         else:
-            pdfiltered = self.get_mainpandas().loc[self.get_mainpandas().location.isin(location_exploded)]
+            pdfiltered = mainpandas.loc[mainpandas.location.isin(location_exploded)]
             pdfiltered = pdfiltered[['location','date','codelocation',kwargs['which']]]
             pdfiltered['clustername'] = pdfiltered['location'].copy()
 

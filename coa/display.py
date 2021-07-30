@@ -669,7 +669,7 @@ class CocoDisplay:
             r_list=[]
             maxou=-1000
             for val in input_field:
-                if val.startswith('cur_idx_tx_'):
+                if val.startswith('cur_idx_tx_') and val != 'cur_idx_tx_incid':
                     standardfig.yaxis[0].formatter = PrintfTickFormatter(format = "0 %'")
                 line_style = ['solid', 'dashed', 'dotted', 'dotdash']
                 for loc in list(mypandas.clustername.unique()):
@@ -679,6 +679,7 @@ class CocoDisplay:
                         leg = CocoDisplay.dict_shorten_loc(mypandas_filter.clustername[0])
                     else:
                         leg = keepnamelikeit
+
                     if len(leg)>12 and leg != keepnamelikeit and not leg.startswith('owid_'):
                         leg=leg[:5]+'...'+leg[-5:]
                     if len(input_field)>1:
@@ -689,7 +690,7 @@ class CocoDisplay:
                     r = standardfig.line(x = 'date', y = val, source = ColumnDataSource(mypandas_filter),
                                      color = color, line_width = 3,
                                      legend_label = leg,
-                                     hover_line_width = 4, name=val, line_dash=line_style[i])
+                                     hover_line_width = 4, name = val, line_dash=line_style[i])
                     r_list.append(r)
                     maxou=max(maxou,np.nanmax(mypandas_filter[val].values))
                     #print(maxou,mypandas_filter[val].values)
@@ -1429,7 +1430,7 @@ class CocoDisplay:
 
         def get_color(feature):
             value = map_dict.get(feature['properties']['location'])
-            if value is None:
+            if value is None or np.isnan(value):
                 return '#8c8c8c'  # MISSING -> gray
             else:
                 return color_scale(value)
@@ -1744,7 +1745,7 @@ class CocoDisplay:
         ax.set_xticks([])
         ax.set_yticks([])
         plt.plot(len(data) - 1, data[len(data) - 1], 'r.')
-        
+
         #ax.fill_between(range(len(data)), data, len(data)*[min(data)], color='green',alpha=0.1)
         img = BytesIO()
         plt.savefig(img)

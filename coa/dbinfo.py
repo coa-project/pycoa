@@ -186,11 +186,21 @@ def generic_info(namedb, keys):
         'hosp_covid':['hosp_covid: hosp_covid'],\
         'dose1_daily':['dose1_daily: dose1_daily'],\
         'dose2_daily':['dose2_daily: dose2_daily'],\
+        'icu_covid':['icu_covid: icu_covid'],\
+        'bed_icu_covid':['bed_icu_covid: bed_icu_covid'],\
         }
         for k,v in moh.items():
             moh[k].append("https://raw.githubusercontent.com/MoH-Malaysia/covid19-public/main/epidemic/cases_state.csv")
             moh[k].append("https://github.com/MoH-Malaysia/covid19-public")
         mydico = moh
+    elif namedb == 'minciencia':
+        mi = {
+        'cases':['cases: Casos confirmados'],\
+        }
+        for k,v in mi.items():
+            mi[k].append("https://raw.githubusercontent.com/MinCiencia/Datos-COVID19/master/output/producto1/Covid-19_std.csv")
+            mi[k].append("https://github.com/MinCiencia")
+        mydico = mi
     elif namedb == 'covid19india':
         india = {
         'Deceased':'Deceased:FILLIT',
@@ -255,6 +265,7 @@ def generic_info(namedb, keys):
         phe = {
         'tot_deaths':['Total number of deaths (original name cumDeathsByDeathDate)',url+'cumDeathsByDeathDate'+'&format=csv'],\
         'tot_cases':['Total number of cases (originale name cumCasesBySpecimenDate)',url+'cumCasesBySpecimenDate'+'&format=csv'],
+        'tot_tests':['Total number of cases (originale name cumTestByPublishDate)',url+'cumLFDTests'+'&format=csv'],
         'tot_vacc1':['Total number of cases (originale name cumCasesBySpecimenDate)',url+'cumPeopleVaccinatedFirstDoseByVaccinationDate'+'&format=csv'],
         'tot_vacc2':['Total number of cases (originale name cumCasesBySpecimenDate)',url+'cumPeopleVaccinatedSecondDoseByVaccinationDate'+'&format=csv'],
         'cur_B.1.617.2':['Current variant B.1.617.2' +'https://covid-surveillance-data.cog.sanger.ac.uk/download/lineages_by_ltla_and_week.tsv'],

@@ -98,6 +98,22 @@ def generic_info(namedb, keys):
         'tx_C1' : ['Taux de présence mutation C (C = L452R)',url8,urlmaster8],
         }
         mydico = spfdic
+    elif namedb == 'spfnational':
+        spfn = {
+        'cur_reanimation': ['(nom d\'origine patients_reanimation) en current réa '],\
+        'cur_hospitalises':  ['(nom d\'origine patients_hospitalises) en current patients hospitalises '],\
+        'total_cas_confirmes':   ['total_cas_confirmes: total cumulé du nombre de décès'],\
+        'total_deces_hopital':  ['total_deces_hopital: total deces hopital '],\
+        'total_patients_gueris':  ['total_patients_gueris: total patients gueris'],\
+        'total_deces_ehpad':  ['total cumulé deces ehpad'],\
+        'total_cas_confirmes_ehpad':  ['total cumulé confirmes ehpad'],\
+        'total_cas_possibles_ehpad':  ['total cumulé possibles ehpad'],\
+        }
+        for k,v in spfn.items():
+              spfn[k].append('https://www.data.gouv.fr/fr/datasets/r/d3a98a30-893f-47f7-96c5-2f4bcaaa0d71')
+              spfn[k].append('https://www.data.gouv.fr/en/datasets/donnees-relatives-a-lepidemie-de-covid-19-en-france-vue-densemble/')
+        mydico = spfn
+
     elif namedb == 'opencovid19':
         op19 = {
         'tot_deces':['tot_deces: total cumulé du nombre de décès au niveau national'],
@@ -145,7 +161,8 @@ def generic_info(namedb, keys):
         'total_cases':['total_cases:FILLIT'],
         'total_tests':['total_tests: FILLIT'],
         'total_vaccinations':['total_vaccinations:FILLIT'],
-        'total_people_fully_vaccinated_per_hundred':['total_people_fully_vaccinated_per_hundred:FILLIT'],
+        'total_people_fully_vaccinated_per_hundred':['original name people_fully_vaccinated_per_hundred, total_people_fully_vaccinated_per_hundred:FILLIT'],
+        'total_people_vaccinated_per_hundred':['original naùe people_vaccinated_per_hundred: total_people_vaccinated_per_hundred:FILLIT'],
         'total_cases_per_million':['total_cases_per_million:FILLIT'],
         'total_deaths_per_million':['total_deaths_per_million:FILLIT'],
         'total_vaccinations_per_hundred':['total_vaccinations_per_hundred: COVID19 vaccine doses administered per 100 people'],
@@ -203,10 +220,10 @@ def generic_info(namedb, keys):
         mydico = mi
     elif namedb == 'covid19india':
         india = {
-        'Deceased':'Deceased:FILLIT',
-        'Confirmed':'Confirmed:FILLIT',
-        'Recovered':'Recovered:FILLIT',
-        'Tested':'Tested:FILLIT'
+        'Deceased':['Deceased:FILLIT'],\
+        'Confirmed':['Confirmed:FILLIT'],\
+        'Recovered':['Recovered:FILLIT'],\
+        'Tested':['Tested:FILLIT']
         }
         for k,v in india.items():
             india[k].append('https://api.covid19india.org/csv/latest/states.csv')

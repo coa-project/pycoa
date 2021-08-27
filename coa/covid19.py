@@ -405,7 +405,7 @@ class DataBase(object):
                             'tx_incid': 'cur_idx_tx_incid',
                             'R': 'cur_idx_R',
                             'taux_occupation_sae': 'cur_idx_taux_occupation_sae',
-                            'tx_pos': 'gidx_tx_pos',
+                            'tx_pos': 'cur_taux_pos',
                             'Prc_tests_PCR_TA_crible':'cur_idx_Prc_tests_PCR_TA_crible',
                             'Prc_susp_501Y_V1':'cur_idx_Prc_susp_501Y_V1',
                             'Prc_susp_501Y_V2_3':'cur_idx_Prc_susp_501Y_V2_3',

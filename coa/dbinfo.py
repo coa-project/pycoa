@@ -49,8 +49,8 @@ def generic_info(namedb, keys):
         ['cur_idx_R:FILLIT',url4,urlmaster4],
         'cur_idx_taux_occupation_sae':
         ['cur_idx_taux_occupation_sae:FILLIT',url4,urlmaster4],
-        'cur_idx_tx_pos':
-        ['cur_idx_tx_pos: Taux de positivité des tests virologiques (Le taux de positivité correspond au nombre de personnes testées positives\
+        'cur_taux_pos':
+        ['cur_taux_pos: Taux de positivité des tests virologiques (Le taux de positivité correspond au nombre de personnes testées positives\
          (RT-PCR et test antigénique) pour la première fois depuis plus de 60 jours rapporté au nombre total de personnes testées positives ou \
          négatives sur une période donnée ; et qui n‘ont jamais été testées positive dans les 60 jours précédents.)',url4,urlmaster2],
         'tot_vacc':
@@ -161,7 +161,7 @@ def generic_info(namedb, keys):
         'total_cases':['total_cases:FILLIT'],
         'total_tests':['total_tests: FILLIT'],
         'total_vaccinations':['total_vaccinations:FILLIT'],
-        'population':['population: total population of a given country'],
+        'population':['population: total population of a given countrytx_pos'],
         'total_people_fully_vaccinated_per_hundred':['original name people_fully_vaccinated_per_hundred, total_people_fully_vaccinated_per_hundred:FILLIT'],
         'total_people_vaccinated_per_hundred':['original naùe people_vaccinated_per_hundred: total_people_vaccinated_per_hundred:FILLIT'],
         'total_cases_per_million':['total_cases_per_million:FILLIT'],

@@ -631,7 +631,7 @@ class CocoDisplay:
                           (input_field[1], '@{casesy}' + '{custom}')],
                 formatters={'location': 'printf', '@{casesx}': cases_custom, '@{casesy}': cases_custom,
                             '@date': 'datetime'},
-                point_policy="follow_mouse"))  # ,PanTool())
+                point_policy="snap_to_data"))  # ,PanTool())
 
             if len(input_field) != 2:
                 raise CoaTypeError('Two variables are needed to be plotted ... ')
@@ -700,7 +700,7 @@ class CocoDisplay:
                 tooltips = [('Location', '@rolloverdisplay'), ('date', '@date{%F}'), (r.name, '@$name')]
                 formatters = {'location': 'printf', '@date': 'datetime', '@name': 'printf'}
                 hover=HoverTool(tooltips = tooltips, formatters = formatters,
-                                            point_policy = "follow_mouse",mode=mode,renderers=[r])  # ,PanTool())
+                                            point_policy = "snap_to_data",mode=mode,renderers=[r])  # ,PanTool())
                 standardfig.add_tools(hover)
 
             if axis_type == 'linear':
@@ -761,7 +761,7 @@ class CocoDisplay:
         cases_custom = CocoDisplay.rollerJS()
         hover_tool = HoverTool(tooltips=[('Cases', '@{cases}' + '{custom}'), ('date', '@date{%F}')],
                                formatters={'Cases': 'printf', '@{cases}': cases_custom, '@date': 'datetime'},
-                               point_policy="follow_mouse")  # ,PanTool())
+                               point_policy="snap_to_data")  # ,PanTool())
 
         panels = []
         for axis_type in ax_type:
@@ -926,7 +926,7 @@ class CocoDisplay:
         standardfig.add_tools(HoverTool(
             tooltips=[('location', '@rolloverdisplay'), ('value', '@value')],
             # formatters={'location':'printf','@{'+input_field+'}': cases_custom,},
-            point_policy="follow_mouse"))
+            point_policy="snap_to_data"))
         return standardfig
 
     @decohistomap
@@ -1277,12 +1277,12 @@ class CocoDisplay:
                     standardfig.add_tools(HoverTool(
                         tooltips=[('Location', '@rolloverdisplay'), (input_field, '@{' + 'cases' + '}' + '{custom}'), ('%:','@percentage'), ],
                         formatters={'location': 'printf', '@{' + 'cases' + '}': cases_custom, '%':'printf'},
-                        point_policy="follow_mouse"))  # ,PanTool())
+                        point_policy="snap_to_data"))  # ,PanTool())
                 else:
                     standardfig.add_tools(HoverTool(
                         tooltips=[('Location', '@rolloverdisplay'), (input_field, '@{' + 'cases' + '}' + '{custom}'), ],
                         formatters={'location': 'printf', '@{' + 'cases' + '}': cases_custom, },
-                        point_policy="follow_mouse"))  # ,PanTool())
+                        point_policy="snap_to_data"))  # ,PanTool())
                 panel = Panel(child = standardfig, title = axis_type)
                 panels.append(panel)
             return func(self, srcfiltered, panels, date_slider)
@@ -1314,7 +1314,7 @@ class CocoDisplay:
                     x = 'horihistotextx',
                     y = 'horihistotexty',
                     x_offset=5,
-                    y_offset=-4, 
+                    y_offset=-4,
                     text = 'horihistotext',
                     source = srcfiltered,text_font_size='10px',text_color='black')
             fig.add_layout(labels)
@@ -1690,7 +1690,7 @@ class CocoDisplay:
         standardfig.add_tools(HoverTool(
             tooltips = [loctips, (input_field, '@{' + 'cases' + '}' + '{custom}'), ],
             formatters = {'location': 'printf', '@{' + 'cases' + '}': cases_custom, },
-            point_policy = "follow_mouse"))  # ,PanTool())
+            point_policy = "snap_to_data"))  # ,PanTool())
         if date_slider:
             standardfig = column(date_slider, standardfig)
         return standardfig

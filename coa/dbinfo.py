@@ -47,6 +47,8 @@ def generic_info(namedb, keys):
         Il est exprimé pour 100 000 habitants)',url2,urlmaster2],
         'cur_idx_R':
         ['cur_idx_R:FILLIT',url4,urlmaster4],
+        'cur_taux_crib':
+        ['cur_taux_crib:FILLIT',url4,urlmaster2],
         'cur_idx_taux_occupation_sae':
         ['cur_idx_taux_occupation_sae:FILLIT',url4,urlmaster4],
         'cur_taux_pos':

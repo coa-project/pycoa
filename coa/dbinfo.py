@@ -161,6 +161,7 @@ def generic_info(namedb, keys):
         'total_cases':['total_cases:FILLIT'],
         'total_tests':['total_tests: FILLIT'],
         'total_vaccinations':['total_vaccinations:FILLIT'],
+        'population':['population: total population of a given country'],
         'total_people_fully_vaccinated_per_hundred':['original name people_fully_vaccinated_per_hundred, total_people_fully_vaccinated_per_hundred:FILLIT'],
         'total_people_vaccinated_per_hundred':['original naùe people_vaccinated_per_hundred: total_people_vaccinated_per_hundred:FILLIT'],
         'total_cases_per_million':['total_cases_per_million:FILLIT'],

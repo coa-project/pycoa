@@ -251,7 +251,7 @@ class DataBase(object):
                             'positive': 'tot_pos_test',
                             'onVentilatorCumulative': 'tot_onVentilator',
                             'onVentilatorCurrently': 'cur_onVentilator',
-                            'totalTestResults':' tot_test',
+                            'totalTestResults':'tot_test',
                             }
                     ctusa = self.csv2pandas("https://covidtracking.com/data/download/all-states-history.csv",
                         rename_columns = rename_dict, separator = ',')

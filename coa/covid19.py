@@ -102,7 +102,7 @@ class DataBase(object):
                     self.return_structured_pandas(prt_data, columns_keeped=columns_keeped)
                 elif self.db == 'obepine' : # FRA
                     info('FRA, réseau Obepine, surveillance Sars-Cov-2 dans les eaux usées')
-                    url='https://www.data.gouv.fr/en/datasets/r/da7810b7-455a-406e-b5ab-6df157e37d11'
+                    url='https://www.data.gouv.fr/fr/datasets/r/89196725-56cf-4a83-bab0-170ad1e8ef85'
                     rename_dict={'Code_Region':'location','Date':'date','Indicateur':'idx_obepine'}
                     obepine_data=self.csv2pandas(url,separator=';',rename_columns=rename_dict)
                     self.return_structured_pandas(obepine_data,columns_keeped=['idx_obepine'])

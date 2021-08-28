@@ -296,6 +296,12 @@ def generic_info(namedb, keys):
         for k,v in phe.items():
             phe[k].append('https://coronavirus.data.gov.uk/details/download')
         mydico = phe
+    elif namedb == 'dgs':
+        url='https://raw.githubusercontent.com/dssg-pt/covid19pt-data/master/data_concelhos_new.csv'
+        dgs = {
+        'tot_cases':['original name confirmados_1'],\
+        }
+        mydico = dgs
     elif namedb == 'covidtracking':
         url='https://covidtracking.com/data/download/all-states-history.csv'
         cotra = {

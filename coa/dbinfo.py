@@ -237,8 +237,8 @@ def generic_info(namedb, keys):
         mydico = india
     elif namedb == 'dpc':
         ita = {
-        'tot_cases':['tot_cases:FILLIT'],\
-        'tot_deaths':['tot_deaths:FILLIT']
+        'tot_cases':['tot_cases:original name totale_casi + FILLIT'],\
+        'tot_deaths':['tot_deaths:original name deceduti + FILLIT']
         }
         for k,v in ita.items():
             ita[k].append('https://raw.githubusercontent.com/pcm-dpc/COVID-19/master/dati-regioni/dpc-covid19-ita-regioni.csv')

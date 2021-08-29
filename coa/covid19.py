@@ -1103,7 +1103,7 @@ class DataBase(object):
             if len(lname)>0:
                 tmp=''
                 for i in lname:
-                    tmp+=i+'-'
+                    tmp+=i+', '
                 lname=tmp[:-1]
             return [lname]
 

@@ -1278,7 +1278,7 @@ class DataBase(object):
         unifiedposition=['location', 'date', kwargs['which'], 'daily', 'cumul', 'weekly', 'codelocation','clustername']
         pdfiltered = pdfiltered[unifiedposition]
         if wallname != None:
-            pdfiltered['location'] = wallname   
+            pdfiltered['location'] = wallname
 
         verb("Here the information I\'ve got on ", kwargs['which']," : ", self.get_keyword_definition(kwargs['which']))
         return pdfiltered

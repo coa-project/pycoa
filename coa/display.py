@@ -160,7 +160,7 @@ class CocoDisplay:
         #mypandas['clustername'] = mypandas['clustername'].apply(lambda x: x if len(x)< 20 else x.split('-')[0]+'...'+x.split('-')[-1] )
         mypandas['rolloverdisplay'] = mypandas['clustername']
         wallname = self.dbld[self.database_name][2]
-        if mypandas['location'].unique() == wallname :
+        if mypandas['location'][0] == wallname :
             mypandas['rolloverdisplay'] = wallname
         mypandas['clustername'] = mypandas['codelocation']
         input_dico['which'] = which
@@ -1043,7 +1043,7 @@ class CocoDisplay:
             locunique = geopdwd_filtered.location.unique()
             geopdwd_filter = geopdwd_filtered.copy()
             nmaxdisplayed = 18
-            if len(locunique) >= nmaxdisplayed:
+            if len(locunique) >= nmaxdisplayed and func.__name__ != 'pycoa_pie' :
                 geopdwd_filter = geopdwd_filter.loc[geopdwd_filter.location.isin(locunique[:nmaxdisplayed])]
             if func.__name__ == 'pycoa_horizonhisto' :
                 #geopdwd_filter['bottom'] = geopdwd_filter.index

@@ -113,7 +113,8 @@ def listwhom():
      data in PyCoA.
      The first one is the default one.
     """
-    return _db.get_available_database()
+    #return _db.get_available_database
+    [print(i,' associated to: ',j) for i,j in zip(get_db_list_dict().keys(),np.array(list(get_db_list_dict().values()))[:,2])]
 
 
 # ----------------------------------------------------------------------

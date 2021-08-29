@@ -200,7 +200,7 @@ class DataBase(object):
 
                     list_moh = [moh1,moh2,moh3,moh4]
                     result = reduce(lambda left, right: left.merge(right, how = 'outer', on=['location','date']), list_moh)
-                    columns_keeped = ['cases_new','hosp_covid','dose1_daily','dose2_daily','icu_covid','bed_icu_covid']
+                    columns_keeped = ['cases_new','hosp_covid','daily_partial','daily_full','icu_covid','beds_icu_covid']
                     self.return_structured_pandas(result, columns_keeped = columns_keeped)
                 elif self.db == 'minciencia': # CHL
                     info('Chile Ministerio de Ciencia, Tecnología, Conocimiento, e Innovación database selected ...')

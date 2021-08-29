@@ -530,6 +530,7 @@ class CocoDisplay:
         df['percentage'] = (df[column_name]/column_sum)
         #(( df['percentage'] * 100 ).astype(np.double).round(2)).apply(lambda x: str(x)+'%')
         percentages = [0]  + df['percentage'].cumsum().tolist()
+        df['angle'] = (df[column_name]/column_sum)*2 * np.pi
         df['starts'] = [p * 2 * np.pi for p in percentages[:-1]]
         df['ends'] = [p * 2 * np.pi for p in percentages[1:]]
         #df['middle'] = (df['starts'] + df['ends'])/2
@@ -543,8 +544,8 @@ class CocoDisplay:
         df['text_angle'] = 0.
         df.loc[:, 'percentage'] = (( df['percentage'] * 100 ).astype(np.double).round(2)).apply(lambda x: str(x))
 
-        df['textdisplayed'] = df['codelocation']#+df[column_name].apply(lambda x: '\n(N='+str(round(x,2))+')')
-        df.loc[df['diff']<= np.pi/10,'textdisplayed']=''
+        df['textdisplayed'] = df['codelocation'].astype(str).str.pad(30, side = "left")#+df[column_name].apply(lambda x: '\n(N='+str(round(x,2))+')')
+        #df.loc[df['diff']<= np.pi/10,'textdisplayed']=''
 
         return df
     ###################### END Static Methods ##################
@@ -1180,6 +1181,7 @@ class CocoDisplay:
                             var bthick = 0.95;
                             var cumul = 0.;
                             var percentage = [];
+                            var angle = [];
                             var text_size = [];
                             var left_quad = [];
                             var right_quad = [];
@@ -1197,7 +1199,7 @@ class CocoDisplay:
                                 text_y.push(r*Math.sin(middle[i]));
                                 text_y2.push(r*Math.sin(middle[i])-0.1);
                                 percentage.push(String(100.*orderval[i] / tot).slice(0, 4));
-
+                                angle.push((orderval[i] / tot) * 2 * Math.PI)
                                 /*if ((ends[i]-starts[i]) > 0.08*(2 * Math.PI))
                                     text_size.push('10pt');
                                 else
@@ -1235,6 +1237,7 @@ class CocoDisplay:
                             source_filter.data['text_y2'] = text_y2;
                             //source_filter.data['text_size'] = text_size;
                             source_filter.data['percentage'] = percentage;
+                            source_filter.data['angle'] = angle;
 
                             ylabel.major_label_overrides = labeldic;
 
@@ -1338,16 +1341,16 @@ class CocoDisplay:
         standardfig.axis.visible = False
         standardfig.xgrid.grid_line_color = None
         standardfig.ygrid.grid_line_color = None
-        w=standardfig.annular_wedge(x = 0., y = 0, inner_radius = 0,
-                         outer_radius = 0.9,
-                         start_angle = 'starts', end_angle = 'ends',
-                         line_color = 'white', color = 'colors', legend_label = 'clustername', source = srcfiltered)
+
+        standardfig.wedge(x=0, y=0, radius=0.9,
+        start_angle=cumsum('angle', include_zero=True), end_angle=cumsum('angle'),
+        line_color="white", fill_color='colors', legend_label='clustername', source=srcfiltered)
         standardfig.legend.visible = False
-        txt = Text(x = 'text_x', y = 'text_y', text = 'textdisplayed', angle = 'text_angle',
-              text_align = 'center', text_font_size = 'text_size')
 
-        standardfig.add_glyph(srcfiltered,txt)
+        labels = LabelSet(x=0, y=0, text='textdisplayed',
+        angle=cumsum('angle', include_zero=True), source=srcfiltered, render_mode='canvas')
 
+        standardfig.add_layout(labels)
         if date_slider:
             standardfig = column(date_slider,standardfig)
         return standardfig

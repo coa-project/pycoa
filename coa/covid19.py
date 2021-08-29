@@ -1013,12 +1013,13 @@ class DataBase(object):
         '''
         kwargs_test(kwargs,['location','which','option'],
             'Bad args used in the get_stats() function.')
-
+        wallname = None
         if not 'location' in kwargs or kwargs['location'] is None.__class__ or kwargs['location'] == None:
             if get_db_list_dict()[self.db][0] == 'WW':
                 kwargs['location'] = 'world'
             else:
                 kwargs['location'] = self.slocation #self.geo_all['code_subregion'].to_list()
+            wallname = get_db_list_dict()[self.db][2]
         else:
             kwargs['location'] = kwargs['location']
 
@@ -1276,6 +1277,8 @@ class DataBase(object):
 
         unifiedposition=['location', 'date', kwargs['which'], 'daily', 'cumul', 'weekly', 'codelocation','clustername']
         pdfiltered = pdfiltered[unifiedposition]
+        if wallname != None:
+            pdfiltered['location'] = wallname   
 
         verb("Here the information I\'ve got on ", kwargs['which']," : ", self.get_keyword_definition(kwargs['which']))
         return pdfiltered

@@ -45,24 +45,24 @@ if _coacache_module_info != None:
 _verbose_mode = 1 # default
 
 # Known db
-_db_list_dict = {'jhu': ['WW','nation'],
-    'owid': ['WW','nation'],
-    'jhu-usa': ['USA','subregion'],
-    'spf': ['FRA','subregion'],
-    'spfnational': ['WW','nation'],
-    'opencovid19': ['FRA','subregion'],
-    'opencovid19national': ['WW','nation'],
-    'dpc': ['ITA','region'],
-    'covidtracking': ['USA','subregion'],
-    'covid19india': ['IND','region'],
-    'rki':['DEU','subregion'],
-    'escovid19data':['ESP','subregion'],
-    'phe':['GBR','subregion'],
-    'sciensano':['BEL','region'],
-    'dgs':['PRT','region'],
-    'obepine':['FRA','region'],
-    'moh':['MYS','subregion'],
-    'minciencia':['CHL','subregion']
+_db_list_dict = {'jhu': ['WW','nation','World'],
+    'owid': ['WW','nation','World'],
+    'jhu-usa': ['USA','subregion','United States of America'],
+    'spf': ['FRA','subregion','France'],
+    'spfnational': ['WW','nation','France'],
+    'opencovid19': ['FRA','subregion','France'],
+    'opencovid19national': ['WW','nation','France'],
+    'dpc': ['ITA','region','Italy'],
+    'covidtracking': ['USA','subregion','United States of America'],
+    'covid19india': ['IND','region','India'],
+    'rki':['DEU','subregion','Germany'],
+    'escovid19data':['ESP','subregion','Spain'],
+    'phe':['GBR','subregion','United Kingdom'],
+    'sciensano':['BEL','region','Belgium'],
+    'dgs':['PRT','region','Portugal'],
+    'obepine':['FRA','region','France'],
+    'moh':['MYS','subregion','Singapore'],
+    'minciencia':['CHL','subregion','Chile']
     }
 
 # ----------------------------------------------------

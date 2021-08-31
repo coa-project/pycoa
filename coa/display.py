@@ -541,7 +541,7 @@ class CocoDisplay:
         df['text_size'] = '10pt'
         df['text_angle'] = 0.
         df.loc[:, 'percentage'] = (( df['percentage'] * 100 ).astype(np.double).round(2)).apply(lambda x: str(x))
-        df['textdisplayed'] = df['codelocation'].astype(str).str.pad(30, side = "left")#+df[column_name].apply(lambda x: '\n(N='+str(round(x,2))+')')
+        df['textdisplayed'] = df['clustername'].astype(str).str.pad(30, side = "left")#+df[column_name].apply(lambda x: '\n(N='+str(round(x,2))+')')
         df['textdisplayed2'] = df[column_name].astype(np.double).round(1).astype(str).str.pad(24, side = "left")
         df.loc[df['diff']<= np.pi/20,'textdisplayed']=''
         df.loc[df['diff']<= np.pi/20,'textdisplayed2']=''
@@ -810,6 +810,7 @@ class CocoDisplay:
 
             mypandas, dico = self.standard_input(mypandas, input_field, **kwargs, plot_last_date=True)
             mypandas = mypandas.explode('location')
+
             if type(input_field) is None.__class__ and dico['which'] is None.__class__:
                 input_field = mypandas.columns[2]
             else:
@@ -880,7 +881,6 @@ class CocoDisplay:
             geopdwd_filter = geopdwd_filter.reset_index(drop=True)
             if cursor_date is False:
                 date_slider = False
-
             return func(self, input_field, date_slider, maplabel, dico, geopdwd, geopdwd_filter)
         return generic_hm
 
@@ -1039,11 +1039,11 @@ class CocoDisplay:
             dico_utc = {i: DateSlider(value=i).value for i in my_date}
             geopdwd['date_utc'] = [dico_utc[i] for i in geopdwd.date]
             geopdwd = geopdwd.drop_duplicates(["date", "codelocation","clustername"])#for sumall avoid duplicate
-            locunique = geopdwd_filtered.location.unique()
+            locunique = geopdwd_filtered.clustername.unique()#geopdwd_filtered.location.unique()
             geopdwd_filter = geopdwd_filtered.copy()
             nmaxdisplayed = 18
-            if len(locunique) >= nmaxdisplayed and func.__name__ != 'pycoa_pie' :
-                geopdwd_filter = geopdwd_filter.loc[geopdwd_filter.location.isin(locunique[:nmaxdisplayed])]
+            if len(locunique) >= nmaxdisplayed :#and func.__name__ != 'pycoa_pie' :
+                geopdwd_filter = geopdwd_filter.loc[geopdwd_filter.clustername.isin(locunique[:nmaxdisplayed])]
             if func.__name__ == 'pycoa_horizonhisto' :
                 #geopdwd_filter['bottom'] = geopdwd_filter.index
                 geopdwd_filter['left'] = geopdwd_filter['cases']

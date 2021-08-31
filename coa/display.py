@@ -1039,9 +1039,12 @@ class CocoDisplay:
             dico_utc = {i: DateSlider(value=i).value for i in my_date}
             geopdwd['date_utc'] = [dico_utc[i] for i in geopdwd.date]
             geopdwd = geopdwd.drop_duplicates(["date", "codelocation","clustername"])#for sumall avoid duplicate
+            geopdwd_filtered = geopdwd_filtered.sort_values(by='cases', ascending = False).reset_index()
+            print(geopdwd_filtered)
             locunique = geopdwd_filtered.clustername.unique()#geopdwd_filtered.location.unique()
             geopdwd_filter = geopdwd_filtered.copy()
             nmaxdisplayed = 18
+
             if len(locunique) >= nmaxdisplayed :#and func.__name__ != 'pycoa_pie' :
                 geopdwd_filter = geopdwd_filter.loc[geopdwd_filter.clustername.isin(locunique[:nmaxdisplayed])]
             if func.__name__ == 'pycoa_horizonhisto' :

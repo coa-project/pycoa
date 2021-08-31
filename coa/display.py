@@ -524,7 +524,7 @@ class CocoDisplay:
                 """)
     @staticmethod
     def add_columns_for_pie_chart(df,column_name):
-        r = 0.6
+        r = 0.9
         df = df.copy()
         column_sum = df[column_name].sum()
         df['percentage'] = (df[column_name]/column_sum)
@@ -536,15 +536,13 @@ class CocoDisplay:
         #df['middle'] = (df['starts'] + df['ends'])/2
         df['diff'] = (df['ends'] - df['starts'])
         df['middle'] = df['starts']+np.abs(df['ends']-df['starts'])/2.
-        df['text_x'] = df['middle'].apply(np.cos)*r
-        df['text_y'] = df['middle'].apply(np.sin)*r
-        df['text_y2'] = df['text_y']
-        df.loc[:, 'text_y2'] = ( df['text_y2'] - 0.1 )
+        df['text_x'] = np.cos(df['angle'])
+        df['text_y'] = np.sin(df['angle'])
         df['text_size'] = '10pt'
         df['text_angle'] = 0.
         df.loc[:, 'percentage'] = (( df['percentage'] * 100 ).astype(np.double).round(2)).apply(lambda x: str(x))
-
         df['textdisplayed'] = df['codelocation'].astype(str).str.pad(30, side = "left")#+df[column_name].apply(lambda x: '\n(N='+str(round(x,2))+')')
+        df['textdisplayed2'] = df[column_name].astype(np.double).round(1).astype(str).str.pad(24, side = "left")
         #df.loc[df['diff']<= np.pi/10,'textdisplayed']=''
 
         return df
@@ -1176,7 +1174,6 @@ class CocoDisplay:
                             var middle = [];
                             var text_x = [];
                             var text_y = [];
-                            var text_y2 = [];
                             var r = 0.7;
                             var bthick = 0.95;
                             var cumul = 0.;
@@ -1197,7 +1194,6 @@ class CocoDisplay:
                                 middle.push((ends[i]+starts[i])/2);
                                 text_x.push(r*Math.cos(middle[i]));
                                 text_y.push(r*Math.sin(middle[i]));
-                                text_y2.push(r*Math.sin(middle[i])-0.1);
                                 percentage.push(String(100.*orderval[i] / tot).slice(0, 4));
                                 angle.push((orderval[i] / tot) * 2 * Math.PI)
                                 /*if ((ends[i]-starts[i]) > 0.08*(2 * Math.PI))
@@ -1234,7 +1230,6 @@ class CocoDisplay:
                             source_filter.data['middle'] = middle;
                             source_filter.data['text_x'] = text_x;
                             source_filter.data['text_y'] = text_y;
-                            source_filter.data['text_y2'] = text_y2;
                             //source_filter.data['text_size'] = text_size;
                             source_filter.data['percentage'] = percentage;
                             source_filter.data['angle'] = angle;
@@ -1348,9 +1343,12 @@ class CocoDisplay:
         standardfig.legend.visible = False
 
         labels = LabelSet(x=0, y=0, text='textdisplayed',
-        angle=cumsum('angle', include_zero=True), source=srcfiltered, render_mode='canvas')
+        angle=cumsum('angle', include_zero=True), source=srcfiltered, render_mode='canvas',text_font_size="12pt")
+        labels2 = LabelSet(x=0, y=0, text='textdisplayed2',
+        angle=cumsum('angle', include_zero=True), source=srcfiltered, render_mode='canvas',text_font_size="8pt")
 
         standardfig.add_layout(labels)
+        standardfig.add_layout(labels2)
         if date_slider:
             standardfig = column(date_slider,standardfig)
         return standardfig

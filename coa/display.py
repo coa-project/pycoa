@@ -160,7 +160,7 @@ class CocoDisplay:
         #mypandas['clustername'] = mypandas['clustername'].apply(lambda x: x if len(x)< 20 else x.split('-')[0]+'...'+x.split('-')[-1] )
         mypandas['rolloverdisplay'] = mypandas['clustername']
         wallname = self.dbld[self.database_name][2]
-        if mypandas['location'][0] == wallname :
+        if mypandas['clustername'][0] == wallname :
             mypandas['rolloverdisplay'] = wallname
         mypandas['clustername'] = mypandas['codelocation']
         input_dico['which'] = which
@@ -543,8 +543,8 @@ class CocoDisplay:
         df.loc[:, 'percentage'] = (( df['percentage'] * 100 ).astype(np.double).round(2)).apply(lambda x: str(x))
         df['textdisplayed'] = df['codelocation'].astype(str).str.pad(30, side = "left")#+df[column_name].apply(lambda x: '\n(N='+str(round(x,2))+')')
         df['textdisplayed2'] = df[column_name].astype(np.double).round(1).astype(str).str.pad(24, side = "left")
-        #df.loc[df['diff']<= np.pi/10,'textdisplayed']=''
-
+        df.loc[df['diff']<= np.pi/20,'textdisplayed']=''
+        df.loc[df['diff']<= np.pi/20,'textdisplayed2']=''
         return df
     ###################### END Static Methods ##################
     ###################### BEGIN Plots ##################

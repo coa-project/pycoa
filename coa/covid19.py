@@ -1211,6 +1211,7 @@ class DataBase(object):
                     print("This warning appear right now due to some missing values at the latest date ", pdfiltered.date.max(),".")
                     print("Use the option='nofillnan' if you want to only display the original data")
                     pdfiltered.loc[:,kwargs['which']] = pdfiltered.groupby(['clustername'])[kwargs['which']].apply(lambda x: x.ffill())
+                    pdfiltered = pdfiltered[pdfiltered[kwargs['which']].notna()]
             elif o == 'smooth7':
                 #pdfiltered[kwargs['which']] = pdfiltered.groupby(['clustername'])[kwargs['which']].rolling(7,min_periods=7,center=True).mean().reset_index(level=0,drop=True)
                 #pdfiltered[kwargs['which']] = pdfiltered.groupby(['location'])[kwargs['which']].rolling(7,min_periods=7,center=True).mean().reset_index(level=0,drop=True)

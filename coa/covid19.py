@@ -1104,15 +1104,16 @@ class DataBase(object):
             if len(lname)>0:
                 tmp=''
                 for i in lname:
-                    tmp+=i+', '
-                lname=tmp[:-1]
+                    tmp += i+', '
+                lname=tmp[:-2]
             return [lname]
 
         pdcluster = pd.DataFrame()
         j=0
         if origlistlistloc != None:
             for i in location_exploded:
-                tmp = mainpandas.loc[mainpandas.location.isin(i)]
+                tmp  = mainpandas.copy()
+                tmp = tmp.loc[tmp.location.isin(i)]
                 if origlistlistloc == [['Métropole']]:
                     tmp['clustername'] = [name_regions[j]]*len(tmp)
                 else:
@@ -1235,8 +1236,8 @@ class DataBase(object):
                tmp = pdfiltered.loc[pdfiltered.clustername.isin(uniqcluster)].\
                         groupby(['clustername','date']).sum().reset_index()
                #dicocode = {i:list(pdfiltered.loc[pdfiltered.clustername.isin(i)]['codelocation']) for i in uniqcluster}
-               codescluster={i:list(pdfiltered.loc[pdfiltered.clustername==i]['codelocation'].unique()) for i in uniqcluster}
-               namescluster={i:list(pdfiltered.loc[pdfiltered.clustername==i]['location'].unique()) for i in uniqcluster}
+               codescluster = {i:list(pdfiltered.loc[pdfiltered.clustername==i]['codelocation'].unique()) for i in uniqcluster}
+               namescluster = {i:list(pdfiltered.loc[pdfiltered.clustername==i]['location'].unique()) for i in uniqcluster}
                tmp['codelocation'] = tmp['clustername'].map(codescluster)
                tmp['location'] = tmp['clustername'].map(namescluster)
 
@@ -1272,14 +1273,16 @@ class DataBase(object):
         pdfiltered['weekly'] = pdfiltered[kwargs['which']].diff(7)
         inx7=pdfiltered.groupby('clustername').head(7).index
         pdfiltered.loc[inx7, 'weekly'] = pdfiltered[kwargs['which']].iloc[inx7]
-
         #if fillnan:
         #    pdfiltered = pdfiltered.fillna(0) # for diff if needed
 
         unifiedposition=['location', 'date', kwargs['which'], 'daily', 'cumul', 'weekly', 'codelocation','clustername']
         pdfiltered = pdfiltered[unifiedposition]
+
         if wallname != None:
-            pdfiltered['location'] = wallname
+            pdfiltered.loc[:,'location'] = wallname
+            if sumall != None:
+                pdfiltered.loc[:,'clustername'] = wallname
 
         verb("Here the information I\'ve got on ", kwargs['which']," : ", self.get_keyword_definition(kwargs['which']))
         return pdfiltered

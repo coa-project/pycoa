@@ -160,7 +160,7 @@ class CocoDisplay:
         #mypandas['clustername'] = mypandas['clustername'].apply(lambda x: x if len(x)< 20 else x.split('-')[0]+'...'+x.split('-')[-1] )
         mypandas['rolloverdisplay'] = mypandas['clustername']
         wallname = self.dbld[self.database_name][2]
-        if mypandas['clustername'][0] == wallname :
+        if mypandas['clustername'].unique()[0] == wallname :
             mypandas['rolloverdisplay'] = wallname
         mypandas['clustername'] = mypandas['codelocation']
         input_dico['which'] = which
@@ -1040,7 +1040,6 @@ class CocoDisplay:
             geopdwd['date_utc'] = [dico_utc[i] for i in geopdwd.date]
             geopdwd = geopdwd.drop_duplicates(["date", "codelocation","clustername"])#for sumall avoid duplicate
             geopdwd_filtered = geopdwd_filtered.sort_values(by='cases', ascending = False).reset_index()
-            print(geopdwd_filtered)
             locunique = geopdwd_filtered.clustername.unique()#geopdwd_filtered.location.unique()
             geopdwd_filter = geopdwd_filtered.copy()
             nmaxdisplayed = 18

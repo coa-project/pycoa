@@ -1046,7 +1046,23 @@ class CocoDisplay:
             nmaxdisplayed = 18
 
             if len(locunique) >= nmaxdisplayed :#and func.__name__ != 'pycoa_pie' :
-                geopdwd_filter = geopdwd_filter.loc[geopdwd_filter.clustername.isin(locunique[:nmaxdisplayed])]
+                if func.__name__ != 'pycoa_pie' :
+                    geopdwd_filter = geopdwd_filter.loc[geopdwd_filter.clustername.isin(locunique[:nmaxdisplayed])]
+                else:
+                    geopdwd_filter_first = geopdwd_filter.loc[geopdwd_filter.clustername.isin(locunique[:nmaxdisplayed-1])]
+                    geopdwd_filter_other = geopdwd_filter.loc[geopdwd_filter.clustername.isin(locunique[nmaxdisplayed-1:])]
+                    geopdwd_filter_other = geopdwd_filter_other[['date',input_field,'daily','cumul','weekly','cases']]
+                    geopdwd_filter_other = geopdwd_filter_other.groupby('date').sum()[[input_field,'daily','cumul','weekly','cases']]
+                    geopdwd_filter_other = geopdwd_filter_other.reset_index()
+                    geopdwd_filter_other['location']='others'
+                    geopdwd_filter_other['clustername']='others'
+                    geopdwd_filter_other['codelocation']='others'
+                    geopdwd_filter_other['rolloverdisplay']='others'
+                    geopdwd_filter_other['colors']='#808080'
+                    geopdwd_filter = geopdwd_filter_first
+                    geopdwd_filter_other = geopdwd_filter_other[['location', 'date',input_field , 'daily', 'cumul', 'weekly',
+                                            'codelocation', 'clustername', 'colors', 'rolloverdisplay', 'cases']]
+                    geopdwd_filter = geopdwd_filter.append(geopdwd_filter_other)
             if func.__name__ == 'pycoa_horizonhisto' :
                 #geopdwd_filter['bottom'] = geopdwd_filter.index
                 geopdwd_filter['left'] = geopdwd_filter['cases']

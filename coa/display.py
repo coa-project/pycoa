@@ -536,8 +536,7 @@ class CocoDisplay:
         #df['middle'] = (df['starts'] + df['ends'])/2
         df['diff'] = (df['ends'] - df['starts'])
         df['middle'] = df['starts']+np.abs(df['ends']-df['starts'])/2.
-        df['text_x'] = np.cos(df['angle'])
-        df['text_y'] = np.sin(df['angle'])
+
         df['text_size'] = '10pt'
         df['text_angle'] = 0.
         df.loc[:, 'percentage'] = (( df['percentage'] * 100 ).astype(np.double).round(2)).apply(lambda x: str(x))
@@ -829,6 +828,8 @@ class CocoDisplay:
             dico_colors = {i: next(colors) for i in uniqloc}
 
             mypandas['colors'] = mypandas['clustername'].map(dico_colors)
+            mypandas = mypandas.drop(columns=['rolloverdisplay'])
+            mypandas['rolloverdisplay'] = mypandas['location']
             geopdwd = mypandas
 
             geopdwd = geopdwd.sort_values(by = input_field, ascending=False)

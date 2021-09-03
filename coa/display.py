@@ -1560,7 +1560,7 @@ class CocoDisplay:
                 #dfLabel['colors'] = dfLabel['location'].map(dicocolors)
                 sourcemaplabel = ColumnDataSource(dfLabel)
 
-            if self.dbld[self.database_name][0] in ['FRA','ESP','PRT']:
+            if self.dbld[self.database_name][0] in ['FRA','ESP','PRT'] and all(len(l) == 2 for l in geopdwd_filtered.codelocation.unique()):
                 minx, miny, maxx, maxy = self.boundary_metropole
                 (minx, miny) = CocoDisplay.wgs84_to_web_mercator((minx, miny))
                 (maxx, maxy) = CocoDisplay.wgs84_to_web_mercator((maxx, maxy))

@@ -1399,19 +1399,20 @@ class CocoDisplay:
         geopdwd['cases'] = geopdwd[input_field]
         geopdwd_filtered['cases'] = geopdwd_filtered[input_field]
 
-        zoom = 2
+        zoom = 1
         if self.dbld[self.database_name] != 'WW':
             self.boundary = geopdwd_filtered['geometry'].total_bounds
             name_location_displayed = 'name_subregion'
-            zoom = 2
+            zoom = 1
         uniqloc = list(geopdwd_filtered.codelocation.unique())
         geopdwd_filtered = geopdwd_filtered.drop(columns=['date', 'colors'])
 
-        if self.dbld[self.database_name] in ['FRA','ESP','PRT']:
+        if self.dbld[self.database_name][0] in ['FRA','ESP','PRT'] and all(len(l) == 2 for l in geopdwd_filtered.codelocation.unique()):
             minx, miny, maxx, maxy = self.boundary_metropole
-            zoom = 3
+            zoom = 4
         else:
             minx, miny, maxx, maxy = self.boundary
+            zoom = 4
 
         msg = "(data from: {})".format(self.database_name)
         mapa = folium.Map(location=[(maxy + miny) / 2., (maxx + minx) / 2.], zoom_start=zoom,

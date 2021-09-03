@@ -846,6 +846,7 @@ class CocoDisplay:
             date_slider = DateSlider(title = "Date: ", start = started, end = ended,
                                      value = ended, step=24 * 60 * 60 * 1000, orientation = orientation)
             geopdwd_filter = geopdwd.copy()
+
             wanted_date = date_slider.value_as_datetime.date()
             geopdwd_filter = geopdwd_filter.loc[geopdwd_filter.date == wanted_date]
 
@@ -861,27 +862,33 @@ class CocoDisplay:
                     geopdwd_filter = pd.merge(geopdwd_filter, self.location_geometry, on='location')
                 geopdwd_filter = gpd.GeoDataFrame(geopdwd_filter, geometry=geopdwd_filter.geometry, crs="EPSG:4326")
                 dico['tile'] = CocoDisplay.get_tile(dico['tile'], func.__name__)
+
             if func.__name__ == 'inner' or func.__name__ == 'pycoa_histo':
                 pos = {}
-                new = pd.DataFrame(columns=geopdwd_filter.columns)
+                new = pd.DataFrame()#columns=geopdwd_filter.columns, dtype=lisgeopdwd_filter.dtypes)
                 n = 0
                 for i in uniqloc:
                     perloc = geopdwd_filter.loc[geopdwd_filter.clustername == i]
                     if all(perloc != 0):
                         pos = perloc.index[0]
-                        new = new.append(geopdwd_filter.iloc[pos])
+                        if new.empty:
+                            new = perloc
+                        else:
+                            new = new.append(perloc)
                         if type(i) == str and len(i) != 3:
                             new.iloc[n, 0] = i
                         n += 1
                 geopdwd_filter = new.reset_index(drop=True)
-
                 my_date = geopdwd.date.unique()
+
                 dico_utc = {i: DateSlider(value = i ).value for i in my_date}
                 geopdwd['date_utc'] = [dico_utc[i] for i in geopdwd.date]
                 geopdwd_filter=geopdwd_filter.sort_values(by=[input_field], ascending=False)
+
             geopdwd_filter = geopdwd_filter.reset_index(drop=True)
             if cursor_date is False:
                 date_slider = False
+
             return func(self, input_field, date_slider, maplabel, dico, geopdwd, geopdwd_filter)
         return generic_hm
 
@@ -1036,6 +1043,7 @@ class CocoDisplay:
             title_fig = input_field
             geopdwd['cases'] = geopdwd[input_field]
             geopdwd_filtered['cases'] = geopdwd_filtered[input_field]
+
             my_date = geopdwd.date.unique()
             dico_utc = {i: DateSlider(value=i).value for i in my_date}
             geopdwd['date_utc'] = [dico_utc[i] for i in geopdwd.date]
@@ -1051,17 +1059,14 @@ class CocoDisplay:
                 else:
                     geopdwd_filter_first = geopdwd_filter.loc[geopdwd_filter.clustername.isin(locunique[:nmaxdisplayed-1])]
                     geopdwd_filter_other = geopdwd_filter.loc[geopdwd_filter.clustername.isin(locunique[nmaxdisplayed-1:])]
-                    geopdwd_filter_other = geopdwd_filter_other[['date',input_field,'daily','cumul','weekly','cases']]
-                    geopdwd_filter_other = geopdwd_filter_other.groupby('date').sum()[[input_field,'daily','cumul','weekly','cases']]
-                    geopdwd_filter_other = geopdwd_filter_other.reset_index()
-                    geopdwd_filter_other['location']='others'
-                    geopdwd_filter_other['clustername']='others'
-                    geopdwd_filter_other['codelocation']='others'
-                    geopdwd_filter_other['rolloverdisplay']='others'
-                    geopdwd_filter_other['colors']='#808080'
+                    geopdwd_filter_other = geopdwd_filter_other.groupby('date').sum()
+                    geopdwd_filter_other['location'] = 'others'
+                    geopdwd_filter_other['clustername'] = 'others'
+                    geopdwd_filter_other['codelocation'] = 'others'
+                    geopdwd_filter_other['rolloverdisplay'] = 'others'
+                    geopdwd_filter_other['colors'] = '#808080'
+
                     geopdwd_filter = geopdwd_filter_first
-                    geopdwd_filter_other = geopdwd_filter_other[['location', 'date',input_field , 'daily', 'cumul', 'weekly',
-                                            'codelocation', 'clustername', 'colors', 'rolloverdisplay', 'cases']]
                     geopdwd_filter = geopdwd_filter.append(geopdwd_filter_other)
             if func.__name__ == 'pycoa_horizonhisto' :
                 #geopdwd_filter['bottom'] = geopdwd_filter.index

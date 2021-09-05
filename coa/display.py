@@ -995,8 +995,11 @@ class CocoDisplay:
                               'contributors': list(contributors.values()),
                               'colors': lcolors})
 
-        tooltips=[('Middle value','@middle_bin'),('Contributors', '@contributors')]
-
+        #tooltips=[('Middle value','@middle_bin'),('Contributors', '@contributors')]
+        tooltips = """
+        <b>Middle value:</b> @middle_bin <br>
+        <b>Contributors:</b> @contributors{safe} <br>
+        """
         hover_tool = HoverTool(tooltips = tooltips)
         panels = []
         bottom = 0
@@ -1064,7 +1067,7 @@ class CocoDisplay:
                     geopdwd_filter_other['clustername'] = 'others'
                     geopdwd_filter_other['codelocation'] = 'others'
                     geopdwd_filter_other['rolloverdisplay'] = 'others'
-                    geopdwd_filter_other['colors'] = '#808080'
+                    geopdwd_filter_other['colors'] = '#FFFFFF'
 
                     geopdwd_filter = geopdwd_filter_first
                     geopdwd_filter = geopdwd_filter.append(geopdwd_filter_other)
@@ -1300,7 +1303,7 @@ class CocoDisplay:
                 cases_custom = CocoDisplay.rollerJS()
                 if func.__name__ == 'pycoa_pie' :
                     standardfig.add_tools(HoverTool(
-                        tooltips=[('Location', '@rolloverdisplay'), (input_field, '@{' + 'cases' + '}' + '{custom}'), ('%:','@percentage'), ],
+                        tooltips=[('Location', '@rolloverdisplay'), (input_field, '@{' + 'cases' + '}' + '{custom}'), ('%','@percentage'), ],
                         formatters={'location': 'printf', '@{' + 'cases' + '}': cases_custom, '%':'printf'},
                         point_policy="snap_to_data"))  # ,PanTool())
                 else:

@@ -1047,20 +1047,19 @@ class DataBase(object):
                 else:
                     raise CoaWhereError("In the case of national DB, all locations must have the same types i.e\
                     list or string but both is not accepted, could be confusing")
-
+        owid_name=''
         if self.db_world:
             self.geo.set_standard('name')
-            owid_name = [c for c in origclist if c.startswith('owid_')]
-            clist = [c for c in origclist if not c.startswith('owid_')]
             if origlistlistloc != None:
                 fulllist = [ i if isinstance(i, list) else [i] for i in origclist ]
                 location_exploded = [ self.geo.to_standard(i,output='list',interpret_region=True) for i in fulllist ]
             else:
+                owid_name = [c for c in origclist if c.startswith('owid_')]
+                clist = [c for c in origclist if not c.startswith('owid_')]
                 location_exploded = self.geo.to_standard(listloc,output='list',interpret_region=True)
-            if len(owid_name) !=0 :
-                location_exploded += owid_name
+                if len(owid_name) !=0 :
+                    location_exploded += owid_name
         else:
-
             def codetoname(listloc):
                 convertname = []
                 a=self.geo.get_data()
@@ -1068,38 +1067,35 @@ class DataBase(object):
                     if not isinstance(i,list):
                         i=[i]
                     if i[0].isdigit() or i[0] in ['2A','2B']:
-                        convertname.append(list(a.loc[a.code_subregion.isin(i)]['name_subregion']))
+                        tmp = list(a.loc[a.code_subregion.isin(i)]['name_subregion'])
+                        if tmp:
+                            tmp = tmp
+                        else:
+                            raise CoaTypeError('This code subregion don\'t exist:' + i[0])
                     else:
-                        convertname.append(i)
+                        try:
+                            tmp = self.geo.get_subregions_from_list_of_region_names(i,output='name')
+                        except:
+                            if i[0] in list(a.name_subregion):
+                                tmp = i
+                            else:
+                                raise CoaTypeError('This name subregion don\'t exist:' + i[0])
+                    if convertname:
+                        convertname.append(tmp)
+                    else:
+                        convertname=[tmp]
                 return convertname
 
             name_regions = []
             if origlistlistloc != None:
                 name_regions  = origlistlistloc
                 origlistlistloc = codetoname(origlistlistloc)
-                location_exploded = [ self.geo.get_subregions_from_list_of_region_names(i,output='name') \
-                            if len(self.geo.get_subregions_from_list_of_region_names(i,output='name'))>0 else i \
-                            for i in origlistlistloc ]
-
-                if origlistlistloc == [['Métropole']]:
-                    all_region = self.geo.get_region_list()
-                    all_codes = all_region.code_region.astype(int)
-                    origclistlist = [[i] for i in all_region[(all_codes>10) & (all_codes<100)].name_region.to_list()]
-                    dicolocation_exploded = { i[0]:self.geo.get_subregions_from_list_of_region_names(i,output='name') for i in origclistlist }
-                    location_exploded = list(dicolocation_exploded.values())
-                    name_regions = list(dicolocation_exploded.keys())
-
+                location_exploded = origlistlistloc
             else:
                 listloc = codetoname(listloc)
                 listloc = DataBase.flat_list(listloc)
+                location_exploded = listloc
 
-                if self.db == 'dpc' or self.db == 'sciensano' or self.db == 'obepine' or self.db == 'rki':
-                    location_exploded = listloc
-                else:
-                    location_exploded = [ self.geo.get_subregions_from_list_of_region_names([i],output='name')\
-                           if len(self.geo.get_subregions_from_list_of_region_names([i],output='name'))>0 else i \
-                            for i in listloc]
-                location_exploded = DataBase.flat_list(location_exploded)
         def sticky(lname):
             if len(lname)>0:
                 tmp=''
@@ -1202,7 +1198,7 @@ class DataBase(object):
             elif o == 'fillnan':
                 fillnan=True
                 # fill with previous value
-                pdfiltered = pdfiltered.copy()
+                pdfiltered = pdfiltered.reset_index(drop=True)
                 pdfiltered.loc[:,kwargs['which']] =\
                 pdfiltered.groupby(['clustername'])[kwargs['which']].apply(lambda x: x.bfill())
                 #if kwargs['which'].startswith('total_') or kwargs['which'].startswith('tot_'):

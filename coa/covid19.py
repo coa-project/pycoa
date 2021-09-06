@@ -1089,6 +1089,7 @@ class DataBase(object):
             name_regions = []
             if origlistlistloc != None:
                 name_regions  = origlistlistloc
+                dicooriglist={i[0]:codetoname(i) for i in origlistlistloc}
                 origlistlistloc = codetoname(origlistlistloc)
                 location_exploded = origlistlistloc
             else:
@@ -1107,14 +1108,11 @@ class DataBase(object):
         pdcluster = pd.DataFrame()
         j=0
         if origlistlistloc != None:
-            for i in location_exploded:
+            for k,v in dicooriglist.items():#location_exploded:
                 tmp  = mainpandas.copy()
-                tmp = tmp.loc[tmp.location.isin(i)]
-                if origlistlistloc == [['Métropole']]:
-                    tmp['clustername'] = [name_regions[j]]*len(tmp)
-                else:
-                    tmp['clustername'] = sticky(origlistlistloc[j])*len(tmp)
+                tmp = tmp.loc[tmp.location.isin(v[0])]
 
+                tmp['clustername'] =[k]*len(tmp)#sticky(origlistlistloc[j])*len(tmp)
                 if pdcluster.empty:
                     pdcluster = tmp
                 else:
@@ -1275,9 +1273,7 @@ class DataBase(object):
         unifiedposition=['location', 'date', kwargs['which'], 'daily', 'cumul', 'weekly', 'codelocation','clustername']
         pdfiltered = pdfiltered[unifiedposition]
 
-        #if wallname != None :
-        #    pdfiltered.loc[:,'location'] = wallname
-        if wallname != None and sumall != None:
+        if wallname != None and sumall == True:
                pdfiltered.loc[:,'clustername'] = wallname
 
         verb("Here the information I\'ve got on ", kwargs['which']," : ", self.get_keyword_definition(kwargs['which']))

@@ -1133,13 +1133,10 @@ class GeoCountry():
         The output argument ('code' as default) is given to the get_subregions_from_region function.
         """
         if not isinstance(l,list):
-            CoaTypeError("Should provide list as argument")
+            raise CoaTypeError("Should provide list as argument")
         s=[]
         for r in l:
-            try:
-                s=s+self.get_subregions_from_region(name=r,output=output)
-            except CoaWhereError:
-                pass
+            s=s+self.get_subregions_from_region(name=r,output=output)
         return s
 
     def get_list_properties(self):

@@ -995,13 +995,14 @@ class CocoDisplay:
                               'right':interval[1:],
                               'middle_bin': [format((i+j)/2, ".1f") for i,j in zip(interval[:-1],interval[1:])],
                               'top': [len(i) for i in list(contributors.values())],
-                              'contributors': list(contributors.values()),
+                              'contributors': [', '.join(i) for i in contributors.values()],
                               'colors': lcolors})
-
         #tooltips=[('Middle value','@middle_bin'),('Contributors', '@contributors')]
         tooltips = """
+        <div style="width: 400px">
         <b>Middle value:</b> @middle_bin <br>
         <b>Contributors:</b> @contributors{safe} <br>
+        </div>
         """
         hover_tool = HoverTool(tooltips = tooltips)
         panels = []
@@ -1420,10 +1421,10 @@ class CocoDisplay:
 
         if self.dbld[self.database_name][0] in ['FRA','ESP','PRT']:# and all(len(l) == 2 for l in geopdwd_filtered.codelocation.unique()):
             minx, miny, maxx, maxy = self.boundary_metropole
-            zoom = 4
+            zoom = 1
         else:
             minx, miny, maxx, maxy = self.boundary
-            zoom = 4
+            zoom = 1
 
         msg = "(data from: {})".format(self.database_name)
         mapa = folium.Map(location=[(maxy + miny) / 2., (maxx + minx) / 2.], zoom_start=zoom,

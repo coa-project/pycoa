@@ -1053,12 +1053,14 @@ class DataBase(object):
             if origlistlistloc != None:
                 fulllist = [ i if isinstance(i, list) else [i] for i in origclist ]
                 location_exploded = [ self.geo.to_standard(i,output='list',interpret_region=True) for i in fulllist ]
+                dicooriglist = {i[0]:[self.geo.to_standard(i,output='list',interpret_region=True)] for i in fulllist}
             else:
                 owid_name = [c for c in origclist if c.startswith('owid_')]
                 clist = [c for c in origclist if not c.startswith('owid_')]
                 location_exploded = self.geo.to_standard(listloc,output='list',interpret_region=True)
                 if len(owid_name) !=0 :
                     location_exploded += owid_name
+
         else:
             def codetoname(listloc):
                 convertname = []
@@ -1087,6 +1089,7 @@ class DataBase(object):
                 return convertname
 
             name_regions = []
+
             if origlistlistloc != None:
                 name_regions  = origlistlistloc
                 dicooriglist={i[0]:codetoname(i) for i in origlistlistloc}

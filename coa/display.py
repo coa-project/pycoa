@@ -1418,7 +1418,7 @@ class CocoDisplay:
         uniqloc = list(geopdwd_filtered.codelocation.unique())
         geopdwd_filtered = geopdwd_filtered.drop(columns=['date', 'colors'])
 
-        if self.dbld[self.database_name][0] in ['FRA','ESP','PRT'] and all(len(l) == 2 for l in geopdwd_filtered.codelocation.unique()):
+        if self.dbld[self.database_name][0] in ['FRA','ESP','PRT']:# and all(len(l) == 2 for l in geopdwd_filtered.codelocation.unique()):
             minx, miny, maxx, maxy = self.boundary_metropole
             zoom = 4
         else:

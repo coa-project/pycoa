@@ -78,7 +78,7 @@ class CocoDisplay:
         self.all_available_display_keys = ['where', 'which', 'what', 'when', 'title_temporal', 'plot_height',
                                            'plot_width', 'title', 'bins', 'var_displayed','textcopyright',
                                            'option', 'input', 'input_field', 'visu', 'plot_last_date', 'tile',
-                                           'orientation','mode']
+                                           'orientation','mode','full_legend']
         self.tiles_listing = ['esri', 'openstreet', 'stamen', 'positron']
         try:
             if self.dbld[self.database_name][0] != 'WW' :
@@ -162,7 +162,7 @@ class CocoDisplay:
         wallname = self.dbld[self.database_name][2]
         if mypandas['clustername'].unique()[0] == wallname :
             mypandas['rolloverdisplay'] = wallname
-        mypandas['clustername'] = mypandas['codelocation']
+        #mypandas['clustername'] = mypandas['codelocation']
         input_dico['which'] = which
         var_displayed = which
 
@@ -659,6 +659,7 @@ class CocoDisplay:
         panels = []
         cases_custom = CocoDisplay.rollerJS()
 
+        full_legend=kwargs.get('full_legend', True)
         mode = kwargs.get('mode', 'mouse')
         allmode=['mouse','vline','hline']
         if mode not in allmode:
@@ -681,8 +682,10 @@ class CocoDisplay:
                     else:
                         leg = keepnamelikeit
 
-                    if len(leg)>12 and leg != keepnamelikeit and not leg.startswith('owid_'):
-                        leg=leg[:5]+'...'+leg[-5:]
+                    if not full_legend:
+                        if len(leg)>12 and leg != keepnamelikeit and not leg.startswith('owid_'):
+                            leg=leg[:5]+'...'+leg[-5:]
+
                     if len(input_field)>1:
                         leg = CocoDisplay.dict_shorten_loc(mypandas_filter.clustername[0]) + ', ' + val
                         color = self.scolors[i]

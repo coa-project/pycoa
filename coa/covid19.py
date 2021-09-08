@@ -602,6 +602,7 @@ class DataBase(object):
             fileName = base_name + ext + extension
             url = base_url + fileName
             self.database_url.append(url)
+            print(url)
             pandas_jhu_db = pandas.read_csv(get_local_from_url(url,7200), sep = ',') # cached for 2 hours
             if self.db == 'jhu':
                 pandas_jhu_db = pandas_jhu_db.rename(columns={'Country/Region':'location'})
@@ -1029,7 +1030,6 @@ class DataBase(object):
 
         #while for last date all values are nan previous date
         mainpandas = self.return_nonan_dates_pandas(self.get_mainpandas(),kwargs['which'])
-
         devorigclist = None
         origclistlist = None
         origlistlistloc = None
@@ -1090,14 +1090,18 @@ class DataBase(object):
 
             name_regions = []
 
+
             if origlistlistloc != None:
-                name_regions  = origlistlistloc
-                dicooriglist={i[0]:codetoname(i) for i in origlistlistloc}
-                origlistlistloc = codetoname(origlistlistloc)
+                if self.db != 'dpc':
+                    name_regions  = origlistlistloc
+                    dicooriglist={i[0]:codetoname(i) for i in origlistlistloc}
+                    origlistlistloc = codetoname(origlistlistloc)
                 location_exploded = origlistlistloc
             else:
-                listloc = codetoname(listloc)
-                listloc = DataBase.flat_list(listloc)
+                if self.db != 'dpc':
+                    listloc = codetoname(listloc)
+                    listloc = DataBase.flat_list(listloc)
+                    location_exploded = listloc
                 location_exploded = listloc
 
         def sticky(lname):

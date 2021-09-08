@@ -160,6 +160,7 @@ class CocoDisplay:
         #mypandas['clustername'] = mypandas['clustername'].apply(lambda x: x if len(x)< 20 else x.split('-')[0]+'...'+x.split('-')[-1] )
         mypandas['rolloverdisplay'] = mypandas['clustername']
         wallname = self.dbld[self.database_name][2]
+
         if mypandas['clustername'].unique()[0] == wallname :
             mypandas['rolloverdisplay'] = wallname
         #mypandas['clustername'] = mypandas['codelocation']
@@ -1569,7 +1570,7 @@ class CocoDisplay:
                     geopdwd_filtered.loc[geopdwd_filtered.clustername == i,'spark'] = \
                                 CocoDisplay.sparkline(geopdwd.loc[(geopdwd.clustername == i) &
                                 (geopdwd.date >= dico['when_beg']) & (geopdwd.date <= dico['when_end'])].sort_values(by='date')[input_field])
-                dfLabel=pd.DataFrame(geopdwd_filtered[['location','centroidx','centroidy','cases','spark']])
+                dfLabel=pd.DataFrame(geopdwd_filtered[['location','centroidx','centroidy','cases','spark','clustername']])
                 dfLabel['cases'] = dfLabel['cases'].round(2)
                 #dicocolors=pd.Series(geopdwd.colors.values,index=geopdwd.location.values).drop_duplicates().to_dict()
                 #dfLabel['colors'] = dfLabel['location'].map(dicocolors)
@@ -1796,14 +1797,12 @@ class CocoDisplay:
     @decopycoageo
     @decomap
     def pycoa_sparkmap(self,input_field, date_slider, maplabel, dico, geopdwd, geopdwd_filtered,standardfig,sourcemaplabel):
-        json_data = json.dumps(json.loads(geopdwd_filtered.to_json()))
-        geopdwd_filtered = GeoJSONDataSource(geojson=json_data)
-
+        #json_data = json.dumps(json.loads(geopdwd_filtered.to_json()))
+        #geopdwd_filtered = GeoJSONDataSource(geojson=json_data)
         standardfig.xaxis.visible = False
         standardfig.yaxis.visible = False
         standardfig.xgrid.grid_line_color = None
         standardfig.ygrid.grid_line_color = None
-
         standardfig.image_url(url='spark', x='centroidx', y='centroidy',source=sourcemaplabel,anchor="center")
         return standardfig
 

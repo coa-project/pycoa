@@ -671,8 +671,8 @@ class CocoDisplay:
             r_list=[]
             maxou=-1000
             for val in input_field:
-                if val.startswith('cur_idx_tx_') and val != 'cur_idx_tx_incid':
-                    standardfig.yaxis[0].formatter = PrintfTickFormatter(format = "0 %'")
+                #if val.startswith('cur_idx_tx_') and val != 'cur_idx_tx_incid':
+                #    standardfig.yaxis[0].formatter = PrintfTickFormatter(format = "0 %'")
                 line_style = ['solid', 'dashed', 'dotted', 'dotdash']
                 for loc in list(mypandas.clustername.unique()):
                     mypandas_filter = mypandas.loc[mypandas.clustername == loc].reset_index(drop = True)
@@ -991,6 +991,7 @@ class CocoDisplay:
             colors = itertools.cycle(self.lcolors)
             lcolors = [next(colors) for i in range(bins)]
             contributors = dict(sorted(contributors.items()))
+            print(contributors)
             frame_histo = pd.DataFrame({
                               'left': interval[:-1],
                               'right':interval[1:],

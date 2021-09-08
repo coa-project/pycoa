@@ -1262,10 +1262,10 @@ class DataBase(object):
         else:
             pdfiltered['clustername'] = pdfiltered['location']
 
-        pdfiltered['daily'] = pdfiltered[kwargs['which']].diff()
-        inx = pdfiltered.groupby('clustername').head(1).index
+        pdfiltered['daily'] = pdfiltered[kwargs['which']].diff(periods=-1)
+        #inx = pdfiltered.groupby('clustername').head(1).index
         #First value of diff is always NaN
-        pdfiltered.loc[inx, 'daily'] = pdfiltered[kwargs['which']].iloc[inx]
+        #pdfiltered.loc[inx, 'daily'] = pdfiltered[kwargs['which']].iloc[inx]
         pdfiltered['cumul'] = pdfiltered[kwargs['which']].cumsum()
         pdfiltered['weekly'] = pdfiltered[kwargs['which']].diff(7)
         inx7=pdfiltered.groupby('clustername').head(7).index

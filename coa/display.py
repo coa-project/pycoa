@@ -992,7 +992,6 @@ class CocoDisplay:
             colors = itertools.cycle(self.lcolors)
             lcolors = [next(colors) for i in range(bins)]
             contributors = dict(sorted(contributors.items()))
-            print(contributors)
             frame_histo = pd.DataFrame({
                               'left': interval[:-1],
                               'right':interval[1:],
@@ -1572,6 +1571,7 @@ class CocoDisplay:
                                 (geopdwd.date >= dico['when_beg']) & (geopdwd.date <= dico['when_end'])].sort_values(by='date')[input_field])
                 dfLabel=pd.DataFrame(geopdwd_filtered[['location','centroidx','centroidy','cases','spark','clustername']])
                 dfLabel['cases'] = dfLabel['cases'].round(2)
+                #print(dfLabel.groupby(['cases','clustername'])['centroidx'].mean())
                 #dicocolors=pd.Series(geopdwd.colors.values,index=geopdwd.location.values).drop_duplicates().to_dict()
                 #dfLabel['colors'] = dfLabel['location'].map(dicocolors)
                 sourcemaplabel = ColumnDataSource(dfLabel)

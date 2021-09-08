@@ -540,7 +540,7 @@ class CocoDisplay:
         df['text_size'] = '10pt'
         df['text_angle'] = 0.
         df.loc[:, 'percentage'] = (( df['percentage'] * 100 ).astype(np.double).round(2)).apply(lambda x: str(x))
-        df['textdisplayed'] = df['clustername'].astype(str).str.pad(30, side = "left")#+df[column_name].apply(lambda x: '\n(N='+str(round(x,2))+')')
+        df['textdisplayed'] = df['codelocation'].astype(str).str.pad(30, side = "left")#+df[column_name].apply(lambda x: '\n(N='+str(round(x,2))+')')
         df['textdisplayed2'] = df[column_name].astype(np.double).round(1).astype(str).str.pad(24, side = "left")
         df.loc[df['diff']<= np.pi/20,'textdisplayed']=''
         df.loc[df['diff']<= np.pi/20,'textdisplayed2']=''
@@ -878,9 +878,10 @@ class CocoDisplay:
                             new = perloc
                         else:
                             new = new.append(perloc)
-                        if type(i) == str and len(i) != 3:
-                            new.iloc[n, 0] = i
+                        #if type(i) == str and len(i) != 3:
+                        #    new.iloc[n, 0] = i
                         n += 1
+
                 geopdwd_filter = new.reset_index(drop=True)
                 my_date = geopdwd.date.unique()
 

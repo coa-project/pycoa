@@ -858,7 +858,7 @@ class GeoCountry():
                 img.replace_with(src)
 
             h_us=pd.read_html(str(soup_us)) # pandas read the modified html
-            h_us=h_us[0][h_us[0].columns[[0,1,2,5,7]]]
+            h_us=h_us[1][h_us[1].columns[[0,1,2,5,7]]]
             h_us.columns=['flag_subregion','code_subregion','town_subregion','population_subregion','area_subregion']
             h_us['flag_subregion'] = [ h.split('\xa0')[0] for h in h_us['flag_subregion'] ]
             self._country_data=self._country_data.merge(h_us,how='left',on='code_subregion')

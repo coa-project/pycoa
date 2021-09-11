@@ -1370,9 +1370,9 @@ class CocoDisplay:
         standardfig.xgrid.grid_line_color = None
         standardfig.ygrid.grid_line_color = None
 
-        standardfig.wedge(x=0, y=0, radius=0.9,
+        standardfig.wedge(x=0, y=0, radius=0.9,line_color='#E8E8E8',
         start_angle=cumsum('angle', include_zero=True), end_angle=cumsum('angle'),
-        line_color="white", fill_color='colors', legend_label='clustername', source=srcfiltered)
+        fill_color='colors', legend_label='clustername', source=srcfiltered)
         standardfig.legend.visible = False
 
         labels = LabelSet(x=0, y=0, text='textdisplayed',
@@ -1571,7 +1571,8 @@ class CocoDisplay:
                                 (geopdwd.date >= dico['when_beg']) & (geopdwd.date <= dico['when_end'])].sort_values(by='date')[input_field])
                 dfLabel=pd.DataFrame(geopdwd_filtered[['location','centroidx','centroidy','cases','spark','clustername']])
                 dfLabel['cases'] = dfLabel['cases'].round(2)
-                #print(dfLabel.groupby(['cases','clustername'])['centroidx'].mean())
+                dfLabel = (dfLabel.groupby(['cases','clustername','spark']).mean())
+                dfLabel = dfLabel.reset_index()
                 #dicocolors=pd.Series(geopdwd.colors.values,index=geopdwd.location.values).drop_duplicates().to_dict()
                 #dfLabel['colors'] = dfLabel['location'].map(dicocolors)
                 sourcemaplabel = ColumnDataSource(dfLabel)

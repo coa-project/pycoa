@@ -602,7 +602,6 @@ class DataBase(object):
             fileName = base_name + ext + extension
             url = base_url + fileName
             self.database_url.append(url)
-            print(url)
             pandas_jhu_db = pandas.read_csv(get_local_from_url(url,7200), sep = ',') # cached for 2 hours
             if self.db == 'jhu':
                 pandas_jhu_db = pandas_jhu_db.rename(columns={'Country/Region':'location'})
@@ -1024,6 +1023,10 @@ class DataBase(object):
         else:
             kwargs['location'] = kwargs['location']
 
+        option = kwargs.get('option', 'fillnan')
+        fillnan = True # default
+        sumall = False # default
+
         if kwargs['which'] not in self.get_available_keys_words() :
             raise CoaKeyError(kwargs['which']+' is not a available for ' + self.db + ' database name. '
             'See get_available_keys_words() for the full list.')
@@ -1033,6 +1036,14 @@ class DataBase(object):
         devorigclist = None
         origclistlist = None
         origlistlistloc = None
+        if 'sumall' in option:
+            if not isinstance(kwargs['location'], list):
+                kwargs['location'] = [[kwargs['location']]]
+            else:
+                if len(kwargs['location']) ==1 :
+                    kwargs['location'] = [kwargs['location']]
+
+
         if not isinstance(kwargs['location'], list):
             listloc = ([kwargs['location']]).copy()
             if not all(isinstance(c, str) for c in listloc):
@@ -1047,6 +1058,7 @@ class DataBase(object):
                 else:
                     raise CoaWhereError("In the case of national DB, all locations must have the same types i.e\
                     list or string but both is not accepted, could be confusing")
+
         owid_name=''
         if self.db_world:
             self.geo.set_standard('name')
@@ -1060,25 +1072,27 @@ class DataBase(object):
                 location_exploded = self.geo.to_standard(listloc,output='list',interpret_region=True)
                 if len(owid_name) !=0 :
                     location_exploded += owid_name
-
         else:
-            def codetoname(listloc):
+            def codetoname(listloc,typeloc='subregion'):
                 convertname = []
                 a=self.geo.get_data()
                 for i in listloc:
                     if not isinstance(i,list):
                         i=[i]
                     if i[0].isdigit() or i[0] in ['2A','2B']:
-                        tmp = list(a.loc[a.code_subregion.isin(i)]['name_subregion'])
+                        tmp = list(a.loc[a['code_'+typeloc].isin(i)]['name_'+typeloc])
                         if tmp:
                             tmp = tmp
                         else:
                             raise CoaTypeError('This code subregion don\'t exist:' + i[0])
                     else:
                         try:
-                            tmp = self.geo.get_subregions_from_list_of_region_names(i,output='name')
+                            if self.database_type[self.db][1] == 'subregion':
+                                tmp = self.geo.get_subregions_from_list_of_region_names(i,output='name')
+                            else:
+                                tmp = i
                         except:
-                            if i[0] in list(a.name_subregion):
+                            if i[0] in list(a['name_'+typeloc]):
                                 tmp = i
                             else:
                                 raise CoaTypeError('This name subregion don\'t exist:' + i[0])
@@ -1088,20 +1102,13 @@ class DataBase(object):
                         convertname=[tmp]
                 return convertname
 
-            name_regions = []
-
-
             if origlistlistloc != None:
-                if self.db != 'dpc':
-                    name_regions  = origlistlistloc
-                    dicooriglist={i[0]:codetoname(i) for i in origlistlistloc}
-                    origlistlistloc = codetoname(origlistlistloc)
+                dicooriglist={i[0]:codetoname(i,self.database_type[self.db][1]) for i in origlistlistloc}
+                origlistlistloc = codetoname(origlistlistloc,self.database_type[self.db][1])
                 location_exploded = origlistlistloc
             else:
-                if self.db != 'dpc':
-                    listloc = codetoname(listloc)
-                    listloc = DataBase.flat_list(listloc)
-                    location_exploded = listloc
+                listloc = codetoname(listloc,self.database_type[self.db][1])
+                listloc = DataBase.flat_list(listloc)
                 location_exploded = listloc
 
         def sticky(lname):
@@ -1118,7 +1125,6 @@ class DataBase(object):
             for k,v in dicooriglist.items():#location_exploded:
                 tmp  = mainpandas.copy()
                 tmp = tmp.loc[tmp.location.isin(v[0])]
-
                 tmp['clustername'] =[k]*len(tmp)#sticky(origlistlistloc[j])*len(tmp)
                 if pdcluster.empty:
                     pdcluster = tmp
@@ -1132,10 +1138,6 @@ class DataBase(object):
             pdfiltered['clustername'] = pdfiltered['location'].copy()
 
         # deal with options now
-        option = kwargs.get('option', 'fillnan')
-        fillnan = True # default
-        sumall = False # default
-
         #if fillnan: # which is the default. Use nofillnan option instead.
             # fill with previous value
         #    pdfiltered = pdfiltered.copy()

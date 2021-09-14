@@ -1008,7 +1008,7 @@ class GeoCountry():
             self._country_data['geometry']=self._country_data.geometry.to_crs('epsg:4326')
         # --- 'PRT' case --------------------------------------------------------------------------------------------
         elif self._country == 'PRT':
-            self._country_data = gpd.read_file('zip://'+get_local_from_url(url,0,'.zip'))
+            self._country_data = gpd.read_file('zip://'+get_local_from_url(url,0,'.zip'),encoding='utf-8')
             #self._district=pd.read_json(self._source_dict['PRT']['District'])[['name','district']].dropna()
 
             self._country_data.rename(columns={\

@@ -1036,7 +1036,7 @@ class DataBase(object):
         devorigclist = None
         origclistlist = None
         origlistlistloc = None
-        if 'sumall' in option:
+        if option and 'sumall' in option:
             if not isinstance(kwargs['location'], list):
                 kwargs['location'] = [[kwargs['location']]]
             else:

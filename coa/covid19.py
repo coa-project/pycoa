@@ -867,6 +867,8 @@ class DataBase(object):
             mypandas = mypandas.loc[~mypandas.location.isnull()]
         else:
             mypandas['codelocation'] =  mypandas['location'].map(codename).astype(str)
+            if self.db != '':
+                mypandas['codelocation'] = mypandas['codelocation'].apply(lambda x: x.replace('IN.',''))
         if self.db == 'owid':
             onlyowid['codelocation'] = onlyowid['location']
             mypandas = mypandas.append(onlyowid)

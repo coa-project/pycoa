@@ -829,8 +829,9 @@ class DataBase(object):
                 if self.db == 'covid19india':
                     mypandas = mypandas.loc[~mypandas.location.isnull()]
                     uniqloc = list(mypandas['location'].unique())
-                temp = self.geo.get_region_list()[['code_region','name_region']]
-                codename = collections.OrderedDict(zip(uniqloc,list(temp.loc[temp.name_region.isin(uniqloc)]['code_region'])))
+                temp = self.geo.get_region_list()[['name_region','code_region']]
+                #codename = collections.OrderedDict(zip(uniqloc,list(temp.loc[temp.name_region.isin(uniqloc)]['code_region'])))
+                codename=dict(temp.values)
                 self.slocation = uniqloc
             elif self.database_type[self.db][1] == 'region' and self.db == 'obepine':
                  temp = self.geo.get_region_list()[['code_region','name_region']]
@@ -867,8 +868,6 @@ class DataBase(object):
             mypandas = mypandas.loc[~mypandas.location.isnull()]
         else:
             mypandas['codelocation'] =  mypandas['location'].map(codename).astype(str)
-            if self.db != '':
-                mypandas['codelocation'] = mypandas['codelocation'].apply(lambda x: x.replace('IN.',''))
         if self.db == 'owid':
             onlyowid['codelocation'] = onlyowid['location']
             mypandas = mypandas.append(onlyowid)

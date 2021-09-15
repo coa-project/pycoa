@@ -1128,7 +1128,7 @@ class DataBase(object):
         pdcluster = pd.DataFrame()
         j=0
         if origlistlistloc != None:
-
+            
             for k,v in dicooriglist.items():#location_exploded:
                 tmp  = mainpandas.copy()
                 tmp = tmp.loc[tmp.location.isin(v[0])]

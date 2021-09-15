@@ -541,7 +541,10 @@ class CocoDisplay:
         df['text_size'] = '10pt'
         df['text_angle'] = 0.
         df.loc[:, 'percentage'] = (( df['percentage'] * 100 ).astype(np.double).round(2)).apply(lambda x: str(x))
-        df['textdisplayed'] = (df['clustername'].apply(lambda x: x[:6] if len(x)>6 else x)).astype(str).str.pad(30, side = "left")#+df[column_name].apply(lambda x: '\n(N='+str(round(x,2))+')')
+        if len(df['codelocation'][0])==3:
+            df['textdisplayed'] = df['codelocation'].astype(str).str.pad(30, side = "left")
+        else:
+            df['textdisplayed'] = (df['clustername'].apply(lambda x: x[:5]+'...' if len(x)>6 else x)).astype(str).str.pad(30, side = "left")#+df[column_name].apply(lambda x: '\n(N='+str(round(x,2))+')')
         df['textdisplayed2'] = df[column_name].astype(np.double).round(1).astype(str).str.pad(24, side = "left")
         df.loc[df['diff']<= np.pi/20,'textdisplayed']=''
         df.loc[df['diff']<= np.pi/20,'textdisplayed2']=''
@@ -834,7 +837,9 @@ class CocoDisplay:
             mypandas['colors'] = mypandas['clustername'].map(dico_colors)
             mypandas = mypandas.drop(columns=['rolloverdisplay'])
             mypandas['rolloverdisplay'] = mypandas['clustername']
-            mypandas = mypandas.drop_duplicates(["date", "codelocation","clustername"])
+            if func.__name__ != 'pycoa_mapfolium' and  func.__name__ != 'innerdecopycoageo':
+                    mypandas = mypandas.drop_duplicates(["date", "codelocation","clustername"])
+
             geopdwd = mypandas
 
             geopdwd = geopdwd.sort_values(by = input_field, ascending=False)

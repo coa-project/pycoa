@@ -615,19 +615,28 @@ class GeoRegion():
     def get_region_list(self):
         return list(self._region_dict.values())
 
+    def is_region(self,region):
+        """ it returns either False or the correctly named region name
+        """
+        if type(region) != str:
+            raise CoaKeyError("The given region is not a str type.")
+
+        region=region.title()  # if not properly capitalized
+        
+        if region not in self.get_region_list():
+            return False
+        else :
+            return region
+
     def get_countries_from_region(self,region):
         """ it returns a list of countries for the given region name.
         The standard used is iso3. To convert to another standard,
         use the GeoManager class.
         """
-
-        if type(region) != str:
-            raise CoaKeyError("The given region is not a str type.")
-
-        region=region.title()  # if not properly capitalized
-
-        if region not in self.get_region_list():
+        r = self.is_region(region)
+        if not r:
             raise CoaKeyError('The given region "'+str(region)+'" is unknown.')
+        region=r
 
         clist=[]
 

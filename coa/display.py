@@ -541,7 +541,7 @@ class CocoDisplay:
         df['text_size'] = '10pt'
         df['text_angle'] = 0.
         df.loc[:, 'percentage'] = (( df['percentage'] * 100 ).astype(np.double).round(2)).apply(lambda x: str(x))
-        df['textdisplayed'] = df['codelocation'].astype(str).str.pad(30, side = "left")#+df[column_name].apply(lambda x: '\n(N='+str(round(x,2))+')')
+        df['textdisplayed'] = (df['clustername'].apply(lambda x: x[:6] if len(x)>6 else x)).astype(str).str.pad(30, side = "left")#+df[column_name].apply(lambda x: '\n(N='+str(round(x,2))+')')
         df['textdisplayed2'] = df[column_name].astype(np.double).round(1).astype(str).str.pad(24, side = "left")
         df.loc[df['diff']<= np.pi/20,'textdisplayed']=''
         df.loc[df['diff']<= np.pi/20,'textdisplayed2']=''
@@ -833,7 +833,8 @@ class CocoDisplay:
 
             mypandas['colors'] = mypandas['clustername'].map(dico_colors)
             mypandas = mypandas.drop(columns=['rolloverdisplay'])
-            mypandas['rolloverdisplay'] = mypandas['location']
+            mypandas['rolloverdisplay'] = mypandas['clustername']
+            mypandas = mypandas.drop_duplicates(["date", "codelocation","clustername"])
             geopdwd = mypandas
 
             geopdwd = geopdwd.sort_values(by = input_field, ascending=False)
@@ -968,8 +969,8 @@ class CocoDisplay:
         mypandas = geopdwd_filtered.rename(columns = {'cases': input_field})
 
         if 'location' in mypandas.columns:
-            uniqloc = list(mypandas.codelocation.unique())
-            allval  = mypandas.loc[mypandas.codelocation.isin(uniqloc)][['rolloverdisplay', input_field]]
+            uniqloc = list(mypandas.clustername.unique())
+            allval  = mypandas.loc[mypandas.clustername.isin(uniqloc)][['rolloverdisplay', input_field]]
             min_val = allval[input_field].min()
             max_val = allval[input_field].max()
             if len(uniqloc) == 1:
@@ -1059,6 +1060,7 @@ class CocoDisplay:
             geopdwd = geopdwd.drop_duplicates(["date", "codelocation","clustername"])#for sumall avoid duplicate
             geopdwd_filtered = geopdwd_filtered.sort_values(by='cases', ascending = False).reset_index()
             locunique = geopdwd_filtered.clustername.unique()#geopdwd_filtered.location.unique()
+
             geopdwd_filter = geopdwd_filtered.copy()
             nmaxdisplayed = 18
 
@@ -1364,13 +1366,13 @@ class CocoDisplay:
     @decohistopie
     def pycoa_pie(self, srcfiltered, panels, date_slider):
         standardfig = panels[0].child
-        standardfig.x_range = Range1d(-1, 1)
-        standardfig.y_range = Range1d(-1, 1)
+        standardfig.x_range = Range1d(-1.1, 1.1)
+        standardfig.y_range = Range1d(-1.1, 1.1)
         standardfig.axis.visible = False
         standardfig.xgrid.grid_line_color = None
         standardfig.ygrid.grid_line_color = None
 
-        standardfig.wedge(x=0, y=0, radius=0.9,line_color='#E8E8E8',
+        standardfig.wedge(x=0, y=0, radius=1.05,line_color='#E8E8E8',
         start_angle=cumsum('angle', include_zero=True), end_angle=cumsum('angle'),
         fill_color='colors', legend_label='clustername', source=srcfiltered)
         standardfig.legend.visible = False

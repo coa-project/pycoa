@@ -479,8 +479,10 @@ class DataBase(object):
                     renamed_cols +=['total_people_fully_vaccinated_per_hundred']
                     col_to_rename+=['people_vaccinated_per_hundred']
                     renamed_cols +=['total_people_vaccinated_per_hundred']
+                    col_to_rename+=['population']
+                    renamed_cols +=['total_population']
                     columns_keeped=['iso_code','total_deaths','total_cases','total_tests','total_vaccinations']
-                    columns_keeped+=['total_cases_per_million','total_deaths_per_million','total_vaccinations_per_hundred','population']
+                    columns_keeped+=['total_cases_per_million','total_deaths_per_million','total_vaccinations_per_hundred']
 
                     self.return_structured_pandas(owid.rename(columns=dict(zip(col_to_rename,renamed_cols))),columns_keeped=columns_keeped+renamed_cols)
             except:
@@ -1126,6 +1128,7 @@ class DataBase(object):
         pdcluster = pd.DataFrame()
         j=0
         if origlistlistloc != None:
+
             for k,v in dicooriglist.items():#location_exploded:
                 tmp  = mainpandas.copy()
                 tmp = tmp.loc[tmp.location.isin(v[0])]
@@ -1211,7 +1214,7 @@ class DataBase(object):
                 # fill with previous value
                 pdfiltered = pdfiltered.reset_index(drop=True)
                 pdfiltered.loc[:,kwargs['which']] =\
-                pdfiltered.groupby(['clustername'])[kwargs['which']].apply(lambda x: x.bfill())
+                pdfiltered.groupby(['location','clustername'])[kwargs['which']].apply(lambda x: x.bfill())
                 #if kwargs['which'].startswith('total_') or kwargs['which'].startswith('tot_'):
                 #    pdfiltered.loc[:,kwargs['which']] = pdfiltered.groupby(['clustername'])[kwargs['which']].apply(lambda x: x.ffill())
                 if pdfiltered.loc[pdfiltered.date == pdfiltered.date.max()][kwargs['which']].isnull().values.any():
@@ -1272,12 +1275,12 @@ class DataBase(object):
         else:
             pdfiltered['clustername'] = pdfiltered['location']
 
-        pdfiltered['daily'] = pdfiltered[kwargs['which']].diff(periods=-1)
+        pdfiltered['daily'] = pdfiltered.groupby('clustername')[kwargs['which']].diff()
         #inx = pdfiltered.groupby('clustername').head(1).index
         #First value of diff is always NaN
         #pdfiltered.loc[inx, 'daily'] = pdfiltered[kwargs['which']].iloc[inx]
-        pdfiltered['cumul'] = pdfiltered[kwargs['which']].cumsum()
-        pdfiltered['weekly'] = pdfiltered[kwargs['which']].diff(7)
+        pdfiltered['cumul'] = pdfiltered.groupby('clustername')[kwargs['which']].cumsum()
+        pdfiltered['weekly'] = pdfiltered.groupby('clustername')[kwargs['which']].diff(7)
         inx7=pdfiltered.groupby('clustername').head(7).index
         pdfiltered.loc[inx7, 'weekly'] = pdfiltered[kwargs['which']].iloc[inx7]
         #if fillnan:

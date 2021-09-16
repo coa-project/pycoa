@@ -1143,6 +1143,7 @@ class DataBase(object):
             pdfiltered = mainpandas.loc[mainpandas.location.isin(location_exploded)]
             pdfiltered = pdfiltered[['location','date','codelocation',kwargs['which']]]
             pdfiltered['clustername'] = pdfiltered['codelocation'].copy()
+
         # deal with options now
         #if fillnan: # which is the default. Use nofillnan option instead.
             # fill with previous value
@@ -1273,10 +1274,10 @@ class DataBase(object):
                 pdfiltered = tmp
         else:
             g=coge.GeoManager('iso3')
-            if self.db_world:
-                pdfiltered['clustername'] = pdfiltered['location'].apply(lambda x: g.to_standard(x)[0])
+            if self.db_world :
+                pdfiltered['clustername'] = pdfiltered['location'].apply(lambda x: g.to_standard(x)[0] if not x.startswith("owid_") else x)
             else:
-                pdfiltered['clustername'] = pdfiltered['location']    
+                pdfiltered['clustername'] = pdfiltered['location']
 
         pdfiltered['daily'] = pdfiltered.groupby('clustername')[kwargs['which']].diff()
         #inx = pdfiltered.groupby('clustername').head(1).index

@@ -158,7 +158,7 @@ class CocoDisplay:
             which = mypandas.columns[1]
         mypandas['codelocation'] = mypandas['codelocation'].apply(lambda x: str(x).replace('[', '').replace(']', '') if len(x)< 10 else x[0]+'...'+x[-1] )
         #mypandas['clustername'] = mypandas['clustername'].apply(lambda x: x if len(x)< 20 else x.split('-')[0]+'...'+x.split('-')[-1] )
-        mypandas['rolloverdisplay'] = mypandas['clustername']
+        mypandas['rolloverdisplay'] = mypandas['location']
         wallname = self.dbld[self.database_name][2]
 
         if mypandas['clustername'].unique()[0] == wallname :
@@ -329,6 +329,8 @@ class CocoDisplay:
                 s.append(A)
             else:
                 s = A
+            if isinstance(s, list):
+                s=s[0]
         return s
 
     @staticmethod
@@ -541,10 +543,11 @@ class CocoDisplay:
         df['text_size'] = '10pt'
         df['text_angle'] = 0.
         df.loc[:, 'percentage'] = (( df['percentage'] * 100 ).astype(np.double).round(2)).apply(lambda x: str(x))
-        if len(df['codelocation'][0])==3:
-            df['textdisplayed'] = df['codelocation'].astype(str).str.pad(30, side = "left")
-        else:
-            df['textdisplayed'] = (df['clustername'].apply(lambda x: x[:5]+'...' if len(x)>6 else x)).astype(str).str.pad(30, side = "left")#+df[column_name].apply(lambda x: '\n(N='+str(round(x,2))+')')
+
+        df['textdisplayed'] = (df['clustername'].apply(lambda x: x[:3]+'...'+x[-3:] if len(x)>7 else x))\
+                    .astype(str).str.pad(30, side = "left")
+                    #else g.to_standard(x,output='list',interpret_region=True)[0]))\
+                    #+df[column_name].apply(lambda x: '\n(N='+str(round(x,2))+')')
         df['textdisplayed2'] = df[column_name].astype(np.double).round(1).astype(str).str.pad(24, side = "left")
         df.loc[df['diff']<= np.pi/20,'textdisplayed']=''
         df.loc[df['diff']<= np.pi/20,'textdisplayed2']=''
@@ -836,7 +839,7 @@ class CocoDisplay:
 
             mypandas['colors'] = mypandas['clustername'].map(dico_colors)
             mypandas = mypandas.drop(columns=['rolloverdisplay'])
-            mypandas['rolloverdisplay'] = mypandas['clustername']
+            mypandas['rolloverdisplay'] = mypandas['location'] #mypandas['clustername']
             if func.__name__ != 'pycoa_mapfolium' and  func.__name__ != 'innerdecopycoageo':
                     mypandas = mypandas.drop_duplicates(["date", "codelocation","clustername"])
 
@@ -1341,7 +1344,7 @@ class CocoDisplay:
         if returnchars == '-':
                 label_dict = {(len(loc) - k) : (v if len(v)<10  else v.split(returnchars)[0]+'...'+v.split(returnchars)[-1]) for k, v in enumerate(loc) }
         else:
-            label_dict = {(len(loc) - k) : (v if len(v)<12 or v in keepsizename or v.startswith("owid_") else v[:6]+'...'+v[-6:]) for k, v in enumerate(loc) }
+            label_dict = {(len(loc) - k) : (v if len(v)<12 or v in keepsizename or v.startswith("owid_") else v[:7]+'...'+v[-7:]) for k, v in enumerate(loc) }
         new_panels = []
         for i in range(n):
             fig = panels[i].child

@@ -1173,8 +1173,9 @@ class DataBase(object):
 
                 for loca in loopover:
                     # modify values in order that diff values is never negative
+
                     if not isinstance(location_exploded[0],list):
-                        pdloc = pdfiltered.loc[ pdfiltered.clustername == loca ][kwargs['which']]
+                        pdloc = pdfiltered.loc[ pdfiltered.location == loca ][kwargs['which']]
                     else:
                         pdloc = pdfiltered.loc[ pdfiltered.location == loca ][kwargs['which']]
                     try:

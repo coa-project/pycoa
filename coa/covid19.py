@@ -1071,7 +1071,7 @@ class DataBase(object):
             if origlistlistloc != None:
                 fulllist = [ i if isinstance(i, list) else [i] for i in origclist ]
                 location_exploded = [ self.geo.to_standard(i,output='list',interpret_region=True) for i in fulllist ]
-                dicooriglist = {i[0]:[self.geo.to_standard(i,output='list',interpret_region=True)] for i in fulllist}
+                dicooriglist = {','.join(i):[self.geo.to_standard(i,output='list',interpret_region=True)] for i in fulllist}
             else:
                 owid_name = [c for c in origclist if c.startswith('owid_')]
                 clist = [c for c in origclist if not c.startswith('owid_')]
@@ -1128,11 +1128,11 @@ class DataBase(object):
         pdcluster = pd.DataFrame()
         j=0
         if origlistlistloc != None:
-            
             for k,v in dicooriglist.items():#location_exploded:
                 tmp  = mainpandas.copy()
                 tmp = tmp.loc[tmp.location.isin(v[0])]
-                tmp['clustername'] =[k]*len(tmp)#sticky(origlistlistloc[j])*len(tmp)
+                code = tmp.codelocation.unique()
+                tmp['clustername'] = [','.join(code)]*len(tmp)#sticky(origlistlistloc[j])*len(tmp)
                 if pdcluster.empty:
                     pdcluster = tmp
                 else:
@@ -1142,8 +1142,7 @@ class DataBase(object):
         else:
             pdfiltered = mainpandas.loc[mainpandas.location.isin(location_exploded)]
             pdfiltered = pdfiltered[['location','date','codelocation',kwargs['which']]]
-            pdfiltered['clustername'] = pdfiltered['location'].copy()
-
+            pdfiltered['clustername'] = pdfiltered['codelocation'].copy()
         # deal with options now
         #if fillnan: # which is the default. Use nofillnan option instead.
             # fill with previous value
@@ -1273,7 +1272,11 @@ class DataBase(object):
                     tmp.at[i,'clustername'] =  sticky(uniqloc)[0]
                 pdfiltered = tmp
         else:
-            pdfiltered['clustername'] = pdfiltered['location']
+            g=coge.GeoManager('iso3')
+            if self.db_world:
+                pdfiltered['clustername'] = pdfiltered['location'].apply(lambda x: g.to_standard(x)[0])
+            else:
+                pdfiltered['clustername'] = pdfiltered['location']    
 
         pdfiltered['daily'] = pdfiltered.groupby('clustername')[kwargs['which']].diff()
         #inx = pdfiltered.groupby('clustername').head(1).index

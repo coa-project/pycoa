@@ -1286,7 +1286,7 @@ class DataBase(object):
             if self.db_world :
                 pdfiltered['clustername'] = pdfiltered['location'].apply(lambda x: g.to_standard(x)[0] if not x.startswith("owid_") else x)
             else:
-                pdfiltered['clustername'] = pdfiltered['location']
+                pdfiltered['clustername'] = pdfiltered['codelocation']
 
         pdfiltered['daily'] = pdfiltered.groupby('clustername')[kwargs['which']].diff()
         #inx = pdfiltered.groupby('clustername').head(1).index

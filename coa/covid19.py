@@ -1069,9 +1069,17 @@ class DataBase(object):
         if self.db_world:
             self.geo.set_standard('name')
             if origlistlistloc != None:
-                fulllist = [ i if isinstance(i, list) else [i] for i in origclist ]
-                location_exploded = [ self.geo.to_standard(i,output='list',interpret_region=True) for i in fulllist ]
-                dicooriglist = {','.join(i):[self.geo.to_standard(i,output='list',interpret_region=True)] for i in fulllist}
+                #fulllist = [ i if isinstance(i, list) else [i] for i in origclist ]
+                fulllist = []
+                for deploy in origlistlistloc:
+                    d=[]
+                    for i in deploy:
+                        if not self.geo.get_GeoRegion().is_region(i):
+                            d.append(self.geo.to_standard(i,output='list',interpret_region=True)[0])
+                        else:
+                            d.append(i)
+                    fulllist.append(d)
+                dicooriglist = { ','.join(i):self.geo.to_standard(i,output='list',interpret_region=True) for i in fulllist}
             else:
                 owid_name = [c for c in origclist if c.startswith('owid_')]
                 clist = [c for c in origclist if not c.startswith('owid_')]
@@ -1128,11 +1136,11 @@ class DataBase(object):
         pdcluster = pd.DataFrame()
         j=0
         if origlistlistloc != None:
-            for k,v in dicooriglist.items():#location_exploded:
+            for k,v in dicooriglist.items():
                 tmp  = mainpandas.copy()
-                tmp = tmp.loc[tmp.location.isin(v[0])]
+                tmp = tmp.loc[tmp.location.isin(v)]
                 code = tmp.codelocation.unique()
-                tmp['clustername'] = [','.join(code)]*len(tmp)#sticky(origlistlistloc[j])*len(tmp)
+                tmp['clustername'] = [k]*len(tmp)
                 if pdcluster.empty:
                     pdcluster = tmp
                 else:

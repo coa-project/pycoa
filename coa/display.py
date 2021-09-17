@@ -839,7 +839,7 @@ class CocoDisplay:
 
             mypandas['colors'] = mypandas['clustername'].map(dico_colors)
             mypandas = mypandas.drop(columns=['rolloverdisplay'])
-            mypandas['rolloverdisplay'] = mypandas['location'] #mypandas['clustername']
+            mypandas['rolloverdisplay'] = mypandas['clustername'] #mypandas['clustername']
             if func.__name__ != 'pycoa_mapfolium' and  func.__name__ != 'innerdecopycoageo':
                     mypandas = mypandas.drop_duplicates(["date", "codelocation","clustername"])
 

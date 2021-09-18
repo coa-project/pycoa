@@ -819,8 +819,11 @@ class CocoDisplay:
 
             mypandas, dico = self.standard_input(mypandas, input_field, **kwargs, plot_last_date=True)
             if func.__name__ == 'pycoa_mapfolium' or  func.__name__ == 'innerdecopycoageo':
-                mypandas = mypandas.explode('location')
-                mypandas['rolloverdisplay'] = mypandas['clustername']
+                if isinstance(mypandas['location'].iloc[0],list):
+                    mypandas['rolloverdisplay'] = mypandas['clustername']
+                    mypandas = mypandas.explode('location')
+                else:
+                    mypandas['rolloverdisplay'] = mypandas['location']
 
             if type(input_field) is None.__class__ and dico['which'] is None.__class__:
                 input_field = mypandas.columns[2]

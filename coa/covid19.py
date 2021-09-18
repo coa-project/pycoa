@@ -1061,7 +1061,7 @@ class DataBase(object):
                 if all(isinstance(c, list) for c in listloc):
                     origlistlistloc = listloc
                 else:
-                    raise CoaWhereError("In the case of national DB, all locations must have the same types i.e\
+                    raise CoaWhereError("In the case of sumall all locations must have the same types i.e\
                     list or string but both is not accepted, could be confusing")
 
         owid_name=''
@@ -1070,11 +1070,12 @@ class DataBase(object):
             if origlistlistloc != None:
                 #fulllist = [ i if isinstance(i, list) else [i] for i in origclist ]
                 fulllist = []
+                g=coge.GeoManager('iso3')
                 for deploy in origlistlistloc:
                     d=[]
                     for i in deploy:
                         if not self.geo.get_GeoRegion().is_region(i):
-                            d.append(self.geo.to_standard(i,output='list',interpret_region=True)[0])
+                            d.append(g.to_standard(i,output='list',interpret_region=True)[0])
                         else:
                             d.append(self.geo.get_GeoRegion().is_region(i))
                     fulllist.append(d)
@@ -1265,7 +1266,6 @@ class DataBase(object):
                     tmp[kwargs['which']] = tmp.loc[tmp.clustername.isin(uniqcluster)].\
                     apply(lambda x: x[kwargs['which']]/len(x.clustername),axis=1)
                pdfiltered = tmp
-
             # computing daily, cumul and weekly
             else:
                 if kwargs['which'].startswith('cur_idx_'):

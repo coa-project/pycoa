@@ -1046,9 +1046,8 @@ class DataBase(object):
             if not isinstance(kwargs['location'], list):
                 kwargs['location'] = [[kwargs['location']]]
             else:
-                if len(kwargs['location']) ==1 :
+                if len(kwargs['location']) == 1 :
                     kwargs['location'] = [kwargs['location']]
-
 
         if not isinstance(kwargs['location'], list):
             listloc = ([kwargs['location']]).copy()
@@ -1118,7 +1117,7 @@ class DataBase(object):
 
             if origlistlistloc != None:
                 dicooriglist={i[0]:codetoname(i,self.database_type[self.db][1]) for i in origlistlistloc}
-                origlistlistloc = codetoname(origlistlistloc,self.database_type[self.db][1])
+                origlistlistloc = DataBase.flat_list(list(dicooriglist.values()))
                 location_exploded = origlistlistloc
             else:
                 listloc = codetoname(listloc,self.database_type[self.db][1])
@@ -1138,6 +1137,8 @@ class DataBase(object):
         if origlistlistloc != None:
             for k,v in dicooriglist.items():
                 tmp  = mainpandas.copy()
+                if any(isinstance(c, list) for c in v):
+                    v=v[0]
                 tmp = tmp.loc[tmp.location.isin(v)]
                 code = tmp.codelocation.unique()
                 tmp['clustername'] = [k]*len(tmp)
@@ -1286,7 +1287,7 @@ class DataBase(object):
             if self.db_world :
                 pdfiltered['clustername'] = pdfiltered['location'].apply(lambda x: g.to_standard(x)[0] if not x.startswith("owid_") else x)
             else:
-                pdfiltered['clustername'] = pdfiltered['location']
+                pdfiltered['clustername'] = pdfiltered['codelocation']
 
         pdfiltered['daily'] = pdfiltered.groupby('clustername')[kwargs['which']].diff()
         #inx = pdfiltered.groupby('clustername').head(1).index

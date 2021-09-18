@@ -979,10 +979,9 @@ class CocoDisplay:
         HoverTool is available it returns position of the middle of the bin and the value.
         """
         mypandas = geopdwd_filtered.rename(columns = {'cases': input_field})
-
         if 'location' in mypandas.columns:
             uniqloc = list(mypandas.clustername.unique())
-            allval  = mypandas.loc[mypandas.clustername.isin(uniqloc)][['rolloverdisplay', input_field]]
+            allval  = mypandas.loc[mypandas.clustername.isin(uniqloc)][['clustername', input_field]]
             min_val = allval[input_field].min()
             max_val = allval[input_field].max()
             if len(uniqloc) == 1:
@@ -1000,7 +999,7 @@ class CocoDisplay:
             contributors = {  i : [] for i in range(bins)}
             for i in range(len(allval)):
                 rank = bisect.bisect_left(interval, allval.iloc[i][input_field])
-                contributors[rank].append(allval.iloc[i]['rolloverdisplay'])
+                contributors[rank].append(allval.iloc[i]['clustername'])
 
             colors = itertools.cycle(self.lcolors)
             lcolors = [next(colors) for i in range(bins)]
@@ -1010,7 +1009,7 @@ class CocoDisplay:
                               'right':interval[1:],
                               'middle_bin': [format((i+j)/2, ".1f") for i,j in zip(interval[:-1],interval[1:])],
                               'top': [len(i) for i in list(contributors.values())],
-                              'contributors': [', '.join(i) for i in contributors.values()],
+                              'contributors': [', '.join(i) for i in contributors.values() ],
                               'colors': lcolors})
         #tooltips=[('Middle value','@middle_bin'),('Contributors', '@contributors')]
         tooltips = """

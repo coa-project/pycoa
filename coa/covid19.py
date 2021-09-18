@@ -1076,7 +1076,7 @@ class DataBase(object):
                         if not self.geo.get_GeoRegion().is_region(i):
                             d.append(self.geo.to_standard(i,output='list',interpret_region=True)[0])
                         else:
-                            d.append(i)
+                            d.append(self.geo.get_GeoRegion().is_region(i))
                     fulllist.append(d)
                 dicooriglist = { ','.join(i):self.geo.to_standard(i,output='list',interpret_region=True) for i in fulllist}
             else:

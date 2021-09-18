@@ -818,7 +818,9 @@ class CocoDisplay:
         def generic_hm(self, mypandas, input_field = None, cursor_date = False, maplabel = False, **kwargs):
 
             mypandas, dico = self.standard_input(mypandas, input_field, **kwargs, plot_last_date=True)
-            mypandas = mypandas.explode('location')
+            if func.__name__ == 'pycoa_mapfolium' or  func.__name__ == 'innerdecopycoageo':
+                mypandas = mypandas.explode('location')
+                mypandas['rolloverdisplay'] = mypandas['clustername']
 
             if type(input_field) is None.__class__ and dico['which'] is None.__class__:
                 input_field = mypandas.columns[2]
@@ -838,8 +840,7 @@ class CocoDisplay:
             dico_colors = {i: next(colors) for i in uniqloc}
 
             mypandas['colors'] = mypandas['clustername'].map(dico_colors)
-            mypandas = mypandas.drop(columns=['rolloverdisplay'])
-            mypandas['rolloverdisplay'] = mypandas['clustername'] #mypandas['clustername']
+
             if func.__name__ != 'pycoa_mapfolium' and  func.__name__ != 'innerdecopycoageo':
                     mypandas = mypandas.drop_duplicates(["date", "codelocation","clustername"])
 

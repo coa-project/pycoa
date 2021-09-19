@@ -161,8 +161,8 @@ class CocoDisplay:
         mypandas['rolloverdisplay'] = mypandas['location']
         wallname = self.dbld[self.database_name][2]
 
-        if mypandas['clustername'].unique()[0] == wallname :
-            mypandas['rolloverdisplay'] = wallname
+        #if mypandas['clustername'].unique()[0] == wallname :
+        #    mypandas['rolloverdisplay'] = wallname
         #mypandas['clustername'] = mypandas['codelocation']
         input_dico['which'] = which
         var_displayed = which
@@ -818,12 +818,12 @@ class CocoDisplay:
         def generic_hm(self, mypandas, input_field = None, cursor_date = False, maplabel = False, **kwargs):
 
             mypandas, dico = self.standard_input(mypandas, input_field, **kwargs, plot_last_date=True)
-            if func.__name__ == 'pycoa_mapfolium' or  func.__name__ == 'innerdecopycoageo':
-                if isinstance(mypandas['location'].iloc[0],list):
-                    mypandas['rolloverdisplay'] = mypandas['clustername']
-                    mypandas = mypandas.explode('location')
-                else:
-                    mypandas['rolloverdisplay'] = mypandas['location']
+            #if func.__name__ == 'pycoa_mapfolium' or  func.__name__ == 'innerdecopycoageo' or :
+            if isinstance(mypandas['location'].iloc[0],list):
+                mypandas['rolloverdisplay'] = mypandas['clustername']
+                mypandas = mypandas.explode('location')
+            else:
+                mypandas['rolloverdisplay'] = mypandas['location']
 
             if type(input_field) is None.__class__ and dico['which'] is None.__class__:
                 input_field = mypandas.columns[2]
@@ -906,7 +906,6 @@ class CocoDisplay:
             geopdwd_filter = geopdwd_filter.reset_index(drop=True)
             if cursor_date is False:
                 date_slider = False
-
             return func(self, input_field, date_slider, maplabel, dico, geopdwd, geopdwd_filter)
         return generic_hm
 

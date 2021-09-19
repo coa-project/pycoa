@@ -160,7 +160,6 @@ class CocoDisplay:
         #mypandas['clustername'] = mypandas['clustername'].apply(lambda x: x if len(x)< 20 else x.split('-')[0]+'...'+x.split('-')[-1] )
         mypandas['rolloverdisplay'] = mypandas['location']
         wallname = self.dbld[self.database_name][2]
-
         #if mypandas['clustername'].unique()[0] == wallname :
         #    mypandas['rolloverdisplay'] = wallname
         #mypandas['clustername'] = mypandas['codelocation']
@@ -246,6 +245,7 @@ class CocoDisplay:
         input_dico['titlebar'] = titlebar
         input_dico['var_displayed'] = var_displayed
         input_dico['data_base'] = self.database_name
+
         return mypandas, input_dico
 
     def get_tiles(self):
@@ -824,7 +824,6 @@ class CocoDisplay:
                 mypandas = mypandas.explode('location')
             else:
                 mypandas['rolloverdisplay'] = mypandas['location']
-
             if type(input_field) is None.__class__ and dico['which'] is None.__class__:
                 input_field = mypandas.columns[2]
             else:
@@ -902,8 +901,8 @@ class CocoDisplay:
                 dico_utc = {i: DateSlider(value = i ).value for i in my_date}
                 geopdwd['date_utc'] = [dico_utc[i] for i in geopdwd.date]
                 geopdwd_filter=geopdwd_filter.sort_values(by=[input_field], ascending=False)
-
             geopdwd_filter = geopdwd_filter.reset_index(drop=True)
+
             if cursor_date is False:
                 date_slider = False
             return func(self, input_field, date_slider, maplabel, dico, geopdwd, geopdwd_filter)

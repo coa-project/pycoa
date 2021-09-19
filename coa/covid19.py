@@ -1070,7 +1070,6 @@ class DataBase(object):
             if origlistlistloc != None:
                 #fulllist = [ i if isinstance(i, list) else [i] for i in origclist ]
                 fulllist = []
-                g=coge.GeoManager('iso3')
                 for deploy in origlistlistloc:
                     d=[]
                     for i in deploy:
@@ -1152,7 +1151,7 @@ class DataBase(object):
         else:
             pdfiltered = mainpandas.loc[mainpandas.location.isin(location_exploded)]
             pdfiltered = pdfiltered[['location','date','codelocation',kwargs['which']]]
-            pdfiltered['clustername'] = pdfiltered['codelocation'].copy()
+            pdfiltered['clustername'] = pdfiltered['location'].copy()
 
         # deal with options now
         #if fillnan: # which is the default. Use nofillnan option instead.
@@ -1283,11 +1282,10 @@ class DataBase(object):
                     tmp.at[i,'clustername'] =  sticky(uniqloc)[0]
                 pdfiltered = tmp
         else:
-            g=coge.GeoManager('iso3')
             if self.db_world :
-                pdfiltered['clustername'] = pdfiltered['location'].apply(lambda x: g.to_standard(x)[0] if not x.startswith("owid_") else x)
+                pdfiltered['clustername'] = pdfiltered['location'].apply(lambda x: self.geo.to_standard(x)[0] if not x.startswith("owid_") else x)
             else:
-                pdfiltered['clustername'] = pdfiltered['codelocation']
+                pdfiltered['clustername'] = pdfiltered['location']
 
         pdfiltered['daily'] = pdfiltered.groupby('clustername')[kwargs['which']].diff()
         #inx = pdfiltered.groupby('clustername').head(1).index

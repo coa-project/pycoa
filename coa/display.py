@@ -311,8 +311,8 @@ class CocoDisplay:
         elif type(toshort) == str:
             toshort = [toshort]
             s = ''
-        if type(toshort) != list:
-            print('That is weird ...', toshort, 'not str nor list')
+        #if type(toshort) != list:
+        #    print('That is weird ...', toshort, 'not str nor list')
 
         for val in toshort:
             if type(val) == list:
@@ -544,7 +544,7 @@ class CocoDisplay:
         df['text_angle'] = 0.
         df.loc[:, 'percentage'] = (( df['percentage'] * 100 ).astype(np.double).round(2)).apply(lambda x: str(x))
 
-        df['textdisplayed'] = (df['clustername'].apply(lambda x: x[:3]+'...'+x[-3:] if len(x)>7 else x))\
+        df['textdisplayed'] = (df['codelocation'].apply(lambda x: x[:3]+'...'+x[-3:] if len(x)>7 else x))\
                     .astype(str).str.pad(30, side = "left")
                     #else g.to_standard(x,output='list',interpret_region=True)[0]))\
                     #+df[column_name].apply(lambda x: '\n(N='+str(round(x,2))+')')
@@ -683,12 +683,7 @@ class CocoDisplay:
                 line_style = ['solid', 'dashed', 'dotted', 'dotdash']
                 for loc in list(mypandas.clustername.unique()):
                     mypandas_filter = mypandas.loc[mypandas.clustername == loc].reset_index(drop = True)
-                    keepnamelikeit = ['United Kingdom']
-                    if mypandas_filter.clustername[0] != keepnamelikeit:
-                        leg = CocoDisplay.dict_shorten_loc(mypandas_filter.clustername[0])
-                    else:
-                        leg = keepnamelikeit
-
+                    leg = CocoDisplay.dict_shorten_loc(mypandas_filter.codelocation)
                     if not full_legend:
                         if len(leg)>12 and leg != keepnamelikeit and not leg.startswith('owid_'):
                             leg=leg[:5]+'...'+leg[-5:]
@@ -1340,7 +1335,7 @@ class CocoDisplay:
     @decohistopie
     def pycoa_horizonhisto(self, srcfiltered, panels, date_slider):
         n = len(panels)
-        loc = srcfiltered.data['clustername']#srcfiltered.data['codelocation']
+        loc = srcfiltered.data['codelocation']#srcfiltered.data['codelocation']
         chars = [' ','-']
         returnchars = [x for x in loc if x in chars]
         label_dict = {}

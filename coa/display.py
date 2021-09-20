@@ -1009,12 +1009,15 @@ class CocoDisplay:
                               'top': [len(i) for i in list(contributors.values())],
                               'contributors': [', '.join(i) for i in contributors.values() ],
                               'colors': lcolors})
-        #tooltips=[('Middle value','@middle_bin'),('Contributors', '@contributors')]
+        #tooltips = """
+        #<div style="width: 400px">
+        #<b>Middle value:</b> @middle_bin <br>
+        #<b>Contributors:</b> @contributors{safe} <br>
+        #</div>
+        #"""
         tooltips = """
-        <div style="width: 400px">
         <b>Middle value:</b> @middle_bin <br>
         <b>Contributors:</b> @contributors{safe} <br>
-        </div>
         """
         hover_tool = HoverTool(tooltips = tooltips)
         panels = []

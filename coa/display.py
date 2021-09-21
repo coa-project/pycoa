@@ -162,15 +162,25 @@ class CocoDisplay:
         wallname = self.dbld[self.database_name][2]
         g=coge.GeoManager('name')
         if self.dbld[self.database_name][0] == 'WW' :
-            mypandas['permanentdisplay'] = mypandas.apply(lambda x: x.clustername if g.get_GeoRegion().is_region(x.clustername) else  str(x.codelocation), axis = 1)
+            mypandas['permanentdisplay'] = mypandas.apply(lambda x: x.clustername if g.get_GeoRegion().is_region(x.clustername) else str(x.codelocation), axis = 1)
         else:
-            mypandas['permanentdisplay'] = mypandas.apply(lambda x:  str(x.codelocation), axis = 1)
-        #if mypandas['clustername'].unique()[0] == wallname :
-        #    mypandas['rolloverdisplay'] = wallname
-        #mypandas['clustername'] = mypandas['codelocation']
+            f=coge.GeoCountry(self.dbld[self.database_name][0])
+            if self.dbld[self.database_name][1] == 'subregion' :
+                trad={}
+                for i in mypandas.clustername.unique():
+                    if f.is_region(i):
+                        trad[i] = f.is_region(i)
+                    elif f.is_subregion(i):
+                        trad[i] = mypandas.loc[mypandas.clustername==i]['codelocation'].iloc[0]
+                    else:
+                        CoaError(i+'is not a region nor subregion')
+                mypandas['permanentdisplay'] = mypandas.clustername.map(trad)
+            elif self.dbld[self.database_name][1] == 'region' :
+                mypandas['permanentdisplay'] = mypandas.codelocation
+
+
         input_dico['which'] = which
         var_displayed = which
-
         title = kwargs.get('title', None)
         input_dico['title'] = title
         textcopyright = kwargs.get('textcopyright', 'default')
@@ -548,11 +558,7 @@ class CocoDisplay:
         df['text_size'] = '10pt'
         df['text_angle'] = 0.
         df.loc[:, 'percentage'] = (( df['percentage'] * 100 ).astype(np.double).round(2)).apply(lambda x: str(x))
-        df['textdisplayed']=df['permanentdisplay'].astype(str).str.pad(30, side = "left")
-        #print(df['e'])
-        #df['textdisplayed'] = (df['codelocation'].apply(lambda x: x[:3]+'...'+x[-3:] if len(x)>7 else x))\
-        #            .astype(str).str.pad(30, side = "left")
-        #print(df['textdisplayed'])
+        df['textdisplayed']=df['permanentdisplay'].apply(lambda x:x[:3]+'...'+x[-3:] if len(x)>4 else x).astype(str).str.pad(30, side = "left")
         df['textdisplayed2'] = df[column_name].astype(np.double).round(1).astype(str).str.pad(24, side = "left")
         df.loc[df['diff']<= np.pi/20,'textdisplayed']=''
         df.loc[df['diff']<= np.pi/20,'textdisplayed2']=''

@@ -63,7 +63,7 @@ _db_list_dict = {'jhu': ['WW','nation','World'],
     'dgs':['PRT','region','Portugal'],
     'obepine':['FRA','region','France'],
     'moh':['MYS','subregion','Singapore'],
-    'minciencia':['CHL','subregion','Chile']
+    #'minciencia':['CHL','subregion','Chile']
     }
 
 # ----------------------------------------------------

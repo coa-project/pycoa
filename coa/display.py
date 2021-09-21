@@ -160,6 +160,11 @@ class CocoDisplay:
         #mypandas['clustername'] = mypandas['clustername'].apply(lambda x: x if len(x)< 20 else x.split('-')[0]+'...'+x.split('-')[-1] )
         mypandas['rolloverdisplay'] = mypandas['location']
         wallname = self.dbld[self.database_name][2]
+        g=coge.GeoManager('name')
+        if self.dbld[self.database_name][0] == 'WW' :
+            mypandas['permanentdisplay'] = mypandas.apply(lambda x: x.clustername if g.get_GeoRegion().is_region(x.clustername) else  str(x.codelocation), axis = 1)
+        else:
+            mypandas['permanentdisplay'] = mypandas.apply(lambda x:  str(x.codelocation), axis = 1)
         #if mypandas['clustername'].unique()[0] == wallname :
         #    mypandas['rolloverdisplay'] = wallname
         #mypandas['clustername'] = mypandas['codelocation']
@@ -525,8 +530,8 @@ class CocoDisplay:
                   }
                   return s;
                 """)
-    @staticmethod
-    def add_columns_for_pie_chart(df,column_name):
+    #@staticmethod
+    def add_columns_for_pie_chart(self,df,column_name):
         r = 0.9
         df = df.copy()
         column_sum = df[column_name].sum()
@@ -543,11 +548,11 @@ class CocoDisplay:
         df['text_size'] = '10pt'
         df['text_angle'] = 0.
         df.loc[:, 'percentage'] = (( df['percentage'] * 100 ).astype(np.double).round(2)).apply(lambda x: str(x))
-
-        df['textdisplayed'] = (df['codelocation'].apply(lambda x: x[:3]+'...'+x[-3:] if len(x)>7 else x))\
-                    .astype(str).str.pad(30, side = "left")
-                    #else g.to_standard(x,output='list',interpret_region=True)[0]))\
-                    #+df[column_name].apply(lambda x: '\n(N='+str(round(x,2))+')')
+        df['textdisplayed']=df['permanentdisplay'].astype(str).str.pad(30, side = "left")
+        #print(df['e'])
+        #df['textdisplayed'] = (df['codelocation'].apply(lambda x: x[:3]+'...'+x[-3:] if len(x)>7 else x))\
+        #            .astype(str).str.pad(30, side = "left")
+        #print(df['textdisplayed'])
         df['textdisplayed2'] = df[column_name].astype(np.double).round(1).astype(str).str.pad(24, side = "left")
         df.loc[df['diff']<= np.pi/20,'textdisplayed']=''
         df.loc[df['diff']<= np.pi/20,'textdisplayed2']=''
@@ -683,13 +688,13 @@ class CocoDisplay:
                 line_style = ['solid', 'dashed', 'dotted', 'dotdash']
                 for loc in list(mypandas.clustername.unique()):
                     mypandas_filter = mypandas.loc[mypandas.clustername == loc].reset_index(drop = True)
-                    leg = CocoDisplay.dict_shorten_loc(mypandas_filter.codelocation)
+                    leg = CocoDisplay.dict_shorten_loc(mypandas_filter.permanentdisplay)
                     if not full_legend:
                         if len(leg)>12 and leg != keepnamelikeit and not leg.startswith('owid_'):
                             leg=leg[:5]+'...'+leg[-5:]
 
                     if len(input_field)>1:
-                        leg = CocoDisplay.dict_shorten_loc(mypandas_filter.clustername[0]) + ', ' + val
+                        leg = CocoDisplay.dict_shorten_loc(mypandas_filter.permanentdisplay[0]) + ', ' + val
                         color = self.scolors[i]
                     else:
                         color = mypandas_filter.colors[i]
@@ -974,7 +979,7 @@ class CocoDisplay:
         mypandas = geopdwd_filtered.rename(columns = {'cases': input_field})
         if 'location' in mypandas.columns:
             uniqloc = list(mypandas.clustername.unique())
-            allval  = mypandas.loc[mypandas.clustername.isin(uniqloc)][['clustername', input_field]]
+            allval  = mypandas.loc[mypandas.clustername.isin(uniqloc)][['clustername', input_field,'permanentdisplay']]
             min_val = allval[input_field].min()
             max_val = allval[input_field].max()
             if len(uniqloc) == 1:
@@ -992,7 +997,7 @@ class CocoDisplay:
             contributors = {  i : [] for i in range(bins)}
             for i in range(len(allval)):
                 rank = bisect.bisect_left(interval, allval.iloc[i][input_field])
-                contributors[rank].append(allval.iloc[i]['clustername'])
+                contributors[rank].append(allval.iloc[i]['permanentdisplay'])
 
             colors = itertools.cycle(self.lcolors)
             lcolors = [next(colors) for i in range(bins)]
@@ -1081,6 +1086,7 @@ class CocoDisplay:
                     geopdwd_filter_other['location'] = 'others'
                     geopdwd_filter_other['clustername'] = 'others'
                     geopdwd_filter_other['codelocation'] = 'others'
+                    geopdwd_filter_other['permanentdisplay'] = 'others'
                     geopdwd_filter_other['rolloverdisplay'] = 'others'
                     geopdwd_filter_other['colors'] = '#FFFFFF'
 
@@ -1104,8 +1110,8 @@ class CocoDisplay:
                 #geopdwd_filter = geopdwd_filter.loc[geopdwd_filter['cases']>0]
 
             if func.__name__ == 'pycoa_pie' :
-                geopdwd_filter = CocoDisplay.add_columns_for_pie_chart(geopdwd_filter,input_field)
-                geopdwd = CocoDisplay.add_columns_for_pie_chart(geopdwd,input_field)
+                geopdwd_filter = self.add_columns_for_pie_chart(geopdwd_filter,input_field)
+                geopdwd = self.add_columns_for_pie_chart(geopdwd,input_field)
 
             source = ColumnDataSource(data = geopdwd)
             #mypandas_filter = geopdwd_filter.sort_values(by = input_field, ascending = False)
@@ -1335,7 +1341,7 @@ class CocoDisplay:
     @decohistopie
     def pycoa_horizonhisto(self, srcfiltered, panels, date_slider):
         n = len(panels)
-        loc = srcfiltered.data['codelocation']#srcfiltered.data['codelocation']
+        loc = srcfiltered.data['permanentdisplay']#srcfiltered.data['codelocation']
         chars = [' ','-']
         returnchars = [x for x in loc if x in chars]
         label_dict = {}

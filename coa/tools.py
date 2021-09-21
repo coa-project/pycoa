@@ -31,6 +31,7 @@ from tempfile import gettempdir
 from getpass import getuser
 from zlib import crc32
 from urllib.parse import urlparse
+import unidecode
 
 from coa.error import CoaKeyError, CoaTypeError, CoaConnectionError, CoaNotManagedError
 
@@ -115,6 +116,11 @@ def kwargs_test(given_args, expected_args, error_string):
         raise CoaKeyError(error_string+' Unrecognized args are '+str(bad_kwargs)+'.')
 
     return True
+
+def tostdstring(s):
+    """Standardization of string for country,region or subregion tests
+    """
+    return unidecode.unidecode(' '.join(s.replace('-',' ').split())).upper()
 
 def fill_missing_dates(p, date_field='date', loc_field='location', d1=None, d2=None):
     """Filling the input pandas dataframe p with missing dates

@@ -45,6 +45,7 @@ setup(
         'pytest >=5.0',\
         'pandas-flavor',\
         'openpyxl',\
+        'unidecode',\
         ],
     # The license can be anything you like
     license='MIT',

@@ -36,7 +36,7 @@ import shapely.affinity as sa
 import shapely.ops as so
 import bs4
 
-from coa.tools import verb,kwargs_test,get_local_from_url,dotdict
+from coa.tools import verb,kwargs_test,get_local_from_url,dotdict,tostdstring
 from coa.error import *
 
 # ---------------------------------------------------------------------

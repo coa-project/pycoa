@@ -1100,12 +1100,30 @@ class GeoCountry():
         cols.append('geometry')
         return self.get_data(True)[cols]
 
+    def is_region(self,r):
+        """ Return False if r is a not a known region, return the correctly capitalized name if ok
+        """
+        r=tostdstring(r)
+        for i in self.get_region_list().name_region.to_list():
+            if tostdstring(i) == r:
+                return i
+        return False
+
     def get_subregion_list(self):
         """ Return the list of available subregions with code, name and geometry
         """
         cols=[c for c in self.get_list_properties() if '_subregion' in c ]
         cols.append('geometry')
         return self.get_data()[cols]
+
+    def is_subregion(self,r):
+        """ Return False if r is a not a known region, return the correctly capitalized name if ok
+        """
+        r=tostdstring(r)
+        for i in self.get_subregion_list().name_subregion.to_list():
+            if tostdstring(i) == r:
+                return i
+        return False
 
     def get_subregions_from_region(self,**kwargs):
         """ Return the list of subregions within a specified region.

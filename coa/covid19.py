@@ -1046,9 +1046,10 @@ class DataBase(object):
             if not isinstance(kwargs['location'], list):
                 kwargs['location'] = [[kwargs['location']]]
             else:
-                if len(kwargs['location']) == 1 :
+                if isinstance([kwargs['location']], list):
+                    kwargs['location'] = kwargs['location']
+                else:
                     kwargs['location'] = [kwargs['location']]
-
         if not isinstance(kwargs['location'], list):
             listloc = ([kwargs['location']]).copy()
             if not all(isinstance(c, str) for c in listloc):
@@ -1086,43 +1087,29 @@ class DataBase(object):
                 if len(owid_name) !=0 :
                     location_exploded += owid_name
         else:
-            def codetoname(listloc,typeloc='subregion'):
-                convertname = []
+            def explosion(listloc,typeloc='subregion'):
+                exploded = []
                 a=self.geo.get_data()
                 for i in listloc:
-                    if not isinstance(i,list):
-                        i=[i]
-                    if i[0].isdigit() or i[0] in ['2A','2B']:
-                        tmp = list(a.loc[a['code_'+typeloc].isin(i)]['name_'+typeloc])
-                        if tmp:
-                            tmp = tmp
-                        else:
-                            raise CoaTypeError('This code subregion don\'t exist:' + i[0])
+                    if self.geo.is_region(i):
+                        i = [self.geo.is_region(i)]
+                        tmp = self.geo.get_subregions_from_list_of_region_names(i,output='name')
+                    elif self.geo.is_subregion(i):
+                       tmp = self.geo.is_subregion(i)
                     else:
-                        if self.database_type[self.db][1] == 'subregion':
-                            if self.geo.is_subregion(i[0]):
-                                tmp = self.geo.is_subregion(i[0])
-                            elif self.geo.is_region(i[0]):
-                                tmp = self.geo.get_subregions_from_list_of_region_names(self.geo.is_region(i[0]),output='name')
-                            else:
-                                raise CoaTypeError('This name region/subregion don\'t exist:' + i[0])
-                        elif self.database_type[self.db][1] == 'region':
-                            if i[0] in list(a['name_'+typeloc]):
-                                tmp = self.geo.is_region(i[0])
-                        else:
-                            raise CoaTypeError('This name subregion don\'t exist:' + i[0])
-                    if convertname:
-                        convertname.append(tmp)
+                        raise CoaTypeError('Not subregion nor region ... what is it ?')
+                    if exploded:
+                        exploded.append(tmp)
                     else:
-                        convertname=[tmp]
-                return convertname
+                        exploded=[tmp]
+                return DataBase.flat_list(exploded)
 
             if origlistlistloc != None:
-                dicooriglist={i[0]:codetoname(i,self.database_type[self.db][1]) for i in origlistlistloc}
-                origlistlistloc = DataBase.flat_list(list(dicooriglist.values()))
-                location_exploded = origlistlistloc
+                dicooriglist={','.join(i):explosion(i,self.database_type[self.db][1]) for i in origlistlistloc}
+                #origlistlistloc = DataBase.flat_list(list(dicooriglist.values()))
+                #location_exploded = origlistlistloc
             else:
-                listloc = codetoname(listloc,self.database_type[self.db][1])
+                listloc = explosion(listloc,self.database_type[self.db][1])
                 listloc = DataBase.flat_list(listloc)
                 location_exploded = listloc
 

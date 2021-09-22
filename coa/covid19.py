@@ -1099,16 +1099,18 @@ class DataBase(object):
                         else:
                             raise CoaTypeError('This code subregion don\'t exist:' + i[0])
                     else:
-                        try:
-                            if self.database_type[self.db][1] == 'subregion':
-                                tmp = self.geo.get_subregions_from_list_of_region_names(i,output='name')
+                        if self.database_type[self.db][1] == 'subregion':
+                            if self.geo.is_subregion(i[0]):
+                                tmp = self.geo.is_subregion(i[0])
+                            elif self.geo.is_region(i[0]):
+                                tmp = self.geo.get_subregions_from_list_of_region_names(self.geo.is_region(i[0]),output='name')
                             else:
-                                tmp = i
-                        except:
+                                raise CoaTypeError('This name region/subregion don\'t exist:' + i[0])
+                        elif self.database_type[self.db][1] == 'region':
                             if i[0] in list(a['name_'+typeloc]):
-                                tmp = i
-                            else:
-                                raise CoaTypeError('This name subregion don\'t exist:' + i[0])
+                                tmp = self.geo.is_region(i[0])
+                        else:
+                            raise CoaTypeError('This name subregion don\'t exist:' + i[0])
                     if convertname:
                         convertname.append(tmp)
                     else:

@@ -1119,10 +1119,13 @@ class GeoCountry():
     def is_subregion(self,r):
         """ Return False if r is a not a known region, return the correctly capitalized name if ok
         """
-        r=tostdstring(r)
+        r2=tostdstring(r)
         for i in self.get_subregion_list().name_subregion.to_list():
-            if tostdstring(i) == r:
+            if tostdstring(i) == r2:
                 return i
+        a=self.get_subregion_list()[self.get_subregion_list().code_subregion==r].name_subregion.values  
+        if a.size == 1:
+            return a[0]
         return False
 
     def get_subregions_from_region(self,**kwargs):

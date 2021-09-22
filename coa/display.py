@@ -1010,7 +1010,7 @@ class CocoDisplay:
             contributors = {  i : [] for i in range(bins)}
             for i in range(len(allval)):
                 rank = bisect.bisect_left(interval, allval.iloc[i][input_field])
-                contributors[rank].append(allval.iloc[i]['permanentdisplay'])
+                contributors[rank].append(allval.iloc[i]['clustername'])
 
             colors = itertools.cycle(self.lcolors)
             lcolors = [next(colors) for i in range(bins)]

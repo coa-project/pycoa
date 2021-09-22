@@ -168,16 +168,21 @@ class CocoDisplay:
             if self.dbld[self.database_name][1] == 'subregion' :
                 trad={}
                 for i in mypandas.clustername.unique():
-                    if f.is_region(i):
-                        trad[i] = f.is_region(i)
-                    elif f.is_subregion(i):
-                        trad[i] = mypandas.loc[mypandas.clustername==i]['codelocation'].iloc[0]
+                    if i == self.dbld[self.database_name][2]:
+                        mypandas['permanentdisplay'] = [self.dbld[self.database_name][2]]*len(mypandas)
                     else:
-                        CoaError(i+'is not a region nor subregion')
-                mypandas['permanentdisplay'] = mypandas.clustername.map(trad)
+                        if f.is_region(i):
+                            trad[i] = f.is_region(i)
+                        elif f.is_subregion(i):
+                            trad[i] = mypandas.loc[mypandas.clustername==i]['codelocation'].iloc[0]
+                        else:
+                            CoaError(i+'is not a region nor subregion')
+                        mypandas['permanentdisplay'] = mypandas.clustername.map(trad)
             elif self.dbld[self.database_name][1] == 'region' :
-                mypandas['permanentdisplay'] = mypandas.codelocation
-
+                if mypandas.clustername.unique()== self.dbld[self.database_name][2]:
+                    mypandas['permanentdisplay'] = [self.dbld[self.database_name][2]]*len(mypandas)
+                else:
+                    mypandas['permanentdisplay'] = mypandas.codelocation
         input_dico['which'] = which
         var_displayed = which
         title = kwargs.get('title', None)
@@ -696,6 +701,7 @@ class CocoDisplay:
                 for loc in list(mypandas.clustername.unique()):
                     mypandas_filter = mypandas.loc[mypandas.clustername == loc].reset_index(drop = True)
                     leg = CocoDisplay.dict_shorten_loc(mypandas_filter.permanentdisplay)
+
                     if not full_legend:
                         if len(leg)>12 and leg != keepnamelikeit and not leg.startswith('owid_'):
                             leg=leg[:5]+'...'+leg[-5:]

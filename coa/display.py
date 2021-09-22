@@ -178,7 +178,6 @@ class CocoDisplay:
             elif self.dbld[self.database_name][1] == 'region' :
                 mypandas['permanentdisplay'] = mypandas.codelocation
 
-
         input_dico['which'] = which
         var_displayed = which
         title = kwargs.get('title', None)
@@ -748,25 +747,25 @@ class CocoDisplay:
 
     @decoplot
     def pycoa_scrollingmenu(self, mypandas, dico, input_field, hover_tool, ax_type, **kwargs):
-        if dico['locsumall']:
-            raise CoaKeyError('For coherence \'locsumall\' can not be called with scrolling_menu ...')
-        tooltips = 'Date: @date{%F} <br>  $name: @$name'
-        hover_tool = HoverTool(tooltips=tooltips, formatters={'@date': 'datetime'})
+        #if dico['locsumall']:
+        #    raise CoaKeyError('For coherence \'locsumall\' can not be called with scrolling_menu ...')
+        #tooltips = 'Date: @date{%F} <br>  $name: @$name'
+        #hover_tool = HoverTool(tooltips=tooltips, formatters={'@date': 'datetime'})
 
-        uniqloc = mypandas.codelocation.unique().to_list()
+        uniqloc = mypandas.clustername.unique().to_list()
         if 'location' in mypandas.columns:
-            tooltips = 'Location: @location <br> Date: @date{%F} <br>  $name: @$name'
+            #tooltips = 'Location: @location <br> Date: @date{%F} <br>  $name: @$name'
 
             if len(uniqloc) < 2:
                 raise CoaTypeError('What do you want me to do ? You have selected, only one country.'
                                    'There is no sens to use this method. See help.')
             # shorten_loc = list(CocoDisplay.dict_shorten_loc(loc).values())
-
         mypandas = mypandas.loc[(mypandas['date'] >= dico['when_beg']) & (mypandas['date'] <= dico['when_end'])]
 
         mypandas[input_field[0]] = mypandas[input_field[0]].astype(float)
-        mypandas = mypandas[['date', 'codelocation', input_field[0]]]
-        mypivot = pd.pivot_table(mypandas, index='date', columns='codelocation', values=input_field[0])
+
+        mypandas = mypandas[['date', 'clustername', input_field[0]]]
+        mypivot = pd.pivot_table(mypandas, index='date', columns='clustername', values=input_field[0])
         source = ColumnDataSource(mypivot)
 
         filter_data1 = mypivot[[uniqloc[0]]].rename(columns={uniqloc[0]: 'cases'})
@@ -957,7 +956,7 @@ class CocoDisplay:
 
         standardfig.add_tools(HoverTool(
             tooltips=[('location', '@rolloverdisplay'), ('value', '@value')],
-            # formatters={'location':'printf','@{'+input_field+'}': cases_custom,},
+            #formatters={'location':'printf','@{'+input_field+'}': cases_custom,},
             point_policy="snap_to_data"))
         return standardfig
 

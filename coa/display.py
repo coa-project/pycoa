@@ -180,7 +180,7 @@ class CocoDisplay:
                             CoaError(i+'is not a region nor subregion')
                         mypandas['permanentdisplay'] = mypandas.clustername.map(trad)
             elif self.dbld[self.database_name][1] == 'region' :
-                if mypandas.clustername.unique()== self.dbld[self.database_name][2]:
+                if all(i == self.dbld[self.database_name][2] for i in mypandas.clustername.unique()):
                     mypandas['permanentdisplay'] = [self.dbld[self.database_name][2]]*len(mypandas)
                 else:
                     mypandas['permanentdisplay'] = mypandas.codelocation

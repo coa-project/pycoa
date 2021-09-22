@@ -329,6 +329,8 @@ class CocoDisplay:
         #    print('That is weird ...', toshort, 'not str nor list')
 
         for val in toshort:
+            if not isinstance(val,str):
+                val= str(val)
             if type(val) == list:
                 val = val[0]
             if val.find(',') == -1:

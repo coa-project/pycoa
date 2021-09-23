@@ -175,7 +175,7 @@ class CocoDisplay:
                         if self.geo.is_region(i):
                             trad[i] = self.geo.is_region(i)
                         elif self.geo.is_subregion(i):
-                            trad[i] = mypandas.loc[mypandas.clustername==i]['codelocation'].iloc[0]
+                            trad[i] = self.geo.is_subregion(i)#mypandas.loc[mypandas.clustername==i]['codelocation'].iloc[0]
                         else:
                             CoaError(i+'is not a region nor subregion')
                         mypandas['permanentdisplay'] = mypandas.clustername.map(trad)
@@ -565,8 +565,8 @@ class CocoDisplay:
         df['text_size'] = '10pt'
         df['text_angle'] = 0.
         df.loc[:, 'percentage'] = (( df['percentage'] * 100 ).astype(np.double).round(2)).apply(lambda x: str(x))
-        df['textdisplayed']=df['permanentdisplay'].astype(str).str.pad(30, side = "left")
-        df['textdisplayed2'] = df[column_name].astype(np.double).round(1).astype(str).str.pad(24, side = "left")
+        df['textdisplayed']=df['permanentdisplay'].astype(str).str.pad(15, side = "left")
+        df['textdisplayed2'] = df[column_name].astype(np.double).round(1).astype(str).str.pad(46, side = "left")
         df.loc[df['diff']<= np.pi/20,'textdisplayed']=''
         df.loc[df['diff']<= np.pi/20,'textdisplayed2']=''
         return df
@@ -1406,7 +1406,7 @@ class CocoDisplay:
         standardfig.legend.visible = False
 
         labels = LabelSet(x=0, y=0, text='textdisplayed',
-        angle=cumsum('angle', include_zero=True), source=srcfiltered, render_mode='canvas',text_font_size="12pt")
+        angle=cumsum('angle', include_zero=True), source=srcfiltered, render_mode='canvas',text_font_size="10pt")
         labels2 = LabelSet(x=0, y=0, text='textdisplayed2',
         angle=cumsum('angle', include_zero=True), source=srcfiltered, render_mode='canvas',text_font_size="8pt")
 

@@ -104,7 +104,8 @@ class DataBase(object):
                     info('FRA, réseau Obepine, surveillance Sars-Cov-2 dans les eaux usées')
                     url='https://www.data.gouv.fr/fr/datasets/r/89196725-56cf-4a83-bab0-170ad1e8ef85'
                     rename_dict={'Code_Region':'location','Date':'date','Indicateur':'idx_obepine'}
-                    obepine_data=self.csv2pandas(url,separator=';',rename_columns=rename_dict)
+                    cast = {'Code_Region': 'string'}
+                    obepine_data=self.csv2pandas(url,cast=cast,separator=';',rename_columns=rename_dict)
                     self.return_structured_pandas(obepine_data,columns_keeped=['idx_obepine'])
                 elif self.db == 'escovid19data': # ESP
                     info('ESP, EsCovid19Data ...')
@@ -792,7 +793,7 @@ class DataBase(object):
             mypandas = mypandasori
 
         if self.db == 'dpc':
-            gd = self.geo.get_data()[['code_region','name_subregion']]
+            gd = self.geo.get_data()[['code_region','name_region']]
             A=['P.A. Bolzano','P.A. Trento']
             tmp=mypandas.loc[mypandas.location.isin(A)].groupby('date').sum()
             tmp['location']='Trentino-Alto Adige'
@@ -800,14 +801,16 @@ class DataBase(object):
             tmp = tmp.reset_index()
             mypandas = mypandas.append(tmp)
             uniqloc = list(mypandas['location'].unique())
-            sub2reg = collections.OrderedDict(zip(uniqloc,list(gd.loc[gd.name_subregion.isin(uniqloc)]['code_region'])))
+            sub2reg = dict(gd.values)
+            #collections.OrderedDict(zip(uniqloc,list(gd.loc[gd.name_region.isin(uniqloc)]['code_region'])))
             mypandas['codelocation'] = mypandas['location'].map(sub2reg)
         if self.db == 'dgs':
-            gd = self.geo.get_data()[['name_subregion','name_region']]
+            gd = self.geo.get_data()[['name_region','name_region']]
             mypandas = mypandas.reset_index(drop=True)
             mypandas['location'] = mypandas['location'].apply(lambda x: x.title().replace('Do', 'do').replace('Da','da').replace('De','de'))
             uniqloc = list(mypandas['location'].unique())
-            sub2reg = collections.OrderedDict(zip(uniqloc,list(gd.loc[gd.name_subregion.isin(uniqloc)]['name_region'])))
+            sub2reg = dict(gd.values)
+            #sub2reg = collections.OrderedDict(zip(uniqloc,list(gd.loc[gd.name_subregion.isin(uniqloc)]['name_region'])))
             mypandas['location'] = mypandas['location'].map(sub2reg)
             mypandas = mypandas.loc[~mypandas.location.isnull()]
 
@@ -827,7 +830,7 @@ class DataBase(object):
             self.slocation = list(codename.values())
             location_is_code = True
         else:
-            if self.database_type[self.db][1] == 'region' and self.db != 'obepine':
+            if self.database_type[self.db][1] == 'region' :
                 if self.db == 'covid19india':
                     mypandas = mypandas.loc[~mypandas.location.isnull()]
                     uniqloc = list(mypandas['location'].unique())
@@ -835,13 +838,9 @@ class DataBase(object):
                 #codename = collections.OrderedDict(zip(uniqloc,list(temp.loc[temp.name_region.isin(uniqloc)]['code_region'])))
                 codename=dict(temp.values)
                 self.slocation = uniqloc
-            elif self.database_type[self.db][1] == 'region' and self.db == 'obepine':
-                 temp = self.geo.get_region_list()[['code_region','name_region']]
-                 mypandas['location'] = mypandas['location'].astype(str)
-                 uniqloc = list(mypandas['location'].unique())
-                 codename = collections.OrderedDict(zip(uniqloc,list(temp.loc[temp.code_region.isin(uniqloc)]['name_region'])))
-                 self.slocation = list(codename.values())
-                 location_is_code = True
+                if self.db == 'obepine':
+                    codename = {v:k for k,v in codename.items()}
+                    location_is_code = True
 
             elif self.database_type[self.db][1] == 'subregion':
                 temp = self.geo_all[['code_subregion','name_subregion']]
@@ -870,6 +869,9 @@ class DataBase(object):
             if self.db != 'dgs':
                 mypandas['codelocation'] =  mypandas['location'].astype(str)
             mypandas['location'] = mypandas['location'].map(codename)
+            if self.db == 'obepine':
+                mypandas = mypandas.dropna(subset=['location'])
+                self.slocation = list(mypandas.codelocation.unique())
             mypandas = mypandas.loc[~mypandas.location.isnull()]
         else:
             mypandas['codelocation'] =  mypandas['location'].map(codename).astype(str)
@@ -1091,13 +1093,22 @@ class DataBase(object):
                 exploded = []
                 a=self.geo.get_data()
                 for i in listloc:
-                    if self.geo.is_region(i):
-                        i = [self.geo.is_region(i)]
-                        tmp = self.geo.get_subregions_from_list_of_region_names(i,output='name')
-                    elif self.geo.is_subregion(i):
-                       tmp = self.geo.is_subregion(i)
+                    if typeloc == 'subregion':
+                        if self.geo.is_region(i):
+                            i = [self.geo.is_region(i)]
+                            tmp = self.geo.get_subregions_from_list_of_region_names(i,output='name')
+                        elif self.geo.is_subregion(i):
+                           tmp = self.geo.is_subregion(i)
+                        else:
+                            raise CoaTypeError('Not subregion nor region ... what is it ?')
+                    elif typeloc == 'region':
+                        tmp = self.geo.get_region_list()
+                        if i.isdigit():
+                            tmp = list(tmp.loc[tmp.code_region==i]['name_region'])
+                        else:
+                            tmp = i
                     else:
-                        raise CoaTypeError('Not subregion nor region ... what is it ?')
+                        raise CoaTypeError('Not subregion nor region requested, don\'t know what to do ?')
                     if exploded:
                         exploded.append(tmp)
                     else:

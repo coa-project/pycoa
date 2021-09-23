@@ -168,7 +168,10 @@ class CocoDisplay:
         else:
             if self.dbld[self.database_name][1] == 'subregion' :
                 trad={}
-                for i in mypandas.clustername.unique():
+                cluster = mypandas.clustername.unique()
+                if isinstance(mypandas.location[0],list):
+                   cluster = [i for i in cluster]
+                for i in cluster:
                     if i == self.dbld[self.database_name][2]:
                         mypandas['permanentdisplay'] = [self.dbld[self.database_name][2]]*len(mypandas)
                     else:
@@ -177,7 +180,8 @@ class CocoDisplay:
                         elif self.geo.is_subregion(i):
                             trad[i] = self.geo.is_subregion(i)#mypandas.loc[mypandas.clustername==i]['codelocation'].iloc[0]
                         else:
-                            CoaError(i+'is not a region nor subregion')
+                            trad[i] = i
+                        trad={k:(v[:3]+'...'+v[-3:] if len(v)>8 else v) for k,v in trad.items()}    
                         mypandas['permanentdisplay'] = mypandas.clustername.map(trad)
             elif self.dbld[self.database_name][1] == 'region' :
                 if all(i == self.dbld[self.database_name][2] for i in mypandas.clustername.unique()):

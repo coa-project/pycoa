@@ -1030,7 +1030,6 @@ class DataBase(object):
             wallname = get_db_list_dict()[self.db][2]
         else:
             kwargs['location'] = kwargs['location']
-
         option = kwargs.get('option', 'fillnan')
         fillnan = True # default
         sumall = False # default
@@ -1048,7 +1047,7 @@ class DataBase(object):
             if not isinstance(kwargs['location'], list):
                 kwargs['location'] = [[kwargs['location']]]
             else:
-                if isinstance([kwargs['location']], list):
+                if isinstance(kwargs['location'][0], list):
                     kwargs['location'] = kwargs['location']
                 else:
                     kwargs['location'] = [kwargs['location']]
@@ -1134,6 +1133,7 @@ class DataBase(object):
 
         pdcluster = pd.DataFrame()
         j=0
+
         if origlistlistloc != None:
             for k,v in dicooriglist.items():
                 tmp  = mainpandas.copy()

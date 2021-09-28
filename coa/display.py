@@ -158,15 +158,15 @@ class CocoDisplay:
             which = mypandas.columns[2]
         else:
             which = mypandas.columns[1]
-        mypandas['codelocation'] = mypandas['codelocation'].apply(lambda x: str(x).replace('[', '').replace(']', '') if len(x)< 10 else x[0]+'...'+x[-1] )
-        #mypandas['clustername'] = mypandas['clustername'].apply(lambda x: x if len(x)< 20 else x.split('-')[0]+'...'+x.split('-')[-1] )
-        mypandas['rolloverdisplay'] = mypandas['location']
-        wallname = self.dbld[self.database_name][2]
 
+        wallname = self.dbld[self.database_name][2]
         if self.dbld[self.database_name][0] == 'WW' :
+            mypandas['codelocation'] = mypandas['codelocation'].apply(lambda x: str(x).replace('[', '').replace(']', '') if len(x)< 10 else x[0]+'...'+x[-1] )
             mypandas['permanentdisplay'] = mypandas.apply(lambda x: x.clustername if self.geo.get_GeoRegion().is_region(x.clustername) else str(x.codelocation), axis = 1)
         else:
             if self.dbld[self.database_name][1] == 'subregion' :
+                mypandas['codelocation'] = mypandas['codelocation'].apply(lambda x: str(x).replace('[', '').replace(']', '') if len(x)< 3 else x[0]+'...'+x[-1] )
+
                 trad={}
                 cluster = mypandas.clustername.unique()
                 if isinstance(mypandas.location[0],list):
@@ -181,13 +181,14 @@ class CocoDisplay:
                             trad[i] = self.geo.is_subregion(i)#mypandas.loc[mypandas.clustername==i]['codelocation'].iloc[0]
                         else:
                             trad[i] = i
-                        trad={k:(v[:3]+'...'+v[-3:] if len(v)>8 else v) for k,v in trad.items()}    
-                        mypandas['permanentdisplay'] = mypandas.clustername.map(trad)
+                        trad={k:(v[:3]+'...'+v[-3:] if len(v)>8 else v) for k,v in trad.items()}
+                        mypandas['permanentdisplay'] = mypandas.codelocation#mypandas.clustername.map(trad)
             elif self.dbld[self.database_name][1] == 'region' :
                 if all(i == self.dbld[self.database_name][2] for i in mypandas.clustername.unique()):
                     mypandas['permanentdisplay'] = [self.dbld[self.database_name][2]]*len(mypandas)
                 else:
                     mypandas['permanentdisplay'] = mypandas.codelocation
+        mypandas['rolloverdisplay'] = mypandas['location']
         input_dico['which'] = which
         var_displayed = which
         title = kwargs.get('title', None)

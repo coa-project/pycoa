@@ -165,8 +165,11 @@ class CocoDisplay:
             mypandas['permanentdisplay'] = mypandas.apply(lambda x: x.clustername if self.geo.get_GeoRegion().is_region(x.clustername) else str(x.codelocation), axis = 1)
         else:
             if self.dbld[self.database_name][1] == 'subregion' :
-                if self.dbld[self.database_name][0] not in ['DEU','GBR','MYS']:
-                    mypandas['codelocation'] = mypandas['codelocation'].apply(lambda x: str(x).replace('[', '').replace(']', '') if len(x)< 3 else x[0]+'...'+x[-1] )
+                #if self.dbld[self.database_name][0] not in ['DEU','GBR','MYS']:
+                if isinstance(mypandas['codelocation'][0],list):
+                    mypandas['codelocation'] = mypandas['codelocation'].apply(lambda x: str(x).replace("'", '')\
+                                                 if len(x)<5 else '['+str(x[0]).replace("'", '')+',...,'+str(x[-1]).replace("'", '')+']')
+
                 trad={}
                 cluster = mypandas.clustername.unique()
                 if isinstance(mypandas.location[0],list):
@@ -707,18 +710,20 @@ class CocoDisplay:
                 line_style = ['solid', 'dashed', 'dotted', 'dotdash']
                 for loc in list(mypandas.clustername.unique()):
                     mypandas_filter = mypandas.loc[mypandas.clustername == loc].reset_index(drop = True)
-                    leg = CocoDisplay.dict_shorten_loc(mypandas_filter.permanentdisplay)
+                    src = ColumnDataSource(mypandas_filter)
+                    leg = mypandas_filter.permanentdisplay[0]
 
-                    if not full_legend:
-                        if len(leg)>12 and leg != keepnamelikeit and not leg.startswith('owid_'):
-                            leg=leg[:5]+'...'+leg[-5:]
+                    #leg = CocoDisplay.dict_shorten_loc(mypandas_filter.permanentdisplay)
+                    #if not full_legend:
+                    #    if len(leg)>12 and leg != keepnamelikeit and not leg.startswith('owid_'):
+                    #        leg=leg[:5]+'...'+leg[-5:]
 
                     if len(input_field)>1:
-                        leg = CocoDisplay.dict_shorten_loc(mypandas_filter.permanentdisplay[0]) + ', ' + val
+                        leg += mypandas_filter.permanentdisplay[0] + ', ' + val
                         color = self.scolors[i]
                     else:
                         color = mypandas_filter.colors[i]
-                    r = standardfig.line(x = 'date', y = val, source = ColumnDataSource(mypandas_filter),
+                    r = standardfig.line(x = 'date', y = val, source = src,
                                      color = color, line_width = 3,
                                      legend_label = leg,
                                      hover_line_width = 4, name = val, line_dash=line_style[i])
@@ -1366,10 +1371,11 @@ class CocoDisplay:
         returnchars = [x for x in loc if x in chars]
         label_dict = {}
         keepsizename=['United Kingdom','European Union']
-        if returnchars == '-':
-                label_dict = {(len(loc) - k) : (v if len(v)<10  else v.split(returnchars)[0]+'...'+v.split(returnchars)[-1]) for k, v in enumerate(loc) }
-        else:
-            label_dict = {(len(loc) - k) : (v if len(v)<12 or v in keepsizename or v.startswith("owid_") else v[:7]+'...'+v[-7:]) for k, v in enumerate(loc) }
+        #if returnchars == '-':
+        #        label_dict = {(len(loc) - k) : (v if len(v)<10  else v.split(returnchars)[0]+'...'+v.split(returnchars)[-1]) for k, v in enumerate(loc) }
+        #else:
+        #    label_dict = {(len(loc) - k) : (v if len(v)<12 or v in keepsizename or v.startswith("owid_") else v[:7]+'...'+v[-7:]) for k, v in enumerate(loc) }
+        label_dict = {k: v for k, v in enumerate(loc) }
         new_panels = []
         for i in range(n):
             fig = panels[i].child

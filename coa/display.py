@@ -165,8 +165,8 @@ class CocoDisplay:
             mypandas['permanentdisplay'] = mypandas.apply(lambda x: x.clustername if self.geo.get_GeoRegion().is_region(x.clustername) else str(x.codelocation), axis = 1)
         else:
             if self.dbld[self.database_name][1] == 'subregion' :
-                mypandas['codelocation'] = mypandas['codelocation'].apply(lambda x: str(x).replace('[', '').replace(']', '') if len(x)< 3 else x[0]+'...'+x[-1] )
-
+                if self.dbld[self.database_name][0] not in ['DEU','GBR','MYS']:
+                    mypandas['codelocation'] = mypandas['codelocation'].apply(lambda x: str(x).replace('[', '').replace(']', '') if len(x)< 3 else x[0]+'...'+x[-1] )
                 trad={}
                 cluster = mypandas.clustername.unique()
                 if isinstance(mypandas.location[0],list):

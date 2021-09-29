@@ -115,12 +115,9 @@ class CocoDisplay:
                    geopan['location'] = [geo.to_standard(c)[0] for c in allcountries]
                    geopan = info.add_field(field=['geometry'],input=geopan ,geofield='location')
                    geopan = gpd.GeoDataFrame(geopan, geometry=geopan.geometry, crs="EPSG:4326")
-
                    geopan = geopan[geopan.location != 'Antarctica']
                    geopan = geopan.dropna().reset_index(drop=True)
-
                    self.location_geometry  = geopan
-                   #self.boundary = geopan['geometry'].total_bounds
         except:
             raise CoaTypeError('What data base are you looking for ?')
 
@@ -165,7 +162,6 @@ class CocoDisplay:
             mypandas['permanentdisplay'] = mypandas.apply(lambda x: x.clustername if self.geo.get_GeoRegion().is_region(x.clustername) else str(x.codelocation), axis = 1)
         else:
             if self.dbld[self.database_name][1] == 'subregion' :
-                #if self.dbld[self.database_name][0] not in ['DEU','GBR','MYS']:
                 if isinstance(mypandas['codelocation'][0],list):
                     mypandas['codelocation'] = mypandas['codelocation'].apply(lambda x: str(x).replace("'", '')\
                                                  if len(x)<5 else '['+str(x[0]).replace("'", '')+',...,'+str(x[-1]).replace("'", '')+']')
@@ -192,6 +188,17 @@ class CocoDisplay:
                 else:
                     mypandas['permanentdisplay'] = mypandas.codelocation
         mypandas['rolloverdisplay'] = mypandas['location']
+
+        uniqloc = mypandas.clustername.unique()
+        if len(uniqloc) < 5:
+            colors = self.scolors
+        else:
+            colors = self.lcolors
+        colors = itertools.cycle(colors)
+        dico_colors = {i: next(colors) for i in uniqloc}
+        mypandas = mypandas.copy()
+        mypandas.loc[:,'colors'] = mypandas['clustername'].map(dico_colors)#(pd.merge(mypandas, country_col, on='location'))
+
         input_dico['which'] = which
         var_displayed = which
         title = kwargs.get('title', None)
@@ -207,8 +214,6 @@ class CocoDisplay:
             raise CoaTypeError("Sorry all data are NaN for " + which)
         else:
             input_dico['when_end'] = mypandas.dropna(subset=[which]).date.max()
-            #input_dico['when_end'] = mypandas.date.max()
-
         if when:
             input_dico['when_beg'], input_dico['when_end'] = extract_dates(when)
             if input_dico['when_beg'] == dt.date(1, 1, 1):
@@ -224,7 +229,6 @@ class CocoDisplay:
                 print('Requested date below available one, take', input_dico['when_beg'])
                 input_dico['when_end'] = input_dico['when_beg']
 
-#        when_end_change = CocoDisplay.changeto_nonan_date(mypandas, input_dico['when_end'], var_displayed)
         when_end_change = CocoDisplay.changeto_nonull_date(mypandas, input_dico['when_end'], var_displayed)
         if when_end_change != input_dico['when_end']:
             input_dico['when_end'] = when_end_change
@@ -258,8 +262,6 @@ class CocoDisplay:
                     titlebar = which + ', ' + 'cumulative sum ' + title_temporal
                 else:
                     raise CoaTypeError('what argument is not daily, daily, cumul nor weekly . See help.')
-                    # else:
-                    #    titlebar = which + ' (' + what +  ' @ ' + when.strftime('%d/%m/%Y') + ')'
                 var_displayed = what
 
         vendors = kwargs.get('tile', 'openstreet')
@@ -303,10 +305,8 @@ class CocoDisplay:
                                           x_units='screen', y_units='screen',
                                           text_font_size='1.5vh', background_fill_color='white', background_fill_alpha=.75,
                                           text=textcopyright)
-
         fig.add_layout(self.logo_db_citation)
         return fig
-
     ###################### BEGIN Static Methods ##################
     @staticmethod
     def get_tile(tilename, which):
@@ -325,7 +325,7 @@ class CocoDisplay:
         else:
             CoaKeyError('Don\'t know you tile ... take default one')
         return tile
-
+    ######################
     @staticmethod
     def dict_shorten_loc(toshort):
         '''
@@ -341,7 +341,6 @@ class CocoDisplay:
             s = ''
         #if type(toshort) != list:
         #    print('That is weird ...', toshort, 'not str nor list')
-
         for val in toshort:
             if not isinstance(val,str):
                 val= str(val)
@@ -362,7 +361,7 @@ class CocoDisplay:
             if isinstance(s, list):
                 s=s[0]
         return s
-
+    ######################
     @staticmethod
     def bokeh_legend(bkfigure):
         toggle_legend_js = CustomJS(args=dict(leg=bkfigure.legend[0]),
@@ -377,7 +376,7 @@ class CocoDisplay:
         }
         """)
         bkfigure.js_on_event(events.DoubleTap, toggle_legend_js)
-
+    ######################
     @staticmethod
     def min_max_range(a_min, a_max):
         """ Return a cleverly rounded min and max giving raw min and raw max of data.
@@ -424,7 +423,7 @@ class CocoDisplay:
             min_r = (1 - k) * min_r
 
         return (min_r, max_r)
-
+    ######################
     @staticmethod
     def save_map2png(map=None, pngfile='map.png'):
         """
@@ -438,7 +437,7 @@ class CocoDisplay:
         img.thumbnail(size, Image.ANTIALIAS)
         img.save(pngfile)
         print(pngfile, ' is now save ...')
-
+    ######################
     @staticmethod
     def save_pandas_as_png(df=None, pngfile='pandas.png'):
         source = ColumnDataSource(df)
@@ -452,7 +451,7 @@ class CocoDisplay:
         data_table = DataTable(source=source, columns=columns_for_table,
                                height_policy="auto", width_policy="auto", index_position=None)
         export_png(data_table, filename=pngfile)
-
+    ######################
     @staticmethod
     def changeto_nonan_date(df=None, when_end=None, field=None):
         if not isinstance(when_end, dt.date):
@@ -467,7 +466,7 @@ class CocoDisplay:
             verb(str(when_end) + ': all the value seems to be nan! I will find an other previous date.\n' +
                  'Here the date I will take: ' + str(when_end - dt.timedelta(days=j - 1)))
         return when_end - dt.timedelta(days=j - 1)
-
+    ######################
     @staticmethod
     def changeto_nonull_date(df=None,when_end = None, field=None):
         if not isinstance(when_end, dt.date):
@@ -486,16 +485,16 @@ class CocoDisplay:
                 verb(str(when_end) + ': all the value seems to be 0! I will find an other previous date.\n' +
                      'Here the date I will take: ' + str(when_end - dt.timedelta(days=j - 1)))
             return when_end - dt.timedelta(days=j - 1)
-
+    ######################
     @staticmethod
     def get_utcdate(date):
         return (date - dt.date(1970, 1, 1)).total_seconds() * 1000.
-
+    ######################
     @staticmethod
     def test_all_val_null(s):
         a = s.to_numpy()
         return (a == 0).all()
-
+    ######################
     @staticmethod
     def get_polycoords(geopandasrow):
         """
@@ -511,7 +510,7 @@ class CocoDisplay:
             for ea in geometry:
                 all.append(list(ea.exterior.coords))
             return all
-
+    ######################
     @staticmethod
     def wgs84_to_web_mercator(tuple_xy):
         """
@@ -527,7 +526,7 @@ class CocoDisplay:
             lat = tuple_xy[1]
         y = np.log(np.tan((90 + lat) * np.pi / 360.0)) * k
         return x, y
-
+    ######################
     @staticmethod
     def rollerJS():
         return CustomJSHover(code="""
@@ -555,7 +554,7 @@ class CocoDisplay:
                   }
                   return s;
                 """)
-    #@staticmethod
+    ###################### END Static Methods ##################
     def add_columns_for_pie_chart(self,df,column_name):
         r = 0.9
         df = df.copy()
@@ -578,7 +577,6 @@ class CocoDisplay:
         df.loc[df['diff']<= np.pi/20,'textdisplayed']=''
         df.loc[df['diff']<= np.pi/20,'textdisplayed2']=''
         return df
-    ###################### END Static Methods ##################
     ###################### BEGIN Plots ##################
     def decoplot(func):
         """
@@ -597,31 +595,10 @@ class CocoDisplay:
             dict_filter_data = defaultdict(list)
             ax_type = ['linear', 'log']
             tooltips = 'Date: @date{%F} <br>  $name: @$name'
-
-            uniqloc = mypandas.clustername.unique()
-
-            if len(uniqloc) < 5:
-                colors = self.scolors
-            else:
-                colors = self.lcolors
-            colors = itertools.cycle(colors)
-            dico_colors = {i: next(colors) for i in uniqloc}
-            mypandas = mypandas.copy()
-            mypandas.loc[:,'colors'] = mypandas['clustername'].map(dico_colors)#(pd.merge(mypandas, country_col, on='location'))
-
+            #uniqloc = mypandas.clustername.unique()
             if 'location' in mypandas.columns:
                 tooltips = 'Location: @codelocation <br> Date: @date{%F} <br>  $name: @$name'
                 new = pd.DataFrame(columns = mypandas.columns)
-                #for i in uniqcodeloc:
-                #        pos = mypandas.loc[mypandas.codelocation == i].index
-                #
-                #           if type(i) == int or len(i) == 3:
-                #            new = new.append(mypandas.iloc[pos])
-                #        else:
-                #            coun = mypandas.loc[mypandas.codelocation == i]['location'].unique()
-                #            new = new.append(mypandas.loc[(mypandas.codelocation == i) & (mypandas.location == coun[0])])
-
-                #mypandas = new
                 location_ordered_byvalues = list(
                     mypandas.loc[mypandas.date == dico['when_end']].sort_values(by=input_field, ascending=False)[
                         'clustername'].unique())
@@ -638,16 +615,12 @@ class CocoDisplay:
                 list_max = []
                 for i in input_field:
                     list_max.append(max(mypandas.loc[mypandas.clustername.isin(location_ordered_byvalues)][i]))
-
                 if len([x for x in list_max if not np.isnan(x)]) > 0:
                     amplitude = (np.nanmax(list_max) - np.nanmin(list_max))
                     if amplitude > 10 ** 4:
                         ax_type.reverse()
-            #mypandas = mypandas.loc[mypandas.date>mypandas.date.min()+dt.timedelta(days=1)] # skype first day
-            #mypandas.loc[:,input_field] = mypandas.groupby(['clustername']).apply(lambda x: x.bfill()).apply(lambda x: x.ffill())
             hover_tool = HoverTool(tooltips=tooltips, formatters={'@date': 'datetime'})
             return func(self, mypandas, dico, input_field, hover_tool, ax_type, **kwargs)
-
         return generic_plot
 
     @decoplot
@@ -705,19 +678,11 @@ class CocoDisplay:
             r_list=[]
             maxou=-1000
             for val in input_field:
-                #if val.startswith('cur_idx_tx_') and val != 'cur_idx_tx_incid':
-                #    standardfig.yaxis[0].formatter = PrintfTickFormatter(format = "0 %'")
                 line_style = ['solid', 'dashed', 'dotted', 'dotdash']
                 for loc in list(mypandas.clustername.unique()):
                     mypandas_filter = mypandas.loc[mypandas.clustername == loc].reset_index(drop = True)
                     src = ColumnDataSource(mypandas_filter)
                     leg = mypandas_filter.permanentdisplay[0]
-
-                    #leg = CocoDisplay.dict_shorten_loc(mypandas_filter.permanentdisplay)
-                    #if not full_legend:
-                    #    if len(leg)>12 and leg != keepnamelikeit and not leg.startswith('owid_'):
-                    #        leg=leg[:5]+'...'+leg[-5:]
-
                     if len(input_field)>1:
                         leg += mypandas_filter.permanentdisplay[0] + ', ' + val
                         color = self.scolors[i]
@@ -729,7 +694,6 @@ class CocoDisplay:
                                      hover_line_width = 4, name = val, line_dash=line_style[i])
                     r_list.append(r)
                     maxou=max(maxou,np.nanmax(mypandas_filter[val].values))
-                    #print(maxou,mypandas_filter[val].values)
                 i += 1
             for r in r_list:
                 label = r.name
@@ -742,13 +706,6 @@ class CocoDisplay:
             if axis_type == 'linear':
                 if maxou  < 1e4 :
                     standardfig.yaxis.formatter = BasicTickFormatter(use_scientific=False)
-                #standardfig.yaxis.formatter = FuncTickFormatter(code="""
-                #    parts = tick.toString().split(".");
-                #    parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, " ");
-                #    return parts.join(".");
-                #""")
-
-                #standardfig.yaxis[0].formatter = PrintfTickFormatter(format = "%4.2e")
 
             standardfig.legend.label_text_font_size = "12px"
             panel = Panel(child=standardfig, title = axis_type)
@@ -767,21 +724,13 @@ class CocoDisplay:
 
     @decoplot
     def pycoa_scrollingmenu(self, mypandas, dico, input_field, hover_tool, ax_type, **kwargs):
-        #if dico['locsumall']:
-        #    raise CoaKeyError('For coherence \'locsumall\' can not be called with scrolling_menu ...')
-        #tooltips = 'Date: @date{%F} <br>  $name: @$name'
-        #hover_tool = HoverTool(tooltips=tooltips, formatters={'@date': 'datetime'})
-
         uniqloc = mypandas.clustername.unique().to_list()
         if 'location' in mypandas.columns:
-            #tooltips = 'Location: @location <br> Date: @date{%F} <br>  $name: @$name'
-
             if len(uniqloc) < 2:
                 raise CoaTypeError('What do you want me to do ? You have selected, only one country.'
                                    'There is no sens to use this method. See help.')
-            # shorten_loc = list(CocoDisplay.dict_shorten_loc(loc).values())
-        mypandas = mypandas.loc[(mypandas['date'] >= dico['when_beg']) & (mypandas['date'] <= dico['when_end'])]
 
+        mypandas = mypandas.loc[(mypandas['date'] >= dico['when_beg']) & (mypandas['date'] <= dico['when_end'])]
         mypandas[input_field[0]] = mypandas[input_field[0]].astype(float)
 
         mypandas = mypandas[['date', 'clustername', input_field[0]]]
@@ -858,15 +807,6 @@ class CocoDisplay:
                     input_field = dico['input_field'][0]
 
             uniqloc = mypandas.clustername.unique()
-            if len(uniqloc) < 5:
-                colors = self.scolors
-            else:
-                colors = self.lcolors
-
-            colors = itertools.cycle(colors)
-            dico_colors = {i: next(colors) for i in uniqloc}
-
-            mypandas['colors'] = mypandas['clustername'].map(dico_colors)
 
             if func.__name__ != 'pycoa_mapfolium' and  func.__name__ != 'innerdecopycoageo':
                     mypandas = mypandas.drop_duplicates(["date", "codelocation","clustername"])
@@ -874,7 +814,6 @@ class CocoDisplay:
             geopdwd = mypandas
 
             geopdwd = geopdwd.sort_values(by = input_field, ascending=False)
-            #geopdwd = geopdwd.dropna(subset = [input_field])
             geopdwd = geopdwd.reset_index(drop = True)
             orientation = kwargs.get('orientation', 'horizontal')
 
@@ -890,8 +829,6 @@ class CocoDisplay:
 
             wanted_date = date_slider.value_as_datetime.date()
             geopdwd_filter = geopdwd_filter.loc[geopdwd_filter.date == wanted_date]
-
-            # geopdwd_filter = geopdwd_filter.drop(columns=['date'])
             geopdwd_filter = geopdwd_filter.reset_index(drop = True)
 
             if func.__name__ == 'pycoa_mapfolium' or func.__name__ == 'innerdecomap' or func.__name__ == 'innerdecopycoageo':
@@ -916,8 +853,6 @@ class CocoDisplay:
                             new = perloc
                         else:
                             new = new.append(perloc)
-                        #if type(i) == str and len(i) != 3:
-                        #    new.iloc[n, 0] = i
                         n += 1
 
                 geopdwd_filter = new.reset_index(drop=True)
@@ -947,11 +882,8 @@ class CocoDisplay:
             raise CoaKeyError('location column name is not present, this is mandatory')
 
         pycoa_pandas = pycoa_pandas.set_index('location')
-        # pycoa_pandas = pycoa_pandas.apply(lambda x: (x-x.min())/(x.max()-x.min()))
         pycoa_pandas = pycoa_pandas.apply(lambda x: (x - x.min()) / (x.max() - x.min()))
-        # apply(lambda x: (x-x.min()/(x.max()-x.min())))
-        # normalized_dict = { pycoa_pandas.apply(lambda x: x(x-x.min())/(x.max()-x.min()))}
-        # print(pycoa_pandas['tot_dc'].apply(norm))
+
         pycoa_pandas.columns.name = 'data'
         pycoa_pandas = pycoa_pandas.stack().rename("value").reset_index()
 
@@ -976,7 +908,6 @@ class CocoDisplay:
 
         standardfig.add_tools(HoverTool(
             tooltips=[('location', '@rolloverdisplay'), ('value', '@value')],
-            #formatters={'location':'printf','@{'+input_field+'}': cases_custom,},
             point_policy="snap_to_data"))
         return standardfig
 
@@ -1132,14 +1063,11 @@ class CocoDisplay:
                 geopdwd_filter['horihistotextx'] = geopdwd_filter['right']
                 geopdwd_filter['horihistotext'] = [ '{:.3g}'.format(float(i)) if float(i)>1.e4 else round(float(i),2) for i in geopdwd_filter['right'] ]
 
-                #geopdwd_filter = geopdwd_filter.loc[geopdwd_filter['cases']>0]
-
             if func.__name__ == 'pycoa_pie' :
                 geopdwd_filter = self.add_columns_for_pie_chart(geopdwd_filter,input_field)
                 geopdwd = self.add_columns_for_pie_chart(geopdwd,input_field)
 
             source = ColumnDataSource(data = geopdwd)
-            #mypandas_filter = geopdwd_filter.sort_values(by = input_field, ascending = False)
             mypandas_filter = geopdwd_filter
             srcfiltered = ColumnDataSource(data = mypandas_filter)
             max_value = mypandas_filter[input_field].max()
@@ -1162,9 +1090,6 @@ class CocoDisplay:
                     if not mypandas_filter[mypandas_filter[input_field] < 0.].empty:
                         print('Some value are negative, can\'t display log scale in this context')
                     else:
-                        #min_range_val = 0.01
-                        #if min_value >= 0:
-                        #    min_range_val = 10 ** np.floor(np.log10(min_value_gt0))
                         if func.__name__ == 'pycoa_horizonhisto' :
                             standardfig.x_range = Range1d(0.01, 50 * max_value)
                             srcfiltered.data['left'] = [0.01] * len(srcfiltered.data['right'])
@@ -1174,9 +1099,7 @@ class CocoDisplay:
                         raise CoaKeyError('Some values are negative, can\'t display a Pie chart, try histo by location')
                     standardfig.plot_width = self.plot_height
                     standardfig.plot_height = self.plot_height
-                #if date_slider and mypandas_filter[mypandas_filter[input_field] < 0].empty:
                 if date_slider:
-                    #date_slider.height = int(0.8*self.plot_height)
                     date_slider.width = int(0.8*self.plot_width)
                     callback = CustomJS(args = dict(source = source,
                                                   source_filter = srcfiltered,
@@ -1371,10 +1294,6 @@ class CocoDisplay:
         returnchars = [x for x in loc if x in chars]
         label_dict = {}
         keepsizename=['United Kingdom','European Union']
-        #if returnchars == '-':
-        #        label_dict = {(len(loc) - k) : (v if len(v)<10  else v.split(returnchars)[0]+'...'+v.split(returnchars)[-1]) for k, v in enumerate(loc) }
-        #else:
-        #    label_dict = {(len(loc) - k) : (v if len(v)<12 or v in keepsizename or v.startswith("owid_") else v[:7]+'...'+v[-7:]) for k, v in enumerate(loc) }
         label_dict = {k: v for k, v in enumerate(loc) }
         new_panels = []
         for i in range(n):
@@ -1449,8 +1368,6 @@ class CocoDisplay:
         Known issue: format for scale can not be changed. When data value are important
         overlaped display appear
         """
-        #geopdwd_filtered = gpd.GeoDataFrame(geopdwd_filtered, geometry=geopdwd_filtered.geometry, crs="EPSG:4326")
-
         geopdwd['cases'] = geopdwd[input_field]
         geopdwd_filtered['cases'] = geopdwd_filtered[input_field]
 
@@ -1515,10 +1432,6 @@ class CocoDisplay:
             else:
                 return color_scale(value)
 
-        #if len(uniqloc) > 1:
-        #    displayed = 'rolloverdisplay'
-        #else:
-        #    displayed = 'codelocation'
         displayed = 'rolloverdisplay'
         folium.GeoJson(
             geopdwd_filtered,
@@ -1549,7 +1462,6 @@ class CocoDisplay:
             geopdwd_filtered['cases'] = geopdwd_filtered[input_field]
             geopdwd_filtered = gpd.GeoDataFrame(geopdwd_filtered, geometry=geopdwd_filtered.geometry, crs="EPSG:4326")
             geopdwd = geopdwd.sort_values(by=['clustername', 'date'], ascending = [True, False])
-            #geopdwd = geopdwd.drop(columns=['date'])
 
             geopdwd_filtered = geopdwd_filtered.sort_values(by=['clustername', 'date'], ascending = [True, False]).drop(columns=['date', 'colors'])
             new_poly = []
@@ -1596,10 +1508,8 @@ class CocoDisplay:
             uniqloc = list(geopdwd_filtered.clustername.unique())
 
             if maplabel or func.__name__ == 'pycoa_sparkmap':
-                #dicocolors=geopdwd[['location','colors']].drop_duplicates().to_dict('records')
                 geopdwd_filtered['centroidx'] = geopdwd_filtered['geometry'].centroid.x
                 geopdwd_filtered['centroidy'] = geopdwd_filtered['geometry'].centroid.y
-                #if dico['locsumall']:
                 locsum = geopdwd_filtered.clustername.unique()
                 for i in locsum:
                     cases = geopdwd_filtered.loc[geopdwd_filtered.clustername == i]['cases'].values[0]
@@ -1614,8 +1524,6 @@ class CocoDisplay:
                 dfLabel['cases'] = dfLabel['cases'].round(2)
                 dfLabel = (dfLabel.groupby(['cases','clustername','spark']).mean())
                 dfLabel = dfLabel.reset_index()
-                #dicocolors=pd.Series(geopdwd.colors.values,index=geopdwd.location.values).drop_duplicates().to_dict()
-                #dfLabel['colors'] = dfLabel['location'].map(dicocolors)
                 sourcemaplabel = ColumnDataSource(dfLabel)
 
             if self.dbld[self.database_name][0] in ['FRA','ESP','PRT'] and all(len(l) == 2 for l in geopdwd_filtered.codelocation.unique()):
@@ -1643,7 +1551,6 @@ class CocoDisplay:
                                            x_axis_type="mercator", y_axis_type="mercator", title=dico['titlebar'],
                                            copyrightposition = copyrightposition)
 
-            #if func.__name__ == 'pycoa_map':
             wmt = WMTSTileSource(
                         url=dico['tile'])
             standardfig.add_tile(wmt)
@@ -1651,8 +1558,6 @@ class CocoDisplay:
             geopdwd_filtered = geopdwd_filtered[['cases','geometry','location','codelocation','rolloverdisplay']]
             if self.dbld[self.database_name][0] == 'BEL' :
                 reorder = list(geopdwd_filtered.location.unique())
-                #reorder = [i for i in reorder[1:]]
-                #reorder.append('00000')
                 geopdwd_filtered = geopdwd_filtered.set_index('location')
                 geopdwd_filtered = geopdwd_filtered.reindex(index = reorder)
                 geopdwd_filtered = geopdwd_filtered.reset_index()
@@ -1763,10 +1668,6 @@ class CocoDisplay:
             standardfig.add_layout(labels)
 
         cases_custom = CocoDisplay.rollerJS()
-        #if len(uniqloc) > 1:
-        #    loctips = ('location', '@location')
-        #else:
-            #loctips = ('location', '@codelocation')
         loctips = ('location', '@rolloverdisplay')
         standardfig.add_tools(HoverTool(
             tooltips = [loctips, (input_field, '@{' + 'cases' + '}' + '{custom}'), ],
@@ -1782,9 +1683,6 @@ class CocoDisplay:
         uniqloc = list(geopdwd_filtered.name_subregion.unique())
         boundary = geopdwd_filtered.loc[geopdwd_filtered.name_subregion.isin(uniqloc)]['geometry'].total_bounds
         minx, miny, maxx, maxy = boundary
-
-        #(minx, miny) = CocoDisplay.wgs84_to_web_mercator((minx, miny))
-        #(maxx, maxy) = CocoDisplay.wgs84_to_web_mercator((maxx, maxy))
 
         standardfig = self.standardfig(x_range=(minx, maxx), y_range=(miny, maxy),
                                        x_axis_type="mercator", y_axis_type="mercator")
@@ -1839,8 +1737,6 @@ class CocoDisplay:
     @decopycoageo
     @decomap
     def pycoa_sparkmap(self,input_field, date_slider, maplabel, dico, geopdwd, geopdwd_filtered,standardfig,sourcemaplabel):
-        #json_data = json.dumps(json.loads(geopdwd_filtered.to_json()))
-        #geopdwd_filtered = GeoJSONDataSource(geojson=json_data)
         standardfig.xaxis.visible = False
         standardfig.yaxis.visible = False
         standardfig.xgrid.grid_line_color = None
@@ -1903,9 +1799,6 @@ class CocoDisplay:
                         days=["%d %b %y"], months=["%d %b %y"], years=["%d %b %y"])
                     fig.xaxis.major_label_orientation = np.pi / 4
                     fig.xaxis.ticker.desired_num_ticks = 10
-
-                    # tot_type_country=self.p.get_stats(country=country,type='Cumul',which='deaths')[-1]
-
                     fig.legend.location = "bottom_left"
                     fig.legend.title_text_font_style = "bold"
                     fig.legend.title_text_font_size = "5px"

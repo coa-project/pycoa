@@ -1293,8 +1293,7 @@ class CocoDisplay:
         chars = [' ','-']
         returnchars = [x for x in loc if x in chars]
         label_dict = {}
-        keepsizename=['United Kingdom','European Union']
-        label_dict = {k: v for k, v in enumerate(loc) }
+        label_dict = {(len(loc) - k) : v for k, v in enumerate(loc) }
         new_panels = []
         for i in range(n):
             fig = panels[i].child

@@ -1,5 +1,10 @@
 #  PyCoA version v2 <img src="https://github.com/coa-project/coa-project.github.io/blob/main/fig/logo-anime.gif" width="140px" align=bottom > 
 
+[![forthebadge made-with-python](http://ForTheBadge.com/images/badges/made-with-python.svg)](https://www.python.org/)
+[![Made withJupyter](https://img.shields.io/badge/Made%20with-Jupyter-orange?style=for-the-badge&logo=Jupyter)](https://jupyter.org/try)
+![GitHub last commit](https://img.shields.io/github/last-commit/pycoa/coa/dev?style=for-the-badge)
+![GitHub](https://img.shields.io/github/license/pycoa/coa?style=for-the-badge)
+
 _Avril 2020 / Mars 2021_
 
 [<img src="https://github.com/coa-project/coa-project.github.io/raw/main/fig/UK.png" height="14px" alt="UK flag"> English  version ](https://github.com/coa-project/pycoa)
@@ -7,7 +12,7 @@ _Avril 2020 / Mars 2021_
 [<img src="https://github.com/coa-project/coa-project.github.io/raw/main/fig/FR.png" height="14px" alt="FR flag"> Version française ](https://github.com/coa-project/pycoa/blob/main/README_FR.md)
 
 <center>
-<a href="https://github.com/coa-project/coa-project.github.io/raw/main/fig/pycoa_v2.0_mapworld.html" target="_blank"><img src="https://github.com/coa-project/coa-project.github.io/raw/main/fig/pycoa_v2.0_mapworld.png"></a>
+<a href="https://github.com/coa-project/coa-project.github.io/raw/main/fig/mapFranceVariant.html" target="_blank"><img src="https://github.com/coa-project/coa-project.github.io/raw/main/fig/mapFranceVariant.png"></a>
 </center>
 
 `PyCoA` (Python Covid Analysis) est un ensemble de code Python™ qui fournit :

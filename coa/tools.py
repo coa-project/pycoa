@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """Project : PyCoA - Copyright ©pycoa.fr
-Date :    april 2020 - february 2021
+Date :    april 2020 - march 2021
 Authors : Olivier Dadoun, Julien Browaeys, Tristan Beau
 License: See joint LICENSE file
 
@@ -12,7 +12,7 @@ This is the PyCoA tools module to be considered as a swiss knife list of functio
 One find function for
  - verbose or warning mode management.
  - kwargs analysis
- - filling nan values of given pandas 
+ - filling nan values of given pandas
  - date parsing validation
  - automatic file caching system
 
@@ -31,8 +31,9 @@ from tempfile import gettempdir
 from getpass import getuser
 from zlib import crc32
 from urllib.parse import urlparse
+import unidecode
 
-from coa.error import CoaKeyError,CoaTypeError,CoaConnectionError,CoaNotManagedError
+from coa.error import CoaKeyError, CoaTypeError, CoaConnectionError, CoaNotManagedError
 
 # testing if coadata is available
 import importlib
@@ -45,14 +46,25 @@ if _coacache_module_info != None:
 _verbose_mode = 1 # default
 
 # Known db
-_db_list_dict = {'jhu':'WW',\
-    'owid':'WW',\
-    'jhu-usa':'USA',\
-    'spf':'FRA',\
-    'opencovid19':'FRA',\
-    'dpc':'ITA',\
-    'covidtracking':'USA',\
-    'covid19india':'IND' }
+_db_list_dict = {'jhu': ['WW','nation','World'],
+    'owid': ['WW','nation','World'],
+    'jhu-usa': ['USA','subregion','United States of America'],
+    'spf': ['FRA','subregion','France'],
+    'spfnational': ['WW','nation','France'],
+    'opencovid19': ['FRA','subregion','France'],
+    'opencovid19national': ['WW','nation','France'],
+    'dpc': ['ITA','region','Italy'],
+    'covidtracking': ['USA','subregion','United States of America'],
+    'covid19india': ['IND','region','India'],
+    'rki':['DEU','subregion','Germany'],
+    'escovid19data':['ESP','subregion','Spain'],
+    'phe':['GBR','subregion','United Kingdom'],
+    'sciensano':['BEL','region','Belgium'],
+    'dgs':['PRT','region','Portugal'],
+    'obepine':['FRA','region','France'],
+    'moh':['MYS','subregion','Singapore'],
+    #'minciencia':['CHL','subregion','Chile']
+    }
 
 # ----------------------------------------------------
 # --- Usefull functions for pycoa --------------------
@@ -61,6 +73,7 @@ _db_list_dict = {'jhu':'WW',\
 def get_db_list_dict():
     """Return db list dict"""
     return _db_list_dict
+
 
 def get_verbose_mode():
     """Return the verbose mode
@@ -88,7 +101,7 @@ def verb(*args):
     if _verbose_mode > 1:
         print(*args)
 
-def kwargs_test(given_args,expected_args,error_string):
+def kwargs_test(given_args, expected_args, error_string):
     """Test that the list of kwargs is compatible with expected args. If not
     it raises a CoaKeyError with error_string.
     """
@@ -104,10 +117,15 @@ def kwargs_test(given_args,expected_args,error_string):
 
     return True
 
-def fill_missing_dates(p,date_field='date',loc_field='location',d1=None,d2=None):
+def tostdstring(s):
+    """Standardization of string for country,region or subregion tests
+    """
+    return unidecode.unidecode(' '.join(s.replace('-',' ').split())).upper()
+
+def fill_missing_dates(p, date_field='date', loc_field='location', d1=None, d2=None):
     """Filling the input pandas dataframe p with missing dates
     """
-    if not isinstance(p,pandas.DataFrame):
+    if not isinstance(p, pandas.DataFrame):
         raise CoaTypeError("Expecting input p as a pandas dataframe.")
     if not date_field in p.columns:
         raise CoaKeyError("The date_field is not a proper column of input pandas dataframe.")
@@ -128,8 +146,8 @@ def fill_missing_dates(p,date_field='date',loc_field='location',d1=None,d2=None)
 
     idx = pandas.date_range(d1, d2, freq = "D")
     idx = idx.date
-    all_loc=list(p[loc_field].unique())
 
+    all_loc=list(p[loc_field].unique())
     pfill=pandas.DataFrame()
     for l in all_loc:
         pp=p[p[loc_field]==l]
@@ -137,9 +155,9 @@ def fill_missing_dates(p,date_field='date',loc_field='location',d1=None,d2=None)
         pp2.index = pandas.DatetimeIndex(pp2.index)
         pp3 = pp2.reindex(idx,fill_value=numpy.nan)#pandas.NA)
         pp3['location'] = pp3['location'].fillna(l)  #pp3['location'].fillna(method='bfill')
-        pp3['codelocation'] = pp3['codelocation'].fillna(method='bfill')
-        pp3['codelocation'] = pp3['codelocation'].fillna(method='ffill')
-        pfill=pandas.concat([pfill,pp3])
+        #pp3['codelocation'] = pp3['codelocation'].fillna(method='bfill')
+        #pp3['codelocation'] = pp3['codelocation'].fillna(method='ffill')
+        pfill=pandas.concat([pfill, pp3])
     pfill.reset_index(inplace=True)
     return pfill
 
@@ -207,6 +225,26 @@ def extract_dates(when):
             raise CoaTypeError("First date must occur before the second one.")
 
     return w0,w1
+
+def week_to_date(whenstr):
+    """
+    convert week to date.
+    2 cases:
+    - Rolling week
+        if format is Y-M-D-Y-M-D: return middle dates
+    - One week data Wnumber: return monday correction to the week number
+    """
+    convertion = 0
+    if len(whenstr) == 21:
+        firstday = datetime.date(int(whenstr.split('-')[0]),int(whenstr.split('-')[1]),int(whenstr.split('-')[2]))
+        lastday  = datetime.date(int(whenstr.split('-')[3]),int(whenstr.split('-')[4]),int(whenstr.split('-')[5]))
+        convertion = firstday + (lastday - firstday)/2
+    elif len(whenstr) == 10:
+        firstday = datetime.date(int(whenstr.split('-')[0]),int(whenstr.split('-')[1]),int(whenstr.split('-')[2]))
+        convertion = firstday+datetime.timedelta(days=3)
+    else:
+        convertion = datetime.datetime.strptime(whenstr  + '-1' , "%G-S%V-%u")
+    return convertion
 
 def get_local_from_url(url,expiration_time=0,suffix=''):
     """"Download data from the given url and store it into a local file.

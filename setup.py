@@ -2,7 +2,7 @@
 
 """ 
 Project : PyCoA
-Date :    april/november 2020
+Date :    april 2020 - march 2021
 Authors : Olivier Dadoun, Julien Browaeys, Tristan Beau
 Copyright ©pycoa.fr
 License:  See joint LICENSE file
@@ -27,6 +27,7 @@ setup(
     packages=['coa'],
     # Needed for dependencies
     install_requires=[ \
+        'bisect'
         'bokeh',\
         'branca',\
         'bs4',\
@@ -43,6 +44,9 @@ setup(
         'scipy',\
         'shapely',\
         'pytest >=5.0',\
+        'pandas-flavor',\
+        'openpyxl',\
+        'unidecode',\
         ],
     # The license can be anything you like
     license='MIT',

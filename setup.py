@@ -27,6 +27,7 @@ setup(
     packages=['coa'],
     # Needed for dependencies
     install_requires=[ \
+        'bisect'
         'bokeh',\
         'branca',\
         'bs4',\
@@ -45,6 +46,7 @@ setup(
         'pytest >=5.0',\
         'pandas-flavor',\
         'openpyxl',\
+        'unidecode',\
         ],
     # The license can be anything you like
     license='MIT',

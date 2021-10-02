@@ -27,6 +27,7 @@ setup(
     packages=['coa'],
     # Needed for dependencies
     install_requires=[ \
+        'bisect'
         'bokeh',\
         'branca',\
         'bs4',\

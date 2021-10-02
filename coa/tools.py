@@ -31,6 +31,7 @@ from tempfile import gettempdir
 from getpass import getuser
 from zlib import crc32
 from urllib.parse import urlparse
+import unidecode
 
 from coa.error import CoaKeyError, CoaTypeError, CoaConnectionError, CoaNotManagedError
 
@@ -45,22 +46,25 @@ if _coacache_module_info != None:
 _verbose_mode = 1 # default
 
 # Known db
-_db_list_dict = {'jhu': ['WW','nation'],
-    'owid': ['WW','nation'],
-    'jhu-usa': ['USA','subregion'],
-    'spf': ['FRA','subregion'],
-    'spfnational': ['WW','nation'],
-    'opencovid19': ['FRA','subregion'],
-    'opencovid19national': ['WW','nation'],
-    'dpc': ['ITA','region'],
-    'covidtracking': ['USA','subregion'],
-    'covid19india': ['IND','region'],
-    'rki':['DEU','subregion'],
-    'escovid19data':['ESP','subregion'],
-    'phe':['GBR','subregion'],
-    'sciensano':['BEL','region'],
-    'dgs':['PRT','region'],
-    'obepine':['FRA','region']}
+_db_list_dict = {'jhu': ['WW','nation','World'],
+    'owid': ['WW','nation','World'],
+    'jhu-usa': ['USA','subregion','United States of America'],
+    'spf': ['FRA','subregion','France'],
+    'spfnational': ['WW','nation','France'],
+    'opencovid19': ['FRA','subregion','France'],
+    'opencovid19national': ['WW','nation','France'],
+    'dpc': ['ITA','region','Italy'],
+    'covidtracking': ['USA','subregion','United States of America'],
+    'covid19india': ['IND','region','India'],
+    'rki':['DEU','subregion','Germany'],
+    'escovid19data':['ESP','subregion','Spain'],
+    'phe':['GBR','subregion','United Kingdom'],
+    'sciensano':['BEL','region','Belgium'],
+    'dgs':['PRT','region','Portugal'],
+    'obepine':['FRA','region','France'],
+    'moh':['MYS','subregion','Singapore'],
+    #'minciencia':['CHL','subregion','Chile']
+    }
 
 # ----------------------------------------------------
 # --- Usefull functions for pycoa --------------------
@@ -112,6 +116,11 @@ def kwargs_test(given_args, expected_args, error_string):
         raise CoaKeyError(error_string+' Unrecognized args are '+str(bad_kwargs)+'.')
 
     return True
+
+def tostdstring(s):
+    """Standardization of string for country,region or subregion tests
+    """
+    return unidecode.unidecode(' '.join(s.replace('-',' ').split())).upper()
 
 def fill_missing_dates(p, date_field='date', loc_field='location', d1=None, d2=None):
     """Filling the input pandas dataframe p with missing dates

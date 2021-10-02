@@ -108,12 +108,19 @@ def listvisu():
 # --- listwhom() -------------------------------------------------------
 # ----------------------------------------------------------------------
 
-def listwhom():
+def listwhom(detailed=False):
     """Return the list of currently avalailable databases for covid19
      data in PyCoA.
      The first one is the default one.
+
+     If detailed=True, gives information location of each given database.
     """
-    return _db.get_available_database()
+    if detailed:
+        for i,j in zip(get_db_list_dict().keys(),np.array(list(get_db_list_dict().values()))[:,2]):
+            info(i,' associated to: ',j)
+        return dict(zip(get_db_list_dict().keys(),np.array(list(get_db_list_dict().values()))[:,0]))
+    else:
+        return _db.get_available_database()
 
 
 # ----------------------------------------------------------------------

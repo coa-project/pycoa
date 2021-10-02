@@ -47,10 +47,12 @@ def generic_info(namedb, keys):
         Il est exprimé pour 100 000 habitants)',url2,urlmaster2],
         'cur_idx_R':
         ['cur_idx_R:FILLIT',url4,urlmaster4],
+        'cur_taux_crib':
+        ['cur_taux_crib:FILLIT',url4,urlmaster2],
         'cur_idx_taux_occupation_sae':
         ['cur_idx_taux_occupation_sae:FILLIT',url4,urlmaster4],
-        'cur_idx_tx_pos':
-        ['cur_idx_tx_pos: Taux de positivité des tests virologiques (Le taux de positivité correspond au nombre de personnes testées positives\
+        'cur_taux_pos':
+        ['cur_taux_pos: Taux de positivité des tests virologiques (Le taux de positivité correspond au nombre de personnes testées positives\
          (RT-PCR et test antigénique) pour la première fois depuis plus de 60 jours rapporté au nombre total de personnes testées positives ou \
          négatives sur une période donnée ; et qui n‘ont jamais été testées positive dans les 60 jours précédents.)',url4,urlmaster2],
         'tot_vacc':
@@ -87,6 +89,9 @@ def generic_info(namedb, keys):
         'nb_crib' : ['Nombre de tests criblés',url8,urlmaster8],
         'nb_pos' : ['Nombre de tests positifs',url8,urlmaster8],
         'tx_crib' : ['Taux tests criblés',url8,urlmaster8],
+        'cur_idx_tx_A1':['FILL IT',url8,urlmaster8],
+        'cur_idx_tx_B1':['FILL IT',url8,urlmaster8],
+        'cur_idx_tx_C1':['FILL IT',url8,urlmaster8],
         'nb_A0' : ['Nombre des tests positifs pour lesquels la recherche de mutation A est négatif (A = E484K)',url8,urlmaster8],
         'nb_A1' : ['Nombre des tests positifs pour lesquels la recherche de mutation A est positif (A = E484K)',url8,urlmaster8],
         'tx_A1' : ['Taux de présence mutation A (A = E484K)',url8,urlmaster8],
@@ -98,6 +103,22 @@ def generic_info(namedb, keys):
         'tx_C1' : ['Taux de présence mutation C (C = L452R)',url8,urlmaster8],
         }
         mydico = spfdic
+    elif namedb == 'spfnational':
+        spfn = {
+        'cur_reanimation': ['(nom d\'origine patients_reanimation) en current réa '],\
+        'cur_hospitalises':  ['(nom d\'origine patients_hospitalises) en current patients hospitalises '],\
+        'total_cas_confirmes':   ['total_cas_confirmes: total cumulé du nombre de décès'],\
+        'total_deces_hopital':  ['total_deces_hopital: total deces hopital '],\
+        'total_patients_gueris':  ['total_patients_gueris: total patients gueris'],\
+        'total_deces_ehpad':  ['total cumulé deces ehpad'],\
+        'total_cas_confirmes_ehpad':  ['total cumulé confirmes ehpad'],\
+        'total_cas_possibles_ehpad':  ['total cumulé possibles ehpad'],\
+        }
+        for k,v in spfn.items():
+              spfn[k].append('https://www.data.gouv.fr/fr/datasets/r/d3a98a30-893f-47f7-96c5-2f4bcaaa0d71')
+              spfn[k].append('https://www.data.gouv.fr/en/datasets/donnees-relatives-a-lepidemie-de-covid-19-en-france-vue-densemble/')
+        mydico = spfn
+
     elif namedb == 'opencovid19':
         op19 = {
         'tot_deces':['tot_deces: total cumulé du nombre de décès au niveau national'],
@@ -136,7 +157,7 @@ def generic_info(namedb, keys):
         obe = {
          'idx_obepine':['tot_deces: total cumulé du nombre de décès']}
         for k,v in obe.items():
-              obe[k].append('https://www.data.gouv.fr/en/datasets/r/da7810b7-455a-406e-b5ab-6df157e37d11')
+              obe[k].append('https://www.data.gouv.fr/fr/datasets/r/89196725-56cf-4a83-bab0-170ad1e8ef85')
               obe[k].append('https://www.data.gouv.fr/en/datasets/surveillance-du-sars-cov-2-dans-les-eaux-usees-1')
         mydico = obe
     elif namedb == 'owid':
@@ -145,7 +166,9 @@ def generic_info(namedb, keys):
         'total_cases':['total_cases:FILLIT'],
         'total_tests':['total_tests: FILLIT'],
         'total_vaccinations':['total_vaccinations:FILLIT'],
-        'total_people_fully_vaccinated_per_hundred':['total_people_fully_vaccinated_per_hundred:FILLIT'],
+        'total_population':['total_population: total population of a given country'],
+        'total_people_fully_vaccinated_per_hundred':['original name people_fully_vaccinated_per_hundred, total_people_fully_vaccinated_per_hundred:FILLIT'],
+        'total_people_vaccinated_per_hundred':['original naùe people_vaccinated_per_hundred: total_people_vaccinated_per_hundred:FILLIT'],
         'total_cases_per_million':['total_cases_per_million:FILLIT'],
         'total_deaths_per_million':['total_deaths_per_million:FILLIT'],
         'total_vaccinations_per_hundred':['total_vaccinations_per_hundred: COVID19 vaccine doses administered per 100 people'],
@@ -180,12 +203,33 @@ def generic_info(namedb, keys):
         for k,v in jhuusa.items():
             jhuusa[k].append("https://github.com/CSSEGISandData/COVID-19")
         mydico = jhuusa
+    elif namedb == 'moh':
+        moh = {
+        'cases_new':['cases_new: cases new'],\
+        'hosp_covid':['hosp_covid: hosp_covid'],\
+        'daily_partial':['daily_partial: daily_partial'],\
+        'daily_full':['daily_full: daily_full'],\
+        'icu_covid':['icu_covid: icu_covid'],\
+        'beds_icu_covid':['beds_icu_covid: beds_icu_covid'],\
+        }
+        for k,v in moh.items():
+            moh[k].append("https://raw.githubusercontent.com/MoH-Malaysia/covid19-public/main/epidemic/cases_state.csv")
+            moh[k].append("https://github.com/MoH-Malaysia/covid19-public")
+        mydico = moh
+    elif namedb == 'minciencia':
+        mi = {
+        'cases':['cases: Casos confirmados'],\
+        }
+        for k,v in mi.items():
+            mi[k].append("https://raw.githubusercontent.com/MinCiencia/Datos-COVID19/master/output/producto1/Covid-19_std.csv")
+            mi[k].append("https://github.com/MinCiencia")
+        mydico = mi
     elif namedb == 'covid19india':
         india = {
-        'Deceased':'Deceased:FILLIT',
-        'Confirmed':'Confirmed:FILLIT',
-        'Recovered':'Recovered:FILLIT',
-        'Tested':'Tested:FILLIT'
+        'Deceased':['Deceased:FILLIT'],\
+        'Confirmed':['Confirmed:FILLIT'],\
+        'Recovered':['Recovered:FILLIT'],\
+        'Tested':['Tested:FILLIT']
         }
         for k,v in india.items():
             india[k].append('https://api.covid19india.org/csv/latest/states.csv')
@@ -193,8 +237,8 @@ def generic_info(namedb, keys):
         mydico = india
     elif namedb == 'dpc':
         ita = {
-        'totale_casi':['tot_cases:FILLIT'],\
-        'deceduti':['tot_deaths:FILLIT']
+        'tot_cases':['tot_cases:original name totale_casi + FILLIT'],\
+        'tot_deaths':['tot_deaths:original name deceduti + FILLIT']
         }
         for k,v in ita.items():
             ita[k].append('https://raw.githubusercontent.com/pcm-dpc/COVID-19/master/dati-regioni/dpc-covid19-ita-regioni.csv')
@@ -244,6 +288,7 @@ def generic_info(namedb, keys):
         phe = {
         'tot_deaths':['Total number of deaths (original name cumDeathsByDeathDate)',url+'cumDeathsByDeathDate'+'&format=csv'],\
         'tot_cases':['Total number of cases (originale name cumCasesBySpecimenDate)',url+'cumCasesBySpecimenDate'+'&format=csv'],
+        'tot_tests':['Total number of cases (originale name cumTestByPublishDate)',url+'cumLFDTests'+'&format=csv'],
         'tot_vacc1':['Total number of cases (originale name cumCasesBySpecimenDate)',url+'cumPeopleVaccinatedFirstDoseByVaccinationDate'+'&format=csv'],
         'tot_vacc2':['Total number of cases (originale name cumCasesBySpecimenDate)',url+'cumPeopleVaccinatedSecondDoseByVaccinationDate'+'&format=csv'],
         'cur_B.1.617.2':['Current variant B.1.617.2' +'https://covid-surveillance-data.cog.sanger.ac.uk/download/lineages_by_ltla_and_week.tsv'],
@@ -251,6 +296,12 @@ def generic_info(namedb, keys):
         for k,v in phe.items():
             phe[k].append('https://coronavirus.data.gov.uk/details/download')
         mydico = phe
+    elif namedb == 'dgs':
+        url='https://raw.githubusercontent.com/dssg-pt/covid19pt-data/master/data_concelhos_new.csv'
+        dgs = {
+        'tot_cases':['original name confirmados_1'],\
+        }
+        mydico = dgs
     elif namedb == 'covidtracking':
         url='https://covidtracking.com/data/download/all-states-history.csv'
         cotra = {

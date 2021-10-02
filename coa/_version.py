@@ -19,6 +19,6 @@ About : Gives the version information, also used in the setup.py and __init__.py
 # 3) we can import it into your module module
 # see : https://stackoverflow.com/questions/458550/standard-way-to-embed-version-into-python-package
 
-__version__ = 'dev'
+__version__ = 'v2.10'
 __author__ = 'Tristan Beau, Julien Browaeys, Olivier Dadoun'
 __email__ = 'support@pycoa.fr'

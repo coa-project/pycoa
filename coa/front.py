@@ -425,7 +425,7 @@ def decoplot(func):
             raise CoaTypeError('Waiting input as valid pycoa pandas '
                                'dataframe. See help.')
 
-        return func(t,input_field,typeofplot, **kwargs)
+        return func(t.reset_index(drop=True),input_field,typeofplot, **kwargs)
     return generic_plot
 
 @decoplot

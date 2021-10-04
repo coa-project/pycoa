@@ -5,14 +5,14 @@
 ![GitHub last commit](https://img.shields.io/github/last-commit/pycoa/coa/dev?style=for-the-badge)
 ![GitHub](https://img.shields.io/github/license/pycoa/coa?style=for-the-badge)
 
-_Avril 2020 / Mars 2021_
+_Avril 2020 / Octobre 2021_
 
 [<img src="https://github.com/coa-project/coa-project.github.io/raw/main/fig/UK.png" height="14px" alt="UK flag"> English  version ](https://github.com/coa-project/pycoa)
 /
 [<img src="https://github.com/coa-project/coa-project.github.io/raw/main/fig/FR.png" height="14px" alt="FR flag"> Version française ](https://github.com/coa-project/pycoa/blob/main/README_FR.md)
 
 <center>
-<a href="https://github.com/coa-project/coa-project.github.io/raw/main/fig/mapFranceVariant.html" target="_blank"><img src="https://github.com/coa-project/coa-project.github.io/raw/main/fig/mapFranceVariant.png"></a>
+<a href="https://github.com/coa-project/coa-project.github.io/raw/main/fig/mapFranceVariant.html" target="_blank"><img src="https://github.com/coa-project/coa-project.github.io/raw/main/fig/pycoa_v2.10_mapFranceVariant.html"></a>
 </center>
 
 `PyCoA` (Python Covid Analysis) est un ensemble de code Python™ qui fournit :
@@ -21,11 +21,15 @@ _Avril 2020 / Mars 2021_
 
 |Série temporelle (cumulative) | Séries temporelles (G20) |
 |------------|-------------|
-|<a href="https://github.com/coa-project/coa-project.github.io/raw/main/fig/pycoa_v2.0_plot_sumall.html" target="_blank"><img src="https://github.com/coa-project/coa-project.github.io/raw/main/fig/pycoa_v2.0_plot_sumall.png"></a>|<a href="https://github.com/coa-project/coa-project.github.io/raw/main/fig/pycoa_v2.0_plot_g20.html" target="_blank"><img src="https://github.com/coa-project/coa-project.github.io/raw/main/fig/pycoa_v2.0_plot_g20.png"></a>|
+|<a href="https://github.com/coa-project/coa-project.github.io/raw/main/fig/pycoa_v2.10_plot_sumall.html" target="_blank"><img src="https://github.com/coa-project/coa-project.github.io/raw/main/fig/pycoa_v2.10_plot_sumall.png"></a>|<a href="https://github.com/coa-project/coa-project.github.io/raw/main/fig/pycoa_v2.10_plot_g20.html" target="_blank"><img src="https://github.com/coa-project/coa-project.github.io/raw/main/fig/pycoa_v2.10_plot_g20.png"></a>|
 
-|Carte (OCDE) | Histogramme | 
+|Carte (OCDE) | Histogramme (Monde) | 
 |------------|-------------|
-|<a href="https://github.com/coa-project/coa-project.github.io/raw/main/fig/pycoa_v2.0_map_oecd.html" target="_blank"><img src="https://github.com/coa-project/coa-project.github.io/raw/main/fig/pycoa_v2.0_map_oecd.png"></a>|<a href="https://github.com/coa-project/coa-project.github.io/raw/main/fig/pycoa_v2.0_hist_bycountry.html" target="_blank"><img src="https://github.com/coa-project/coa-project.github.io/raw/main/fig/pycoa_v2.0_hist_bycountry.png"></a>|
+|<a href="https://github.com/coa-project/coa-project.github.io/raw/main/fig/pycoa_v2.10_plot_oecd.html" target="_blank"><img src="https://github.com/coa-project/coa-project.github.io/raw/main/fig/pycoa_v2.10_plot_oecd.png"></a>|<a href="https://github.com/coa-project/coa-project.github.io/raw/main/fig/pycoa_v2.10_hist_bycountry.html" target="_blank"><img src="https://github.com/coa-project/coa-project.github.io/raw/main/fig/pycoa_v2.10_hist_bycountry.png"></a>|
+
+|PIE (UE) | Histogram by value (Asie) |
+|------------|-------------|
+|<a href="https://github.com/coa-project/coa-project.github.io/raw/main/fig/pycoa_v2.10_pie.html" target="_blank"><img src="https://github.com/coa-project/coa-project.github.io/raw/main/fig/pycoa_v2.10_pie.png"></a>|<a href="https://github.com/coa-project/coa-project.github.io/raw/main/fig/pycoa_v2.10_histval.html" target="_blank"><img src="https://github.com/coa-project/coa-project.github.io/raw/main/fig/pycoa_v2.10_histval.png"></a>|
 
 Cette analyse est pensée pour être accessible à des non-spécialistes : des lycéen·nes qui apprennent Python™, des étudiant·es, des journalistes scientifiques, voire même des chercheurs et chercheuses qui ne sont pas famillier·es avec l'extraction de données. Des analyses simples peuvent être directement effectuées, et des analyses plus poussées peuvent être produites par les personnes habituées à programmer en Python™. Comme exemple, après avoir <a href="https://github.com/coa-project/pycoa/wiki/FR:Install" target=_blank>installé PyCoA</a>, les quelques lignes suivantes permettent de créer les figures en entête de cette courte documentation.
 
@@ -38,12 +42,26 @@ cf.map(where='oecd',what='daily',when='01/02/2021',which='confirmed')
 
 cf.setwhom('owid') # changing database
 cf.hist(which='total_vaccinations') # default is for all countries
+cf.hist(which='cur_icu_patients',typeofhist='pie',where='european union')
+cf.hist(which='total_people_fully_vaccinated_per_hundred',typeofhist='byvalue',where='asia')
 ```
-Depuis la version `v2.0`, PyCoA accède également à des données locales comme [SPF](https://www.santepubliquefrance.fr/dossiers/coronavirus-covid-19) ou [OpenCovid19](https://github.com/opencovid19-fr) pour la France, [JHU-USA](https://coronavirus.jhu.edu/) pour les États-Unis. Nous pouvons allons obtenir des graphes comme ci-après. D'autres bases ont également été ajouté, pour l'Italie ou l'Inde par exemple.
+Depuis la version `v2.0`, PyCoA accède également à des données locales :
+- [JHU-USA](https://coronavirus.jhu.edu/) ou [CovidTracking](https://covidtracking.com) pour les États-Unis, 
+- [SPF](https://www.santepubliquefrance.fr/dossiers/coronavirus-covid-19), [OpenCovid19](https://github.com/opencovid19-fr) ou [Obepine](https://www.reseau-obepine.fr/donnees-ouvertes/) pour la France,
+- [DPC](https://github.com/pcm-dpc/COVID-19) pour l'Italie,
+- [Covid19India](https://api.covid19india.org) pour l'Inde,
+- [RKI](https://github.com/jgehrcke/covid-19-germany-gae) pour l'Allemagne,
+- [Escovid19Data](https://github.com/montera34/escovid19data) pour l'Espagne,
+- [PHE](https://api.coronavirus.data.gov.uk) pour le Royaume Uni,
+- [Sciensano](https://epistat.sciensano.be) pour la Belgique,
+- [DGS](https://github.com/dssg-pt/covid19pt-data) pour le Portugal,
+- [MOH](https://github.com/MoH-Malaysia) pour la Malaysie.
+
+Nous pouvons allons obtenir des graphes comme ci-après. D'autres bases ont également été ajouté, pour l'Italie ou l'Inde par exemple.
 
 |Données SPF | Données JHU-USA |
 |------------|-------------|
-|<a href="https://github.com/coa-project/coa-project.github.io/raw/main/fig/pycoa_v2.0_spf.html" target="_blank"><img src="https://github.com/coa-project/coa-project.github.io/raw/main/fig/pycoa_v2.0_spf.png" width=504></a>|<a href="https://github.com/coa-project/coa-project.github.io/raw/main/fig/pycoa_v2.0_jhu-usafolium.html" target="_blank"><img src="https://github.com/coa-project/coa-project.github.io/raw/main/fig/pycoa_v2.0_jhu-usafolium.jpg" width=504></a>|
+|<a href="https://github.com/coa-project/coa-project.github.io/raw/main/fig/pycoa_v2.10_spf.html" target="_blank"><img src="https://github.com/coa-project/coa-project.github.io/raw/main/fig/pycoa_v2.10_spf.png" width=504></a>|<a href="https://github.com/coa-project/coa-project.github.io/raw/main/fig/pycoa_v2.10_jhu-usafolium.html" target="_blank"><img src="https://github.com/coa-project/coa-project.github.io/raw/main/fig/pycoa_v2.10_jhu-usafolium.png" width=504></a>|
 
 ```python
 cf.setwhom('spf') # Santé Publique France database

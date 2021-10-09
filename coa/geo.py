@@ -716,7 +716,8 @@ class GeoCountry():
 
     _source_dict = {'FRA':{'Basics':_country_info_dict['FRA'],\
                     'Subregion Flags':'http://sticker-departement.com/',\
-                    'Region Flags':'https://fr.wikipedia.org/w/index.php?title=R%C3%A9gion_fran%C3%A7aise&oldid=177269957'},\
+                    'Region Flags':'https://fr.wikipedia.org/w/index.php?title=R%C3%A9gion_fran%C3%A7aise&oldid=177269957',\
+                    'Population':'https://www.insee.fr/fr/statistiques/4989753?sommaire=4989761'},\
                     'USA':{'Basics':_country_info_dict['USA'],\
                     'Subregion informations':'https://en.wikipedia.org/wiki/List_of_states_and_territories_of_the_United_States'},\
                     'ITA':{'Basics':_country_info_dict['ITA']},\
@@ -805,8 +806,13 @@ class GeoCountry():
                 'nom_chf':'town_subregion',\
                 },inplace=True)
 
-            self._country_data.drop(['id_geofla','code_reg','nom_reg','x_chf_lieu','y_chf_lieu','x_centroid','y_centroid'],axis=1,inplace=True) # removing some column without interest
+            # adding population information (departements)
+            pop_fra = pd.read_html(get_local_from_url(self._source_dict['FRA']['Population']))[0]
+            pop_fra['population_subregion']=pop_fra['Population municipale'].str.replace(r"[ \xa0]","").astype(int)
+            self._country_data=self._country_data.merge(pop_fra,left_on='code_subregion',right_on='Code département')
+            self._country_data.drop(['id_geofla','code_reg','nom_reg','x_chf_lieu','y_chf_lieu','x_centroid','y_centroid','Code département','Nom du département','Population municipale'],axis=1,inplace=True) # removing some column without interest
 
+            # moving artificially (if needed) outre-mer area to be near to metropole for map representations
             list_translation={"GUADELOUPE":(63,23),
                                  "MARTINIQUE":(63,23),
                                  "GUYANE":(50,35),
@@ -1239,13 +1245,17 @@ class GeoCountry():
 
                     elif self.get_country()=='USA':
                         usa_col=pr.columns.tolist()
-                        usa_col.remove('population_subregion') # Remove numeric column, if not, the dissolve does not work properly
-                        usa_col.remove('area_subregion') # idem
+                        #usa_col.remove('population_subregion') # Remove numeric column, if not, the dissolve does not work properly
+                        #usa_col.remove('area_subregion') # idem
                         pr=pr[usa_col]
 
                     pr['code_subregion']=pr.code_subregion.apply(lambda x: [x])
                     pr['name_subregion']=pr.name_subregion.apply(lambda x: [x])
                     self._country_data_region=pr.dissolve(by=col_reg,aggfunc=(lambda x: x.sum())).sort_values(by='code_region').reset_index()
+                    for x in ['population','area']:
+                        if x+'_subregion' in self._country_data_region.columns:
+                            self._country_data_region.rename(columns={x+'_subregion':x+'_region'},inplace=True)
+
                 return self._country_data_region
             else:
                 if not isinstance(self._country_data_subregion,pd.DataFrame): #i.e. is None

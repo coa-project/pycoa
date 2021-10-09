@@ -1,6 +1,9 @@
 # PyCoa - Release_notes
 
 ## dev - 
+- Includes population information for USA and France. 
+
+## v2.10 - 
 - Map bug fixed for option='sumall'
 - maplabel added for bokeh map   
 - fix bug with smooth7 , in the case data non continious
@@ -17,6 +20,7 @@
 - add export and merger method
 - change flat_list from covdi19 to staticmethod i.e remove self not needed
 - keep owid : world field -> change to owid_* & population value
+- various sumall and region sumall graphical issues
   
 ## v2.02 - march 2021 - Import decorators modifciation inside the display
 - New standard output is pandas dataframe

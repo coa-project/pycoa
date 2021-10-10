@@ -273,8 +273,12 @@ def get(**kwargs):
                 * nofillnan means that nan value won't be filled.
                 * smooth7 will perform a 7 day window average of data
                 * sumall will return integrated over locations given via the
-                where keyword, the data
-                is available. By default : no option.
+                where keyword. If using double bracket notation, the sumall
+                option is applied for each bracketed member of the where arg.
+                * normbypop (if available, according to the used db), will
+                normalize the result by the population. 
+                
+                By default : no option.
                 See listoption().
     """
     kwargs_test(kwargs, ['where', 'what', 'which', 'whom', 'when', 'output', 'option', 'bins', 'title', 'visu', 'tile','dateslider','maplabel'],
@@ -425,7 +429,7 @@ def decoplot(func):
             raise CoaTypeError('Waiting input as valid pycoa pandas '
                                'dataframe. See help.')
 
-        return func(t,input_field,typeofplot, **kwargs)
+        return func(t.reset_index(drop=True),input_field,typeofplot, **kwargs)
     return generic_plot
 
 @decoplot

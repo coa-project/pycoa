@@ -1565,6 +1565,7 @@ class CocoDisplay:
                 geopdwd = geopdwd.loc[~geopdwd.cases.isnull()]
                 geopdwd_filtered  = geopdwd_filtered.loc[~geopdwd_filtered.cases.isnull()]
             return func(self,input_field, date_slider, maplabel, dico, geopdwd, geopdwd_filtered,standardfig,sourcemaplabel)
+
         return innerdecomap
 
     @decohistomap

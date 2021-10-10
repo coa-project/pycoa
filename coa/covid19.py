@@ -55,7 +55,7 @@ class DataBase(object):
         self.geo_all = ''
         self.database_url = []
         self.db_world=None
-        self.geoinfo = report
+        self.databaseinfo = report
         if self.db not in self.database_name:
             raise CoaDbError('Unknown ' + self.db + '. Available database so far in PyCoa are : ' + str(self.database_name), file=sys.stderr)
         else:
@@ -558,15 +558,15 @@ class DataBase(object):
        '''
             Return definition on the selected keword
        '''
-       value = self.geoinfo.generic_info(self.get_db(),keys)[0]
+       value = self.databaseinfo.generic_info(self.get_db(),keys)[0]
        return value
 
    def get_keyword_url(self,keys):
        '''
         Return url where the keyword have been parsed
        '''
-       value = self.geoinfo.generic_info(self.get_db(),keys)[1]
-       master  = self.geoinfo.generic_info(self.get_db(),keys)[2]
+       value = self.databaseinfo.generic_info(self.get_db(),keys)[1]
+       master  = self.databaseinfo.generic_info(self.get_db(),keys)[2]
        return value, master
 
    def return_jhu_pandas(self):

@@ -32,7 +32,6 @@
 - Added date_slider in the front end for hist (except byvalue) and map
 - Optimized style of code writing (pyCharm recommandations), and docstrings corrections
 
-
 ## v2.01 - march 2021 - Minor improvements
 - New local database support : USA (Covidtracking), ITA (dpc), IND (covid19india)
 - concerning IND: since we don't have a json file description of 'Telangana','Ladakh',

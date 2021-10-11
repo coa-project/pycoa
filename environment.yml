@@ -1,0 +1,30 @@
+name: pycoa-environment
+channels:
+  - conda-forge
+dependencies:
+  - python
+  - numpy
+  - pip
+  - pip:
+    - nbgitpuller
+    - sphinx-gallery
+    - pandas
+    - matplotlib
+    - bokeh
+    - branca
+    - bs4
+    - datascroller
+    - datetime
+    - folium
+    - lxml
+    - geopandas
+    - matplotlib
+    - numpy
+    - pandas
+    - pycountry
+    - pycountry_convert
+    - requests
+    - scipy
+    - shapely
+    - pytest
+    - unidecode

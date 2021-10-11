@@ -529,12 +529,6 @@ class DataBase(object):
         Return available options for the get_stats method
         '''
         o=self.available_options
-        print(self.geo)
-        if self.db_world==True:
-            o.append('normbypop')
-        else:
-            if 'population_subregion' in self.geo.get_data().columns:
-                o.append('normbypop')
         return o
 
    def get_available_keys_words(self):
@@ -1010,7 +1004,6 @@ class DataBase(object):
             * 'nofillnan' if you do not want that NaN values are filled, which is the default behaviour
             * 'smooth7' moving average, window of 7 days
             * 'sumall' sum data over all locations
-            * 'normbypop' to normalize by population (available for some db only)
 
         keys are keyswords from the selected database
                 location        | date      | keywords          |  daily            |  weekly
@@ -1252,14 +1245,6 @@ class DataBase(object):
                 sumall = True
                 #if kwargs['which'].startswith('cur_idx_Prc'):
                 #    print('Warning this data is from rolling value, ended date may be not correct ...')
-            elif o == 'normbypop': 
-                # Normalization by unit of population
-                if not o in self.get_available_options():
-                    raise CoaKeyError('The option normbypop is not available for this db.')
-                if self.db_world==True:
-                    raise CoaKeyError('The option normbypop not yet implemented. Soon…')
-                else: # local db
-                    raise CoaKeyError('The option normbypop not yet implemented. Soon…')    
             elif o != None and o != '':
                 raise CoaKeyError('The option '+o+' is not recognized in get_stats. See get_available_options() for list.')
         pdfiltered = pdfiltered.reset_index(drop=True)

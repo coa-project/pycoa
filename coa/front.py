@@ -275,9 +275,7 @@ def get(**kwargs):
                 * sumall will return integrated over locations given via the
                 where keyword. If using double bracket notation, the sumall
                 option is applied for each bracketed member of the where arg.
-                * normbypop (if available, according to the used db), will
-                normalize the result by the population. 
-                
+
                 By default : no option.
                 See listoption().
     """

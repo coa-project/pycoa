@@ -682,6 +682,7 @@ class CocoDisplay:
                 for loc in list(mypandas.clustername.unique()):
                     mypandas_filter = mypandas.loc[mypandas.clustername == loc].reset_index(drop = True)
                     src = ColumnDataSource(mypandas_filter)
+                    leg = mypandas_filter.permanentdisplay[0]
                     if len(input_field)>1:
                         leg = mypandas_filter.permanentdisplay[0] + ', ' + val
                         color = self.scolors[i]

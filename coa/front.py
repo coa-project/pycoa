@@ -45,6 +45,7 @@ from coa.tools import kwargs_test, extract_dates, get_db_list_dict, info
 import coa.covid19 as coco
 from coa.error import *
 import coa._version
+import coa.geo as coge
 
 output_notebook(hide_banner=True)
 
@@ -60,6 +61,9 @@ else:
     _whom = _listwhom[0]  # default base
 
 _db, _cocoplot = coco.DataBase.factory(_whom)  # initialization with default
+_gi = None
+
+_dict_bypop = {'no':0,'100':100,'1k':1e3,'100k':1e5,'1M':1e6}
 
 _listwhat = ['cumul',  # first one is default, nota:  we must avoid uppercases
              'daily',
@@ -182,6 +186,14 @@ def listregion():
     else:
         return sorted(r['name_region'].to_list())
 
+# ----------------------------------------------------------------------
+# --- listbypop() ------------------------------------------------------
+# ----------------------------------------------------------------------
+
+def listbypop():
+    """Get the list of available population normalization
+    """
+    return list(_dict_bypop.keys())
 
 # ----------------------------------------------------------------------
 # --- setwhom() --------------------------------------------------------

@@ -3,6 +3,10 @@
 ## dev - 
 - Includes population information for USA and France. 
 
+## v2.11
+- Mv coabook to the current folder
+- remove coadocker from git no more usefull
+ 
 ## v2.10 - 
 - Map bug fixed for option='sumall'
 - maplabel added for bokeh map   
@@ -21,7 +25,8 @@
 - change flat_list from covdi19 to staticmethod i.e remove self not needed
 - keep owid : world field -> change to owid_* & population value
 - various sumall and region sumall graphical issues
-  
+- add sumall with list of list, for instance [['EU'],['Africa']] 
+
 ## v2.02 - march 2021 - Import decorators modifciation inside the display
 - New standard output is pandas dataframe
 - Bug solved for a SPF database which has changed

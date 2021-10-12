@@ -287,21 +287,30 @@ def get(**kwargs):
                 * sumall will return integrated over locations given via the
                 where keyword. If using double bracket notation, the sumall
                 option is applied for each bracketed member of the where arg.
-
                 By default : no option.
+
                 See listoption().
+
+    bypop --    normalize by population (if available for the selected database).
+                * by default, 'no' normalization
+                * can normalize by '100', '1k', '100k' or '1M'
+
     """
-    kwargs_test(kwargs, ['where', 'what', 'which', 'whom', 'when', 'output', 'option', 'bins', 'title', 'visu', 'tile','dateslider','maplabel'],
+    kwargs_test(kwargs, ['where', 'what', 'which', 'whom', 'when', 'output', 'option', 
+        'bins', 'title', 'visu', 'tile','dateslider','maplabel','bypop'],
                 'Bad args used in the pycoa.get() function.')
     # no dateslider currently
 
-    global _db, _whom
+    global _db, _whom, _gi
+
     where = kwargs.get('where', None)
     what = kwargs.get('what', listwhat()[0])
     which = kwargs.get('which', None)
     whom = kwargs.get('whom', None)
-    option = kwargs.get('option', None)
     when = kwargs.get('when', None)
+
+    option = kwargs.get('option', None)
+    bypop = kwargs.get('bypop','no')
 
     output = kwargs.get('output', listoutput()[0])
 
@@ -317,12 +326,15 @@ def get(**kwargs):
     if not bool([s for s in listwhat() if what.startswith(s)]):
         raise CoaKeyError('What option ' + what + ' not supported. '
                                                   'See listwhat() for full list.')
-
     if not which:
         which = listwhich()[0]
     elif which not in listwhich():
         raise CoaKeyError('Which option ' + which + ' not supported. '
                                                     'See listwhich() for list.')
+
+    if bypop not in listbypop():
+        raise CoaKeyError('The bypop arg should be selected in '+str(listbypop)+' only.')
+ 
     pandy = _db.get_stats(which=which, location=where, option=option).rename(columns={'location': 'where'})
     db_first_date = pandy.date.min()
     db_last_date = pandy.date.max()
@@ -333,6 +345,17 @@ def get(**kwargs):
     # when cut
     pandy = pandy[(pandy.date >= when_beg) & (pandy.date <= when_end)]
     pandy.reset_index()
+
+    # manage pop norm if asked
+    if bypop != 'no':
+        if _db.db_world == True:
+            if not isinstance(_gi,coa.geo.GeoInfo):
+                _gi = coge.GeoInfo()
+            pandy=_gi.add_field(input=pandy,field='population',geofield='codelocation')
+            pandy[which+' per '+bypop]=pandy[which]/pandy['population']*_dict_bypop[bypop]
+        else:
+            raise CoaKeyError('The selected database does not support the population normalization asked by the bypop arg.')
+
     # casted_data = None
     if output == 'pandas':
         pandy = pandy.drop(columns=['cumul'])
@@ -410,7 +433,7 @@ def decoplot(func):
 
         """
         kwargs_test(kwargs, ['where', 'what', 'which', 'whom', 'when',
-                             'input', 'input_field', 'width_height', 'title', 'option','typeofplot'],
+                             'input', 'input_field', 'width_height', 'title', 'option','typeofplot','bypop'],
                     'Bad args used in the pycoa.plot() function.')
 
         when = kwargs.get('when', None)
@@ -438,6 +461,11 @@ def decoplot(func):
         else:
             raise CoaTypeError('Waiting input as valid pycoa pandas '
                                'dataframe. See help.')
+
+        bypop=kwargs.pop('bypop','no')
+        if bypop != 'no':
+            kwargs['which']=kwargs['which']+' per '+bypop   
+            input_field=kwargs['which']
 
         return func(t.reset_index(drop=True),input_field,typeofplot, **kwargs)
     return generic_plot

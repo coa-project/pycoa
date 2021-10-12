@@ -351,10 +351,24 @@ def get(**kwargs):
         if _db.db_world == True:
             if not isinstance(_gi,coa.geo.GeoInfo):
                 _gi = coge.GeoInfo()
-            pandy=_gi.add_field(input=pandy,field='population',geofield='codelocation')
-            pandy[which+' per '+bypop]=pandy[which]/pandy['population']*_dict_bypop[bypop]
+            pop_field='population'
+            pandy=_gi.add_field(input=pandy,field=pop_field,geofield='codelocation')
         else:
-            raise CoaKeyError('The selected database does not support the population normalization asked by the bypop arg.')
+            if not isinstance(_gi,coa.geo.GeoCountry):
+                _gi=None
+            else:
+                if _gi.get_country() != _db.geo.get_country():
+                    _gi=None
+
+            if _gi == None :
+                _gi = _db.geo
+            pop_field='population_subregion'
+            if pop_field not in _gi.get_list_properties():
+                raise CoaKeyError('The population information not available for this country. No normalization possible')
+
+            pandy=_gi.add_field(input=pandy,field=pop_field,input_key='codelocation')
+
+        pandy[which+' per '+bypop]=pandy[which]/pandy[pop_field]*_dict_bypop[bypop]
 
     # casted_data = None
     if output == 'pandas':
@@ -464,7 +478,7 @@ def decoplot(func):
 
         bypop=kwargs.pop('bypop','no')
         if bypop != 'no':
-            kwargs['which']=kwargs['which']+' per '+bypop   
+            kwargs['which']=which+' per '+bypop   
             input_field=kwargs['which']
 
         return func(t.reset_index(drop=True),input_field,typeofplot, **kwargs)

@@ -544,7 +544,7 @@ def hist(**kwargs):
     #               preferable to use this option with folium map
     # """
     kwargs_test(kwargs, ['where', 'what', 'which', 'whom', 'when', 'input', 'input_field', 'bins', 'title',
-                         'typeofhist', 'option','dateslider'],
+                         'typeofhist', 'option','dateslider','bypop'],
                 'Bad args used in the pycoa.hist() function.')
     # no 'dateslider' currently
 
@@ -572,6 +572,11 @@ def hist(**kwargs):
     else:
         raise CoaTypeError('Waiting input as valid pycoa pandas '
                            'dataframe. See help.')
+
+    bypop=kwargs.pop('bypop','no')
+    if bypop != 'no':
+        kwargs['which']=which+' per '+bypop   
+        input_field=kwargs['which']
 
     if dateslider is not None:
         del kwargs['dateslider']

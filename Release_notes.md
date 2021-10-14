@@ -6,6 +6,7 @@
 ## v2.11
 - Mv coabook to the current folder
 - remove coadocker from git no more usefull
+- Decorator uniformization in the front
  
 ## v2.10 - 
 - Map bug fixed for option='sumall'

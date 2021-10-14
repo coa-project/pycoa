@@ -441,7 +441,7 @@ def chartsinput_deco(f):
         if bypop != 'no':
             kwargs['which']=which+' per '+bypop
             input_field=kwargs['which']
-        kwargs['input_field'] = input_field    
+        kwargs['input_field'] = input_field
         return f(**kwargs)
 
     return wrapper
@@ -603,6 +603,7 @@ def plot(**kwargs):
     elif typeofplot == 'menulocation':
         if input_field is not None and len(input_field) > 1:
             print('typeofplot is menulocation but dim(input_field)>1, menulocation has not effect ...')
+        typeofplot = kwargs.pop('typeofplot')    
         fig = _cocoplot.pycoa_scrollingmenu(t, **kwargs)
     else:
         raise CoaKeyError('Unknown typeofplot value. Should be date, versus or menulocation.')

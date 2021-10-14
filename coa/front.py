@@ -45,6 +45,7 @@ from coa.tools import kwargs_test, extract_dates, get_db_list_dict, info
 import coa.covid19 as coco
 from coa.error import *
 import coa._version
+import coa.geo as coge
 
 output_notebook(hide_banner=True)
 
@@ -60,6 +61,9 @@ else:
     _whom = _listwhom[0]  # default base
 
 _db, _cocoplot = coco.DataBase.factory(_whom)  # initialization with default
+_gi = None
+
+_dict_bypop = {'no':0,'100':100,'1k':1e3,'100k':1e5,'1M':1e6}
 
 _listwhat = ['cumul',  # first one is default, nota:  we must avoid uppercases
              'daily',
@@ -182,6 +186,14 @@ def listregion():
     else:
         return sorted(r['name_region'].to_list())
 
+# ----------------------------------------------------------------------
+# --- listbypop() ------------------------------------------------------
+# ----------------------------------------------------------------------
+
+def listbypop():
+    """Get the list of available population normalization
+    """
+    return list(_dict_bypop.keys())
 
 # ----------------------------------------------------------------------
 # --- setwhom() --------------------------------------------------------
@@ -277,18 +289,25 @@ def get(**kwargs):
 
                 By default : no option.
                 See listoption().
+    bypop --    normalize by population (if available for the selected database).
+                * by default, 'no' normalization
+                * can normalize by '100', '1k', '100k' or '1M'
     """
-    kwargs_test(kwargs, ['where', 'what', 'which', 'whom', 'when', 'output', 'option', 'bins', 'title', 'visu', 'tile','typeofplot','dateslider','maplabel','typeofhist'],
+    kwargs_test(kwargs, ['where', 'what', 'which', 'whom', 'when', 'output', 'option', 'bins', 'title',\
+                        'visu', 'tile','typeofplot','dateslider','maplabel','typeofhist','bypop'],
                 'Bad args used in the pycoa.get() function.')
     # no dateslider currently
 
-    global _db, _whom
+    global _db, _whom, _gi
     where = kwargs.get('where', None)
     what = kwargs.get('what', listwhat()[0])
     which = kwargs.get('which', None)
     whom = kwargs.get('whom', None)
     option = kwargs.get('option', None)
     when = kwargs.get('when', None)
+
+    option = kwargs.get('option', None)
+    bypop = kwargs.get('bypop','no')
 
     output = kwargs.get('output', listoutput()[0])
 
@@ -310,6 +329,9 @@ def get(**kwargs):
     elif which not in listwhich():
         raise CoaKeyError('Which option ' + which + ' not supported. '
                                                     'See listwhich() for list.')
+    if bypop not in listbypop():
+        raise CoaKeyError('The bypop arg should be selected in '+str(listbypop)+' only.')
+
     pandy = _db.get_stats(which=which, location=where, option=option).rename(columns={'location': 'where'})
     db_first_date = pandy.date.min()
     db_last_date = pandy.date.max()
@@ -320,6 +342,29 @@ def get(**kwargs):
     # when cut
     pandy = pandy[(pandy.date >= when_beg) & (pandy.date <= when_end)]
     pandy.reset_index()
+    # manage pop norm if asked
+    if bypop != 'no':
+        if _db.db_world == True:
+            if not isinstance(_gi,coa.geo.GeoInfo):
+                _gi = coge.GeoInfo()
+            pop_field='population'
+            pandy=_gi.add_field(input=pandy,field=pop_field,geofield='codelocation')
+        else:
+            if not isinstance(_gi,coa.geo.GeoCountry):
+                _gi=None
+            else:
+                if _gi.get_country() != _db.geo.get_country():
+                    _gi=None
+
+            if _gi == None :
+                _gi = _db.geo
+            pop_field='population_subregion'
+            if pop_field not in _gi.get_list_properties():
+                raise CoaKeyError('The population information not available for this country. No normalization possible')
+
+            pandy=_gi.add_field(input=pandy,field=pop_field,input_key='codelocation')
+
+        pandy[which+' per '+bypop]=pandy[which]/pandy[pop_field]*_dict_bypop[bypop]
     # casted_data = None
     if output == 'pandas':
         pandy = pandy.drop(columns=['cumul'])
@@ -344,9 +389,9 @@ def get(**kwargs):
 
 def export(**kwargs):
     '''
-    Export pycoas pandas as an output file selected by output argument
-    'pandas': pycoa pandas
-    'format': excel or csv
+        Export pycoas pandas as an output file selected by output argument
+        'pandas': pycoa pandas
+        'format': excel or csv
     '''
     global _db
     kwargs_test(kwargs, ['format','pandas'])
@@ -365,16 +410,15 @@ def chartsinput_deco(f):
     def wrapper(*args, **kwargs):
         kwargs_test(kwargs,
                     ['where', 'what', 'which', 'whom', 'when', 'input', 'input_field',\
-                    'title','typeofplot','typeofhist','visu','tile','dateslider','maplabel','option'],
+                    'title','typeofplot','typeofhist','visu','tile','dateslider','maplabel','option','bypop'],
                     'Bad args used in the pycoa.map() function.')
         # no 'dateslider' currently.
-        which = ''
         input_arg = kwargs.get('input', None)
+        input_field = kwargs.get('input_field')
         where = kwargs.get('where', None)
         what = kwargs.get('what', None)
         option = kwargs.get('option', None)
 
-        input_field = None
         if isinstance(input_arg, pd.DataFrame):
             input_field = kwargs.get('input_field', listwhich()[0])
             if input_field not in input_arg.columns:
@@ -386,10 +430,18 @@ def chartsinput_deco(f):
             kwargs['t'] = input_arg
         elif input_arg == None:
             kwargs['t'] = get(**kwargs, output='pandas')
+            which = kwargs.get('which', listwhich()[0])
+            what = kwargs.get('what', listwhat()[0])
+            option = kwargs.get('option', None)
         else:
             raise CoaTypeError('Waiting input as valid pycoa pandas '
                                'dataframe. See help.')
-        kwargs['input_field'] = input_field
+
+        bypop=kwargs.pop('bypop','no')
+        if bypop != 'no':
+            kwargs['which']=which+' per '+bypop
+            input_field=kwargs['which']
+        kwargs['input_field'] = input_field    
         return f(**kwargs)
 
     return wrapper
@@ -538,7 +590,7 @@ def plot(**kwargs):
     """
     t = kwargs.pop('t')
     input_field = kwargs.pop('input_field')
-    typeofplot = kwargs.pop('typeofplot', 'date')
+    typeofplot = kwargs.get('typeofplot', 'date')
 
     if typeofplot == 'date':
         fig = _cocoplot.pycoa_date_plot(t,input_field, **kwargs)

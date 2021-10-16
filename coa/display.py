@@ -554,6 +554,7 @@ class CocoDisplay:
                   }
                   return s;
                 """)
+
     ###################### END Static Methods ##################
     def add_columns_for_pie_chart(self,df,column_name):
         r = 0.9
@@ -1514,6 +1515,7 @@ class CocoDisplay:
                     cases = geopdwd_filtered.loc[geopdwd_filtered.clustername == i]['cases'].values[0]
                     centrosx = geopdwd_filtered.loc[geopdwd_filtered.clustername == i]['centroidx']#.mean()
                     centrosy = geopdwd_filtered.loc[geopdwd_filtered.clustername == i]['centroidy']#.mean()
+                    geopdwd_filtered.loc[geopdwd_filtered.clustername == i,'cases'] = cases
                     geopdwd_filtered.loc[geopdwd_filtered.clustername == i,'centroidx'] = centrosx
                     geopdwd_filtered.loc[geopdwd_filtered.clustername == i,'centroidy'] = centrosy
                     geopdwd_filtered.loc[geopdwd_filtered.clustername == i,'spark'] = \
@@ -1523,6 +1525,7 @@ class CocoDisplay:
                 dfLabel['cases'] = dfLabel['cases'].round(2)
                 dfLabel = (dfLabel.groupby(['cases','clustername','spark']).mean())
                 dfLabel = dfLabel.reset_index()
+                dfLabel['cases']=[str(i) for i in dfLabel['cases']]
                 sourcemaplabel = ColumnDataSource(dfLabel)
 
             if self.dbld[self.database_name][0] in ['FRA','ESP','PRT'] and all(len(l) == 2 for l in geopdwd_filtered.codelocation.unique()):
@@ -1637,7 +1640,7 @@ class CocoDisplay:
                         if (maplabel.get_length() !== 0){
                             maplabel.data['cases'] = source_filter.data['cases'];
                             }
-
+                        for (var i = 0; i < maplabel.get_length(); i++)   maplabel.data['cases'][i] =  maplabel.data['cases'][i].toString();   
                         var tmp = title.text;
                         tmp = tmp.slice(0, -11);
                         var dateconverted = new Date(date_slider.value);

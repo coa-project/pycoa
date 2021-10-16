@@ -457,23 +457,32 @@ def map(**kwargs):
     by default visu='bokeh'
     - In the default case (i.e visu='bokeh') available option are :
         - dateslider=True: a date slider is called and displayed on the right part of the map
-        - maplabel=True: value are displayed directly on the map
+        - maplabel = text, value are displayed directly on the map
+                   = spark, sparkline are displayed directly on the map
     """
     visu = kwargs.get('visu', listvisu()[0])
     t = kwargs.pop('t')
     input_field = kwargs.pop('input_field')
     dateslider = kwargs.get('dateslider', None)
     maplabel = kwargs.get('maplabel', None)
-
+    sparkline = False
     if dateslider is not None:
         del kwargs['dateslider']
         kwargs['cursor_date'] = dateslider
     if maplabel is not None:
-        del kwargs['maplabel']
-        kwargs['maplabel'] = maplabel
+        kwargs['maplabel'] = False
+        if maplabel == 'text':
+            kwargs['maplabel'] = True
+        elif maplabel == 'spark':
+            sparkline = True
+        else:
+            raise CoaTypeError('Waiting for a valide label visualisation: text or spark')
 
     if visu == 'bokeh':
-        return show(_cocoplot.pycoa_map(t, input_field, **kwargs))
+        if sparkline == False:
+            return show(_cocoplot.pycoa_map(t, input_field, **kwargs))
+        else:
+            return show(_cocoplot.pycoa_sparkmap(t, input_field, **kwargs))
     elif visu == 'folium':
         if dateslider or maplabel:
             raise CoaKeyError('Not available with folium map, you should considere to use bokeh map visu in this case')
@@ -603,7 +612,7 @@ def plot(**kwargs):
     elif typeofplot == 'menulocation':
         if input_field is not None and len(input_field) > 1:
             print('typeofplot is menulocation but dim(input_field)>1, menulocation has not effect ...')
-        typeofplot = kwargs.pop('typeofplot')    
+        typeofplot = kwargs.pop('typeofplot')
         fig = _cocoplot.pycoa_scrollingmenu(t, **kwargs)
     else:
         raise CoaKeyError('Unknown typeofplot value. Should be date, versus or menulocation.')

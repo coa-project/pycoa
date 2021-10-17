@@ -1100,13 +1100,18 @@ class DataBase(object):
                         elif self.geo.is_subregion(i):
                            tmp = self.geo.is_subregion(i)
                         else:
-                            raise CoaTypeError('Not subregion nor region ... what is it ?')
+                            raise CoaTypeError(i + ': not subregion nor region ... what is it ?')
                     elif typeloc == 'region':
                         tmp = self.geo.get_region_list()
                         if i.isdigit():
                             tmp = list(tmp.loc[tmp.code_region==i]['name_region'])
-                        else:
+                        elif self.geo.is_region(i):
                             tmp = i
+                        else:
+                            if self.geo.is_subregion(i):
+                                raise CoaTypeError(i+ ' is a subregion ... not compatible with a region DB granularity?')
+                            else:
+                                raise CoaTypeError(i + ': not subregion nor region ... what is it ?')
                     else:
                         raise CoaTypeError('Not subregion nor region requested, don\'t know what to do ?')
                     if exploded:

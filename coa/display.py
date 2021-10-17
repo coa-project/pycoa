@@ -1063,7 +1063,7 @@ class CocoDisplay:
                 geopdwd_filter['horihistotexty'] =  geopdwd_filter['bottom'] + bthick/2
                 geopdwd_filter['horihistotextx'] = geopdwd_filter['right']
                 geopdwd_filter['horihistotext'] = [ '{:.3g}'.format(float(i)) if float(i)>1.e4 else round(float(i),2) for i in geopdwd_filter['right'] ]
-
+                geopdwd_filter['horihistotext'] = [str(i) for i in geopdwd_filter['horihistotext']]
             if func.__name__ == 'pycoa_pie' :
                 geopdwd_filter = self.add_columns_for_pie_chart(geopdwd_filter,input_field)
                 geopdwd = self.add_columns_for_pie_chart(geopdwd,input_field)
@@ -1640,7 +1640,7 @@ class CocoDisplay:
                         if (maplabel.get_length() !== 0){
                             maplabel.data['cases'] = source_filter.data['cases'];
                             }
-                        for (var i = 0; i < maplabel.get_length(); i++)   maplabel.data['cases'][i] =  maplabel.data['cases'][i].toString();   
+                        for (var i = 0; i < maplabel.get_length(); i++)   maplabel.data['cases'][i] =  maplabel.data['cases'][i].toString();
                         var tmp = title.text;
                         tmp = tmp.slice(0, -11);
                         var dateconverted = new Date(date_slider.value);

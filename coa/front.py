@@ -399,20 +399,24 @@ def export(**kwargs):
     format = kwargs.get('format', 'excel')
     _db.export(pandas=pandy,format=format)
 # ----------------------------------------------------------------------
-# --- deco_pycoa_graph(**kwargs) ---------------------------------------
+# --- chartsinput_deco(f)
+# ------  with wraps
+# ----------  wrapper(*args, **kwargs)
+#---------------------------------------
 # ----------------------------------------------------------------------
 def chartsinput_deco(f):
     '''
-        Main decorator for graphical output function calls
-        It mainly deals with arg testings.
+        Main decorator it mainly deals with arg testings
     '''
     @wraps(f)
     def wrapper(*args, **kwargs):
+        '''
+            wrapper dealing with arg testing
+        '''
         kwargs_test(kwargs,
                     ['where', 'what', 'which', 'whom', 'when', 'input', 'input_field',\
                     'title','typeofplot','typeofhist','visu','tile','dateslider','maplabel','option','bypop'],
                     'Bad args used in the pycoa.map() function.')
-        # no 'dateslider' currently.
         input_arg = kwargs.get('input', None)
         input_field = kwargs.get('input_field')
         where = kwargs.get('where', None)
@@ -429,7 +433,7 @@ def chartsinput_deco(f):
                                   "Use option within the get() function instead.")
             kwargs['t'] = input_arg
         elif input_arg == None:
-            kwargs['t'] = get(**kwargs, output='pandas')
+            kwargs['t'] = get(**kwargs,output='pandas')
             which = kwargs.get('which', listwhich()[0])
             what = kwargs.get('what', listwhat()[0])
             option = kwargs.get('option', None)
@@ -442,6 +446,7 @@ def chartsinput_deco(f):
             kwargs['which']=which+' per '+bypop
             input_field=kwargs['which']
         kwargs['input_field'] = input_field
+        when = kwargs.get('when', None)
         return f(**kwargs)
 
     return wrapper
@@ -452,7 +457,7 @@ def chartsinput_deco(f):
 def map(**kwargs):
     """
     Create a map according to arguments and options.
-    See help(hist).
+    See help(map).
     - 2 types of visu are avalailable so far : bokeh or folium (see listvisu())
     by default visu='bokeh'
     - In the default case (i.e visu='bokeh') available option are :
@@ -494,9 +499,9 @@ def map(**kwargs):
 # ----------------------------------------------------------------------
 @chartsinput_deco
 def hist(**kwargs):
-    """Create histogram according to arguments (same as the get
-    function) and options.
-
+    """
+    Create histogram according to arguments.
+    See help(hist).
     Keyword arguments
     -----------------
 
@@ -524,13 +529,6 @@ def hist(**kwargs):
                     histograms.
                     If none provided, a default value will be used.
     """
-
-    # not currently supported : dateslider  -- boolean value. Caution : experimental feature.
-    #               If True, add a date vertical cursor bar to the left of the figure
-    #               to dislay histo/map to a particular date (default false)
-    #               Warning : this coud be time consuming when one use it with map bokeh
-    #               preferable to use this option with folium map
-    # """
     t = kwargs.pop('t')
     input_field = kwargs.pop('input_field')
     dateslider = kwargs.get('dateslider', None)
@@ -563,9 +561,7 @@ def hist(**kwargs):
 @chartsinput_deco
 def plot(**kwargs):
     """
-    Decorator Plot data according to arguments (same as the get function)
-    and options.
-
+    Create a date plot according to arguments. See help(plot).
     Keyword arguments
     -----------------
 

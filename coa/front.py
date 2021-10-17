@@ -425,9 +425,9 @@ def chartsinput_deco(f):
 
         if isinstance(input_arg, pd.DataFrame):
             input_field = kwargs.get('input_field', listwhich()[0])
-            if input_field not in input_arg.columns:
-                raise CoaKeyError("Cannot find " + str(input_field) + " field in the pandas data. "
-                                                                      "Set a proper input_field key.")
+            #if input_field not in input_arg.columns:
+            #    raise CoaKeyError("Cannot find " + str(input_field) + " field in the pandas data. "
+            #                                                          "Set a proper input_field key.")
             if 'option' in kwargs:
                 raise CoaKeyError("Cannot use option with input pandas data. "
                                   "Use option within the get() function instead.")
@@ -597,6 +597,9 @@ def plot(**kwargs):
     input_field = kwargs.pop('input_field')
     typeofplot = kwargs.get('typeofplot', 'date')
 
+    if 'typeofplot' in kwargs:
+        typeofplot = kwargs.pop('typeofplot')
+
     if typeofplot == 'date':
         fig = _cocoplot.pycoa_date_plot(t,input_field, **kwargs)
     elif typeofplot == 'versus':
@@ -608,7 +611,6 @@ def plot(**kwargs):
     elif typeofplot == 'menulocation':
         if input_field is not None and len(input_field) > 1:
             print('typeofplot is menulocation but dim(input_field)>1, menulocation has not effect ...')
-        typeofplot = kwargs.pop('typeofplot')
         fig = _cocoplot.pycoa_scrollingmenu(t, **kwargs)
     else:
         raise CoaKeyError('Unknown typeofplot value. Should be date, versus or menulocation.')

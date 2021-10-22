@@ -294,7 +294,7 @@ def get(**kwargs):
                 * can normalize by '100', '1k', '100k' or '1M'
     """
     kwargs_test(kwargs, ['where', 'what', 'which', 'whom', 'when', 'output', 'option', 'bins', 'title',\
-                        'visu', 'tile','typeofplot','dateslider','maplabel','typeofhist','bypop'],
+                        'visu', 'tile','typeofplot','dateslider','maplabel','typeofhist','mode','bypop'],
                 'Bad args used in the pycoa.get() function.')
     # no dateslider currently
 
@@ -305,7 +305,8 @@ def get(**kwargs):
     whom = kwargs.get('whom', None)
     option = kwargs.get('option', None)
     when = kwargs.get('when', None)
-
+    if 'mode' in kwargs:
+        kwargs.pop('mode')
     option = kwargs.get('option', None)
     bypop = kwargs.get('bypop','no')
 
@@ -415,7 +416,7 @@ def chartsinput_deco(f):
         '''
         kwargs_test(kwargs,
                     ['where', 'what', 'which', 'whom', 'when', 'input', 'input_field',\
-                    'title','typeofplot','typeofhist','visu','tile','dateslider','maplabel','option','bypop'],
+                    'title','typeofplot','typeofhist','visu','tile','dateslider','maplabel','option','mode','bypop'],
                     'Bad args used in the pycoa.map() function.')
         input_arg = kwargs.get('input', None)
         input_field = kwargs.get('input_field')

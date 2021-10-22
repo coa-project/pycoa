@@ -77,12 +77,12 @@ class CocoDisplay:
 
         self.options_stats  = ['when']
         self.options_charts = [ 'bins']
-
-        self.available_tiles = ['esri', 'openstreet', 'stamen', 'positron']
+        self.options_front = ['option','where','what', 'which','visu']
+        self.available_tiles = ['openstreet','esri', 'openstreet', 'stamen', 'positron']
         self.available_modes = ['mouse','vline','hline']
         self.available_textcopyrightposition = ['left','right']
 
-        self.dfigure_default = {'plot_height':width_height_default[1] ,'plot_width':width_height_default[0],'title':None, 'textcopyrightposition':'left','textcopyright':'©pycoa.fr'}
+        self.dfigure_default = {'plot_height':width_height_default[1] ,'plot_width':width_height_default[0],'title':None, 'textcopyrightposition':'left','textcopyright':'default'}
         self.dvisu_default = {'mode':'mouse','tile':self.available_tiles[0],'orientation':'horizontal','cursor_date':None,'maplabel':None}
 
         self.when_beg = dt.date(1, 1, 1)
@@ -178,6 +178,9 @@ class CocoDisplay:
                     * keys = [plot_width, plot_width, title, when, title_temporal,bins, what, which]
             Note that method used only the needed variables, some of them are useless
             """
+            for i in self.options_front:#from the front end !
+                if i in kwargs:
+                    kwargs.pop(i)
             kwargs_test(kwargs, self.alloptions, 'Bad args used in the display function.')
             if input_field is None:
                 input_field = 'cumul'
@@ -205,7 +208,6 @@ class CocoDisplay:
             else:
                 tile = self.dvisu_default['tile']
             kwargs['tile'] = CocoDisplay.convert_tile(tile, func.__name__,self.available_tiles[0])
-            print('func.__name__',func.__name__)
             orientation = kwargs.get('orientation', 'horizontal')
             cursor_date = kwargs.get('cursor_date', None)
             maplabel = kwargs.get('maplabel', None)
@@ -290,7 +292,8 @@ class CocoDisplay:
                 else:
                     when_end_change = min(when_end_change,CocoDisplay.changeto_nonull_date(mypandas, when_end, i))
 
-            if func.__name__ == 'generic_hm' :
+            if func.__name__ == 'pycoa_histo' or func.__name__ == 'inner_decohistopie' or  func.__name__ == 'innerdecopycoageo' or \
+                func.__name__ == 'pycoa_mapfolium':
                 if len(input_field) > 1:
                     print(str(input_field) + ' is dim = ' + str(len(input_field)) + '. No effect with ' + func.__name__ + '! Take the first input: ' + input_field[0])
                 input_field = input_field[0]
@@ -303,7 +306,7 @@ class CocoDisplay:
             mypandas = mypandas.loc[(mypandas['date'] >=  self.when_beg) & (mypandas['date'] <=  self.when_end)]
 
             title_temporal = ' (' + 'between ' + when_beg.strftime('%d/%m/%Y') + ' and ' + when_end.strftime('%d/%m/%Y') + ')'
-            if func.__name__ ==  'generic_hm':
+            if func.__name__ == 'pycoa_mapfolium' or func.__name__ ==  'innerdecopycoageo'  or func.__name__ ==  'pycoa_histo' or func.__name__ ==  'inner_decohistopie':
                 title_temporal = ' (' + when_end.strftime('%d/%m/%Y')  + ')'
             if option != '':
                 title_temporal = ', option ' + option + title_temporal
@@ -331,7 +334,8 @@ class CocoDisplay:
         """
         decorator for plot purpose
         """
-        def generic_plot(self, mypandas, input_field = None, **kwargs):
+        @wraps(func)
+        def inner_plot(self, mypandas, input_field = None, **kwargs):
             dict_filter_data = defaultdict(list)
             if 'location' in mypandas.columns:
                 new = pd.DataFrame(columns = mypandas.columns)
@@ -354,11 +358,12 @@ class CocoDisplay:
                     if amplitude > 10 ** 4:
                         self.ax_type.reverse()
                 if func.__name__ == 'pycoa_scrollingmenu' :
-                    if len(input_field) > 1:
-                        print(str(input_field) + ' is dim = ' + str(len(input_field)) + '. No effect with ' + func.__name__ + '! Take the first input: ' + input_field[0])
+                    if isinstance(input_field,list):
+                        if len(input_field) > 1:
+                            print(str(input_field) + ' is dim = ' + str(len(input_field)) + '. No effect with ' + func.__name__ + '! Take the first input: ' + input_field[0])
                         input_field = input_field[0]
             return func(self, mypandas, input_field, **kwargs)
-        return generic_plot
+        return inner_plot
 
     ''' PLOT VERSUS '''
     @decowrapper
@@ -517,7 +522,8 @@ class CocoDisplay:
         """
         Decorator function used for histogram and map
         """
-        def generic_hm(self, mypandas, input_field = None, **kwargs):
+        @wraps(func)
+        def inner_hm(self, mypandas, input_field = None, **kwargs):
             orientation = kwargs.get('orientation', self.dvisu_default['orientation'])
             cursor_date = kwargs.get('cursor_date', None)
             #if orientation:
@@ -557,7 +563,7 @@ class CocoDisplay:
                     geopdwd = pd.merge(geopdwd, self.location_geometry, on='location')
                 geopdwd = gpd.GeoDataFrame(geopdwd, geometry=geopdwd.geometry, crs="EPSG:4326")
 
-            if func.__name__ == 'inner' or func.__name__ == 'pycoa_histo':
+            if func.__name__ == 'pycoa_histo':
                 pos = {}
                 new = pd.DataFrame()
                 n = 0
@@ -577,7 +583,7 @@ class CocoDisplay:
                 date_slider = None
             kwargs['date_slider'] = date_slider
             return func(self, geopdwd, input_field, **kwargs)
-        return generic_hm
+        return inner_hm
 
     ''' VERTICAL HISTO '''
     @decowrapper
@@ -1057,7 +1063,7 @@ class CocoDisplay:
         overlaped display appear
         """
         title = kwargs.get('title', None)
-        tile = CocoDisplay.convert_tile(kwargs['tile'], 'folium')
+        tile =  kwargs.get('tile', self.dvisu_default['tile'])
         plot_width = kwargs.get('plot_width',self.dfigure_default['plot_width'])
         plot_height = kwargs.get('plot_height',self.dfigure_default['plot_height'])
 
@@ -1119,7 +1125,7 @@ class CocoDisplay:
         html.script.get_root().render()
         html.script._children[e.get_name()] = e
         geopdwd_filtered[input_field + 'scientific_format'] = \
-            (['{:.5g}'.format(i) for i in geopdwd_filtered[input_field]])
+            (['{:.5g}'.format(i) for i in geopdwd_filtered['cases']])
         # (['{:.3g}'.format(i) if i>100000 else i for i in geopdwd_filter[input_field]])
 
         map_dict = geopdwd_filtered.set_index('location')[input_field].to_dict()
@@ -1211,7 +1217,7 @@ class CocoDisplay:
             title = kwargs.get('title', None)
             maplabel = kwargs.get('maplabel',self.dvisu_default['maplabel'])
             title = kwargs.get('title', None)
-            tile = CocoDisplay.convert_tile(kwargs['tile'], 'folium')
+            tile = kwargs.get('tile', self.dvisu_default['tile'])
 
             sourcemaplabel = ColumnDataSource(pd.DataFrame({'centroidx':[],'centroidy':[],'cases':[],'spark':[]}))
             uniqloc = list(geopdwd_filtered.clustername.unique())
@@ -1412,7 +1418,7 @@ class CocoDisplay:
         ''' Return tiles url according to folium or bokeh resquested'''
         tile = ''
         if tilename == 'openstreet':
-            if which == 'folium':
+            if which == 'pycoa_mapfolium':
                 tile = r'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
             else:
                 tile = r'http://c.tile.openstreetmap.org/{Z}/{X}/{Y}.png'

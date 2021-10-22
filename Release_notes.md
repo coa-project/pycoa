@@ -9,6 +9,7 @@
 - Decorator uniformization in the front
 - Use kwargs in the backend remove dico
 - date_plot with several variable and several location
+- add mode : mode=vline or hline
  
 ## v2.10 - 
 - Map bug fixed for option='sumall'

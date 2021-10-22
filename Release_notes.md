@@ -7,6 +7,8 @@
 - Mv coabook to the current folder
 - remove coadocker from git no more usefull
 - Decorator uniformization in the front
+- Use kwargs in the backend remove dico
+- date_plot with several variable and several location
  
 ## v2.10 - 
 - Map bug fixed for option='sumall'

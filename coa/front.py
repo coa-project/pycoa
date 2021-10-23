@@ -432,9 +432,9 @@ def chartsinput_deco(f):
             if 'option' in kwargs:
                 raise CoaKeyError("Cannot use option with input pandas data. "
                                   "Use option within the get() function instead.")
-            kwargs['t'] = input_arg
+            kwargs['input'] = input_arg
         elif input_arg == None:
-            kwargs['t'] = get(**kwargs,output='pandas')
+            kwargs['input'] = get(**kwargs,output='pandas')
             which = kwargs.get('which', listwhich()[0])
             what = kwargs.get('what', listwhat()[0])
             option = kwargs.get('option', None)
@@ -467,7 +467,7 @@ def map(**kwargs):
                    = spark, sparkline are displayed directly on the map
     """
     visu = kwargs.get('visu', listvisu()[0])
-    t = kwargs.pop('t')
+    input = kwargs.pop('input')
     input_field = kwargs.pop('input_field')
     dateslider = kwargs.get('dateslider', None)
     maplabel = kwargs.get('maplabel', None)
@@ -486,13 +486,13 @@ def map(**kwargs):
 
     if visu == 'bokeh':
         if sparkline == False:
-            return show(_cocoplot.pycoa_map(t, input_field, **kwargs))
+            return show(_cocoplot.pycoa_map(input, input_field, **kwargs))
         else:
-            return show(_cocoplot.pycoa_sparkmap(t, input_field, **kwargs))
+            return show(_cocoplot.pycoa_sparkmap(input, input_field, **kwargs))
     elif visu == 'folium':
         if dateslider or maplabel:
             raise CoaKeyError('Not available with folium map, you should considere to use bokeh map visu in this case')
-        return _cocoplot.pycoa_mapfolium(t, input_field, **kwargs)
+        return _cocoplot.pycoa_mapfolium(input, input_field, **kwargs)
     else:
         raise CoaTypeError('Waiting for a valid visualisation. So far: \'bokeh\' or \'folium\'.See help.')
 # ----------------------------------------------------------------------
@@ -530,7 +530,7 @@ def hist(**kwargs):
                     histograms.
                     If none provided, a default value will be used.
     """
-    t = kwargs.pop('t')
+    input = kwargs.pop('input')
     input_field = kwargs.pop('input_field')
     dateslider = kwargs.get('dateslider', None)
     typeofhist = kwargs.pop('typeofhist', 'bylocation')
@@ -542,15 +542,15 @@ def hist(**kwargs):
     if typeofhist == 'bylocation':
         if 'bins' in kwargs:
             raise CoaKeyError("The bins keyword cannot be set with histograms by location. See help.")
-        fig = _cocoplot.pycoa_horizonhisto(t, input_field, **kwargs)
+        fig = _cocoplot.pycoa_horizonhisto(input, input_field, **kwargs)
     elif typeofhist == 'byvalue':
         if dateslider:
             info('dateslider not implemented for typeofhist=\'byvalue\'.')
-            fig = _cocoplot.pycoa_horizonhisto(t, input_field, **kwargs)
+            fig = _cocoplot.pycoa_horizonhisto(input, input_field, **kwargs)
         else:
-            fig = _cocoplot.pycoa_histo(t, input_field, **kwargs)
+            fig = _cocoplot.pycoa_histo(input, input_field, **kwargs)
     elif typeofhist == 'pie':
-        fig = _cocoplot.pycoa_pie(t, input_field, **kwargs)
+        fig = _cocoplot.pycoa_pie(input, input_field, **kwargs)
 
     else:
         raise CoaKeyError('Unknown typeofhist value. Should be bylocation or byvalue.')
@@ -594,7 +594,7 @@ def plot(**kwargs):
                              Moreover dim(input_field) must be 2.
 
     """
-    t = kwargs.pop('t')
+    input = kwargs.pop('input')
     input_field = kwargs.pop('input_field')
     typeofplot = kwargs.get('typeofplot', 'date')
 
@@ -602,17 +602,17 @@ def plot(**kwargs):
         typeofplot = kwargs.pop('typeofplot')
 
     if typeofplot == 'date':
-        fig = _cocoplot.pycoa_date_plot(t,input_field, **kwargs)
+        fig = _cocoplot.pycoa_date_plot(input,input_field, **kwargs)
     elif typeofplot == 'versus':
         if input_field is not None and len(input_field) == 2:
-            fig = _cocoplot.pycoa_plot(t, input_field,**kwargs)
+            fig = _cocoplot.pycoa_plot(input, input_field,**kwargs)
         else:
             print('typeofplot is versus but dim(input_field)!=2, versus has not effect ...')
-            fig = _cocoplot.pycoa_date_plot(t, input_field, **kwargs)
+            fig = _cocoplot.pycoa_date_plot(input, input_field, **kwargs)
     elif typeofplot == 'menulocation':
         if input_field is not None and len(input_field) > 1:
             print('typeofplot is menulocation but dim(input_field)>1, menulocation has not effect ...')
-        fig = _cocoplot.pycoa_scrollingmenu(t, **kwargs)
+        fig = _cocoplot.pycoa_scrollingmenu(input, **kwargs)
     else:
         raise CoaKeyError('Unknown typeofplot value. Should be date, versus or menulocation.')
     show(fig)

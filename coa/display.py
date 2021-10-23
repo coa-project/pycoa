@@ -75,7 +75,7 @@ class CocoDisplay:
         self.location_geometry = None
         self.boundary_metropole = None
 
-        self.options_stats  = ['when']
+        self.options_stats  = ['when','input','input_field']
         self.options_charts = [ 'bins']
         self.options_front = ['option','where','what', 'which','visu']
         self.available_tiles = ['openstreet','esri', 'openstreet', 'stamen', 'positron']
@@ -170,7 +170,7 @@ class CocoDisplay:
             Main decorator it mainly deals with arg testings
         '''
         @wraps(func)
-        def wrapper(self, mypandas, input_field = None, **kwargs):
+        def wrapper(self, input = None, input_field = None, **kwargs):
             """
             Parse a standard input, return :
                 - pandas: with location keyword (eventually force a column named 'where' to 'location')
@@ -178,6 +178,8 @@ class CocoDisplay:
                     * keys = [plot_width, plot_width, title, when, title_temporal,bins, what, which]
             Note that method used only the needed variables, some of them are useless
             """
+            if not isinstance(input, pd.DataFrame):
+                raise CoaTypeError(input + 'Must be a pandas, with pycoa structure !')
             for i in self.options_front:#from the front end !
                 if i in kwargs:
                     kwargs.pop(i)
@@ -215,43 +217,43 @@ class CocoDisplay:
                 maplabel = maplabel
             kwargs['maplabel'] = maplabel
 
-            if 'where' in mypandas.columns:
-                mypandas = mypandas.rename(columns={'where': 'location'})
+            if 'where' in input.columns:
+                input = input.rename(columns={'where': 'location'})
 
             wallname = self.dbld[self.database_name][2]
             if self.dbld[self.database_name][0] == 'WW' :
-                mypandas['codelocation'] = mypandas['codelocation'].apply(lambda x: str(x).replace('[', '').replace(']', '') if len(x)< 10 else x[0]+'...'+x[-1] )
-                mypandas['permanentdisplay'] = mypandas.apply(lambda x: x.clustername if self.geo.get_GeoRegion().is_region(x.clustername) else str(x.codelocation), axis = 1)
+                input['codelocation'] = input['codelocation'].apply(lambda x: str(x).replace('[', '').replace(']', '') if len(x)< 10 else x[0]+'...'+x[-1] )
+                input['permanentdisplay'] = input.apply(lambda x: x.clustername if self.geo.get_GeoRegion().is_region(x.clustername) else str(x.codelocation), axis = 1)
             else:
                 if self.dbld[self.database_name][1] == 'subregion' :
-                    if isinstance(mypandas['codelocation'][0],list):
-                        mypandas['codelocation'] = mypandas['codelocation'].apply(lambda x: str(x).replace("'", '')\
+                    if isinstance(input['codelocation'][0],list):
+                        input['codelocation'] = input['codelocation'].apply(lambda x: str(x).replace("'", '')\
                                                      if len(x)<5 else '['+str(x[0]).replace("'", '')+',...,'+str(x[-1]).replace("'", '')+']')
 
                     trad={}
-                    cluster = mypandas.clustername.unique()
-                    if isinstance(mypandas.location[0],list):
+                    cluster = input.clustername.unique()
+                    if isinstance(input.location[0],list):
                        cluster = [i for i in cluster]
                     for i in cluster:
                         if i == self.dbld[self.database_name][2]:
-                            mypandas['permanentdisplay'] = [self.dbld[self.database_name][2]]*len(mypandas)
+                            input['permanentdisplay'] = [self.dbld[self.database_name][2]]*len(input)
                         else:
                             if self.geo.is_region(i):
                                 trad[i] = self.geo.is_region(i)
                             elif self.geo.is_subregion(i):
-                                trad[i] = self.geo.is_subregion(i)#mypandas.loc[mypandas.clustername==i]['codelocation'].iloc[0]
+                                trad[i] = self.geo.is_subregion(i)#input.loc[input.clustername==i]['codelocation'].iloc[0]
                             else:
                                 trad[i] = i
                             trad={k:(v[:3]+'...'+v[-3:] if len(v)>8 else v) for k,v in trad.items()}
-                            mypandas['permanentdisplay'] = mypandas.codelocation#mypandas.clustername.map(trad)
+                            input['permanentdisplay'] = input.codelocation#input.clustername.map(trad)
                 elif self.dbld[self.database_name][1] == 'region' :
-                    if all(i == self.dbld[self.database_name][2] for i in mypandas.clustername.unique()):
-                        mypandas['permanentdisplay'] = [self.dbld[self.database_name][2]]*len(mypandas)
+                    if all(i == self.dbld[self.database_name][2] for i in input.clustername.unique()):
+                        input['permanentdisplay'] = [self.dbld[self.database_name][2]]*len(input)
                     else:
-                        mypandas['permanentdisplay'] = mypandas.codelocation
-            mypandas['rolloverdisplay'] = mypandas['location']
+                        input['permanentdisplay'] = input.codelocation
+            input['rolloverdisplay'] = input['location']
 
-            uniqloc = mypandas.clustername.unique()
+            uniqloc = input.clustername.unique()
             if len(uniqloc) < 5:
                 colors = self.scolors
             else:
@@ -259,19 +261,19 @@ class CocoDisplay:
             colors = itertools.cycle(colors)
             dico_colors = {i: next(colors) for i in uniqloc}
 
-            mypandas = mypandas.copy()
-            mypandas.loc[:,'colors'] = mypandas['clustername'].map(dico_colors)#(pd.merge(mypandas, country_col, on='location'))
+            input = input.copy()
+            input.loc[:,'colors'] = input['clustername'].map(dico_colors)#(pd.merge(input, country_col, on='location'))
 
-            when_beg = mypandas.date.min()
-            when_end = mypandas.date.max()
+            when_beg = input.date.min()
+            when_end = input.date.max()
 
             if when:
                 when_beg, when_end = extract_dates(when)
                 if when_beg == dt.date(1, 1, 1):
-                    when_beg = mypandas['date'].min()
+                    when_beg = input['date'].min()
 
                 if when_end == '':
-                    when_end = mypandas['date'].max()
+                    when_end = input['date'].max()
 
                 if not isinstance(when_beg, dt.date):
                     raise CoaNoData("With your current cuts, there are no data to plot.")
@@ -287,13 +289,13 @@ class CocoDisplay:
 
             when_end_change = when_end
             for i in input_field:
-                if mypandas[i].isnull().all():
+                if input[i].isnull().all():
                     raise CoaTypeError("Sorry all data are NaN for " + i)
                 else:
-                    when_end_change = min(when_end_change,CocoDisplay.changeto_nonull_date(mypandas, when_end, i))
+                    when_end_change = min(when_end_change,CocoDisplay.changeto_nonull_date(input, when_end, i))
 
             if func.__name__ == 'pycoa_histo' or func.__name__ == 'inner_decohistopie' or  func.__name__ == 'innerdecopycoageo' or \
-                func.__name__ == 'pycoa_mapfolium':
+                func.__name__ == 'pycoa_mapfolium' or func.__name__ == 'pycoa_map' or func.__name__ == 'pycoa_sparkmap':
                 if len(input_field) > 1:
                     print(str(input_field) + ' is dim = ' + str(len(input_field)) + '. No effect with ' + func.__name__ + '! Take the first input: ' + input_field[0])
                 input_field = input_field[0]
@@ -303,10 +305,10 @@ class CocoDisplay:
 
             self.when_beg = when_beg
             self.when_end = when_end
-            mypandas = mypandas.loc[(mypandas['date'] >=  self.when_beg) & (mypandas['date'] <=  self.when_end)]
+            input = input.loc[(input['date'] >=  self.when_beg) & (input['date'] <=  self.when_end)]
 
             title_temporal = ' (' + 'between ' + when_beg.strftime('%d/%m/%Y') + ' and ' + when_end.strftime('%d/%m/%Y') + ')'
-            if func.__name__ == 'pycoa_mapfolium' or func.__name__ ==  'innerdecopycoageo'  or func.__name__ ==  'pycoa_histo' or func.__name__ ==  'inner_decohistopie':
+            if func.__name__ == 'pycoa_mapfolium' or func.__name__ == 'pycoa_map' or func.__name__ ==  'innerdecopycoageo'  or func.__name__ ==  'pycoa_histo' or func.__name__ ==  'inner_decohistopie':
                 title_temporal = ' (' + when_end.strftime('%d/%m/%Y')  + ')'
             if option != '':
                 title_temporal = ', option ' + option + title_temporal
@@ -327,7 +329,7 @@ class CocoDisplay:
                 title  = titlefig
             kwargs['title'] = title
 
-            return func(self, mypandas, input_field, **kwargs)
+            return func(self, input, input_field, **kwargs)
         return wrapper
     ''' DECORATORS FOR PLOT: DATE, VERSUS, SCROLLINGMENU '''
     def decoplot(func):
@@ -335,24 +337,24 @@ class CocoDisplay:
         decorator for plot purpose
         """
         @wraps(func)
-        def inner_plot(self, mypandas, input_field = None, **kwargs):
+        def inner_plot(self, input = None, input_field = None, **kwargs):
             dict_filter_data = defaultdict(list)
-            if 'location' in mypandas.columns:
-                new = pd.DataFrame(columns = mypandas.columns)
+            if 'location' in input.columns:
+                new = pd.DataFrame(columns = input.columns)
                 location_ordered_byvalues = list(
-                    mypandas.loc[mypandas.date == self.when_end].sort_values(by=input_field, ascending=False)['clustername'].unique())
-                mypandas = mypandas.copy()  # needed to avoid warning
+                    input.loc[input.date == self.when_end].sort_values(by=input_field, ascending=False)['clustername'].unique())
+                input = input.copy()  # needed to avoid warning
 
-                mypandas.loc[:,'clustername'] = pd.Categorical(mypandas.clustername,
+                input.loc[:,'clustername'] = pd.Categorical(input.clustername,
                                                        categories=location_ordered_byvalues, ordered=True)
 
-                mypandas = mypandas.sort_values(by=['clustername', 'date']).reset_index()
+                input = input.sort_values(by=['clustername', 'date']).reset_index()
 
                 if len(location_ordered_byvalues) > 12:
-                    mypandas = mypandas.loc[mypandas.clustername.isin(location_ordered_byvalues[:12])]
+                    input = input.loc[input.clustername.isin(location_ordered_byvalues[:12])]
                 list_max = []
                 for i in input_field:
-                    list_max.append(max(mypandas.loc[mypandas.clustername.isin(location_ordered_byvalues)][i]))
+                    list_max.append(max(input.loc[input.clustername.isin(location_ordered_byvalues)][i]))
                 if len([x for x in list_max if not np.isnan(x)]) > 0:
                     amplitude = (np.nanmax(list_max) - np.nanmin(list_max))
                     if amplitude > 10 ** 4:
@@ -362,13 +364,37 @@ class CocoDisplay:
                         if len(input_field) > 1:
                             print(str(input_field) + ' is dim = ' + str(len(input_field)) + '. No effect with ' + func.__name__ + '! Take the first input: ' + input_field[0])
                         input_field = input_field[0]
-            return func(self, mypandas, input_field, **kwargs)
+            return func(self, input, input_field, **kwargs)
         return inner_plot
 
     ''' PLOT VERSUS '''
     @decowrapper
     @decoplot
-    def pycoa_plot(self, mypandas, input_field = None ,**kwargs):
+    def pycoa_plot(self, input = None, input_field = None ,**kwargs):
+        '''
+        -----------------
+        Create a versus plot according to arguments.
+        See help(pycoa_plot).
+        Keyword arguments
+        -----------------
+        - input = None : if None take first element. A DataFrame with a Pycoa struture is mandatory
+        |location|date|Variable desired|daily|cumul|weekly|codelocation|clustername|permanentdisplay|rolloverdisplay|
+        - input_field = if None take second element. It should be a list dim=2. Moreover the 2 variables must be present
+        in the DataFrame considered.
+        - plot_heigh = width_height_default[1]
+        - plot_width = width_height_default[0]
+        - title = None
+        - textcopyrightposition = left
+        - textcopyright = default
+        - mode = mouse
+        - cursor_date = None if True
+                - orientation = horizontal
+        - when : default min and max according to the inpude DataFrame.
+                 Dates are given under the format dd/mm/yyyy.
+                 when format [dd/mm/yyyy : dd/mm/yyyy]
+                 if [:dd/mm/yyyy] min date up to
+                 if [dd/mm/yyyy:] up to max date
+        '''
         if len(input_field) != 2:
             raise CoaTypeError('Two variables are needed to plot a versus chart ... ')
         panels = []
@@ -385,8 +411,8 @@ class CocoDisplay:
                             '@date': 'datetime'}, mode = kwargs['mode'],
                 point_policy="snap_to_data"))  # ,PanTool())
 
-            for loc in mypandas.clustername.unique():
-                pandaloc = mypandas.loc[mypandas.clustername == loc].sort_values(by='date', ascending='True')
+            for loc in input.clustername.unique():
+                pandaloc = input.loc[input.clustername == loc].sort_values(by='date', ascending='True')
                 pandaloc.rename(columns={input_field[0]: 'casesx', input_field[1]: 'casesy'}, inplace=True)
                 standardfig.line(x='casesx', y='casesy',
                                  source=ColumnDataSource(pandaloc), legend_label=pandaloc.clustername.iloc[0],
@@ -405,11 +431,33 @@ class CocoDisplay:
     ''' DATE PLOT '''
     @decowrapper
     @decoplot
-    def pycoa_date_plot(self, mypandas, input_field = None, **kwargs):
+    def pycoa_date_plot(self, input = None, input_field = None, **kwargs):
+        '''
+        -----------------
+        Create a date plot according to arguments. See help(pycoa_date_plot).
+        Keyword arguments
+        -----------------
+        - input = None : if None take first element. A DataFrame with a Pycoa struture is mandatory
+        |location|date|Variable desired|daily|cumul|weekly|codelocation|clustername|permanentdisplay|rolloverdisplay|
+        - input_field = if None take second element could be a list
+        - plot_heigh= width_height_default[1]
+        - plot_width = width_height_default[0]
+        - title = None
+        - textcopyrightposition = left
+        - textcopyright = default
+        - mode = mouse
+        - cursor_date = None if True
+                - orientation = horizontal
+        - when : default min and max according to the inpude DataFrame.
+                 Dates are given under the format dd/mm/yyyy.
+                 when format [dd/mm/yyyy : dd/mm/yyyy]
+                 if [:dd/mm/yyyy] min date up to
+                 if [dd/mm/yyyy:] up to max date
+        '''
         panels = []
         cases_custom = CocoDisplay.rollerJS()
-        if isinstance(mypandas['rolloverdisplay'][0],list):
-            mypandas['rolloverdisplay'] = mypandas['clustername']
+        if isinstance(input['rolloverdisplay'][0],list):
+            input['rolloverdisplay'] = input['clustername']
         for axis_type in self.ax_type:
             standardfig = self.standardfig( y_axis_type = axis_type, x_axis_type = 'datetime',**kwargs)
             i = 0
@@ -417,19 +465,19 @@ class CocoDisplay:
             maxou=-1000
             for val in input_field:
                 line_style = ['solid', 'dashed', 'dotted', 'dotdash']
-                for loc in list(mypandas.clustername.unique()):
-                    mypandas_filter = mypandas.loc[mypandas.clustername == loc].reset_index(drop = True)
-                    src = ColumnDataSource(mypandas_filter)
-                    leg = mypandas_filter.permanentdisplay[0]
+                for loc in list(input.clustername.unique()):
+                    input_filter = input.loc[input.clustername == loc].reset_index(drop = True)
+                    src = ColumnDataSource(input_filter)
+                    leg = input_filter.permanentdisplay[0]
                     if len(input_field)>1:
-                        leg = mypandas_filter.permanentdisplay[0] + ', ' + val
+                        leg = input_filter.permanentdisplay[0] + ', ' + val
 
                     r = standardfig.line(x = 'date', y = val, source = src,
-                                     color = mypandas_filter.colors[0], line_width = 3,
+                                     color = input_filter.colors[0], line_width = 3,
                                      legend_label = leg,
                                      hover_line_width = 4, name = val, line_dash=line_style[i])
                     r_list.append(r)
-                    maxou=max(maxou,np.nanmax(mypandas_filter[val].values))
+                    maxou=max(maxou,np.nanmax(input_filter[val].values))
                 i += 1
             for r in r_list:
                 label = r.name
@@ -460,16 +508,40 @@ class CocoDisplay:
     ''' SCROLLINGMENU PLOT '''
     @decowrapper
     @decoplot
-    def pycoa_scrollingmenu(self, mypandas, input_field = None, **kwargs):
+    def pycoa_scrollingmenu(self, input = None, input_field = None, **kwargs):
+        '''
+        -----------------
+        Create a date plot, with a scrolling menu location, according to arguments.
+        See help(pycoa_scrollingmenu).
+        Keyword arguments
+        -----------------
+        len(location) > 2
+        - input = None : if None take first element. A DataFrame with a Pycoa struture is mandatory
+        |location|date|Variable desired|daily|cumul|weekly|codelocation|clustername|permanentdisplay|rolloverdisplay|
+        - input_field = if None take second element could be a list
+        - plot_heigh= width_height_default[1]
+        - plot_width = width_height_default[0]
+        - title = None
+        - textcopyrightposition = left
+        - textcopyright = default
+        - mode = mouse
+        - cursor_date = None if True
+                - orientation = horizontal
+        - when : default min and max according to the inpude DataFrame.
+                 Dates are given under the format dd/mm/yyyy.
+                 when format [dd/mm/yyyy : dd/mm/yyyy]
+                 if [:dd/mm/yyyy] min date up to
+                 if [dd/mm/yyyy:] up to max date
+        '''
         mode = kwargs.get('mode',self.dvisu_default['mode'])
-        uniqloc = mypandas.clustername.unique().to_list()
-        if 'location' in mypandas.columns:
+        uniqloc = input.clustername.unique().to_list()
+        if 'location' in input.columns:
             if len(uniqloc) < 2:
                 raise CoaTypeError('What do you want me to do ? You have selected, only one country.'
                                    'There is no sens to use this method. See help.')
-        mypandas = mypandas[['date', 'clustername', input_field]]
+        input = input[['date', 'clustername', input_field]]
 
-        mypivot = pd.pivot_table(mypandas, index='date', columns='clustername', values=input_field)
+        mypivot = pd.pivot_table(input = None, index='date', columns='clustername', values=input_field)
         source = ColumnDataSource(mypivot)
 
         filter_data1 = mypivot[[uniqloc[0]]].rename(columns={uniqloc[0]: 'cases'})
@@ -523,25 +595,25 @@ class CocoDisplay:
         Decorator function used for histogram and map
         """
         @wraps(func)
-        def inner_hm(self, mypandas, input_field = None, **kwargs):
+        def inner_hm(self, input = None, input_field = None, **kwargs):
             orientation = kwargs.get('orientation', self.dvisu_default['orientation'])
             cursor_date = kwargs.get('cursor_date', None)
             #if orientation:
             #    kwargs['orientation'] = orientation
             #kwargs['cursor_date'] = kwargs.get('cursor_date',  self.dvisu_default['cursor_date'])
 
-            if isinstance(mypandas['location'].iloc[0],list):
-                mypandas['rolloverdisplay'] = mypandas['clustername']
-                mypandas = mypandas.explode('location')
+            if isinstance(input['location'].iloc[0],list):
+                input['rolloverdisplay'] = input['clustername']
+                input = input.explode('location')
             else:
-                mypandas['rolloverdisplay'] = mypandas['location']
+                input['rolloverdisplay'] = input['location']
 
-            uniqloc = mypandas.clustername.unique()
+            uniqloc = input.clustername.unique()
 
             if func.__name__ != 'pycoa_mapfolium' and  func.__name__ != 'innerdecopycoageo':
-                    mypandas = mypandas.drop_duplicates(["date", "codelocation","clustername"])
+                    input = input.drop_duplicates(["date", "codelocation","clustername"])
 
-            geopdwd = mypandas
+            geopdwd = input
             geopdwd = geopdwd.sort_values(by = input_field, ascending=False)
             geopdwd = geopdwd.reset_index(drop = True)
 
@@ -554,8 +626,8 @@ class CocoDisplay:
 
             wanted_date = date_slider.value_as_datetime.date()
 
-            if func.__name__ == 'pycoa_mapfolium' or func.__name__ == 'innerdecomap' or func.__name__ == 'innerdecopycoageo':
-                if isinstance(mypandas.location.to_list()[0],list):
+            if func.__name__ == 'pycoa_mapfolium' or func.__name__ == 'pycoa_map' or func.__name__ == 'innerdecomap' or func.__name__ == 'innerdecopycoageo':
+                if isinstance(input.location.to_list()[0],list):
                     geom = self.location_geometry
                     geodic={loc:geom.loc[geom.location==loc]['geometry'].values[0] for loc in geopdwd.location.unique()}
                     geopdwd['geometry'] = geopdwd['location'].map(geodic)
@@ -588,35 +660,36 @@ class CocoDisplay:
     ''' VERTICAL HISTO '''
     @decowrapper
     @decohistomap
-    def pycoa_histo(self, geopdwd, input_field = None, **kwargs):
-        """Create a Bokeh histogram from a pandas input
-        Keyword arguments
-        -----------------
-        babepandas : pandas consided
-        input_field : variable from pandas data. If pandas is produced from pycoa get_stat method
-        then 'daily','weekly' and 'cumul' can be also used
-        title: title for the figure , no title by default
-        width_height : as a list of width and height of the histo, default [500,400]
-        bins : number of bins of the hitogram default 50
-        when : - default None
-                dates are given under the format dd/mm/yyyy. In the when
-                option, one can give one date which will be the end of
-                the data slice. Or one can give two dates separated with
-                ":", which will define the time cut for the output data
-                btw those two dates.
-        Note
-        -----------------
-        HoverTool is available it returns position of the middle of the bin and the value.
-        """
+    def pycoa_histo(self,  geopdwd, input_field = None, **kwargs):
+        '''
+            -----------------
+            Create 1D histogramme by value according to arguments.
+            See help(pycoa_histo).
+            Keyword arguments
+            -----------------
+            - geopdwd : A DataFrame with a Pycoa struture is mandatory
+            |location|date|Variable desired|daily|cumul|weekly|codelocation|clustername|permanentdisplay|rolloverdisplay|
+            - input_field = if None take second element could be a list
+            - plot_heigh= width_height_default[1]
+            - plot_width = width_height_default[0]
+            - title = None
+            - textcopyrightposition = left
+            - textcopyright = default
+            - when : default min and max according to the inpude DataFrame.
+                     Dates are given under the format dd/mm/yyyy.
+                     when format [dd/mm/yyyy : dd/mm/yyyy]
+                     if [:dd/mm/yyyy] min date up to
+                     if [dd/mm/yyyy:] up to max date
+        '''
         geopdwd_filter = geopdwd.loc[geopdwd.date == self.when_end]
         geopdwd_filter = geopdwd_filter.reset_index(drop = True)
 
-        mypandas = geopdwd_filter.rename(columns = {'cases': input_field})
+        input = geopdwd_filter.rename(columns = {'cases': input_field})
         binning = kwargs.get('bins')
 
-        if 'location' in mypandas.columns:
-            uniqloc = list(mypandas.clustername.unique())
-            allval  = mypandas.loc[mypandas.clustername.isin(uniqloc)][['clustername', input_field,'permanentdisplay']]
+        if 'location' in input.columns:
+            uniqloc = list(input.clustername.unique())
+            allval  = input.loc[input.clustername.isin(uniqloc)][['clustername', input_field,'permanentdisplay']]
             min_val = allval[input_field].min()
             max_val = allval[input_field].max()
 
@@ -754,11 +827,11 @@ class CocoDisplay:
                 geopdwd = self.add_columns_for_pie_chart(geopdwd,input_field)
 
             source = ColumnDataSource(data = geopdwd)
-            mypandas_filter = geopdwd_filter
-            srcfiltered = ColumnDataSource(data = mypandas_filter)
-            max_value = mypandas_filter[input_field].max()
-            min_value = mypandas_filter[input_field].min()
-            min_value_gt0 = mypandas_filter[mypandas_filter[input_field] > 0][input_field].min()
+            input_filter = geopdwd_filter
+            srcfiltered = ColumnDataSource(data = input_filter)
+            max_value = input_filter[input_field].max()
+            min_value = input_filter[input_field].min()
+            min_value_gt0 = input_filter[input_filter[input_field] > 0][input_field].min()
             panels = []
             for axis_type in self.ax_type:
                 plot_width = kwargs['plot_width']
@@ -767,11 +840,11 @@ class CocoDisplay:
 
                 standardfig.xaxis[0].formatter = PrintfTickFormatter(format="%4.2e")
                 standardfig.x_range = Range1d(0.01, 1.2 * max_value)
-                if not mypandas_filter[mypandas_filter[input_field] < 0.].empty:
+                if not input_filter[input_filter[input_field] < 0.].empty:
                     standardfig.x_range = Range1d(1.2 * min_value, 1.2 * max_value)
 
                 if axis_type == "log":
-                    if not mypandas_filter[mypandas_filter[input_field] < 0.].empty:
+                    if not input_filter[input_filter[input_field] < 0.].empty:
                         print('Some value are negative, can\'t display log scale in this context')
                     else:
                         if func.__name__ == 'pycoa_horizonhisto' :
@@ -779,7 +852,7 @@ class CocoDisplay:
                             srcfiltered.data['left'] = [0.01] * len(srcfiltered.data['right'])
 
                 if func.__name__ == 'pycoa_pie' :
-                    if not mypandas_filter[mypandas_filter[input_field] < 0.].empty:
+                    if not input_filter[input_filter[input_field] < 0.].empty:
                         raise CoaKeyError('Some values are negative, can\'t display a Pie chart, try histo by location')
                     standardfig.plot_width = plot_height
                     standardfig.plot_height = plot_height
@@ -980,6 +1053,29 @@ class CocoDisplay:
     @decohistomap
     @decohistopie
     def pycoa_horizonhisto(self, srcfiltered, panels, date_slider):
+        '''
+            -----------------
+            Create 1D histogramme by location according to arguments.
+            See help(pycoa_histo).
+            Keyword arguments
+            -----------------
+            - srcfiltered : A DataFrame with a Pycoa struture is mandatory
+            |location|date|Variable desired|daily|cumul|weekly|codelocation|clustername|permanentdisplay|rolloverdisplay|
+            - input_field = if None take second element could be a list
+            - plot_heigh= width_height_default[1]
+            - plot_width = width_height_default[0]
+            - title = None
+            - textcopyrightposition = left
+            - textcopyright = default
+            - mode = mouse
+            - cursor_date = None if True
+                    - orientation = horizontal
+            - when : default min and max according to the inpude DataFrame.
+                         Dates are given under the format dd/mm/yyyy.
+                         when format [dd/mm/yyyy : dd/mm/yyyy]
+                         if [:dd/mm/yyyy] min date up to
+                         if [dd/mm/yyyy:] up to max date
+        '''
         n = len(panels)
         loc = srcfiltered.data['permanentdisplay']#srcfiltered.data['codelocation']
         chars = [' ','-']
@@ -1012,10 +1108,50 @@ class CocoDisplay:
         return tabs
 
     ''' PIE '''
+    def add_columns_for_pie_chart(self,df,column_name):
+        r = 0.9
+        df = df.copy()
+        column_sum = df[column_name].sum()
+        df['percentage'] = (df[column_name]/column_sum)
+        #(( df['percentage'] * 100 ).astype(np.double).round(2)).apply(lambda x: str(x)+'%')
+        percentages = [0]  + df['percentage'].cumsum().tolist()
+        df['angle'] = (df[column_name]/column_sum)*2 * np.pi
+        df['starts'] = [p * 2 * np.pi for p in percentages[:-1]]
+        df['ends'] = [p * 2 * np.pi for p in percentages[1:]]
+        #df['middle'] = (df['starts'] + df['ends'])/2
+        df['diff'] = (df['ends'] - df['starts'])
+        df['middle'] = df['starts']+np.abs(df['ends']-df['starts'])/2.
+
+        df['text_size'] = '10pt'
+        df['text_angle'] = 0.
+        df.loc[:, 'percentage'] = (( df['percentage'] * 100 ).astype(np.double).round(2)).apply(lambda x: str(x))
+        df['textdisplayed']=df['permanentdisplay'].astype(str).str.pad(15, side = "left")
+        df['textdisplayed2'] = df[column_name].astype(np.double).round(1).astype(str).str.pad(46, side = "left")
+        df.loc[df['diff']<= np.pi/20,'textdisplayed']=''
+        df.loc[df['diff']<= np.pi/20,'textdisplayed2']=''
+        return df
     @decowrapper
     @decohistomap
     @decohistopie
     def pycoa_pie(self, srcfiltered, panels, date_slider):
+        '''
+            -----------------
+            Create a pie chart according to arguments.
+            See help(pycoa_pie).
+            Keyword arguments
+            -----------------
+            - srcfiltered : A DataFrame with a Pycoa struture is mandatory
+            |location|date|Variable desired|daily|cumul|weekly|codelocation|clustername|permanentdisplay|rolloverdisplay|
+            - input_field = if None take second element could be a list
+            - plot_heigh= width_height_default[1]
+            - plot_width = width_height_default[0]
+            - title = None
+            - textcopyrightposition = left
+            - textcopyright = default
+            - mode = mouse
+            - cursor_date = None if True
+                    - orientation = horizontal
+        '''
         standardfig = panels[0].child
         standardfig.x_range = Range1d(-1.1, 1.1)
         standardfig.y_range = Range1d(-1.1, 1.1)
@@ -1043,26 +1179,29 @@ class CocoDisplay:
     @decowrapper
     @decohistomap
     def pycoa_mapfolium(self, geopdwd, input_field, **kwargs):
-        """Create a Folium map from a pandas input
-        Folium limite so far:
-            - scale format can not be changed (no way to use scientific notation)
-            - map can not be saved as png only html format
-                - save_map2png for this purpose (available only in command line, not in iconic form)
-        Keyword arguments
-        -----------------
-        babepandas : pandas considered
-        which_data: variable from pandas data. If pandas is produced from pycoa get_stat method
-        then 'daily', 'weekly' and 'cumul' can be also used
-        width_height : as a list of width and height of the histo, default [500,400]
-        when   --   dates are given under the format dd/mm/yyyy. In the when
-                        option, one can give one date which will be the end of
-                        the data slice. Or one can give two dates separated with
-                        ":", which will define the time cut for the output data
-                        btw those two dates.
-                    only the when_end date is taking into account [:dd/mm/yyyy]
-        Known issue: format for scale can not be changed. When data value are important
-        overlaped display appear
-        """
+        '''
+            -----------------
+            Create a map folium to arguments.
+            See help(pycoa_histo).
+            Keyword arguments
+            -----------------
+            - srcfiltered : A DataFrame with a Pycoa struture is mandatory
+            |location|date|Variable desired|daily|cumul|weekly|codelocation|clustername|permanentdisplay|rolloverdisplay|
+            - input_field = if None take second element could be a list
+            - plot_heigh= width_height_default[1]
+            - plot_width = width_height_default[0]
+            - title = None
+            - textcopyrightposition = left
+            - textcopyright = default
+            - mode = mouse
+            - cursor_date = None if True
+                    - orientation = horizontal
+            - when : default min and max according to the inpude DataFrame.
+                         Dates are given under the format dd/mm/yyyy.
+                         when format [dd/mm/yyyy : dd/mm/yyyy]
+                         if [:dd/mm/yyyy] min date up to
+                         if [dd/mm/yyyy:] up to max date
+        '''
         title = kwargs.get('title', None)
         tile =  kwargs.get('tile', self.dvisu_default['tile'])
         plot_width = kwargs.get('plot_width',self.dfigure_default['plot_width'])
@@ -1166,6 +1305,7 @@ class CocoDisplay:
 
     ''' DECORATOR FOR MAP BOKEH '''
     def decopycoageo(func):
+        @wraps(func)
         def innerdecopycoageo(self, geopdwd, input_field, **kwargs):
             geopdwd['cases'] = geopdwd[input_field]
             geopdwd_filtered = geopdwd.loc[geopdwd.date == self.when_end]
@@ -1214,6 +1354,7 @@ class CocoDisplay:
         return geopdwd_filtered
 
     def decomap(func):
+        @wraps(func)
         def innerdecomap(self, geopdwd, geopdwd_filtered, **kwargs):
             title = kwargs.get('title', None)
             maplabel = kwargs.get('maplabel',self.dvisu_default['maplabel'])
@@ -1289,22 +1430,31 @@ class CocoDisplay:
     @decopycoageo
     @decomap
     def pycoa_map(self, geopdwd, geopdwd_filtered, sourcemaplabel, standardfig,**kwargs):
-        """Create a Bokeh map from a pandas input
-        Keyword arguments
-        -----------------
-        babepandas : pandas considered
-        Input parameters:
-          - what (default:None) at precise date: by default get_which() set in get_stats()
-           could be 'daily' or cumul or 'weekly'
-          - when   --   dates are given under the format dd/mm/yyyy. In the when
-                          option, one can give one date which will be the end of
-                          the data slice. Or one can give two dates separated with
-                          ":", which will define the time cut for the output data
-                          btw those two dates.
-                         Only the when_end date is taking into account [:dd/mm/yyyy]
-          - plot_width, plot_height (default [500,400]): bokeh variable for map size
-        Known issue: can not avoid to display value when there are Nan values
-        """
+        '''
+            -----------------
+            Create a map folium to arguments.
+            See help(pycoa_histo).
+            Keyword arguments
+            -----------------
+            - srcfiltered : A DataFrame with a Pycoa struture is mandatory
+            |location|date|Variable desired|daily|cumul|weekly|codelocation|clustername|permanentdisplay|rolloverdisplay|
+            - input_field = if None take second element could be a list
+            - plot_heigh= width_height_default[1]
+            - plot_width = width_height_default[0]
+            - title = None
+            - textcopyrightposition = left
+            - textcopyright = default
+            - mode = mouse
+            - cursor_date = None if True
+                    - orientation = horizontal
+            - when : default min and max according to the inpude DataFrame.
+                         Dates are given under the format dd/mm/yyyy.
+                         when format [dd/mm/yyyy : dd/mm/yyyy]
+                         if [:dd/mm/yyyy] min date up to
+                         if [dd/mm/yyyy:] up to max date
+            - tile : tile
+            - maplabel: False
+        '''
         date_slider = kwargs['date_slider']
         maplabel = kwargs.get('maplabel',self.dvisu_default['maplabel'])
         min_col, max_col = CocoDisplay.min_max_range(np.nanmin(geopdwd_filtered['cases']),
@@ -1423,7 +1573,9 @@ class CocoDisplay:
                 tile = r'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
             else:
                 tile = r'http://c.tile.openstreetmap.org/{Z}/{X}/{Y}.png'
-        #elif tilename == 'positron':
+        elif tilename == 'positron':
+            print('Problem with positron tile (huge http resquest need to check), esri is then used ...')
+            tile = r'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}.png'
         #    tile = 'https://tiles.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png'
         elif tilename == 'esri':
             tile = r'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}.png'
@@ -1662,34 +1814,8 @@ class CocoDisplay:
                   }
                   return s;
                 """)
-    ###################### END Static Methods ##################
-    def add_columns_for_pie_chart(self,df,column_name):
-        r = 0.9
-        df = df.copy()
-        column_sum = df[column_name].sum()
-        df['percentage'] = (df[column_name]/column_sum)
-        #(( df['percentage'] * 100 ).astype(np.double).round(2)).apply(lambda x: str(x)+'%')
-        percentages = [0]  + df['percentage'].cumsum().tolist()
-        df['angle'] = (df[column_name]/column_sum)*2 * np.pi
-        df['starts'] = [p * 2 * np.pi for p in percentages[:-1]]
-        df['ends'] = [p * 2 * np.pi for p in percentages[1:]]
-        #df['middle'] = (df['starts'] + df['ends'])/2
-        df['diff'] = (df['ends'] - df['starts'])
-        df['middle'] = df['starts']+np.abs(df['ends']-df['starts'])/2.
-
-        df['text_size'] = '10pt'
-        df['text_angle'] = 0.
-        df.loc[:, 'percentage'] = (( df['percentage'] * 100 ).astype(np.double).round(2)).apply(lambda x: str(x))
-        df['textdisplayed']=df['permanentdisplay'].astype(str).str.pad(15, side = "left")
-        df['textdisplayed2'] = df[column_name].astype(np.double).round(1).astype(str).str.pad(46, side = "left")
-        df.loc[df['diff']<= np.pi/20,'textdisplayed']=''
-        df.loc[df['diff']<= np.pi/20,'textdisplayed2']=''
-        return df
-    ###################### BEGIN Plots ##################
-
-
-    #### NOT YET IMPLEMENTED WITH THIS CURRENT VERSION ... TO DO ...
-    #took from https://github.com/iiSeymour/sparkline-nb/blob/master/sparkline-nb.ipynb
+    ######################
+    @staticmethod
     def sparkline(data, figsize=(0.5, 0.5), **kwags):
         """
         Returns a HTML image tag containing a base64 encoded sparkline style plot
@@ -1710,71 +1836,4 @@ class CocoDisplay:
         img.seek(0)
         plt.close()
         return 'data:image/png;base64,' + "{}".format(base64.b64encode(img.read()).decode())
-
-
-    def spark_pandas(self, pandy, which_data):
-        """
-            Return pandas : location as index andwhich_data as sparkline (latest 30 values)
-        """
-        pd.DataFrame._repr_html_ = lambda self: self.to_html(escape=False)
-        loc = pandy['location'].unique()
-        resume = pd.DataFrame({
-            'location': loc,
-            'cases':
-                [CocoDisplay.sparkline(pandy.groupby('location')[which_data].apply(list)[i][-30:])
-                 for i in loc]})
-        return resume.set_index('location')
-
-    def crystal_fig(self, crys, err_y):
-        sline = []
-        scolumn = []
-        i = 1
-        list_fits_fig = crys.GetListFits()
-        for dct in list_fits_fig:
-            for key, value in dct.items():
-                location = key
-                if math.nan not in value[0] and math.nan not in value[1]:
-                    maxy = crys.GetFitsParameters()[location][1]
-                    if not math.isnan(maxy):
-                        maxy = int(maxy)
-                    leg = 'From fit : tmax:' + \
-                          str(crys.GetFitsParameters()[location][0])
-                    leg += '   Tot deaths:' + str(maxy)
-                    fig = figure(plot_width=300, plot_height=200,
-                                 tools=['box_zoom,box_select,crosshair,reset'], title=leg, x_axis_type="datetime")
-
-                    date = [extract_dates(i)
-                            for i in self.p.getDates()]
-                    if err_y:
-                        fig.circle(
-                            date, value[0], color=self.scolors[i % 10], legend_label=location)
-                        y_err_x = []
-                        y_err_y = []
-                        for px, py in zip(date, value[0]):
-                            err = np.sqrt(np.abs(py))
-                            y_err_x.append((px, px))
-                            y_err_y.append((py - err, py + err))
-                        fig.multi_line(y_err_x, y_err_y,
-                                       color=self.scolors[i % 10])
-                    else:
-                        fig.line(
-                            date, value[0], line_color=self.scolors[i % 10], legend_label=location)
-
-                    fig.line(date[:crys.GetTotalDaysConsidered(
-                    )], value[1][:crys.GetTotalDaysConsidered()], line_color='red', line_width=4)
-
-                    fig.xaxis.formatter = DatetimeTickFormatter(
-                        days=["%d %b %y"], months=["%d %b %y"], years=["%d %b %y"])
-                    fig.xaxis.major_label_orientation = np.pi / 4
-                    fig.xaxis.ticker.desired_num_ticks = 10
-                    fig.legend.location = "bottom_left"
-                    fig.legend.title_text_font_style = "bold"
-                    fig.legend.title_text_font_size = "5px"
-
-                    scolumn.append(fig)
-                    if i % 2 == 0:
-                        sline.append(scolumn)
-                        scolumn = []
-                    i += 1
-        fig = gridplot(sline)
-        return fig
+    ###################### END Static Methods ##################

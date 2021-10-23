@@ -886,7 +886,8 @@ class CocoDisplay:
                                 top.push((orderval.length-i) + bthick/2);
                                 bottom.push((orderval.length-i) - bthick/2);
 
-                                if(orderval[i]<0)
+                                if (isNaN(orderval[i])) orderval[i] = 0.;
+                                if(orderval[i]<=0.)
                                 {
                                     left_quad.push(orderval[i]);
                                     right_quad.push(0.);
@@ -942,7 +943,7 @@ class CocoDisplay:
 
                             x_range.end =  1.2 * maxx;
                             x_range.start =  1.05 * minx;
-                            if(x_axis_type==='log' && minx >= 0){
+                            if(minx >= 0){
                                 x_range.start =  0.01;
                                 source_filter.data['left'] = Array(left_quad.length).fill(0.01);
                                 }
@@ -1414,7 +1415,7 @@ class CocoDisplay:
 
     ###################### BEGIN Static Methods ##################
     @staticmethod
-    def convert_tile(tilename, which = 'bokeh', tile_default = 'positron'):
+    def convert_tile(tilename, which = 'bokeh', tile_default = 'openstreet'):
         ''' Return tiles url according to folium or bokeh resquested'''
         tile = ''
         if tilename == 'openstreet':
@@ -1422,8 +1423,8 @@ class CocoDisplay:
                 tile = r'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
             else:
                 tile = r'http://c.tile.openstreetmap.org/{Z}/{X}/{Y}.png'
-        elif tilename == 'positron':
-            tile = 'https://tiles.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png'
+        #elif tilename == 'positron':
+        #    tile = 'https://tiles.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png'
         elif tilename == 'esri':
             tile = r'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}.png'
         elif tilename == 'stamen':

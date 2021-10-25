@@ -271,8 +271,6 @@ class CocoDisplay:
                 else:
                     when_end_change = min(when_end_change,CocoDisplay.changeto_nonull_date(input, when_end, i))
 
-            #if func.__name__ == 'pycoa_histo' or func.__name__ == 'inner_decohistopie' or  func.__name__ == 'innerdecopycoageo' or \
-            #    func.__name__ == 'pycoa_mapfolium' or func.__name__ == 'pycoa_map' or func.__name__ == 'pycoa_sparkmap':
             if func.__name__ != 'pycoa_date_plot'  and func.__name__ != 'pycoa_plot':
                 if len(input_field) > 1:
                     print(str(input_field) + ' is dim = ' + str(len(input_field)) + '. No effect with ' + func.__name__ + '! Take the first input: ' + input_field[0])
@@ -286,8 +284,7 @@ class CocoDisplay:
             input = input.loc[(input['date'] >=  self.when_beg) & (input['date'] <=  self.when_end)]
 
             title_temporal = ' (' + 'between ' + when_beg.strftime('%d/%m/%Y') + ' and ' + when_end.strftime('%d/%m/%Y') + ')'
-            #if func.__name__ == 'pycoa_mapfolium' or func.__name__ == 'pycoa_map' or func.__name__ ==  'innerdecopycoageo'  or func.__name__ ==  'pycoa_histo' or func.__name__ ==  'inner_decohistopie':
-            if func.__name__ == 'pycoa_mapfolium' or func.__name__ == 'pycoa_map' or func.__name__ ==  'pycoa_histo' or  func.__name__ ==  'pycoa_pie' or func.__name__ ==  'pycoa_horizonhisto':
+            if func.__name__ != 'pycoa_date_plot'  and func.__name__ != 'pycoa_plot':
                 title_temporal = ' (' + when_end.strftime('%d/%m/%Y')  + ')'
             if option:
                 title_temporal = ', option ' + option + title_temporal
@@ -786,6 +783,7 @@ class CocoDisplay:
             dico_utc = {i: DateSlider(value=i).value for i in my_date}
             geopdwd['date_utc'] = [dico_utc[i] for i in geopdwd.date]
             geopdwd = geopdwd.drop_duplicates(["date", "codelocation","clustername"])#for sumall avoid duplicate
+            geopdwd_filter = geopdwd_filter.drop_duplicates(["date", "codelocation","clustername"])
             geopdwd_filter = geopdwd_filter.sort_values(by='cases', ascending = False).reset_index()
             locunique = geopdwd_filter.clustername.unique()#geopdwd_filtered.location.unique()
             geopdwd_filter = geopdwd_filter.copy()

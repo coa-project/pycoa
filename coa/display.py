@@ -77,8 +77,8 @@ class CocoDisplay:
 
         self.options_stats  = ['when','input','input_field']
         self.options_charts = [ 'bins']
-        self.options_front = ['option','where','what', 'which','visu']
-        self.available_tiles = ['openstreet','esri', 'openstreet', 'stamen', 'positron']
+        self.options_front = ['where','option','which']
+        self.available_tiles = ['openstreet','esri','stamen','positron']
         self.available_modes = ['mouse','vline','hline']
         self.available_textcopyrightposition = ['left','right']
 
@@ -88,7 +88,7 @@ class CocoDisplay:
         self.when_beg = dt.date(1, 1, 1)
         self.when_end = dt.date(1, 1, 1)
 
-        self.alloptions =  self.options_stats + self.options_charts + list(self.dfigure_default.keys()) + list(self.dvisu_default.keys())
+        self.alloptions =  self.options_stats + self.options_charts + self.options_front + list(self.dfigure_default.keys()) + list(self.dvisu_default.keys())
 
         try:
             if self.dbld[self.database_name][0] != 'WW' :
@@ -158,7 +158,7 @@ class CocoDisplay:
                                           text_font_size='1.5vh', background_fill_color='white', background_fill_alpha=.75,
                                           text=textcopyright)
 
-        for i in list(self.dvisu_default.keys()) + ['textcopyright', 'textcopyrightposition'] + self.options_stats + ['date_slider']:
+        for i in list(self.dvisu_default.keys())  + self.options_front + self.options_charts + ['textcopyright', 'textcopyrightposition'] + self.options_stats + ['date_slider']:
             if i in kwargs.keys():
                 kwargs.pop(i)
         fig = figure(**kwargs, tools=['save', 'box_zoom,reset'], toolbar_location="right")
@@ -180,42 +180,19 @@ class CocoDisplay:
             """
             if not isinstance(input, pd.DataFrame):
                 raise CoaTypeError(input + 'Must be a pandas, with pycoa structure !')
-            for i in self.options_front:#from the front end !
-                if i in kwargs:
-                    kwargs.pop(i)
+
             kwargs_test(kwargs, self.alloptions, 'Bad args used in the display function.')
             if input_field is None:
-                input_field = 'cumul'
-            when = kwargs.get('when', None)
-            option = kwargs.get('option', '')
-            bins = kwargs.get('bins', 10)
+                input_field = input.columns[2]
 
+            when = kwargs.get('when', None)
+            option = kwargs.get('option', None)
+            bins = kwargs.get('bins', 10)
             title = kwargs.get('title', None)
             #textcopyright = kwargs.get('textcopyright', 'default')
             #textcopyrightposition = kwargs.get('textcopyrightposition', 'left')
             kwargs['plot_width'] = kwargs.get('plot_width', self.dfigure_default['plot_width'])
             kwargs['plot_height'] = kwargs.get('plot_height', self.dfigure_default['plot_height'])
-            mode = kwargs.get('mode', None)
-            if mode:
-                mode = mode
-            else:
-                mode = self.dvisu_default['mode']
-            if mode not in self.available_modes:
-                raise CoaTypeError('Don\'t know the mode wanted. So far:' + str(self.available_modes))
-            kwargs['mode'] = mode
-
-            tile = kwargs.get('tile', None)
-            if tile:
-                tile = tile
-            else:
-                tile = self.dvisu_default['tile']
-            kwargs['tile'] = CocoDisplay.convert_tile(tile, func.__name__,self.available_tiles[0])
-            orientation = kwargs.get('orientation', 'horizontal')
-            cursor_date = kwargs.get('cursor_date', None)
-            maplabel = kwargs.get('maplabel', None)
-            if maplabel:
-                maplabel = maplabel
-            kwargs['maplabel'] = maplabel
 
             if 'where' in input.columns:
                 input = input.rename(columns={'where': 'location'})
@@ -294,8 +271,9 @@ class CocoDisplay:
                 else:
                     when_end_change = min(when_end_change,CocoDisplay.changeto_nonull_date(input, when_end, i))
 
-            if func.__name__ == 'pycoa_histo' or func.__name__ == 'inner_decohistopie' or  func.__name__ == 'innerdecopycoageo' or \
-                func.__name__ == 'pycoa_mapfolium' or func.__name__ == 'pycoa_map' or func.__name__ == 'pycoa_sparkmap':
+            #if func.__name__ == 'pycoa_histo' or func.__name__ == 'inner_decohistopie' or  func.__name__ == 'innerdecopycoageo' or \
+            #    func.__name__ == 'pycoa_mapfolium' or func.__name__ == 'pycoa_map' or func.__name__ == 'pycoa_sparkmap':
+            if func.__name__ != 'pycoa_date_plot'  and func.__name__ != 'pycoa_plot':
                 if len(input_field) > 1:
                     print(str(input_field) + ' is dim = ' + str(len(input_field)) + '. No effect with ' + func.__name__ + '! Take the first input: ' + input_field[0])
                 input_field = input_field[0]
@@ -308,9 +286,10 @@ class CocoDisplay:
             input = input.loc[(input['date'] >=  self.when_beg) & (input['date'] <=  self.when_end)]
 
             title_temporal = ' (' + 'between ' + when_beg.strftime('%d/%m/%Y') + ' and ' + when_end.strftime('%d/%m/%Y') + ')'
-            if func.__name__ == 'pycoa_mapfolium' or func.__name__ == 'pycoa_map' or func.__name__ ==  'innerdecopycoageo'  or func.__name__ ==  'pycoa_histo' or func.__name__ ==  'inner_decohistopie':
+            #if func.__name__ == 'pycoa_mapfolium' or func.__name__ == 'pycoa_map' or func.__name__ ==  'innerdecopycoageo'  or func.__name__ ==  'pycoa_histo' or func.__name__ ==  'inner_decohistopie':
+            if func.__name__ == 'pycoa_mapfolium' or func.__name__ == 'pycoa_map' or func.__name__ ==  'pycoa_histo' or  func.__name__ ==  'pycoa_pie' or func.__name__ ==  'pycoa_horizonhisto':
                 title_temporal = ' (' + when_end.strftime('%d/%m/%Y')  + ')'
-            if option != '':
+            if option:
                 title_temporal = ', option ' + option + title_temporal
 
             input_field_tostring = str(input_field).replace('[', '').replace(']', '').replace('\'', '')
@@ -338,7 +317,15 @@ class CocoDisplay:
         """
         @wraps(func)
         def inner_plot(self, input = None, input_field = None, **kwargs):
-            dict_filter_data = defaultdict(list)
+            mode = kwargs.get('mode', None)
+            if mode:
+                mode = mode
+            else:
+                mode = self.dvisu_default['mode']
+            if mode not in self.available_modes:
+                raise CoaTypeError('Don\'t know the mode wanted. So far:' + str(self.available_modes))
+            kwargs['mode'] = mode
+
             if 'location' in input.columns:
                 new = pd.DataFrame(columns = input.columns)
                 location_ordered_byvalues = list(
@@ -596,6 +583,20 @@ class CocoDisplay:
         """
         @wraps(func)
         def inner_hm(self, input = None, input_field = None, **kwargs):
+            tile = kwargs.get('tile', None)
+            if tile:
+                tile = tile
+            else:
+                tile = self.dvisu_default['tile']
+
+            maplabel = kwargs.get('maplabel', None)
+            if maplabel:
+                maplabel = maplabel
+
+            if 'map' in func.__name__:
+                kwargs['tile'] = tile
+                kwargs['maplabel'] = maplabel
+
             orientation = kwargs.get('orientation', self.dvisu_default['orientation'])
             cursor_date = kwargs.get('cursor_date', None)
             #if orientation:
@@ -610,9 +611,6 @@ class CocoDisplay:
 
             uniqloc = input.clustername.unique()
 
-            if func.__name__ != 'pycoa_mapfolium' and  func.__name__ != 'innerdecopycoageo':
-                    input = input.drop_duplicates(["date", "codelocation","clustername"])
-
             geopdwd = input
             geopdwd = geopdwd.sort_values(by = input_field, ascending=False)
             geopdwd = geopdwd.reset_index(drop = True)
@@ -626,7 +624,8 @@ class CocoDisplay:
 
             wanted_date = date_slider.value_as_datetime.date()
 
-            if func.__name__ == 'pycoa_mapfolium' or func.__name__ == 'pycoa_map' or func.__name__ == 'innerdecomap' or func.__name__ == 'innerdecopycoageo':
+            #if func.__name__ == 'pycoa_mapfolium' or func.__name__ == 'pycoa_map' or func.__name__ == 'innerdecomap' or func.__name__ == 'innerdecopycoageo':
+            if func.__name__ == 'pycoa_mapfolium' or func.__name__ == 'pycoa_map':
                 if isinstance(input.location.to_list()[0],list):
                     geom = self.location_geometry
                     geodic={loc:geom.loc[geom.location==loc]['geometry'].values[0] for loc in geopdwd.location.unique()}
@@ -685,7 +684,7 @@ class CocoDisplay:
         geopdwd_filter = geopdwd_filter.reset_index(drop = True)
 
         input = geopdwd_filter.rename(columns = {'cases': input_field})
-        binning = kwargs.get('bins')
+        bins = kwargs.get('bins', None)
 
         if 'location' in input.columns:
             uniqloc = list(input.clustername.unique())
@@ -693,11 +692,11 @@ class CocoDisplay:
             min_val = allval[input_field].min()
             max_val = allval[input_field].max()
 
-            if binning:
-                bins = binning
+            if bins:
+                bins = bins
             else:
                 if len(uniqloc) == 1:
-                    binning = 2
+                    bins = 2
                     min_val = 0.
                 else:
                     bins = 10
@@ -771,6 +770,7 @@ class CocoDisplay:
 
     ''' DECORATORS FOR HISTO VERTICAL, HISTO HORIZONTAL, PIE '''
     def decohistopie(func):
+        @wraps(func)
         def inner_decohistopie(self, geopdwd, input_field, **kwargs):
             """
             Decorator for
@@ -829,9 +829,9 @@ class CocoDisplay:
             source = ColumnDataSource(data = geopdwd)
             input_filter = geopdwd_filter
             srcfiltered = ColumnDataSource(data = input_filter)
-            max_value = input_filter[input_field].max()
-            min_value = input_filter[input_field].min()
-            min_value_gt0 = input_filter[input_filter[input_field] > 0][input_field].min()
+            max_value = max(input_filter['cases'])
+            min_value = min(input_filter['cases'])
+            min_value_gt0 = min(input_filter[input_filter['cases'] > 0]['cases'])
             panels = []
             for axis_type in self.ax_type:
                 plot_width = kwargs['plot_width']
@@ -1204,6 +1204,7 @@ class CocoDisplay:
         '''
         title = kwargs.get('title', None)
         tile =  kwargs.get('tile', self.dvisu_default['tile'])
+        tile = CocoDisplay.convert_tile(tile, 'folium')
         plot_width = kwargs.get('plot_width',self.dfigure_default['plot_width'])
         plot_height = kwargs.get('plot_height',self.dfigure_default['plot_height'])
 
@@ -1211,7 +1212,6 @@ class CocoDisplay:
         geopdwd_filtered = geopdwd.loc[geopdwd.date == self.when_end]
         geopdwd_filtered = geopdwd_filtered.reset_index(drop = True)
         geopdwd_filtered['cases'] = geopdwd_filtered[input_field]
-
         my_date = geopdwd.date.unique()
         dico_utc = {i: DateSlider(value=i).value for i in my_date}
         geopdwd['date_utc'] = [dico_utc[i] for i in geopdwd.date]
@@ -1310,7 +1310,6 @@ class CocoDisplay:
             geopdwd['cases'] = geopdwd[input_field]
             geopdwd_filtered = geopdwd.loc[geopdwd.date == self.when_end]
             geopdwd_filtered = geopdwd_filtered.reset_index(drop = True)
-
             geopdwd_filtered = gpd.GeoDataFrame(geopdwd_filtered, geometry=geopdwd_filtered.geometry, crs="EPSG:4326")
             geopdwd = geopdwd.sort_values(by=['clustername', 'date'], ascending = [True, False])
             geopdwd_filtered = geopdwd_filtered.sort_values(by=['clustername', 'date'], ascending = [True, False]).drop(columns=['date', 'colors'])
@@ -1359,7 +1358,8 @@ class CocoDisplay:
             title = kwargs.get('title', None)
             maplabel = kwargs.get('maplabel',self.dvisu_default['maplabel'])
             title = kwargs.get('title', None)
-            tile = kwargs.get('tile', self.dvisu_default['tile'])
+            tile =  kwargs.get('tile', self.dvisu_default['tile'])
+            tile = CocoDisplay.convert_tile(tile, 'bokeh')
 
             sourcemaplabel = ColumnDataSource(pd.DataFrame({'centroidx':[],'centroidy':[],'cases':[],'spark':[]}))
             uniqloc = list(geopdwd_filtered.clustername.unique())
@@ -1432,7 +1432,7 @@ class CocoDisplay:
     def pycoa_map(self, geopdwd, geopdwd_filtered, sourcemaplabel, standardfig,**kwargs):
         '''
             -----------------
-            Create a map folium to arguments.
+            Create a map bokeh with arguments.
             See help(pycoa_histo).
             Keyword arguments
             -----------------
@@ -1556,6 +1556,32 @@ class CocoDisplay:
     @decopycoageo
     @decomap
     def pycoa_sparkmap(self, geopdwd, geopdwd_filtered, sourcemaplabel, standardfig,**kwargs):
+        '''
+            -----------------
+            Create a bokeh map with sparkline label and with to arguments.
+            See help(pycoa_histo).
+            Keyword arguments
+            -----------------
+            - srcfiltered : A DataFrame with a Pycoa struture is mandatory
+            |location|date|Variable desired|daily|cumul|weekly|codelocation|clustername|permanentdisplay|rolloverdisplay|
+            - input_field = if None take second element could be a list
+            - plot_heigh= width_height_default[1]
+            - plot_width = width_height_default[0]
+            - title = None
+            - textcopyrightposition = left
+            - textcopyright = default
+            - mode = mouse
+            - cursor_date = None if True
+                    - orientation = horizontal
+            - when : default min and max according to the inpude DataFrame.
+                         Dates are given under the format dd/mm/yyyy.
+                         when format [dd/mm/yyyy : dd/mm/yyyy]
+                         if [:dd/mm/yyyy] min date up to
+                         if [dd/mm/yyyy:] up to max date
+            - tile : tile
+            - maplabel: False
+        '''
+
         standardfig.xaxis.visible = False
         standardfig.yaxis.visible = False
         standardfig.xgrid.grid_line_color = None
@@ -1565,11 +1591,11 @@ class CocoDisplay:
 
     ###################### BEGIN Static Methods ##################
     @staticmethod
-    def convert_tile(tilename, which = 'bokeh', tile_default = 'openstreet'):
+    def convert_tile(tilename, which = 'bokeh'):
         ''' Return tiles url according to folium or bokeh resquested'''
-        tile = ''
+        tile = 'openstreet'
         if tilename == 'openstreet':
-            if which == 'pycoa_mapfolium':
+            if which == 'folium':
                 tile = r'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
             else:
                 tile = r'http://c.tile.openstreetmap.org/{Z}/{X}/{Y}.png'
@@ -1582,8 +1608,7 @@ class CocoDisplay:
         elif tilename == 'stamen':
             tile = r'http://tile.stamen.com/toner/{z}/{x}/{y}.png'
         else:
-            print('Don\'t know you tile ... take default one: ' + tile_default)
-            tile = tile_default
+            print('Don\'t know you tile ... take default one: ')
         return tile
     ######################
     @staticmethod

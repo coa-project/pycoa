@@ -10,6 +10,7 @@
 - Use kwargs in the backend remove dico
 - date_plot with several variable and several location
 - add mode : mode=vline or hline
+- Use @wraps in the decorator to get the real name and doctring of each method
  
 ## v2.10 - 
 - Map bug fixed for option='sumall'

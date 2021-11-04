@@ -4,7 +4,7 @@
 [![Made withJupyter](https://img.shields.io/badge/Made%20with-Jupyter-orange?style=for-the-badge&logo=Jupyter)](https://jupyter.org/try)
 ![GitHub last commit](https://img.shields.io/github/last-commit/pycoa/coa/dev?style=for-the-badge)
 ![GitHub](https://img.shields.io/github/license/pycoa/coa?style=for-the-badge)
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/coa-project/coadocker/HEAD)
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/coa-project/pycoa/dev)
 _April 2020/October 2021_
 
 [<img src="https://github.com/coa-project/coa-project.github.io/raw/main/fig/UK.png" height="14px" alt="UK flag"> English  version ](https://github.com/coa-project/pycoa)

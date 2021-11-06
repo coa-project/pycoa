@@ -40,6 +40,7 @@ import pandas as pd
 from functools import wraps
 import numpy as np
 from bokeh.io import show, output_notebook
+import types
 
 from coa.tools import kwargs_test, extract_dates, get_db_list_dict, info
 import coa.covid19 as coco
@@ -119,12 +120,15 @@ def listwhom(detailed=False):
 
      If detailed=True, gives information location of each given database.
     """
-    if detailed:
-        for i,j in zip(get_db_list_dict().keys(),np.array(list(get_db_list_dict().values()))[:,2]):
-            info(i,' associated to: ',j)
-        return dict(zip(get_db_list_dict().keys(),np.array(list(get_db_list_dict().values()))[:,0]))
-    else:
-        return _db.get_available_database()
+    try:
+        if int(detailed):
+            for i,j in zip(get_db_list_dict().keys(),np.array(list(get_db_list_dict().values()))[:,2]):
+                info(i,' associated to: ',j)
+            return dict(zip(get_db_list_dict().keys(),np.array(list(get_db_list_dict().values()))[:,0]))
+        else:
+            return _db.get_available_database()
+    except:
+        raise CoaKeyError('Waiting for a boolean !')
 
 
 # ----------------------------------------------------------------------

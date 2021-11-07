@@ -491,7 +491,7 @@ class DataBase(object):
                     "You may contact support@pycoa.fr. Thanks.")
             # some info
             info('Few information concernant the selected database : ', self.get_db())
-            info('Available which key-words for: ',self.get_available_keys_words())
+            info('Available key-words, which ∈',self.get_available_keys_words())
             info('Example of location : ',  ', '.join(random.choices(self.get_locations(), k=5)), ' ...')
             info('Last date data ', self.get_dates().max())
 

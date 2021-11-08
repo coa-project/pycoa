@@ -161,7 +161,7 @@ def listtile():
     """Return the list of currently avalailable tile option for map()
      Default is the first one.
     """
-    return _cocoplot.tiles_listing
+    return _cocoplot.tiles_list()
 
 
 # ----------------------------------------------------------------------

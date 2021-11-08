@@ -271,7 +271,7 @@ class CocoDisplay:
                 else:
                     when_end_change = min(when_end_change,CocoDisplay.changeto_nonull_date(input, when_end, i))
 
-            if func.__name__ != 'pycoa_date_plot'  and func.__name__ != 'pycoa_plot':
+            if func.__name__ != 'pycoa_date_plot'  and func.__name__ != 'pycoa_plot'  and func.__name__ != 'pycoa_scrollingmenu':
                 if len(input_field) > 1:
                     print(str(input_field) + ' is dim = ' + str(len(input_field)) + '. No effect with ' + func.__name__ + '! Take the first input: ' + input_field[0])
                 input_field = input_field[0]
@@ -525,7 +525,7 @@ class CocoDisplay:
                                    'There is no sens to use this method. See help.')
         input = input[['date', 'clustername', input_field]]
 
-        mypivot = pd.pivot_table(input = None, index='date', columns='clustername', values=input_field)
+        mypivot = pd.pivot_table(input, index='date', columns='clustername', values=input_field)
         source = ColumnDataSource(mypivot)
 
         filter_data1 = mypivot[[uniqloc[0]]].rename(columns={uniqloc[0]: 'cases'})

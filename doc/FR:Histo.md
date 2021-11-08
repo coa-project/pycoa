@@ -51,8 +51,22 @@ produit une carte du monde du nombre de décès quotidien (mot clef `which='deat
 
 <img src="figs/map_jhu.png" alt="figs/map_jhu.png" />
 
-Pour la liste des formats de sorties :
+Même carte avec le fond 'esri', `tile='esri'``
+
 ```python
-listoutput()
+cf.map(where=['world'],what='daily',when='01/04/2020',tile='esri')
 ```
-> `['list','dict','array','pandas']`
+
+<img src="figs/map_jhu_esri.png" alt="figs/map_jhu_esri.png" />
+
+L'ensemble des `tiles` disponibles
+```python
+cf.listtile()
+```
+> ['openstreet', 'esri', 'stamen', 'positron']
+
+Par defaut les cartes demandées sont des images. On peut vouloir avoir une vraie carte de type `folium`
+```python
+cf.map(where=['Europe'],what='weekly',tile='positron', visu='folium')
+```
+<img src="figs/mapfolium.png" alt="figs/mapfolium.png" />

@@ -61,12 +61,13 @@ cf.plot(where='European Union',option=['sumall','smooth7'])
 ```python
 cf.listregion()
 ```
-* `plot` accepte l'argument `typeofplot`; Par default celui-ci est `date` ce qui signifie que le plot sera une evolution temporelle.
+* `plot` accepte l'argument `typeofplot`;
+Par default celui-ci est `date` ce qui signifie que le plot sera une evolution temporelle de la variable épidémilogique étudiée.
   * `typeofplot='menulocation'`
 ```python
 cf.plot(where='European Union',typeofplot='menulocation')
 ```
 
-<img src="scrollingmenu_jhu.png"/>
+<img src="figs/scrollingmenu_jhu2.png"/>
 
   * `typeofplot='versus'` Voir plus dans la section avancé

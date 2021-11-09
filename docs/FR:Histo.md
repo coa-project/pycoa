@@ -70,3 +70,17 @@ Par defaut les cartes demandées sont des images. On peut vouloir avoir une vrai
 cf.map(where=['Europe'],what='weekly',tile='positron', visu='folium')
 ```
 <img src="figs/mapfolium.png" alt="figs/mapfolium.png" />
+
+
+```python
+cf.map(where=['FRA','ESP','PRT','GER','ITA'], maplabel = 'text')
+```
+
+<img src="figs/maplabel_jhu.png" alt="figs/maplabel_jhu.png" />
+
+
+```python
+cf.map(where=['FRA','ESP','PRT','GER','ITA'], maplabel = 'spark')
+```
+
+<img src="figs/mapspark_jhu.png" alt="figs/mapspark_jhu.png" />

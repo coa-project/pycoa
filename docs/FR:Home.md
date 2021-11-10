@@ -1,4 +1,4 @@
-
+TEST
 Bienvenue au wiki de `PyCoA` en version française <img src="https://github.com/coa-project/coa-project.github.io/blob/main/fig/FR.png" height="16px" alt="drapeau FR" />. Il existe aussi la [[version en anglais|Home:v1]] <img src="https://github.com/coa-project/coa-project.github.io/blob/main/fig/UK.png" height="16px" alt="UK flag" />.
 
 <img src="https://github.com/coa-project/coa-project.github.io/blob/main/fig/logo-anime.gif" height=150px /> 

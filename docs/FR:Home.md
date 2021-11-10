@@ -62,5 +62,5 @@ FR:Histo.md        FR:Home:v1.md      FR:Notebooks.md    fig
 * [[Arborescence|FR:Arborescence]]
 * [[Notebooks|FR:Notebooks]]
 * [[IO|FR:IO]]
-* [[Plot|FR:Plot]]
-* [[Histo|FR:Histo]]
+* [[Plot|FR:Plot_et_al]]
+* [[Histo|FR:Histo_et_al]]

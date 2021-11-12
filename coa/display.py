@@ -142,7 +142,7 @@ class CocoDisplay:
         textcopyrightposition = kwargs.get('textcopyrightposition', self.dfigure_default['textcopyrightposition'])
 
         if textcopyrightposition == 'right':
-            xpos = 0.75
+            xpos = 0.65
         elif textcopyrightposition == 'left':
             xpos = 0.08
         else:

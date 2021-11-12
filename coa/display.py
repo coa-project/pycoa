@@ -1585,7 +1585,9 @@ class CocoDisplay:
         standardfig.ygrid.grid_line_color = None
         standardfig.image_url(url='spark', x='centroidx', y='centroidy',source=sourcemaplabel,anchor="center")
         return standardfig
-
+    ######################
+    def tiles_list(self):
+        return self.available_tiles
     ###################### BEGIN Static Methods ##################
     @staticmethod
     def convert_tile(tilename, which = 'bokeh'):
@@ -1607,7 +1609,7 @@ class CocoDisplay:
         else:
             print('Don\'t know you tile ... take default one: ')
         return tile
-    ######################
+    #####################
     @staticmethod
     def dict_shorten_loc(toshort):
         '''

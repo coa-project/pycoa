@@ -161,7 +161,7 @@ def listtile():
     """Return the list of currently avalailable tile option for map()
      Default is the first one.
     """
-    return _cocoplot.tiles_listing
+    return _cocoplot.tiles_list()
 
 
 # ----------------------------------------------------------------------
@@ -178,17 +178,31 @@ def listwhich():
 
 
 # ----------------------------------------------------------------------
-# --- listregion() ------------------------------------------------------
+# --- listwhere() ------------------------------------------------------
 # ----------------------------------------------------------------------
-
-def listregion():
-    """Get the list of available regions managed by the current database
+def listwhere(clustered = False):
+    """Get the list of available regions/subregions managed by the current database
     """
-    r = _db.geo.get_region_list()
-    if isinstance(r, list):
-        return r
+    def clust():
+        r = _db.geo.get_region_list()
+        if isinstance(r, list):
+            return r
+        else:
+            return sorted(r['name_region'].to_list())
+
+    if clustered:
+        return clust()
     else:
-        return sorted(r['name_region'].to_list())
+        if _db.db_world == True:
+            r = _db.geo.get_GeoRegion().get_countries_from_region('world')
+            r = [_db.geo.to_standard(c)[0] for c in r]
+        else:
+            if get_db_list_dict()[_whom][1] == 'subregion':
+                pan = _db.geo.get_subregion_list()
+                r = list(pan.name_subregion.unique())
+            else:
+                r = clust()
+        return r
 
 # ----------------------------------------------------------------------
 # --- listbypop() ------------------------------------------------------
@@ -616,7 +630,7 @@ def plot(**kwargs):
     elif typeofplot == 'menulocation':
         if input_field is not None and len(input_field) > 1:
             print('typeofplot is menulocation but dim(input_field)>1, menulocation has not effect ...')
-        fig = _cocoplot.pycoa_scrollingmenu(input, **kwargs)
+        fig = _cocoplot.pycoa_scrollingmenu(input, input_field, **kwargs)
     else:
         raise CoaKeyError('Unknown typeofplot value. Should be date, versus or menulocation.')
     show(fig)

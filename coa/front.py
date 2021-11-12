@@ -122,9 +122,11 @@ def listwhom(detailed=False):
     """
     try:
         if int(detailed):
-            for i,j,k in zip(get_db_list_dict().keys(),np.array(list(get_db_list_dict().values()))[:,2],np.array(list(get_db_list_dict().values()))[:,1]):
-                print('Database name: ' + i +' associated to: '+ j + ' (granularity '+ k + ')')
-            return dict(zip(get_db_list_dict().keys(),np.array(list(get_db_list_dict().values()))[:,0]))
+            df = pd.DataFrame(get_db_list_dict())
+            df = df.T.reset_index()
+            df.index = df.index+1
+            df = df.rename(columns={'index':'Database',0: "WW/iso3",1:'Granularité',2:'WW/Name'})
+            return df
         else:
             return _db.get_available_database()
     except:

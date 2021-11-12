@@ -122,8 +122,8 @@ def listwhom(detailed=False):
     """
     try:
         if int(detailed):
-            for i,j in zip(get_db_list_dict().keys(),np.array(list(get_db_list_dict().values()))[:,2]):
-                info(i,' associated to: ',j)
+            for i,j,k in zip(get_db_list_dict().keys(),np.array(list(get_db_list_dict().values()))[:,2],np.array(list(get_db_list_dict().values()))[:,1]):
+                print('Database name: ' + i +' associated to: '+ j + ' (granularity '+ k + ')')
             return dict(zip(get_db_list_dict().keys(),np.array(list(get_db_list_dict().values()))[:,0]))
         else:
             return _db.get_available_database()

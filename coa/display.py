@@ -199,37 +199,43 @@ class CocoDisplay:
                 input = input.rename(columns={'where': 'location'})
 
             wallname = self.dbld[self.database_name][2]
-            if self.dbld[self.database_name][0] == 'WW' :
-                input['codelocation'] = input['codelocation'].apply(lambda x: str(x).replace('[', '').replace(']', '') if len(x)< 10 else x[0]+'...'+x[-1] )
-                input['permanentdisplay'] = input.apply(lambda x: x.clustername if self.geo.get_GeoRegion().is_region(x.clustername) else str(x.codelocation), axis = 1)
+            if 'codelocation' or 'clustername' not in input:
+                input['codelocation'] = 'dummy'
+                input['clustername'] = 'dummy'
+                input['rolloverdisplay'] = 'dummy'
+                input['permanentdisplay'] = 'dummy'
             else:
-                if self.dbld[self.database_name][1] == 'subregion' :
-                    if isinstance(input['codelocation'][0],list):
-                        input['codelocation'] = input['codelocation'].apply(lambda x: str(x).replace("'", '')\
-                                                     if len(x)<5 else '['+str(x[0]).replace("'", '')+',...,'+str(x[-1]).replace("'", '')+']')
+                if self.dbld[self.database_name][0] == 'WW' :
+                    input['codelocation'] = input['codelocation'].apply(lambda x: str(x).replace('[', '').replace(']', '') if len(x)< 10 else x[0]+'...'+x[-1] )
+                    input['permanentdisplay'] = input.apply(lambda x: x.clustername if self.geo.get_GeoRegion().is_region(x.clustername) else str(x.codelocation), axis = 1)
+                else:
+                    if self.dbld[self.database_name][1] == 'subregion' :
+                        if isinstance(input['codelocation'][0],list):
+                            input['codelocation'] = input['codelocation'].apply(lambda x: str(x).replace("'", '')\
+                                                         if len(x)<5 else '['+str(x[0]).replace("'", '')+',...,'+str(x[-1]).replace("'", '')+']')
 
-                    trad={}
-                    cluster = input.clustername.unique()
-                    if isinstance(input.location[0],list):
-                       cluster = [i for i in cluster]
-                    for i in cluster:
-                        if i == self.dbld[self.database_name][2]:
+                        trad={}
+                        cluster = input.clustername.unique()
+                        if isinstance(input.location[0],list):
+                           cluster = [i for i in cluster]
+                        for i in cluster:
+                            if i == self.dbld[self.database_name][2]:
+                                input['permanentdisplay'] = [self.dbld[self.database_name][2]]*len(input)
+                            else:
+                                if self.geo.is_region(i):
+                                    trad[i] = self.geo.is_region(i)
+                                elif self.geo.is_subregion(i):
+                                    trad[i] = self.geo.is_subregion(i)#input.loc[input.clustername==i]['codelocation'].iloc[0]
+                                else:
+                                    trad[i] = i
+                                trad={k:(v[:3]+'...'+v[-3:] if len(v)>8 else v) for k,v in trad.items()}
+                                input['permanentdisplay'] = input.codelocation#input.clustername.map(trad)
+                    elif self.dbld[self.database_name][1] == 'region' :
+                        if all(i == self.dbld[self.database_name][2] for i in input.clustername.unique()):
                             input['permanentdisplay'] = [self.dbld[self.database_name][2]]*len(input)
                         else:
-                            if self.geo.is_region(i):
-                                trad[i] = self.geo.is_region(i)
-                            elif self.geo.is_subregion(i):
-                                trad[i] = self.geo.is_subregion(i)#input.loc[input.clustername==i]['codelocation'].iloc[0]
-                            else:
-                                trad[i] = i
-                            trad={k:(v[:3]+'...'+v[-3:] if len(v)>8 else v) for k,v in trad.items()}
-                            input['permanentdisplay'] = input.codelocation#input.clustername.map(trad)
-                elif self.dbld[self.database_name][1] == 'region' :
-                    if all(i == self.dbld[self.database_name][2] for i in input.clustername.unique()):
-                        input['permanentdisplay'] = [self.dbld[self.database_name][2]]*len(input)
-                    else:
-                        input['permanentdisplay'] = input.codelocation
-            input['rolloverdisplay'] = input['location']
+                            input['permanentdisplay'] = input.codelocation
+                input['rolloverdisplay'] = input['location']
 
             uniqloc = input.clustername.unique()
             if len(uniqloc) < 5:

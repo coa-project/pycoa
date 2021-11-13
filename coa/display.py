@@ -182,10 +182,11 @@ class CocoDisplay:
                 raise CoaTypeError(input + 'Must be a pandas, with pycoa structure !')
 
             kwargs_test(kwargs, self.alloptions, 'Bad args used in the display function.')
-            if input_field is None:
-                input_field = input.columns[2]
 
             when = kwargs.get('when', None)
+            what = kwargs.get('what', 'cumul')  # cumul is the default
+            if input_field is None:
+                input_field = what
             option = kwargs.get('option', None)
             bins = kwargs.get('bins', 10)
             title = kwargs.get('title', None)

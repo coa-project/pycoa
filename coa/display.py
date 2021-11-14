@@ -199,7 +199,7 @@ class CocoDisplay:
                 input = input.rename(columns={'where': 'location'})
 
             wallname = self.dbld[self.database_name][2]
-            if 'codelocation' or 'clustername' not in input:
+            if 'codelocation' and 'clustername' not in input.columns:
                 input['codelocation'] = 'dummy'
                 input['clustername'] = 'dummy'
                 input['rolloverdisplay'] = 'dummy'
@@ -294,7 +294,7 @@ class CocoDisplay:
             if func.__name__ != 'pycoa_date_plot'  and func.__name__ != 'pycoa_plot':
                 title_temporal = ' (' + when_end.strftime('%d/%m/%Y')  + ')'
             if option:
-                title_temporal = ', option ' + option + title_temporal
+                title_temporal = ', option ' + str(option) + title_temporal
 
             input_field_tostring = str(input_field).replace('[', '').replace(']', '').replace('\'', '')
             if input_field_tostring == 'daily':

@@ -437,7 +437,7 @@ def chartsinput_deco(f):
         '''
         kwargs_test(kwargs,
                     ['where', 'what', 'which', 'whom', 'when', 'input', 'input_field',\
-                    'title','typeofplot','typeofhist','visu','tile','dateslider','maplabel','option','mode','bypop',
+                    'title','typeofplot','typeofhist','bins','visu','tile','dateslider','maplabel','option','mode','bypop',
                     'plot_width','plot_height','textcopyright','textcopyrightposition'],
                     'Bad args used in the pycoa function.')
         input_arg = kwargs.get('input', None)

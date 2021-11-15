@@ -420,7 +420,7 @@ def saveoutput(**kwargs):
     kwargs_test(kwargs, ['pandas','saveformat','savename'], 'Bad args used in the pycoa.saveoutput function.')
     pandy = kwargs.get('pandas', pd.DataFrame())
     saveformat = kwargs.get('saveformat', 'excel')
-    savename = kwargs.get('savename', None)
+    savename = kwargs.get('savename', '')
     if pandy.empty:
         raise CoaKeyError('Pandas to save is mandatory there is not default !')
     else:

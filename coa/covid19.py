@@ -1361,8 +1361,9 @@ class DataBase(object):
             saveformat = kwargs['saveformat']
        if saveformat not in possibleformat:
            raise CoaKeyError('Output option '+saveformat+' is not recognized.')
-       if 'savename' in kwargs:
+       if 'savename' in kwargs and kwargs['savename'] != '':
           savename = kwargs['savename']
+
        if not 'pandas' in kwargs:
           raise CoaKeyError('Absolute needed variable : the pandas desired ')
        else:

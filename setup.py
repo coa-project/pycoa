@@ -46,6 +46,7 @@ setup(
         'pandas-flavor',\
         'openpyxl',\
         'unidecode',\
+        'openpyxl',\
         ],
     # The license can be anything you like
     license='MIT',

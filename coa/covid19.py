@@ -1346,32 +1346,34 @@ class DataBase(object):
 
         return base
 
-   def export(self,**kwargs):
+   def saveoutput(self,**kwargs):
        '''
-       Export pycoas pandas as an  output file selected by output argument
+       saveoutput pycoas pandas as an  output file selected by output argument
        'pandas': pycoa pandas
-       'format': excel or csv (default excel)
+       'saveformat': excel or csv (default excel)
+       'savename': pycoaout (default)
        '''
        possibleformat=['excel','csv']
-       format = 'excel'
-       name = 'pycoaout'
+       saveformat = 'excel'
+       savename = 'pycoaout'
        pandyori = ''
-       if 'format' in kwargs:
-            format = kwargs['format']
-       if format not in possibleformat:
-           raise CoaKeyError('Output option '+format+' is not recognized.')
-       if 'name' in kwargs:
-          name = kwargs['name']
+       if 'saveformat' in kwargs:
+            saveformat = kwargs['saveformat']
+       if saveformat not in possibleformat:
+           raise CoaKeyError('Output option '+saveformat+' is not recognized.')
+       if 'savename' in kwargs:
+          savename = kwargs['savename']
        if not 'pandas' in kwargs:
           raise CoaKeyError('Absolute needed variable : the pandas desired ')
        else:
           pandyori = kwargs['pandas']
-       pandy = pandyori.copy()
+       pandy = pandyori
+       pandy['date'] = pd.to_datetime(pandy['date'])
        pandy['date']=pandy['date'].apply(lambda x: x.strftime('%Y-%m-%d'))
-       if format == 'excel':
-           pandy.to_excel(name+'.xlsx',index=False, na_rep='NAN')
-       elif format == 'csv':
-           pandy.to_csv(name+'.csv', encoding='utf-8', index=False, float_format='%.4f',na_rep='NAN')
+       if saveformat == 'excel':
+           pandy.to_excel(savename+'.xlsx',index=False, na_rep='NAN')
+       elif saveformat == 'csv':
+           pandy.to_csv(savename+'.csv', encoding='utf-8', index=False, float_format='%.4f',na_rep='NAN')
 
    ## https://www.kaggle.com/freealf/estimation-of-rt-from-cases
    def smooth_cases(self,cases):

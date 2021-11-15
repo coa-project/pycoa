@@ -409,17 +409,23 @@ def get(**kwargs):
         raise CoaKeyError('Unknown output.')
     return casted_data
 
-def export(**kwargs):
+def saveoutput(**kwargs):
     '''
         Export pycoas pandas as an output file selected by output argument
-        'pandas': pycoa pandas
-        'format': excel or csv
+        'pandas': pandas to save
+        'saveformat': excel (default) or csv
+        'savename': None (default pycoaout+ '.xlsx/.csv')
     '''
     global _db
-    kwargs_test(kwargs, ['format','pandas'])
-    pandy = kwargs.get('pandas', listwhat()[0])
-    format = kwargs.get('format', 'excel')
-    _db.export(pandas=pandy,format=format)
+    kwargs_test(kwargs, ['pandas','saveformat','savename'], 'Bad args used in the pycoa.saveoutput function.')
+    pandy = kwargs.get('pandas', pd.DataFrame())
+    saveformat = kwargs.get('saveformat', 'excel')
+    savename = kwargs.get('savename', None)
+    if pandy.empty:
+        raise CoaKeyError('Pandas to save is mandatory there is not default !')
+    else:
+        _db.saveoutput(pandas=pandy,saveformat=saveformat,savename=savename)
+
 # ----------------------------------------------------------------------
 # --- chartsinput_deco(f)
 # ------  with wraps

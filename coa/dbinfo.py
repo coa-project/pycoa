@@ -205,7 +205,7 @@ def generic_info(namedb, keys):
         mydico = jhuusa
     elif namedb == 'moh':
         moh = {
-        'cases_new':['cases_new: cases new'],\
+        'tot_cases':['tot_cases: total cases (from original data cases_new )'],\
         'hosp_covid':['hosp_covid: hosp_covid'],\
         'daily_partial':['daily_partial: daily_partial'],\
         'daily_full':['daily_full: daily_full'],\

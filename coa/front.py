@@ -426,6 +426,19 @@ def saveoutput(**kwargs):
     else:
         _db.saveoutput(pandas=pandy,saveformat=saveformat,savename=savename)
 
+def merger(**kwargs):
+    '''
+    Merge two or more pycoa pandas retrieve from get_stats operation
+    'stats': list (min 2D) of pandas from stats
+    '''
+    global _db
+    kwargs_test(kwargs,['stats'], 'Bad args used in the pycoa.merger function.')
+    listpandy = kwargs.get('stats',[])
+    if len(listpandy)==0:
+       raise CoaKeyError('List of pandas is mandatory there is not default !')
+    else:
+       return _db.merger(stats = listpandy)
+
 # ----------------------------------------------------------------------
 # --- chartsinput_deco(f)
 # ------  with wraps

@@ -195,13 +195,15 @@ class DataBase(object):
                     info('Malaysia moh covid19-public database selected ...')
                     rename_dict = {'state': 'location'}
                     moh1 = self.csv2pandas("https://raw.githubusercontent.com/MoH-Malaysia/covid19-public/main/epidemic/cases_state.csv",rename_columns=rename_dict,separator=',')
+                    moh1['tot_cases']=moh1.groupby(['location'])['cases_new'].cumsum()
+
                     moh2 = self.csv2pandas("https://raw.githubusercontent.com/MoH-Malaysia/covid19-public/main/epidemic/hospital.csv",rename_columns=rename_dict,separator=',')
                     moh3 = self.csv2pandas("https://raw.githubusercontent.com/MoH-Malaysia/covid19-public/main/epidemic/icu.csv",rename_columns=rename_dict,separator=',')
                     moh4 = self.csv2pandas("https://raw.githubusercontent.com/CITF-Malaysia/citf-public/main/vaccination/vax_state.csv",rename_columns=rename_dict,separator=',')
 
                     list_moh = [moh1,moh2,moh3,moh4]
                     result = reduce(lambda left, right: left.merge(right, how = 'outer', on=['location','date']), list_moh)
-                    columns_keeped = ['cases_new','hosp_covid','daily_partial','daily_full','icu_covid','beds_icu_covid']
+                    columns_keeped = ['tot_cases','hosp_covid','daily_partial','daily_full','icu_covid','beds_icu_covid']
                     self.return_structured_pandas(result, columns_keeped = columns_keeped)
                 elif self.db == 'minciencia': # CHL
                     info('Chile Ministerio de Ciencia, Tecnología, Conocimiento, e Innovación database selected ...')
@@ -1340,7 +1342,7 @@ class DataBase(object):
             variable=keep[0]
             keep[0:0]=['date','clustername']
             p=p[keep]
-            changename={i:i+'_'+keep[2] for i in keep[3:]}
+            changename={i:i+'_'+keep[2] for i in keep[3:] if i != 'clustername'}
             p=p.rename(columns=changename)
             base=pd.merge(base,p,on=['date','clustername'])
 

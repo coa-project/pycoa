@@ -32,7 +32,7 @@ import base64
 from IPython import display
 
 from bokeh.models import ColumnDataSource, TableColumn, DataTable, ColorBar, \
-    HoverTool, BasicTicker, GeoJSONDataSource, LinearColorMapper, Label, \
+    HoverTool, CrosshairTool, BasicTicker, GeoJSONDataSource, LinearColorMapper, Label, \
     PrintfTickFormatter, BasicTickFormatter, CustomJS, CustomJSHover, Select, \
     Range1d, DatetimeTickFormatter, Legend, LegendItem, Text
 from bokeh.models.widgets import Tabs, Panel
@@ -83,7 +83,7 @@ class CocoDisplay:
         self.available_textcopyrightposition = ['left','right']
 
         self.dfigure_default = {'plot_height':width_height_default[1] ,'plot_width':width_height_default[0],'title':None, 'textcopyrightposition':'left','textcopyright':'default'}
-        self.dvisu_default = {'mode':'mouse','tile':self.available_tiles[0],'orientation':'horizontal','cursor_date':None,'maplabel':None}
+        self.dvisu_default = {'mode':'mouse','tile':self.available_tiles[0],'orientation':'horizontal','cursor_date':None,'maplabel':None,'guideline':False}
 
         self.when_beg = dt.date(1, 1, 1)
         self.when_end = dt.date(1, 1, 1)
@@ -437,6 +437,7 @@ class CocoDisplay:
         - textcopyrightposition = left
         - textcopyright = default
         - mode = mouse
+        - guideline = False
         - cursor_date = None if True
                 - orientation = horizontal
         - when : default min and max according to the inpude DataFrame.
@@ -445,6 +446,7 @@ class CocoDisplay:
                  if [:dd/mm/yyyy] min date up to
                  if [dd/mm/yyyy:] up to max date
         '''
+        guideline = kwargs.get('guideline',self.dvisu_default['guideline'])
         panels = []
         cases_custom = CocoDisplay.rollerJS()
         if isinstance(input['rolloverdisplay'][0],list):
@@ -476,6 +478,9 @@ class CocoDisplay:
                 formatters = {'location': 'printf', '@date': 'datetime', '@name': 'printf'}
                 hover=HoverTool(tooltips = tooltips, formatters = formatters, point_policy = "snap_to_data", mode = kwargs['mode'], renderers=[r])  # ,PanTool())
                 standardfig.add_tools(hover)
+                if guideline:
+                    cross= CrosshairTool()
+                    standardfig.add_tools(cross)
 
             if axis_type == 'linear':
                 if maxou  < 1e4 :
@@ -516,6 +521,7 @@ class CocoDisplay:
         - textcopyrightposition = left
         - textcopyright = default
         - mode = mouse
+        -guideline = False
         - cursor_date = None if True
                 - orientation = horizontal
         - when : default min and max according to the inpude DataFrame.
@@ -525,6 +531,8 @@ class CocoDisplay:
                  if [dd/mm/yyyy:] up to max date
         '''
         mode = kwargs.get('mode',self.dvisu_default['mode'])
+        guideline = kwargs.get('guideline',self.dvisu_default['guideline'])
+
         uniqloc = input.clustername.unique().to_list()
         if 'location' in input.columns:
             if len(uniqloc) < 2:
@@ -553,7 +561,9 @@ class CocoDisplay:
             standardfig.yaxis[0].formatter = PrintfTickFormatter(format = "%4.2e")
 
             standardfig.add_tools(hover_tool)
-
+            if guideline:
+                cross= CrosshairTool()
+                standardfig.add_tools(cross)
             def add_line(src, options, init, color):
                 s = Select(options = options, value = init)
                 r = standardfig.line(x = 'date', y = 'cases', source = src, line_width = 3, line_color = color)

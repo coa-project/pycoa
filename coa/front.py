@@ -463,6 +463,7 @@ def chartsinput_deco(f):
         input_field = kwargs.get('input_field')
         where = kwargs.get('where', None)
         what = kwargs.get('what', None)
+        when = kwargs.get('when', None)
         option = kwargs.get('option', None)
 
         if isinstance(input_arg, pd.DataFrame):
@@ -488,7 +489,6 @@ def chartsinput_deco(f):
             kwargs['which']=which+' per '+bypop
             input_field=kwargs['which']
         kwargs['input_field'] = input_field
-        when = kwargs.get('when', None)
         return f(**kwargs)
 
     return wrapper

@@ -117,6 +117,7 @@ class CocoDisplay:
                          list_dep_metro =  geo.get_subregions_from_region(name='España peninsular')
                     if list_dep_metro:
                         self.boundary_metropole = self.location_geometry.loc[self.location_geometry.code_subregion.isin(list_dep_metro)]['geometry'].total_bounds
+
             else:
                    self.geo=coge.GeoManager('name')
                    geopan = gpd.GeoDataFrame()#crs="EPSG:4326")
@@ -185,6 +186,7 @@ class CocoDisplay:
 
             when = kwargs.get('when', None)
             what = kwargs.get('what', 'cumul')  # cumul is the default
+            which = kwargs.get('which', input.columns[2])
             if input_field is None:
                 input_field = what
             option = kwargs.get('option', None)
@@ -210,6 +212,7 @@ class CocoDisplay:
                     input['permanentdisplay'] = input.apply(lambda x: x.clustername if self.geo.get_GeoRegion().is_region(x.clustername) else str(x.codelocation), axis = 1)
                 else:
                     if self.dbld[self.database_name][1] == 'subregion' :
+                        input = input.reset_index(drop=True)
                         if isinstance(input['codelocation'][0],list):
                             input['codelocation'] = input['codelocation'].apply(lambda x: str(x).replace("'", '')\
                                                          if len(x)<5 else '['+str(x[0]).replace("'", '')+',...,'+str(x[-1]).replace("'", '')+']')
@@ -298,11 +301,11 @@ class CocoDisplay:
 
             input_field_tostring = str(input_field).replace('[', '').replace(']', '').replace('\'', '')
             if input_field_tostring == 'daily':
-                titlefig = input_field_tostring + ', ' + 'day to day difference ' + title_temporal
+                titlefig = which + ', ' + 'day to day difference ' + title_temporal
             elif input_field_tostring == 'weekly':
-                titlefig = input_field_tostring + ', ' + 'week to week difference' + title_temporal
+                titlefig = which + ', ' + 'week to week difference' + title_temporal
             elif input_field_tostring == 'cumul':
-                titlefig = input_field_tostring + ', ' + 'cumulative sum ' + title_temporal
+                titlefig = which + ', ' + 'cumulative sum ' + title_temporal
             else:
                 titlefig = input_field_tostring + title_temporal
 
@@ -311,7 +314,6 @@ class CocoDisplay:
             else:
                 title  = titlefig
             kwargs['title'] = title
-
             return func(self, input, input_field, **kwargs)
         return wrapper
     ''' DECORATORS FOR PLOT: DATE, VERSUS, SCROLLINGMENU '''
@@ -1400,13 +1402,13 @@ class CocoDisplay:
                 dfLabel['cases']=[str(i) for i in dfLabel['cases']]
                 sourcemaplabel = ColumnDataSource(dfLabel)
 
-            if self.dbld[self.database_name][0] in ['FRA','ESP','PRT'] and all(len(l) == 2 for l in geopdwd_filtered.codelocation.unique()):
-                minx, miny, maxx, maxy = self.boundary_metropole
-                (minx, miny) = CocoDisplay.wgs84_to_web_mercator((minx, miny))
-                (maxx, maxy) = CocoDisplay.wgs84_to_web_mercator((maxx, maxy))
-            else:
-                minx, miny, maxx, maxy =  geopdwd_filtered['geometry'].total_bounds #self.boundary
-
+            #if self.dbld[self.database_name][0] in ['FRA','ESP','PRT']: #and all(len(l) == 2 for l in geopdwd_filtered.codelocation.unique()):
+            #    minx, miny, maxx, maxy = self.boundary_metropole
+            #    (minx, miny) = CocoDisplay.wgs84_to_web_mercator((minx, miny))
+            #    (maxx, maxy) = CocoDisplay.wgs84_to_web_mercator((maxx, maxy))
+            #else:
+                #minx, miny, maxx, maxy =  geopdwd_filtered['geometry'].total_bounds #self.boundary
+            minx, miny, maxx, maxy =  geopdwd_filtered['geometry'].total_bounds #self.boundary
             if self.dbld[self.database_name][0] != 'WW':
                 ratio = 0.05
                 minx -= ratio*minx

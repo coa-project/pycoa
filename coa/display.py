@@ -305,7 +305,10 @@ class CocoDisplay:
             elif input_field_tostring == 'weekly':
                 titlefig = which + ', ' + 'week to week difference' + title_temporal
             elif input_field_tostring == 'cumul':
-                titlefig = which + ', ' + 'cumulative sum ' + title_temporal
+                if 'cur_' in  which:
+                    titlefig = which + ', ' + 'current ' + which.replace('cur_','')  + title_temporal
+                else:
+                    titlefig = which + ', ' + 'cumulative sum ' + title_temporal
             else:
                 titlefig = input_field_tostring + title_temporal
 

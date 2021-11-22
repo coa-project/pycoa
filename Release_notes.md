@@ -11,7 +11,8 @@
 - date_plot with several variable and several location
 - add mode : mode=vline or hline
 - Use @wraps in the decorator to get the real name and doctring of each method
- 
+- When which='cur_' change the default title 
+- add new spf value nbre_pass_corona 
 ## v2.10 - 
 - Map bug fixed for option='sumall'
 - maplabel added for bokeh map   

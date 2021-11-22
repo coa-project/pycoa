@@ -364,7 +364,11 @@ class DataBase(object):
                         spf8 = self.csv2pandas("https://www.data.gouv.fr/fr/datasets/r/4d3e5a8b-9649-4c41-86ec-5420eb6b530c",
                         rename_columns = rename, separator=';',cast=cast)
                         #spf8keeped = list(spf8.columns)[2:]
-                        list_spf=[spf1, spf2, spf3, spf4, spf5, spf6, spf7,spf8]
+                        rename = {'date_de_passage':'date','dep':'location'}
+                        spf9 = self.csv2pandas("https://www.data.gouv.fr/en/datasets/r/eceb9fb4-3ebc-4da3-828d-f5939712600a",
+                        rename_columns = rename, separator=';',cast=cast)
+
+                        list_spf=[spf1, spf2, spf3, spf4, spf5, spf6, spf7,spf8,spf9]
 
                         #for i in list_spf:
                         #    i['date'] = pd.to_datetime(i['date']).apply(lambda x: x if not pd.isnull(x) else '')
@@ -386,7 +390,6 @@ class DataBase(object):
                                 #result['offset_'+w] = 0
                             result['tot_'+w]=result.groupby(['location'])[w].cumsum()#+result['offset_'+w]
                         #
-
                         def dontneeeded():
                             for col in result.columns:
                                 if col.startswith('Prc'):
@@ -419,10 +422,10 @@ class DataBase(object):
                             'tx_crib' : 'cur_taux_crib',
                             'tx_A1':'cur_idx_tx_A1',
                             'tx_B1':'cur_idx_tx_B1',
-                            'tx_C1':'cur_idx_tx_C1'
+                            'tx_C1':'cur_idx_tx_C1',
+                            'nbre_pass_corona':'cur_nbre_pass_corona',
                             }
                         result = result.rename(columns=rename_dict)
-
                         #coltocast=list(rename_dict.values())[:5]
                         #result[coltocast] = result[coltocast].astype('Int64')
                         spf8keeped = ['nb_A0','nb_A1', 'nb_B0', 'nb_B1', 'nb_C0', 'nb_C1']

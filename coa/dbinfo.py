@@ -24,6 +24,7 @@ def generic_info(namedb, keys):
         urlmaster6='https://www.data.gouv.fr/fr/datasets/donnees-de-laboratoires-pour-le-depistage-indicateurs-sur-les-variants/'
         urlmaster7='https://www.data.gouv.fr/fr/datasets/donnees-de-laboratoires-pour-le-depistage-focus-par-niveau-scolaire/'
         urlmaster8='https://www.data.gouv.fr/fr/datasets/donnees-de-laboratoires-pour-le-depistage-indicateurs-sur-les-mutations/'
+        urlmaster9='https://www.data.gouv.fr/en/datasets/donnees-des-urgences-hospitalieres-et-de-sos-medecins-relatives-a-lepidemie-de-covid-19/'
         url1='https://www.data.gouv.fr/fr/datasets/r/63352e38-d353-4b54-bfd1-f1b3ee1cabd7'
         url2='https://www.data.gouv.fr/fr/datasets/r/6fadff46-9efd-4c53-942a-54aca783c30c'
         url3='https://www.data.gouv.fr/fr/datasets/r/406c6a23-e283-4300-9484-54e78c8ae675'
@@ -32,6 +33,7 @@ def generic_info(namedb, keys):
         url6='https://www.data.gouv.fr/fr/datasets/r/16f4fd03-797f-4616-bca9-78ff212d06e8'
         url7='https://www.data.gouv.fr/fr/datasets/r/c0f59f00-3ab2-4f31-8a05-d317b43e9055'
         url8='https://www.data.gouv.fr/fr/datasets/r/4d3e5a8b-9649-4c41-86ec-5420eb6b530c'
+        url9='https://www.data.gouv.fr/en/datasets/r/eceb9fb4-3ebc-4da3-828d-f5939712600a'
         spfdic = {
         'tot_dc':
         ['tot_dc:FILLIT',url1,urlmaster1],
@@ -101,6 +103,7 @@ def generic_info(namedb, keys):
         'nb_C0' : ['Nombre des tests positifs pour lesquels la recherche de mutation C est négatif (C = L452R)',url8,urlmaster8],
         'nb_C1' : ['Nombre des tests positifs pour lesquels la recherche de mutation C est positif (C = L452R)',url8,urlmaster8],
         'tx_C1' : ['Taux de présence mutation C (C = L452R)',url8,urlmaster8],
+        'cur_nbre_pass_corona' : ['  Nombre de passages aux urgences pour suspicion de COVID-19 (nbre_pass_corona)',url9,urlmaster9],
         }
         mydico = spfdic
     elif namedb == 'spfnational':

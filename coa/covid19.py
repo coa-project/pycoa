@@ -1302,7 +1302,10 @@ class DataBase(object):
         inx = pdfiltered.groupby('clustername').head(1).index
         #First value of diff is always NaN
         pdfiltered.loc[inx, 'daily'] = pdfiltered[kwargs['which']].iloc[inx]
-        pdfiltered['cumul'] = pdfiltered.groupby('clustername')[kwargs['which']].cumsum()
+        if 'cur_' in kwargs['which']:
+            pdfiltered['cumul'] = pdfiltered[kwargs['which']]
+        else:
+            pdfiltered['cumul'] = pdfiltered.groupby('clustername')[kwargs['which']].cumsum()
         pdfiltered['weekly'] = pdfiltered.groupby('clustername')[kwargs['which']].diff(7)
         inx7=pdfiltered.groupby('clustername').head(7).index
         pdfiltered.loc[inx7, 'weekly'] = pdfiltered[kwargs['which']].iloc[inx7]

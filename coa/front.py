@@ -428,8 +428,9 @@ def saveoutput(**kwargs):
 
 def merger(**kwargs):
     '''
-    Merge two or more pycoa pandas retrieve from get_stats operation
-    'stats': list (min 2D) of pandas from stats
+    Merge two or more pycoa pandas from get_stats operation
+    'coapandas': list (min 2D) of pandas from stats
+    'whichcol': list variable associate to the coapandas list to be retrieve
     '''
     global _db
     kwargs_test(kwargs,['coapandas', 'whichcol'], 'Bad args used in the pycoa.merger function.')

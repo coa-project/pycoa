@@ -461,6 +461,7 @@ class CocoDisplay:
             i = 0
             r_list=[]
             maxou=-1000
+            smcolors = iter(self.scolors)
             for val in input_field:
                 line_style = ['solid', 'dashed', 'dotted', 'dotdash']
                 for loc in list(input.clustername.unique()):
@@ -469,9 +470,12 @@ class CocoDisplay:
                     leg = input_filter.permanentdisplay[0]
                     if len(input_field)>1:
                         leg = input_filter.permanentdisplay[0] + ', ' + val
-
+                    if len(list(input.clustername.unique())) == 1:
+                        color = next(smcolors)
+                    else:
+                        color = input_filter.colors[0]
                     r = standardfig.line(x = 'date', y = val, source = src,
-                                     color = input_filter.colors[0], line_width = 3,
+                                     color = color, line_width = 3,
                                      legend_label = leg,
                                      hover_line_width = 4, name = val, line_dash=line_style[i])
                     r_list.append(r)

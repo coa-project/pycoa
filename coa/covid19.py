@@ -1324,34 +1324,32 @@ class DataBase(object):
    def merger(self,**kwargs):
         '''
         Merge two or more pycoa pandas retrieve from get_stats operation
-        'stats': list (min 2D) of pandas from stats
+        'coapandas': list (min 2D) of pandas from stats
         '''
         pdstats = []
-        what = ''
-        if not isinstance(kwargs['stats'], list) or len(kwargs['stats'])<=1:
-            raise CoaKeyError('stats value should be at least a list of 2 elements ... ')
+        if not isinstance(kwargs['coapandas'], list) or len(kwargs['coapandas'])<=1:
+            raise CoaKeyError('coapandas value must be at least a list of 2 elements ... ')
         else:
-            pdstats = kwargs['stats']
-        if not 'what' in kwargs:
-            what = [ i.columns[2] for i in pdstats]
+            pdstats = kwargs['coapandas']
+        whichcol =  kwargs['whichcol']
+        if whichcol is  None:
+            raise CoaKeyError('whichcol value must be present ... ')
         else:
-            if not isinstance(kwargs['what'], list) or len(kwargs['what'])==1:
-                what = len(pdstats)*[kwargs['what']]
+            if len(whichcol) != len(pdstats):
+                raise CoaKeyError(whichcol+' must have the same length as coapandas ... ')
+
+        if not all([j in i.columns for i,j in zip(pdstats,whichcol)]):
+            raise CoaKeyError('Please check your coapandas and the associate whichcol ')
 
         base = pdstats[0].copy()
-        name=DataBase.flat_list(pdstats[0].columns.values.tolist()[3:6])
-        changename={i:i+'_'+pdstats[0].columns[2] for i in name}
-        base=base.rename(columns=changename)
-
+        base = base[['date','clustername',whichcol[0]]]
+        j=1
         for p in pdstats[1:]:
-            keep=DataBase.flat_list(p.columns.values.tolist()[2:6])
-            variable=keep[0]
-            keep[0:0]=['date','clustername']
-            p=p[keep]
-            changename={i:i+'_'+keep[2] for i in keep[3:] if i != 'clustername'}
-            p=p.rename(columns=changename)
+            p=p[['date','clustername',whichcol[j]]]
+            p=p.rename(columns={whichcol[j]:whichcol[j]+'_'+str(j)})
             base=pd.merge(base,p,on=['date','clustername'])
-
+            j+=1
+        base[['where','codelocation']]= pdstats[0][['where','codelocation']]  #needed by display 
         return base
 
    def saveoutput(self,**kwargs):

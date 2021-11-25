@@ -168,6 +168,7 @@ def generic_info(namedb, keys):
         'total_deaths':['total_deaths:FILLIT'],
         'total_cases':['total_cases:FILLIT'],
         'total_tests':['total_tests: FILLIT'],
+        'cur_new_tests':['cur_new_tests (new_tests): FILLIT'],
         'total_vaccinations':['total_vaccinations:FILLIT'],
         'total_population':['total_population: total population of a given country'],
         'total_people_fully_vaccinated_per_hundred':['original name people_fully_vaccinated_per_hundred, total_people_fully_vaccinated_per_hundred:FILLIT'],
@@ -300,10 +301,11 @@ def generic_info(namedb, keys):
             phe[k].append('https://coronavirus.data.gov.uk/details/download')
         mydico = phe
     elif namedb == 'dgs':
-        url='https://raw.githubusercontent.com/dssg-pt/covid19pt-data/master/data_concelhos_new.csv'
         dgs = {
-        'tot_cases':['original name confirmados_1'],\
-        }
+            'tot_cases':['original name confirmados_1']}
+        for k,v in dgs.items():
+              dgs[k].append('https://raw.githubusercontent.com/dssg-pt/covid19pt-data/master/data_concelhos_new.csv')
+              dgs[k].append('https://github.com/dssg-pt/covid19pt-data')
         mydico = dgs
     elif namedb == 'covidtracking':
         url='https://covidtracking.com/data/download/all-states-history.csv'

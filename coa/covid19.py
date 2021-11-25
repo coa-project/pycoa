@@ -479,7 +479,7 @@ class DataBase(object):
                     owid = self.csv2pandas("https://raw.githubusercontent.com/owid/covid-19-data/master/public/data/owid-covid-data.csv",
                     separator=',',drop_field=drop_field)
                     # renaming some columns
-                    col_to_rename=['reproduction_rate','icu_patients','hosp_patients','positive_rate']
+                    col_to_rename=['reproduction_rate','icu_patients','hosp_patients','positive_rate','new_tests']
                     renamed_cols=['cur_'+c if c != 'positive_rate' else 'cur_idx_'+c for c in col_to_rename]
                     col_to_rename+=['people_fully_vaccinated_per_hundred']
                     renamed_cols +=['total_people_fully_vaccinated_per_hundred']
@@ -574,6 +574,7 @@ class DataBase(object):
        value = self.databaseinfo.generic_info(self.get_db(),keys)[1]
        master  = self.databaseinfo.generic_info(self.get_db(),keys)[2]
        return value, master
+
 
    def return_jhu_pandas(self):
         ''' For center for Systems Science and Engineering (CSSE) at Johns Hopkins University
@@ -1323,8 +1324,9 @@ class DataBase(object):
 
    def merger(self,**kwargs):
         '''
-        Merge two or more pycoa pandas retrieve from get_stats operation
+        Merge two or more pycoa pandas from get_stats operation
         'coapandas': list (min 2D) of pandas from stats
+        'whichcol': list variable associate to the coapandas list to be retrieve
         '''
         pdstats = []
         if not isinstance(kwargs['coapandas'], list) or len(kwargs['coapandas'])<=1:
@@ -1349,7 +1351,7 @@ class DataBase(object):
             p=p.rename(columns={whichcol[j]:whichcol[j]+'_'+str(j)})
             base=pd.merge(base,p,on=['date','clustername'])
             j+=1
-        base[['where','codelocation']]= pdstats[0][['where','codelocation']]  #needed by display 
+        base[['where','codelocation']]= pdstats[0][['where','codelocation']]  #needed by display
         return base
 
    def saveoutput(self,**kwargs):

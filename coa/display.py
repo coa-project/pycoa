@@ -251,16 +251,16 @@ class CocoDisplay:
             input = input.copy()
             input.loc[:,'colors'] = input['clustername'].map(dico_colors)#(pd.merge(input, country_col, on='location'))
 
-            when_beg = input.date.min()
-            when_end = input.date.max()
+            when_beg = input[[input_field,'date']].date.min()
+            when_end = input[[input_field,'date']].date.max()
 
             if when:
                 when_beg, when_end = extract_dates(when)
-                if when_beg == dt.date(1, 1, 1):
-                    when_beg = input['date'].min()
+                if when_end > input[[input_field,'date']].date.max():
+                    when_end = input[[input_field,'date']].date.max()
 
-                if when_end == '':
-                    when_end = input['date'].max()
+                if when_beg == dt.date(1, 1, 1):
+                    when_beg = input[[input_field,'date']].date.min()
 
                 if not isinstance(when_beg, dt.date):
                     raise CoaNoData("With your current cuts, there are no data to plot.")
@@ -268,9 +268,8 @@ class CocoDisplay:
                 if when_end <= when_beg:
                     print('Requested date below available one, take', when_beg)
                     when_end = when_beg
-
-                if when_beg < input.date.min() or when_end > input.date.max():
-                    raise CoaNoData("No available data after "+str(input.date.max())+ ' and before' +str(input.date.min()))
+                if when_beg > input[[input_field,'date']].date.max() or when_end > input[[input_field,'date']].date.max():
+                    raise CoaNoData("No available data after "+str(input[[input_field,'date']].date.max()))
 
 
             if not isinstance(input_field, list):

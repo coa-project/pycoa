@@ -340,9 +340,6 @@ def get(**kwargs):
         whom = _whom
     if whom != _whom:
         setwhom(whom)
-    when_beg, when_end = extract_dates(when)
-    if when_end > pandy[[which,'date']].date.max():
-        when_end = pandy[[which,'date']].date.max()
 
     if not bool([s for s in listwhat() if what.startswith(s)]):
         raise CoaKeyError('What option ' + what + ' not supported. '
@@ -357,6 +354,10 @@ def get(**kwargs):
         raise CoaKeyError('The bypop arg should be selected in '+str(listbypop)+' only.')
 
     pandy = _db.get_stats(which=which, location=where, option=option).rename(columns={'location': 'where'})
+    when_beg, when_end = extract_dates(when)
+    if when_end > pandy[[which,'date']].date.max():
+        when_end = pandy[[which,'date']].date.max()
+
     db_first_date = pandy[[which,'date']].date.min()
     db_last_date = pandy[[which,'date']].date.max()
     if when_beg < db_first_date:

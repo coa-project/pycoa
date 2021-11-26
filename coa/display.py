@@ -269,6 +269,9 @@ class CocoDisplay:
                     print('Requested date below available one, take', when_beg)
                     when_end = when_beg
 
+                if when_beg > input.date.max() or when_end > input.date.max():
+                    raise CoaNoData("No available data after "+str(input.date.max()))
+
             if not isinstance(input_field, list):
                   input_field = [input_field]
             else:
@@ -625,7 +628,6 @@ class CocoDisplay:
             #if orientation:
             #    kwargs['orientation'] = orientation
             #kwargs['cursor_date'] = kwargs.get('cursor_date',  self.dvisu_default['cursor_date'])
-
             if isinstance(input['location'].iloc[0],list):
                 input['rolloverdisplay'] = input['clustername']
                 input = input.explode('location')
@@ -641,11 +643,10 @@ class CocoDisplay:
             started = geopdwd.date.min()
             ended = geopdwd.date.max()
 
-
-            date_slider = DateSlider(title = "Date: ", start = started, end = ended,
+            if cursor_date:
+                date_slider = DateSlider(title = "Date: ", start = started, end = ended,
                                      value = ended, step=24 * 60 * 60 * 1000, orientation = orientation)
-
-            wanted_date = date_slider.value_as_datetime.date()
+                #wanted_date = date_slider.value_as_datetime.date()
 
             #if func.__name__ == 'pycoa_mapfolium' or func.__name__ == 'pycoa_map' or func.__name__ == 'innerdecomap' or func.__name__ == 'innerdecopycoageo':
             if func.__name__ == 'pycoa_mapfolium' or func.__name__ == 'pycoa_map' or func.__name__ == 'pycoa_sparkmap':

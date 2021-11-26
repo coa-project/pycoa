@@ -362,6 +362,9 @@ def get(**kwargs):
     if when_end > db_last_date:
         when_end = db_last_date
     # when cut
+    if when_beg > pandy.date.max() or when_end > pandy.date.max():
+        raise CoaNoData("No available data after "+str(pandy.date.max()))
+
     pandy = pandy[(pandy.date >= when_beg) & (pandy.date <= when_end)]
     pandy.reset_index()
     # manage pop norm if asked

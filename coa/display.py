@@ -269,8 +269,9 @@ class CocoDisplay:
                     print('Requested date below available one, take', when_beg)
                     when_end = when_beg
 
-                if when_beg > input.date.max() or when_end > input.date.max():
-                    raise CoaNoData("No available data after "+str(input.date.max()))
+                if when_beg < input.date.min() or when_end > input.date.max():
+                    raise CoaNoData("No available data after "+str(input.date.max())+ ' and before' +str(input.date.min()))
+
 
             if not isinstance(input_field, list):
                   input_field = [input_field]

@@ -61,6 +61,12 @@ def generic_info(namedb, keys):
         ['tot_vacc: (nom initial n_cum_dose1)',url5,urlmaster5],
         'tot_vacc2':
         ['tot_vacc2: (nom initial n_cum_dose2)',url5,urlmaster5],
+        'tot_vacc3':
+        ['tot_vacc3: (nom initial n_cum_dose3)',url5,urlmaster5],
+        'tot_vacc4':
+        ['tot_vacc4: (nom initial n_cum_dose4)',url5,urlmaster5],
+        'tot_rappel_vacc':
+        ['tot_rappel_vacc: (nom initial n_rappel)',url5,urlmaster5],
         'tot_incid_hosp':
         ['tot_incid_hosp: Nombre total de personnes hospitalisées',url2,urlmaster2],
         'tot_incid_rea':
@@ -295,6 +301,7 @@ def generic_info(namedb, keys):
         'tot_tests':['Total number of cases (originale name cumTestByPublishDate)',url+'cumLFDTests'+'&format=csv'],
         'tot_vacc1':['Total number of cases (originale name cumCasesBySpecimenDate)',url+'cumPeopleVaccinatedFirstDoseByVaccinationDate'+'&format=csv'],
         'tot_vacc2':['Total number of cases (originale name cumCasesBySpecimenDate)',url+'cumPeopleVaccinatedSecondDoseByVaccinationDate'+'&format=csv'],
+        'tot_vacc3':['Total number of cases (originale name cumCasesBySpecimenDate)',url+'cumPeopleVaccinatedThirddDoseByVaccinationDate'+'&format=csv'],
         'cur_B.1.617.2':['Current variant B.1.617.2',url +'https://covid-surveillance-data.cog.sanger.ac.uk/download/lineages_by_ltla_and_week.tsv'],
         }
         for k,v in phe.items():

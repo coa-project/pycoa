@@ -170,6 +170,7 @@ class DataBase(object):
                         'cumLFDTests':'tot_tests',\
                         'cumPeopleVaccinatedFirstDoseByVaccinationDate':'tot_vacc1',\
                         'cumPeopleVaccinatedSecondDoseByVaccinationDate':'tot_vacc2',\
+                        'cumPeopleVaccinatedThirdDoseByVaccinationDate':'tot_vacc3',\
                         #'covidOccupiedMVBeds':'cur_icu',\
                         #'cumPeopleVaccinatedFirstDoseByVaccinationDate':'tot_dose1',\
                         #'cumPeopleVaccinatedSecondDoseByVaccinationDate':'tot_dose2',\
@@ -377,7 +378,7 @@ class DataBase(object):
                         result = reduce(lambda left, right: left.merge(right, how = 'outer', on=['location','date']), list_spf)
                         result = result.loc[~result['location'].isin(['00'])]
                         result = result.sort_values(by=['location','date'])
-                        for w in ['incid_hosp', 'incid_rea', 'incid_rad', 'incid_dc', 'P', 'T', 'n_dose1', 'n_dose2']:
+                        for w in ['incid_hosp', 'incid_rea', 'incid_rad', 'incid_dc', 'P', 'T', 'n_dose1', 'n_dose2','n_dose3','n_dose4','n_rappel']:
                             result[w]=pd.to_numeric(result[w], errors = 'coerce')
                             if w.startswith('incid_'):
                                 ww = w[6:]
@@ -408,6 +409,9 @@ class DataBase(object):
                             'rea': 'cur_rea',
                             'tot_n_dose1': 'tot_vacc',
                             'tot_n_dose2': 'tot_vacc2',
+                            'tot_n_dose3': 'tot_vacc3',
+                            'tot_n_dose4': 'tot_vacc4',
+                            'tot_n_rappel':'tot_rappel_vacc',
                             'tx_incid': 'cur_idx_tx_incid',
                             'R': 'cur_idx_R',
                             'taux_occupation_sae': 'cur_idx_taux_occupation_sae',
@@ -425,6 +429,7 @@ class DataBase(object):
                             'tx_C1':'cur_idx_tx_C1',
                             'nbre_pass_corona':'cur_nbre_pass_corona',
                             }
+                        display(result)
                         result = result.rename(columns=rename_dict)
                         #coltocast=list(rename_dict.values())[:5]
                         #result[coltocast] = result[coltocast].astype('Int64')

@@ -317,7 +317,6 @@ class DataBase(object):
                         # previously : https://www.data.gouv.fr/fr/datasets/r/4f39ec91-80d7-4602-befb-4b522804c0af
                         spf5 = self.csv2pandas("https://www.data.gouv.fr/fr/datasets/r/535f8686-d75d-43d9-94b3-da8cdf850634",
                             rename_columns = rename, constraints = constraints, separator = ';', encoding = "ISO-8859-1", cast = cast)
-
                         #print(spf5)
                         # https://www.data.gouv.fr/fr/datasets/indicateurs-de-suivi-de-lepidemie-de-covid-19/#_
                         # tension hospitaliere
@@ -378,7 +377,7 @@ class DataBase(object):
                         result = reduce(lambda left, right: left.merge(right, how = 'outer', on=['location','date']), list_spf)
                         result = result.loc[~result['location'].isin(['00'])]
                         result = result.sort_values(by=['location','date'])
-                        for w in ['incid_hosp', 'incid_rea', 'incid_rad', 'incid_dc', 'P', 'T', 'n_dose1', 'n_dose2','n_dose3','n_dose4','n_rappel']:
+                        for w in ['incid_hosp', 'incid_rea', 'incid_rad', 'incid_dc', 'P', 'T', 'n_cum_dose1', 'n_cum_dose2','n_cum_dose3','n_cum_dose4','n_cum_rappel']:
                             result[w]=pd.to_numeric(result[w], errors = 'coerce')
                             if w.startswith('incid_'):
                                 ww = w[6:]
@@ -389,7 +388,9 @@ class DataBase(object):
                             else:
                                 pass
                                 #result['offset_'+w] = 0
-                            result['tot_'+w]=result.groupby(['location'])[w].cumsum()#+result['offset_'+w]
+                            if 'n_cum' not in w:
+                                result['tot_'+w]=result.groupby(['location','date'])[w].cumsum()#+result['offset_'+w]
+
                         #
                         def dontneeeded():
                             for col in result.columns:
@@ -407,11 +408,11 @@ class DataBase(object):
                             'hosp': 'cur_hosp',
                             'rad': 'tot_rad',
                             'rea': 'cur_rea',
-                            'tot_n_dose1': 'tot_vacc',
-                            'tot_n_dose2': 'tot_vacc2',
-                            'tot_n_dose3': 'tot_vacc3',
-                            'tot_n_dose4': 'tot_vacc4',
-                            'tot_n_rappel':'tot_rappel_vacc',
+                            'n_cum_dose1': 'tot_vacc1',
+                            'n_cum_dose2': 'tot_vacc2',
+                            'n_cum_dose3': 'tot_vacc3',
+                            'n_cum_dose4': 'tot_vacc4',
+                            'n_cum_rappel':'tot_rappel_vacc',
                             'tx_incid': 'cur_idx_tx_incid',
                             'R': 'cur_idx_R',
                             'taux_occupation_sae': 'cur_idx_taux_occupation_sae',
@@ -429,7 +430,6 @@ class DataBase(object):
                             'tx_C1':'cur_idx_tx_C1',
                             'nbre_pass_corona':'cur_nbre_pass_corona',
                             }
-                        display(result)
                         result = result.rename(columns=rename_dict)
                         #coltocast=list(rename_dict.values())[:5]
                         #result[coltocast] = result[coltocast].astype('Int64')
@@ -873,6 +873,10 @@ class DataBase(object):
 
         if self.db == 'dgs':
             mypandas = mypandas.reset_index(drop=True)
+
+        if self.db == 'spf':
+            mypandas = mypandas.drop_duplicates(subset=['location', 'date'], keep='last')
+
         if self.db != 'spfnational':
             mypandas = mypandas.groupby(['location','date']).sum(min_count=1).reset_index() # summing in case of multiple dates (e.g. in opencovid19 data). But keep nan if any
         mypandas = fill_missing_dates(mypandas)

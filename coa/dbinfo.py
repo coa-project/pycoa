@@ -57,8 +57,8 @@ def generic_info(namedb, keys):
         ['cur_taux_pos: Taux de positivité des tests virologiques (Le taux de positivité correspond au nombre de personnes testées positives\
          (RT-PCR et test antigénique) pour la première fois depuis plus de 60 jours rapporté au nombre total de personnes testées positives ou \
          négatives sur une période donnée ; et qui n‘ont jamais été testées positive dans les 60 jours précédents.)',url4,urlmaster2],
-        'tot_vacc':
-        ['tot_vacc: (nom initial n_cum_dose1)',url5,urlmaster5],
+        'tot_vacc1':
+        ['tot_vacc1: (nom initial n_cum_dose1)',url5,urlmaster5],
         'tot_vacc2':
         ['tot_vacc2: (nom initial n_cum_dose2)',url5,urlmaster5],
         'tot_vacc3':

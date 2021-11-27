@@ -251,16 +251,16 @@ class CocoDisplay:
             input = input.copy()
             input.loc[:,'colors'] = input['clustername'].map(dico_colors)#(pd.merge(input, country_col, on='location'))
 
-            when_beg = input.date.min()
-            when_end = input.date.max()
+            when_beg = input[[input_field,'date']].date.min()
+            when_end = input[[input_field,'date']].date.max()
 
             if when:
                 when_beg, when_end = extract_dates(when)
-                if when_beg == dt.date(1, 1, 1):
-                    when_beg = input['date'].min()
+                if when_end > input[[input_field,'date']].date.max():
+                    when_end = input[[input_field,'date']].date.max()
 
-                if when_end == '':
-                    when_end = input['date'].max()
+                if when_beg == dt.date(1, 1, 1):
+                    when_beg = input[[input_field,'date']].date.min()
 
                 if not isinstance(when_beg, dt.date):
                     raise CoaNoData("With your current cuts, there are no data to plot.")
@@ -268,6 +268,9 @@ class CocoDisplay:
                 if when_end <= when_beg:
                     print('Requested date below available one, take', when_beg)
                     when_end = when_beg
+                if when_beg > input[[input_field,'date']].date.max() or when_end > input[[input_field,'date']].date.max():
+                    raise CoaNoData("No available data after "+str(input[[input_field,'date']].date.max()))
+
 
             if not isinstance(input_field, list):
                   input_field = [input_field]
@@ -625,7 +628,6 @@ class CocoDisplay:
             #if orientation:
             #    kwargs['orientation'] = orientation
             #kwargs['cursor_date'] = kwargs.get('cursor_date',  self.dvisu_default['cursor_date'])
-
             if isinstance(input['location'].iloc[0],list):
                 input['rolloverdisplay'] = input['clustername']
                 input = input.explode('location')
@@ -641,11 +643,10 @@ class CocoDisplay:
             started = geopdwd.date.min()
             ended = geopdwd.date.max()
 
-
-            date_slider = DateSlider(title = "Date: ", start = started, end = ended,
+            if cursor_date:
+                date_slider = DateSlider(title = "Date: ", start = started, end = ended,
                                      value = ended, step=24 * 60 * 60 * 1000, orientation = orientation)
-
-            wanted_date = date_slider.value_as_datetime.date()
+                #wanted_date = date_slider.value_as_datetime.date()
 
             #if func.__name__ == 'pycoa_mapfolium' or func.__name__ == 'pycoa_map' or func.__name__ == 'innerdecomap' or func.__name__ == 'innerdecopycoageo':
             if func.__name__ == 'pycoa_mapfolium' or func.__name__ == 'pycoa_map' or func.__name__ == 'pycoa_sparkmap':

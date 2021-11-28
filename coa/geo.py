@@ -698,7 +698,8 @@ class GeoCountry():
     The list of supported countries is given by get_list_countries() function. """
 
     # Assuming zip file here
-    _country_info_dict = {'FRA':'https://github.com/coa-project/coadata/raw/main/coastore/public.opendatasoft.com_912711563.zip',\
+    _country_info_dict = {'FRA':'https://data.opendatasoft.com/explore/dataset/georef-france-departement@public/download/?format=geojson&timezone=Europe/Berlin&lang=fr',\
+                    #previously https://github.com/coa-project/coadata/raw/main/coastore/public.opendatasoft.com_912711563.zip',\
                     'USA':'https://alicia.data.socrata.com/api/geospatial/jhnu-yfrj?method=export&format=Original',\
                     'ITA':'https://raw.githubusercontent.com/openpolis/geojson-italy/master/geojson/limits_IT_provinces.geojson',\
                     'IND':'https://raw.githubusercontent.com/deldersveld/topojson/master/countries/india/india-states.json',\
@@ -767,12 +768,13 @@ class GeoCountry():
 
         # --- 'FRA' case ---------------------------------------------------------------------------------------
         if self._country=='FRA':
-            self._country_data = gpd.read_file('zip://'+get_local_from_url(url,0,'.zip'))
+            #self._country_data = gpd.read_file('zip://'+get_local_from_url(url,0,'.zip'))
+            self._country_data = gpd.read_file(get_local_from_url(url,0))
 
             # adding a flag for subregion (departements)
             self._country_data['flag_subregion']=self._source_dict['FRA']['Subregion Flags']+'img/dept/sticker_plaque_immat_'+\
-                self._country_data['code_dept']+'_'+\
-                [n.lower() for n in self._country_data['nom_dept']]+'_moto.png' # picture of a sticker for motobikes, not so bad...
+                self._country_data['dep_code']+'_'+\
+                [n.lower() for n in self._country_data['dep_name']]+'_moto.png' # picture of a sticker for motobikes, not so bad...
 
             # Reading information to get region flags and correct names of regions
             f_reg_flag=open(get_local_from_url(self._source_dict['FRA']['Region Flags'],0), 'r', encoding="utf8")
@@ -798,12 +800,12 @@ class GeoCountry():
             p_reg_flag["code_region"]=[ str(int(c)).zfill(2) for c in p_reg_flag["code_region"] ] # convert to str for merge the code, adding 1 leading 0 if needed
 
             self._country_data=self._country_data.merge(p_reg_flag,how='left',\
-                    left_on='code_reg',right_on='code_region') # merging with flag and correct names
+                    left_on='reg_code',right_on='code_region') # merging with flag and correct names
             # standardize name for region, subregion
             self._country_data.rename(columns={\
-                'code_dept':'code_subregion',\
-                'nom_dept':'name_subregion',\
-                'nom_chf':'town_subregion',\
+                'dep_code':'code_subregion',\
+                'dep_name':'name_subregion',\
+                #'nom_chf':'town_subregion',\
                 },inplace=True)
 
             # adding population information (departements)
@@ -816,18 +818,21 @@ class GeoCountry():
             # Pour les collectivités d'Outremer : https://www.insee.fr/fr/statistiques/4989739?sommaire=4989761
             com_df=pd.DataFrame([{'Code département':'980','population_subregion':(5985+10124+34065+281674+12067)}])
             pop_fra=pop_fra.append(com_df).reset_index()
+            geo_com=self._country_data[self._country_data.code_subregion.isin(['975','977','978','986','987'])][['geometry']]
+            geo_com['smthing']=0
+            geo_com=geo_com.dissolve(by='smthing')['geometry']
             self._country_data=self._country_data.append(
-                pd.DataFrame([{'code_subregion':'980','name_subregion':'Collectivités d\'outre-mer','code_region':'09','name_region':'Collectivités d\'outre-mer','geometry':sg.Polygon([])}])).reset_index()
+                pd.DataFrame([{'code_subregion':'980','name_subregion':'Collectivités d\'outre-mer','code_region':'09','name_region':'Collectivités d\'outre-mer','geometry':geo_com.values[0]}])).reset_index()
             # Merging
             self._country_data=self._country_data.merge(pop_fra,left_on='code_subregion',right_on='Code département')
-            self._country_data.drop(['id_geofla','code_reg','nom_reg','x_chf_lieu','y_chf_lieu','x_centroid','y_centroid','Code département','Nom du département','Population municipale'],axis=1,inplace=True) # removing some column without interest
-
+            self._country_data=self._country_data[['geometry','code_subregion','name_subregion','flag_subregion','code_region','name_region','population_subregion']]
+            #.drop(['id_geofla','code_reg','nom_reg','x_chf_lieu','y_chf_lieu','x_centroid','y_centroid','Code département','Nom du département','Population municipale'],axis=1,inplace=True) # removing some column without interest
             # moving artificially (if needed) outre-mer area to be near to metropole for map representations
-            list_translation={"GUADELOUPE":(63,23),
-                                 "MARTINIQUE":(63,23),
-                                 "GUYANE":(50,35),
-                                 "REUNION":(-51,60),
-                                 "MAYOTTE":(-38,51.5)}
+            list_translation={"Guadeloupe":(63,23),
+                                 "Martinique":(63,23),
+                                 "Guyane":(50,35),
+                                 "Réunion":(-51,60),
+                                 "Mayotte":(-38,51.5)}
 
             if dense_geometry == True :
                 # Moving DROM-COM near hexagon

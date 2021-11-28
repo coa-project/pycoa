@@ -817,7 +817,7 @@ class GeoCountry():
             com_df=pd.DataFrame([{'Code département':'980','population_subregion':(5985+10124+34065+281674+12067)}])
             pop_fra=pop_fra.append(com_df).reset_index()
             self._country_data=self._country_data.append(
-                pd.DataFrame([{'code_subregion':'980','name_subregion':'Collectivités d\'outre-mer','code_region':'09','name_region':'Collectivités d\'outre-mer'}])).reset_index()
+                pd.DataFrame([{'code_subregion':'980','name_subregion':'Collectivités d\'outre-mer','code_region':'09','name_region':'Collectivités d\'outre-mer','geometry':sg.Polygon([])}])).reset_index()
             # Merging
             self._country_data=self._country_data.merge(pop_fra,left_on='code_subregion',right_on='Code département')
             self._country_data.drop(['id_geofla','code_reg','nom_reg','x_chf_lieu','y_chf_lieu','x_centroid','y_centroid','Code département','Nom du département','Population municipale'],axis=1,inplace=True) # removing some column without interest

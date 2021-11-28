@@ -171,24 +171,24 @@ def generic_info(namedb, keys):
         mydico = obe
     elif namedb == 'owid':
         owid={
-        'total_deaths':['total_deaths:Total deaths attributed to COVID-19'],
-        'total_cases':['total_cases:Total confirmed cases of COVID-19'],
+        'total_deaths':['total_deaths: Total deaths attributed to COVID-19'],
+        'total_cases':['total_cases: Total confirmed cases of COVID-19'],
         'total_tests':['total_tests: Total tests for COVID-19'],
-        'cur_new_tests':['cur_new_tests (new_tests): New tests for COVID-19 (only calculated for consecutive days)'],
-        'total_vaccinations':['total_vaccinations:Total number of COVID-19 vaccination doses administered'],
+        'cur_new_tests':['cur_new_tests (original name new_tests): New tests for COVID-19 (only calculated for consecutive days)'],
+        'total_vaccinations':['total_vaccinations: Total number of COVID-19 vaccination doses administered'],
         'total_population':['total_population: total population of a given country'],
-        'total_people_fully_vaccinated_per_hundred':['original name people_fully_vaccinated_per_hundred, total_people_fully_vaccinated_per_hundred:Total number of people who received all doses prescribed by the vaccination protocol per 100 people in the total population'],
-        'total_boosters':['total_boosters:Total number of COVID-19 vaccination booster doses administered (doses administered beyond the number prescribed by the vaccination protocol)'],
-        'total_people_vaccinated':['(original name people_vaccinated), Total number of people who received at least one vaccine dose'],
-        'total_people_fully_vaccinated':['(original name : people_fully_vaccinated),Total number of people who received all doses prescribed by the vaccination protocol'],
-        'total_people_vaccinated_per_hundred':['original people_vaccinated_per_hundred: total_people_vaccinated_per_hundred:Total number of people who received all doses prescribed by the vaccination protocol per 100 people in the total population'],
-        'total_cases_per_million':['total_cases_per_million:Total confirmed cases of COVID-19 per 1,000,000 people'],
-        'total_deaths_per_million':['total_deaths_per_million:Total deaths attributed to COVID-19 per 1,000,000 people'],
+        'total_people_fully_vaccinated_per_hundred':['total_people_fully_vaccinated_per_hundred (original name people_fully_vaccinated_per_hundred): Total number of people who received all doses prescribed by the vaccination protocol per 100 people in the total population'],
+        'total_boosters':['total_boosters: Total number of COVID-19 vaccination booster doses administered (doses administered beyond the number prescribed by the vaccination protocol)'],
+        'total_people_vaccinated':['total_people_vaccinated (original name people_vaccinated): Total number of people who received at least one vaccine dose'],
+        'total_people_fully_vaccinated':['total_people_fully_vaccinated (original name people_fully_vaccinated): Total number of people who received all doses prescribed by the vaccination protocol'],
+        'total_people_vaccinated_per_hundred':['total_people_vaccinated_per_hundred (original name people_vaccinated_per_hundred): total_people_vaccinated_per_hundred:Total number of people who received all doses prescribed by the vaccination protocol per 100 people in the total population'],
+        'total_cases_per_million':['total_cases_per_million: Total confirmed cases of COVID-19 per 1,000,000 people'],
+        'total_deaths_per_million':['total_deaths_per_million: Total deaths attributed to COVID-19 per 1,000,000 people'],
         'total_vaccinations_per_hundred':['total_vaccinations_per_hundred: COVID19 vaccine doses administered per 100 people'],
-        'cur_reproduction_rate':['(original name:reproduction_rate)cur_reproduction_rate:Real-time estimate of the effective reproduction rate (R) of COVID-19. See https://github.com/crondonm/TrackingR/tree/main/Estimates-Database'],
-        'cur_icu_patients':['(orignale name:icu_patients) cur_icu_patients: (ICU: intensive care unit),Number of COVID-19 patients in intensive care units (ICUs) on a given day'],
-        'cur_hosp_patients':['( originale name hosp_patients) cur_hosp_patients:Number of COVID-19 patients in hospital on a given day'],
-        'cur_idx_positive_rate':['(originale name positive_rate) cur_idx_positive_rate:The share of COVID-19 tests that are positive, given as a rolling 7-day average (this is the inverse of tests_per_case)']
+        'cur_reproduction_rate':['cur_reproduction_rate (original name reproduction_rate): Real-time estimate of the effective reproduction rate (R) of COVID-19. See https://github.com/crondonm/TrackingR/tree/main/Estimates-Database'],
+        'cur_icu_patients':['cur_icu_patients (orignal name icu_patients): Number of COVID-19 patients in intensive care units (ICUs) on a given day'],
+        'cur_hosp_patients':['cur_hosp_patients (original name hosp_patients): Number of COVID-19 patients in hospital on a given day'],
+        'cur_idx_positive_rate':['cur_idx_positive_rate (original name positive_rate): The share of COVID-19 tests that are positive, given as a rolling 7-day average (this is the inverse of tests_per_case)']
         }
         for k,v in owid.items():
             owid[k].append("https://raw.githubusercontent.com/owid/covid-19-data/master/public/data/owid-covid-data.csv")

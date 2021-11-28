@@ -32,7 +32,7 @@
 - keep owid : world field -> change to owid_* & population value
 - various sumall and region sumall graphical issues
 - add sumall with list of list, for instance [['EU'],['Africa']] 
-
+- if which is tot_ or total_ cumul = value 
 ## v2.02 - march 2021 - Import decorators modifciation inside the display
 - New standard output is pandas dataframe
 - Bug solved for a SPF database which has changed

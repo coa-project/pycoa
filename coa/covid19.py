@@ -550,7 +550,7 @@ class DataBase(object):
         Return all the available keyswords for the database selected
         Key-words are for:
         - jhu : ['deaths','confirmed','recovered']
-            * the data are cumulative i.e for a date it represents the total cases
+                            * the data are cumulative i.e for a date it represents the total cases
             For more information please have a look to https://github.com/CSSEGISandData/COVID-19/tree/master/csse_covid_19_data
         - 'owid' : ['total_deaths','total_cases','reproduction_rate','icu_patients','hosp_patients','total_tests',
                     'positive_rate','total_vaccinations']
@@ -1316,7 +1316,7 @@ class DataBase(object):
         inx = pdfiltered.groupby('clustername').head(1).index
         #First value of diff is always NaN
         pdfiltered.loc[inx, 'daily'] = pdfiltered[kwargs['which']].iloc[inx]
-        if 'cur_' in kwargs['which']:
+        if 'cur_' in kwargs['which'] or 'total_' in kwargs['which'] or 'tot_' in kwargs['which']:
             pdfiltered['cumul'] = pdfiltered[kwargs['which']]
         else:
             pdfiltered['cumul'] = pdfiltered.groupby('clustername')[kwargs['which']].cumsum()
@@ -1364,7 +1364,10 @@ class DataBase(object):
             p=p.rename(columns={whichcol[j]:whichcol[j]+'_'+str(j)})
             base=pd.merge(base,p,on=['date','clustername'])
             j+=1
-        base[['where','codelocation']]= pdstats[0][['where','codelocation']]  #needed by display
+        if 'location' in list(pdstats[0].columns):
+            base[['where','codelocation']] = pdstats[0][['location','codelocation']]  #needed by display
+        else:
+            base[['where','codelocation']]= pdstats[0][['where','codelocation']]  #needed by display
         return base
 
    def saveoutput(self,**kwargs):

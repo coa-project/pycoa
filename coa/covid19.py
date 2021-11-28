@@ -1342,33 +1342,38 @@ class DataBase(object):
         'coapandas': list (min 2D) of pandas from stats
         'whichcol': list variable associate to the coapandas list to be retrieve
         '''
-        pdstats = []
-        if not isinstance(kwargs['coapandas'], list) or len(kwargs['coapandas'])<=1:
-            raise CoaKeyError('coapandas value must be at least a list of 2 elements ... ')
-        else:
-            pdstats = kwargs['coapandas']
-        whichcol =  kwargs['whichcol']
-        if whichcol is  None:
-            raise CoaKeyError('whichcol value must be present ... ')
-        else:
-            if len(whichcol) != len(pdstats):
-                raise CoaKeyError(whichcol+' must have the same length as coapandas ... ')
 
-        if not all([j in i.columns for i,j in zip(pdstats,whichcol)]):
+        coapandas = kwargs.get('coapandas', None)
+        whichcol =  kwargs.get('whichcol', None)
+
+        if coapandas is None or not isinstance(coapandas, list) or len(coapandas)<=1:
+            raise CoaKeyError('coapandas value must be at least a list of 2 elements ... ')
+
+        if whichcol is None:
+            print([ i.columns[2] for i in coapandas ])
+            whichcol = [ i.columns[2] for i in coapandas ]
+        else:
+            if len(whichcol) != len(coapandas):
+                raise CoaKeyError('whichcol value must have same length as  coapandas i.e' + len(coapandas) +'... ')
+
+
+        if not all([j in i.columns for i,j in zip(coapandas,whichcol)]):
             raise CoaKeyError('Please check your coapandas and the associate whichcol ')
 
-        base = pdstats[0].copy()
+        base = coapandas[0].copy()
         base = base[['date','clustername',whichcol[0]]]
         j=1
-        for p in pdstats[1:]:
+        for p in coapandas[1:]:
             p=p[['date','clustername',whichcol[j]]]
-            p=p.rename(columns={whichcol[j]:whichcol[j]+'_'+str(j)})
+            if whichcol[j] in p.columns:
+                whichcol[j] += '_'+str(j)
+            p=p.rename(columns={whichcol[j]:whichcol[j]})
             base=pd.merge(base,p,on=['date','clustername'])
             j+=1
-        if 'location' in list(pdstats[0].columns):
-            base[['where','codelocation']] = pdstats[0][['location','codelocation']]  #needed by display
+        if 'location' in list(coapandas[0].columns):
+            base[['where','codelocation']] = coapandas[0][['location','codelocation']]  #needed by display
         else:
-            base[['where','codelocation']]= pdstats[0][['where','codelocation']]  #needed by display
+            base[['where','codelocation']]= coapandas[0][['where','codelocation']]  #needed by display
         return base
 
    def saveoutput(self,**kwargs):

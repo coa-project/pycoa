@@ -810,9 +810,15 @@ class GeoCountry():
             pop_fra = pd.read_html(get_local_from_url(self._source_dict['FRA']['Population']))[0]
             pop_fra['population_subregion']=pop_fra['Population municipale'].str.replace(r"[ \xa0]","").astype(int)
             # En l'absence de Mayotte dans ce document, car le recensement n'a pas eu lieu en phase, ajout à la main
-            # En référence à la page : https://www.insee.fr/fr/statistiques/3291775?sommaire=2120838
+            # En référence à la page pour Mayotte : https://www.insee.fr/fr/statistiques/3291775?sommaire=2120838
             mayotte_df=pd.DataFrame([{'Code département':'976','population_subregion':256518}])
-            pop_fra=pop_fra.append(mayotte_df).reset_index()
+            pop_fra=pop_fra.append(mayotte_df)
+            # Pour les collectivités d'Outremer : https://www.insee.fr/fr/statistiques/4989739?sommaire=4989761
+            com_df=pd.DataFrame([{'Code département':'980','population_subregion':(5985+10124+34065+281674+12067)}])
+            pop_fra=pop_fra.append(com_df).reset_index()
+            self._country_data=self._country_data.append(
+                pd.DataFrame([{'code_subregion':'980','name_subregion':'Collectivités d\'outre-mer','code_region':'09','name_region':'Collectivités d\'outre-mer'}])).reset_index()
+            # Merging
             self._country_data=self._country_data.merge(pop_fra,left_on='code_subregion',right_on='Code département')
             self._country_data.drop(['id_geofla','code_reg','nom_reg','x_chf_lieu','y_chf_lieu','x_centroid','y_centroid','Code département','Nom du département','Population municipale'],axis=1,inplace=True) # removing some column without interest
 

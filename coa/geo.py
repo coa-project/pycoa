@@ -622,7 +622,7 @@ class GeoRegion():
             raise CoaKeyError("The given region is not a str type.")
 
         region=region.title()  # if not properly capitalized
-        
+
         if region not in self.get_region_list():
             return False
         else :
@@ -809,6 +809,10 @@ class GeoCountry():
             # adding population information (departements)
             pop_fra = pd.read_html(get_local_from_url(self._source_dict['FRA']['Population']))[0]
             pop_fra['population_subregion']=pop_fra['Population municipale'].str.replace(r"[ \xa0]","").astype(int)
+            # En l'absence de Mayotte dans ce document, car le recensement n'a pas eu lieu en phase, ajout à la main
+            # En référence à la page : https://www.insee.fr/fr/statistiques/3291775?sommaire=2120838
+            mayotte_df=pd.DataFrame([{'Code département':'976','population_subregion':256518}])
+            pop_fra=pop_fra.append(mayotte_df).reset_index()
             self._country_data=self._country_data.merge(pop_fra,left_on='code_subregion',right_on='Code département')
             self._country_data.drop(['id_geofla','code_reg','nom_reg','x_chf_lieu','y_chf_lieu','x_centroid','y_centroid','Code département','Nom du département','Population municipale'],axis=1,inplace=True) # removing some column without interest
 
@@ -1057,7 +1061,7 @@ class GeoCountry():
             self._country_data['code_subregion']=[str(c).zfill(5) for c in self._country_data.COD_COMUNA]
             self._country_data['code_region']=self._country_data.code_subregion.str.slice(stop=2)
             self._country_data=self._country_data[['name_subregion','code_subregion','name_region','code_region','geometry']]
-            
+
     # def get_region_from_municipality(self,lname):
     #     """  Return region list from a municipality list
     #     """
@@ -1129,7 +1133,7 @@ class GeoCountry():
         for i in self.get_subregion_list().name_subregion.to_list():
             if tostdstring(i) == r2:
                 return i
-        a=self.get_subregion_list()[self.get_subregion_list().code_subregion==r].name_subregion.values  
+        a=self.get_subregion_list()[self.get_subregion_list().code_subregion==r].name_subregion.values
         if a.size == 1:
             return a[0]
         return False

@@ -370,30 +370,16 @@ def get(**kwargs):
 
     pandy = pandy[(pandy.date >= when_beg) & (pandy.date <= when_end)]
     pandy.reset_index()
+    pop_field = ''
     # manage pop norm if asked
+    if isinstance(pandy['codelocation'].iloc[0],list):
+        pandy = pandy.explode('codelocation')
     if bypop != 'no':
         if _db.db_world == True:
             if not isinstance(_gi,coa.geo.GeoInfo):
                 _gi = coge.GeoInfo()
             pop_field='population'
-
-            if isinstance(pandy['codelocation'].iloc[0],list):
-                pandy = pandy.explode('codelocation')
-            clust = pandy['clustername'].unique()
-
             pandy = _gi.add_field(input=pandy,field=pop_field,geofield='codelocation')
-            df = pd.DataFrame()
-            for i in clust:
-                pandyi = pandy.loc[ pandy['clustername'] == i ].copy()
-                pandyi.loc[:,'population'] = pandyi.groupby('codelocation')['population'].first().sum()
-                cody = [pandyi.groupby('codelocation')['codelocation'].first().tolist()]*len(pandyi)
-                pandyi = pandyi.assign(codelocation=cody)
-                pandyi = pandyi.drop_duplicates(['date','clustername'])
-                if df.empty:
-                    df = pandyi
-                else:
-                    df = df.append(pandyi)
-            pandy = df
         else:
             if not isinstance(_gi,coa.geo.GeoCountry):
                 _gi=None
@@ -408,6 +394,20 @@ def get(**kwargs):
                 raise CoaKeyError('The population information not available for this country. No normalization possible')
 
             pandy=_gi.add_field(input=pandy,field=pop_field,input_key='codelocation')
+
+        clust = pandy['clustername'].unique()
+        df = pd.DataFrame()
+        for i in clust:
+            pandyi = pandy.loc[ pandy['clustername'] == i ].copy()
+            pandyi.loc[:,pop_field] = pandyi.groupby('codelocation')[pop_field].first().sum()
+            cody = [pandyi.groupby('codelocation')['codelocation'].first().tolist()]*len(pandyi)
+            pandyi = pandyi.assign(codelocation=cody)
+            pandyi = pandyi.drop_duplicates(['date','clustername'])
+            if df.empty:
+                df = pandyi
+            else:
+                df = df.append(pandyi)
+        pandy = df
 
         pandy[which+' per '+bypop]=pandy[which]/pandy[pop_field]*_dict_bypop[bypop]
     # casted_data = None

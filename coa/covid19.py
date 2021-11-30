@@ -651,6 +651,9 @@ class DataBase(object):
             pandas_jhu_db=pandas_jhu_db.groupby(['location','date']).sum().reset_index()
             pandas_list.append(pandas_jhu_db)
 
+        if 'jhu' in self.db:
+            pandas_list = [pan.rename(columns={i:'tot_'+i for i in jhu_files_ext}) for pan in pandas_list]
+            self.available_keys_words = ['tot_'+i for i in jhu_files_ext]
         uniqloc = list(pandas_list[0]['location'].unique())
         oldloc = uniqloc
         codedico={}
@@ -1054,7 +1057,7 @@ class DataBase(object):
         option = kwargs.get('option', 'fillnan')
         fillnan = True # default
         sumall = False # default
-
+        sumallandsmooth7 = False
         if kwargs['which'] not in self.get_available_keys_words() :
             raise CoaKeyError(kwargs['which']+' is not a available for ' + self.db + ' database name. '
             'See get_available_keys_words() for the full list.')
@@ -1196,6 +1199,10 @@ class DataBase(object):
         if 'nonneg' in option:
             option.remove('nonneg')
             option.insert(0, 'nonneg')
+        if 'smooth7' and 'sumall' in  option:
+            option.remove('sumall')
+            option.remove('smooth7')
+            option+=['sumallandsmooth7']
         for o in option:
             if o == 'nonneg':
                 if kwargs['which'].startswith('cur_'):
@@ -1265,12 +1272,15 @@ class DataBase(object):
                 pdfiltered[kwargs['which']] = pdfiltered.groupby(['location'])[kwargs['which']].rolling(7,min_periods=7).mean().reset_index(level=0,drop=True)
                 #pdfiltered[kwargs['which']] = pdfiltered[kwargs['which']].fillna(0) # causes bug with fillnan procedure below
                 #pdfiltered = pdfiltered.groupby('location').apply(lambda x : x[3:-3]).reset_index(drop=True) # remove out of bound dates.
-                fillnan = True
+                fillnan=True
             elif o == 'sumall':
                 sumall = True
                 #if kwargs['which'].startswith('cur_idx_Prc'):
                 #    print('Warning this data is from rolling value, ended date may be not correct ...')
-            elif o != None and o != '':
+            elif o == 'sumallandsmooth7':
+                sumall = True
+                sumallandsmooth7 = True
+            elif o != None and o != '' and o != 'sumallandsmooth7':
                 raise CoaKeyError('The option '+o+' is not recognized in get_stats. See get_available_options() for list.')
         pdfiltered = pdfiltered.reset_index(drop=True)
 
@@ -1291,6 +1301,8 @@ class DataBase(object):
                     tmp[kwargs['which']] = tmp.loc[tmp.clustername.isin(uniqcluster)].\
                     apply(lambda x: x[kwargs['which']]/len(x.clustername),axis=1)
                pdfiltered = tmp
+            if sumallandsmooth7:
+                pdfiltered[kwargs['which']] = pdfiltered.groupby(['clustername'])[kwargs['which']].rolling(7,min_periods=7).mean().reset_index(level=0,drop=True)
             # computing daily, cumul and weekly
             else:
                 if kwargs['which'].startswith('cur_idx_'):

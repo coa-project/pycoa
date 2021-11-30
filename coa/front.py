@@ -376,7 +376,24 @@ def get(**kwargs):
             if not isinstance(_gi,coa.geo.GeoInfo):
                 _gi = coge.GeoInfo()
             pop_field='population'
-            pandy=_gi.add_field(input=pandy,field=pop_field,geofield='codelocation')
+
+            if isinstance(pandy['codelocation'].iloc[0],list):
+                pandy = pandy.explode('codelocation')
+            clust = pandy['clustername'].unique()
+
+            pandy = _gi.add_field(input=pandy,field=pop_field,geofield='codelocation')
+            df = pd.DataFrame()
+            for i in clust:
+                pandyi = pandy.loc[ pandy['clustername'] == i ].copy()
+                pandyi.loc[:,'population'] = pandyi.groupby('codelocation')['population'].first().sum()
+                cody = [pandyi.groupby('codelocation')['codelocation'].first().tolist()]*len(pandyi)
+                pandyi = pandyi.assign(codelocation=cody)
+                pandyi = pandyi.drop_duplicates(['date','clustername'])
+                if df.empty:
+                    df = pandyi
+                else:
+                    df = df.append(pandyi)
+            pandy = df
         else:
             if not isinstance(_gi,coa.geo.GeoCountry):
                 _gi=None

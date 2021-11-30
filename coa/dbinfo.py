@@ -196,11 +196,11 @@ def generic_info(namedb, keys):
         mydico = owid
     elif namedb == 'jhu':
         jhu = {
-        'deaths':['deaths: counts include confirmed and probable (where reported).',\
+        'tot_deaths':['tot_deaths (original name deaths): counts include confirmed and probable (where reported).',\
         'https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_deaths_global.csv'],
-        'confirmed':['confirmed: counts include confirmed and probable (where reported).',\
+        'tot_confirmed':['tot_confirmed (original name confirmed): counts include confirmed and probable (where reported).',\
         'https://github.com/CSSEGISandData/COVID-19/blob/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv'],
-        'recovered':['recovered: cases are estimates based on local media reports, and state and local reporting when available, and therefore may be substantially lower than the true number. US state-level recovered cases are from COVID Tracking Project (https://covidtracking.com/)',\
+        'tot_recovered':['tot_recovered (original name recovered): cases are estimates based on local media reports, and state and local reporting when available, and therefore may be substantially lower than the true number. US state-level recovered cases are from COVID Tracking Project (https://covidtracking.com/)',\
         'https://github.com/CSSEGISandData/COVID-19/blob/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_recovered_global.csv']
          }
         for k,v in jhu.items():
@@ -208,9 +208,9 @@ def generic_info(namedb, keys):
         mydico = jhu
     elif namedb == 'jhu-usa':
         jhuusa = {
-        'deaths':['deaths: counts include confirmed and probable (where reported).',\
+        'tot_deaths':['tot_deaths (original name deaths): counts include confirmed and probable (where reported).',\
         'https://github.com/CSSEGISandData/COVID-19/blob/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_deaths_US.csv'],
-        'confirmed':['confirmed: counts include confirmed and probable (where reported).',\
+        'tot_confirmed':['tot_confirmed (original name confirmed): counts include confirmed and probable (where reported).',\
         'https://github.com/CSSEGISandData/COVID-19/blob/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_US.csv']
         }
         for k,v in jhuusa.items():

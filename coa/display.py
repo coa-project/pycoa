@@ -299,6 +299,9 @@ class CocoDisplay:
             if func.__name__ != 'pycoa_date_plot'  and func.__name__ != 'pycoa_plot':
                 title_temporal = ' (' + when_end.strftime('%d/%m/%Y')  + ')'
             if option:
+                if 'sumallandsmooth7' in option:
+                    option.remove('sumallandsmooth7')
+                    option += ['sumall','smooth7']
                 title_temporal = ', option ' + str(option) + title_temporal
 
             input_field_tostring = str(input_field).replace('[', '').replace(']', '').replace('\'', '')

@@ -13,6 +13,8 @@
 - Use @wraps in the decorator to get the real name and doctring of each method
 - When which='cur_' change the default title 
 - add new spf value nbre_pass_corona 
+- mv jhu which to 'tot'_which to avoid to cumul al already cumul value
+- when option = sumall + smooth7 do sumall and smooth and not the opposite
 ## v2.10 - 
 - Map bug fixed for option='sumall'
 - maplabel added for bokeh map   

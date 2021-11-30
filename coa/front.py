@@ -372,9 +372,11 @@ def get(**kwargs):
     pandy.reset_index()
     pop_field = ''
     # manage pop norm if asked
-    if isinstance(pandy['codelocation'].iloc[0],list):
-        pandy = pandy.explode('codelocation')
+
     if bypop != 'no':
+        if isinstance(pandy['codelocation'].iloc[0],list):
+            pandy = pandy.explode('codelocation')
+
         if _db.db_world == True:
             if not isinstance(_gi,coa.geo.GeoInfo):
                 _gi = coge.GeoInfo()

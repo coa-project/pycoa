@@ -39,6 +39,7 @@ from bokeh.models.widgets import Tabs, Panel
 from bokeh.plotting import figure
 from bokeh.layouts import row, column, gridplot
 from bokeh.palettes import Category10, Category20, Viridis256
+from bokeh.models import Title
 
 from bokeh.io import export_png
 from bokeh import events
@@ -81,6 +82,7 @@ class CocoDisplay:
         self.available_tiles = ['openstreet','esri','stamen','positron']
         self.available_modes = ['mouse','vline','hline']
         self.available_textcopyrightposition = ['left','right']
+        self.uptitle, self.subtitle = ' ',' '
 
         self.dfigure_default = {'plot_height':width_height_default[1] ,'plot_width':width_height_default[0],'title':None, 'textcopyrightposition':'left','textcopyright':'default'}
         self.dvisu_default = {'mode':'mouse','tile':self.available_tiles[0],'orientation':'horizontal','cursor_date':None,'maplabel':None,'guideline':False}
@@ -164,6 +166,8 @@ class CocoDisplay:
                 kwargs.pop(i)
         fig = figure(**kwargs, tools=['save', 'box_zoom,reset'], toolbar_location="right")
         fig.add_layout(citation)
+        fig.add_layout(Title(text=self.uptitle, text_font_size="10pt"), 'above')
+        fig.add_layout(Title(text=self.subtitle, text_font_size="8pt", text_font_style="italic"), 'below')
         return fig
     ''' WRAPPER COMMUN FOR ALL'''
     def decowrapper(func):
@@ -232,7 +236,10 @@ class CocoDisplay:
                                 else:
                                     trad[i] = i
                                 trad={k:(v[:3]+'...'+v[-3:] if len(v)>8 else v) for k,v in trad.items()}
-                                input['permanentdisplay'] = input.codelocation#input.clustername.map(trad)
+                                if ',' in input.codelocation[0]:
+                                    input['permanentdisplay'] = input.clustername
+                                else:
+                                    input['permanentdisplay'] = input.codelocation#input.clustername.map(trad)
                     elif self.dbld[self.database_name][1] == 'region' :
                         if all(i == self.dbld[self.database_name][2] for i in input.clustername.unique()):
                             input['permanentdisplay'] = [self.dbld[self.database_name][2]]*len(input)
@@ -298,30 +305,33 @@ class CocoDisplay:
             title_temporal = ' (' + 'between ' + when_beg.strftime('%d/%m/%Y') + ' and ' + when_end.strftime('%d/%m/%Y') + ')'
             if func.__name__ != 'pycoa_date_plot'  and func.__name__ != 'pycoa_plot':
                 title_temporal = ' (' + when_end.strftime('%d/%m/%Y')  + ')'
+            title_option=''
             if option:
                 if 'sumallandsmooth7' in option:
                     option.remove('sumallandsmooth7')
                     option += ['sumall','smooth7']
-                title_temporal = ', option ' + str(option) + title_temporal
+                title_option = ' option: ' + str(option)
 
             input_field_tostring = str(input_field).replace('[', '').replace(']', '').replace('\'', '')
             if input_field_tostring == 'daily':
-                titlefig = which + ', ' + 'day to day difference ' + title_temporal
+                titlefig = which + ', ' + 'day to day difference ' + title_option
             elif input_field_tostring == 'weekly':
-                titlefig = which + ', ' + 'week to week difference' + title_temporal
+                titlefig = which + ', ' + 'week to week difference ' + title_option
             elif input_field_tostring == 'cumul':
                 if 'cur_' in  which:
-                    titlefig = which + ', ' + 'current ' + which.replace('cur_','')  + title_temporal
+                    titlefig = which + ', ' + 'current ' + which.replace('cur_','')+ title_option
                 else:
-                    titlefig = which + ', ' + 'cumulative sum ' + title_temporal
+                    titlefig = which + ', ' + 'cumulative sum '+ title_option
             else:
-                titlefig = input_field_tostring + title_temporal
+                titlefig = input_field_tostring + title_option
 
             if title:
                 title = title
             else:
                 title  = titlefig
-            kwargs['title'] = title
+            self.uptitle = title
+            self.subtitle = title_temporal
+            #kwargs['title'] = title
             return func(self, input, input_field, **kwargs)
         return wrapper
     ''' DECORATORS FOR PLOT: DATE, VERSUS, SCROLLINGMENU '''

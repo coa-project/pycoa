@@ -1199,7 +1199,7 @@ class DataBase(object):
         if 'nonneg' in option:
             option.remove('nonneg')
             option.insert(0, 'nonneg')
-        if 'smooth7' and 'sumall' in  option:
+        if 'smooth7' in  option and 'sumall' in  option:
             option.remove('sumall')
             option.remove('smooth7')
             option+=['sumallandsmooth7']
@@ -1301,8 +1301,9 @@ class DataBase(object):
                     tmp[kwargs['which']] = tmp.loc[tmp.clustername.isin(uniqcluster)].\
                     apply(lambda x: x[kwargs['which']]/len(x.clustername),axis=1)
                pdfiltered = tmp
-            if sumallandsmooth7:
-                pdfiltered[kwargs['which']] = pdfiltered.groupby(['clustername'])[kwargs['which']].rolling(7,min_periods=7).mean().reset_index(level=0,drop=True)
+               pdfiltered = pdfiltered.drop_duplicates(['date','clustername'])
+               if sumallandsmooth7:
+                   pdfiltered[kwargs['which']] = pdfiltered.groupby(['clustername'])[kwargs['which']].rolling(7,min_periods=7).mean().reset_index(level=0,drop=True)
             # computing daily, cumul and weekly
             else:
                 if kwargs['which'].startswith('cur_idx_'):

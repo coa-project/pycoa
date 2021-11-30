@@ -402,16 +402,17 @@ def get(**kwargs):
             pandyi.loc[:,pop_field] = pandyi.groupby('codelocation')[pop_field].first().sum()
             cody = [pandyi.groupby('codelocation')['codelocation'].first().tolist()]*len(pandyi)
             pandyi = pandyi.assign(codelocation=cody)
-            pandyi = pandyi.drop_duplicates(['date','clustername'])
             if df.empty:
                 df = pandyi
             else:
                 df = df.append(pandyi)
+        df = df.drop_duplicates(['date','clustername'])
         pandy = df
 
         pandy[which+' per '+bypop]=pandy[which]/pandy[pop_field]*_dict_bypop[bypop]
     # casted_data = None
     if output == 'pandas':
+        pandy = pandy.drop_duplicates(['date','clustername'])
         pandy = pandy.drop(columns=['cumul'])
         pandy['cumul'] = pandy[which]
         casted_data = pandy

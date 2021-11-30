@@ -390,7 +390,7 @@ class DataBase(object):
                                 pass
                                 #result['offset_'+w] = 0
                             if 'n_cum' not in w:
-                                result['tot_'+w]=result.groupby(['location','date'])[w].cumsum()#+result['offset_'+w]
+                                result['tot_'+w]=result.groupby(['location'])[w].cumsum()#+result['offset_'+w]
 
                         #
                         def dontneeeded():

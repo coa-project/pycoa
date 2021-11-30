@@ -322,8 +322,6 @@ class CocoDisplay:
                     titlefig = which + ', ' + 'current ' + which.replace('cur_','')+ title_option
                 else:
                     titlefig = which + ', ' + 'cumulative sum '+ title_option
-                if self.database_name == 'spf' and 'tot_' in which:
-                    titlefig = which + ', ' + title_option
             else:
                 titlefig = input_field_tostring + title_option
 

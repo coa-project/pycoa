@@ -412,7 +412,10 @@ def get(**kwargs):
         pandy = df
 
         pandy[pop_field]=pandy[pop_field].replace(0., np.nan)
-        pandy[which+' per '+bypop]=pandy[which]/pandy[pop_field]*_dict_bypop[bypop]
+        if what:
+            pandy[what+' per '+bypop]=pandy[what]/pandy[pop_field]*_dict_bypop[bypop]
+        else:
+            pandy[which+' per '+bypop]=pandy[which]/pandy[pop_field]*_dict_bypop[bypop]
     # casted_data = None
     if output == 'pandas':
         pandy = pandy.drop_duplicates(['date','clustername'])
@@ -515,8 +518,12 @@ def chartsinput_deco(f):
 
         bypop=kwargs.pop('bypop','no')
         if bypop != 'no':
-            kwargs['which']=which+' per '+bypop
-            input_field=kwargs['which']
+            if what:
+                kwargs['what']=what+' per '+bypop
+                input_field=kwargs['what']
+            else:
+                kwargs['which']=which+' per '+bypop
+                input_field=kwargs['which']
         kwargs['input_field'] = input_field
         return f(**kwargs)
 

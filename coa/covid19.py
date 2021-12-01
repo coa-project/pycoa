@@ -485,21 +485,16 @@ class DataBase(object):
                     owid = self.csv2pandas("https://raw.githubusercontent.com/owid/covid-19-data/master/public/data/owid-covid-data.csv",
                     separator=',',drop_field=drop_field)
                     # renaming some columns
-                    col_to_rename=['reproduction_rate','icu_patients','hosp_patients','positive_rate','new_tests']
-                    renamed_cols=['cur_'+c if c != 'positive_rate' else 'cur_idx_'+c for c in col_to_rename]
-                    col_to_rename+=['people_vaccinated']
-                    renamed_cols +=['total_people_vaccinated']
-                    col_to_rename+=['people_fully_vaccinated']
-                    renamed_cols +=['total_people_fully_vaccinated']
-                    col_to_rename+=['people_fully_vaccinated_per_hundred']
-                    renamed_cols +=['total_people_fully_vaccinated_per_hundred']
-                    col_to_rename+=['people_vaccinated_per_hundred']
-                    renamed_cols +=['total_people_vaccinated_per_hundred']
-                    col_to_rename+=['population']
-                    renamed_cols +=['total_population']
-                    columns_keeped=['iso_code','total_deaths','total_cases','total_tests','total_vaccinations']
-                    columns_keeped+=['total_cases_per_million','total_deaths_per_million','total_vaccinations_per_hundred','total_boosters']
-
+                    col_to_rename1=['reproduction_rate','icu_patients','hosp_patients','positive_rate']
+                    renamed_cols1=['cur_'+c if c != 'positive_rate' else 'cur_idx_'+c for c in col_to_rename1]
+                    col_to_rename2=['people_vaccinated','people_fully_vaccinated','people_fully_vaccinated_per_hundred',\
+                    'people_vaccinated_per_hundred','population']
+                    renamed_cols2=['total_'+i for i in col_to_rename2]
+                    col_to_rename = col_to_rename1+col_to_rename2
+                    renamed_cols = renamed_cols1 +renamed_cols2
+                    columns_keeped=['iso_code','total_deaths','total_cases','total_vaccinations']
+                    columns_keeped+=['total_cases_per_million','total_deaths_per_million','total_vaccinations_per_hundred','total_boosters','total_tests']
+                    owid['total_tests'] = owid.groupby(['location'])['new_tests'].cumsum()
                     self.return_structured_pandas(owid.rename(columns=dict(zip(col_to_rename,renamed_cols))),columns_keeped=columns_keeped+renamed_cols)
             except:
                 raise CoaDbError("An error occured while parsing data of "+self.get_db()+". This may be due to a data format modification. "
@@ -784,7 +779,6 @@ class DataBase(object):
 
         if columns_skipped:
             columns_keeped = [x for x in mypandas.columns.values.tolist() if x not in columns_skipped + absolutlyneeded]
-
         mypandas = mypandas[absolutlyneeded + columns_keeped]
 
         self.available_keys_words = columns_keeped #+ absolutlyneeded

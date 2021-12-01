@@ -64,7 +64,7 @@ else:
 _db, _cocoplot = coco.DataBase.factory(_whom)  # initialization with default
 _gi = None
 
-_dict_bypop = {'no':0,'100':100,'1k':1e3,'100k':1e5,'1M':1e6}
+_dict_bypop = {'no':0,'100':100,'1k':1e3,'100k':1e5,'1M':1e6,'pop':1.}
 
 _listwhat = ['cumul',  # first one is default, nota:  we must avoid uppercases
              'daily',
@@ -411,6 +411,7 @@ def get(**kwargs):
         df = df.drop_duplicates(['date','clustername'])
         pandy = df
 
+        pandy[pop_field]=pandy[pop_field].replace(0., np.nan)
         pandy[which+' per '+bypop]=pandy[which]/pandy[pop_field]*_dict_bypop[bypop]
     # casted_data = None
     if output == 'pandas':

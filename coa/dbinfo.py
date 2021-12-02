@@ -287,10 +287,10 @@ def generic_info(namedb, keys):
         mydico = esco
     elif namedb == 'sciensano':
         sci = {
-        'tot_hosp':['Total number of lab-confirmed hospitalized COVID-19 patients at the moment of reporting, including ICU (prevalence) (original name TOTAL_IN)'],\
-        'tot_icu':['Total number of lab-confirmed hospitalized COVID-19 patients in ICU at the moment of reporting (prevalence) (original name TOTAL_IN_ICU)'],\
-        'tot_resp':['Total number of lab-confirmed hospitalized COVID-19 patients under respiratory support at the moment of reporting (prevalence) (original name TOTAL_IN_RESP)'],\
-        'tot_ecmo':['Total number of lab-confirmed hospitalized COVID-19 patients on ECMO at the moment of reporting (prevalence) (orginale name TOTAL_IN_ECMO)']
+        'cur_hosp':['Total number of lab-confirmed hospitalized COVID-19 patients at the moment of reporting, including ICU (prevalence) (original name TOTAL_IN)'],\
+        'cur_icu':['Total number of lab-confirmed hospitalized COVID-19 patients in ICU at the moment of reporting (prevalence) (original name TOTAL_IN_ICU)'],\
+        'cur_resp':['Total number of lab-confirmed hospitalized COVID-19 patients under respiratory support at the moment of reporting (prevalence) (original name TOTAL_IN_RESP)'],\
+        'cur_ecmo':['Total number of lab-confirmed hospitalized COVID-19 patients on ECMO at the moment of reporting (prevalence) (orginale name TOTAL_IN_ECMO)']
         }
         for k,v in sci.items():
             sci[k].append('https://epistat.sciensano.be/Data/COVID19BE_HOSP.csv')

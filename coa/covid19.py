@@ -143,13 +143,14 @@ class DataBase(object):
                     info('BEL, Sciensano Belgian institute for health data  ...')
                     rename_dict = { 'DATE' : 'date',\
                     'PROVINCE':'location',\
-                    'TOTAL_IN':'tot_hosp',
-                    'TOTAL_IN_ICU':'tot_icu',
-                    'TOTAL_IN_RESP':'tot_resp',
-                    'TOTAL_IN_ECMO':'tot_ecmo'}
+                    'TOTAL_IN':'cur_hosp',
+                    'TOTAL_IN_ICU':'cur_icu',
+                    'TOTAL_IN_RESP':'cur_resp',
+                    'TOTAL_IN_ECMO':'cur_ecmo'}
                     url='https://epistat.sciensano.be/Data/COVID19BE_HOSP.csv'
                     beldata=self.csv2pandas(url,separator=',',rename_columns=rename_dict)
-                    columns_keeped = ['tot_hosp','tot_icu','tot_resp','tot_ecmo']
+                    [rename_dict.pop(i) for i in ['DATE','PROVINCE']]
+                    columns_keeped = list(rename_dict.values())
                     cvsloc2jsonloc={
                     'BrabantWallon':'Brabant wallon (le)',\
                     'Brussels':'Région de Bruxelles-Capitale',\

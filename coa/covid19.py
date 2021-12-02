@@ -1284,17 +1284,22 @@ class DataBase(object):
         if sumall:
             if origlistlistloc != None:
                uniqcluster = pdfiltered.clustername.unique()
-               tmp = pdfiltered.loc[pdfiltered.clustername.isin(uniqcluster)].\
-                        groupby(['clustername','date']).sum().reset_index()
+               if kwargs['which'].startswith('cur_idx_'):
+                   tmp = pdfiltered.groupby(['clustername','date']).mean().reset_index()
+               else:
+                   tmp = pdfiltered.groupby(['clustername','date']).sum().reset_index()#.loc[pdfiltered.clustername.isin(uniqcluster)].\
+
                #dicocode = {i:list(pdfiltered.loc[pdfiltered.clustername.isin(i)]['codelocation']) for i in uniqcluster}
                codescluster = {i:list(pdfiltered.loc[pdfiltered.clustername==i]['codelocation'].unique()) for i in uniqcluster}
                namescluster = {i:list(pdfiltered.loc[pdfiltered.clustername==i]['location'].unique()) for i in uniqcluster}
                tmp['codelocation'] = tmp['clustername'].map(codescluster)
                tmp['location'] = tmp['clustername'].map(namescluster)
 
-               if kwargs['which'].startswith('cur_idx_'):
-                    tmp[kwargs['which']] = tmp.loc[tmp.clustername.isin(uniqcluster)].\
-                    apply(lambda x: x[kwargs['which']]/len(x.clustername),axis=1)
+               #if kwargs['which'].startswith('cur_idx_'):
+                    #print(len(tmp.clustername[0].split(',')),tmp.clustername[0])
+                    #tmp[kwargs['which']] = tmp.loc[tmp.clustername.isin(uniqcluster)].\
+                    #apply(lambda x: x[kwargs['which']]/len(x.clustername[0].split(',')),axis=1)
+                #    tmp[kwargs['which']]
                pdfiltered = tmp
                pdfiltered = pdfiltered.drop_duplicates(['date','clustername'])
                if sumallandsmooth7:

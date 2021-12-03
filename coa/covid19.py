@@ -1268,6 +1268,8 @@ class DataBase(object):
                 #pdfiltered[kwargs['which']] = pdfiltered[kwargs['which']].fillna(0) # causes bug with fillnan procedure below
                 #pdfiltered = pdfiltered.groupby('location').apply(lambda x : x[3:-3]).reset_index(drop=True) # remove out of bound dates.
                 fillnan=True
+                #pdfiltered.loc[:,kwargs['which']] =\
+                #pdfiltered.groupby(['location','clustername'])[kwargs['which']].apply(lambda x: x.bfill())
             elif o == 'sumall':
                 sumall = True
                 #if kwargs['which'].startswith('cur_idx_Prc'):
@@ -1304,6 +1306,8 @@ class DataBase(object):
                pdfiltered = pdfiltered.drop_duplicates(['date','clustername'])
                if sumallandsmooth7:
                    pdfiltered[kwargs['which']] = pdfiltered.groupby(['clustername'])[kwargs['which']].rolling(7,min_periods=7).mean().reset_index(level=0,drop=True)
+                   pdfiltered.loc[:,kwargs['which']] =\
+                   pdfiltered.groupby(['clustername'])[kwargs['which']].apply(lambda x: x.bfill())
             # computing daily, cumul and weekly
             else:
                 if kwargs['which'].startswith('cur_idx_'):

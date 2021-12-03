@@ -542,12 +542,14 @@ def map(**kwargs):
         - dateslider=True: a date slider is called and displayed on the right part of the map
         - maplabel = text, value are displayed directly on the map
                    = spark, sparkline are displayed directly on the map
+                   = percent, colormap tick are in %
     """
     visu = kwargs.get('visu', listvisu()[0])
     input = kwargs.pop('input')
     input_field = kwargs.pop('input_field')
     dateslider = kwargs.get('dateslider', None)
     maplabel = kwargs.get('maplabel', None)
+
     sparkline = False
     if dateslider is not None:
         del kwargs['dateslider']
@@ -558,8 +560,10 @@ def map(**kwargs):
             kwargs['maplabel'] = True
         elif maplabel == 'spark':
             sparkline = True
+        elif maplabel == 'percentmap':
+            kwargs['percentmap'] = True
         else:
-            raise CoaTypeError('Waiting for a valide label visualisation: text or spark')
+            raise CoaTypeError('Waiting for a valide label visualisation: text, spark or percentmap')
 
     if visu == 'bokeh':
         if sparkline == False:

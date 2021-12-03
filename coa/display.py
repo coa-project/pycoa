@@ -33,7 +33,7 @@ from IPython import display
 
 from bokeh.models import ColumnDataSource, TableColumn, DataTable, ColorBar, \
     HoverTool, CrosshairTool, BasicTicker, GeoJSONDataSource, LinearColorMapper, Label, \
-    PrintfTickFormatter, BasicTickFormatter, CustomJS, CustomJSHover, Select, \
+    PrintfTickFormatter, BasicTickFormatter, NumeralTickFormatter, CustomJS, CustomJSHover, Select, \
     Range1d, DatetimeTickFormatter, Legend, LegendItem, Text
 from bokeh.models.widgets import Tabs, Panel
 from bokeh.plotting import figure
@@ -85,7 +85,7 @@ class CocoDisplay:
         self.uptitle, self.subtitle = ' ',' '
 
         self.dfigure_default = {'plot_height':width_height_default[1] ,'plot_width':width_height_default[0],'title':None, 'textcopyrightposition':'left','textcopyright':'default'}
-        self.dvisu_default = {'mode':'mouse','tile':self.available_tiles[0],'orientation':'horizontal','cursor_date':None,'maplabel':None,'guideline':False}
+        self.dvisu_default = {'mode':'mouse','tile':self.available_tiles[0],'orientation':'horizontal','cursor_date':None,'maplabel':None,'guideline':False,'percentmap':False}
 
         self.when_beg = dt.date(1, 1, 1)
         self.when_end = dt.date(1, 1, 1)
@@ -818,6 +818,7 @@ class CocoDisplay:
             geopdwd_filter['cases'] = geopdwd_filter[input_field]
             cursor_date = kwargs.get('cursor_date',self.dvisu_default['cursor_date'])
             date_slider = kwargs['date_slider']
+            percentcolormap = kwargs['percentage']
             my_date = geopdwd.date.unique()
             dico_utc = {i: DateSlider(value=i).value for i in my_date}
             geopdwd['date_utc'] = [dico_utc[i] for i in geopdwd.date]
@@ -1492,7 +1493,9 @@ class CocoDisplay:
             - tile : tile
             - maplabel: False
         '''
+
         date_slider = kwargs['date_slider']
+        percentcolormap =  kwargs.get('percentmap',self.dvisu_default['percentmap'])
         maplabel = kwargs.get('maplabel',self.dvisu_default['maplabel'])
         min_col, max_col = CocoDisplay.min_max_range(np.nanmin(geopdwd_filtered['cases']),
                                                      np.nanmax(geopdwd_filtered['cases']))
@@ -1504,6 +1507,9 @@ class CocoDisplay:
         color_bar = ColorBar(color_mapper=color_mapper, label_standoff=4,
                              border_line_color=None, location=(0, 0), orientation='horizontal', ticker=BasicTicker())
         color_bar.formatter = BasicTickFormatter(use_scientific=True, precision=1, power_limit_low=int(max_col))
+        if percentcolormap:
+            color_bar.formatter = BasicTickFormatter(use_scientific=False)
+            color_bar.formatter = NumeralTickFormatter(format="0.0%")
         standardfig.add_layout(color_bar, 'below')
 
         if date_slider:

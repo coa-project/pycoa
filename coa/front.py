@@ -542,28 +542,32 @@ def map(**kwargs):
         - dateslider=True: a date slider is called and displayed on the right part of the map
         - maplabel = text, value are displayed directly on the map
                    = spark, sparkline are displayed directly on the map
-                   = percent, colormap tick are in %
+                   = tickmap%, colormap tick are in %
     """
     visu = kwargs.get('visu', listvisu()[0])
     input = kwargs.pop('input')
     input_field = kwargs.pop('input_field')
     dateslider = kwargs.get('dateslider', None)
     maplabel = kwargs.get('maplabel', None)
+    if not isinstance(maplabel,list):
+        maplabel = [maplabel]
+    if not all([a for a in maplabel if a not in ['text','spark','tickmap%'] ]):
+        raise CoaTypeError('Waiting a correct maplabel value. See help.')
 
     sparkline = False
     if dateslider is not None:
         del kwargs['dateslider']
         kwargs['cursor_date'] = dateslider
     if maplabel is not None:
-        kwargs['maplabel'] = False
-        if maplabel == 'text':
-            kwargs['maplabel'] = True
-        elif maplabel == 'spark':
+        kwargs['maplabel'] = []
+        if 'text' in maplabel:
+            kwargs['maplabel'].append('text')
+            if 'tickmap%' in maplabel:
+                kwargs['maplabel'].append('tickmap%')
+        elif 'spark' in maplabel:
             sparkline = True
-        elif maplabel == 'percentmap':
-            kwargs['percentmap'] = True
         else:
-            raise CoaTypeError('Waiting for a valide label visualisation: text, spark or percentmap')
+            raise CoaTypeError('Waiting for a valide label visualisation: text, spark or tickmap%')
 
     if visu == 'bokeh':
         if sparkline == False:

@@ -85,7 +85,7 @@ class CocoDisplay:
         self.uptitle, self.subtitle = ' ',' '
 
         self.dfigure_default = {'plot_height':width_height_default[1] ,'plot_width':width_height_default[0],'title':None, 'textcopyrightposition':'left','textcopyright':'default'}
-        self.dvisu_default = {'mode':'mouse','tile':self.available_tiles[0],'orientation':'horizontal','cursor_date':None,'maplabel':None,'guideline':False,'percentmap':False}
+        self.dvisu_default = {'mode':'mouse','tile':self.available_tiles[0],'orientation':'horizontal','cursor_date':None,'maplabel':None,'guideline':False}
 
         self.when_beg = dt.date(1, 1, 1)
         self.when_end = dt.date(1, 1, 1)
@@ -628,8 +628,10 @@ class CocoDisplay:
                 tile = self.dvisu_default['tile']
 
             maplabel = kwargs.get('maplabel', None)
-            if maplabel:
-                maplabel = maplabel
+            if not isinstance(maplabel,list):
+                    maplabel=[maplabel]
+            #if maplabel:
+            #    maplabel = maplabel
 
             if 'map' in func.__name__:
                 kwargs['tile'] = tile
@@ -818,7 +820,6 @@ class CocoDisplay:
             geopdwd_filter['cases'] = geopdwd_filter[input_field]
             cursor_date = kwargs.get('cursor_date',self.dvisu_default['cursor_date'])
             date_slider = kwargs['date_slider']
-            percentcolormap = kwargs['percentage']
             my_date = geopdwd.date.unique()
             dico_utc = {i: DateSlider(value=i).value for i in my_date}
             geopdwd['date_utc'] = [dico_utc[i] for i in geopdwd.date]
@@ -1399,36 +1400,23 @@ class CocoDisplay:
             tile =  kwargs.get('tile', self.dvisu_default['tile'])
             tile = CocoDisplay.convert_tile(tile, 'bokeh')
 
-            sourcemaplabel = ColumnDataSource(pd.DataFrame({'centroidx':[],'centroidy':[],'cases':[],'spark':[]}))
             uniqloc = list(geopdwd_filtered.clustername.unique())
-
             if maplabel or func.__name__ == 'pycoa_sparkmap':
-                geopdwd_filtered['centroidx'] = geopdwd_filtered['geometry'].centroid.x
-                geopdwd_filtered['centroidy'] = geopdwd_filtered['geometry'].centroid.y
                 locsum = geopdwd_filtered.clustername.unique()
-                for i in locsum:
-                    cases = geopdwd_filtered.loc[geopdwd_filtered.clustername == i]['cases'].values[0]
-                    centrosx = geopdwd_filtered.loc[geopdwd_filtered.clustername == i]['centroidx']#.mean()
-                    centrosy = geopdwd_filtered.loc[geopdwd_filtered.clustername == i]['centroidy']#.mean()
-                    geopdwd_filtered.loc[geopdwd_filtered.clustername == i,'cases'] = cases
-                    geopdwd_filtered.loc[geopdwd_filtered.clustername == i,'centroidx'] = centrosx
-                    geopdwd_filtered.loc[geopdwd_filtered.clustername == i,'centroidy'] = centrosy
-                    geopdwd_filtered.loc[geopdwd_filtered.clustername == i,'spark'] = \
-                                CocoDisplay.sparkline(geopdwd.loc[(geopdwd.clustername == i) &
+                numberpercluster = geopdwd_filtered['clustername'].value_counts().to_dict()
+                sumgeo = geopdwd_filtered.dissolve(by='clustername', aggfunc='sum').reset_index()
+                sumgeo['nb'] = sumgeo['clustername'].map(numberpercluster)
+                centrosx = sumgeo['geometry'].centroid.x
+                centrosy = sumgeo['geometry'].centroid.y
+                cases = sumgeo['cases']/sumgeo['nb']
+                sparkos = CocoDisplay.sparkline(geopdwd.loc[(geopdwd.clustername.isin(locsum)) &
                                 (geopdwd.date >= self.when_beg) & (geopdwd.date <= self.when_end)].sort_values(by='date')['cases'])
-                dfLabel=pd.DataFrame(geopdwd_filtered[['location','centroidx','centroidy','cases','spark','clustername']])
+
+                dfLabel=pd.DataFrame({'clustername':sumgeo.clustername,'centroidx':centrosx,'centroidy':centrosy,'cases':cases,'spark':sparkos})
                 dfLabel['cases'] = dfLabel['cases'].round(2)
-                dfLabel = (dfLabel.groupby(['cases','clustername','spark']).mean())
-                dfLabel = dfLabel.reset_index()
                 dfLabel['cases']=[str(i) for i in dfLabel['cases']]
                 sourcemaplabel = ColumnDataSource(dfLabel)
 
-            #if self.dbld[self.database_name][0] in ['FRA','ESP','PRT']: #and all(len(l) == 2 for l in geopdwd_filtered.codelocation.unique()):
-            #    minx, miny, maxx, maxy = self.boundary_metropole
-            #    (minx, miny) = CocoDisplay.wgs84_to_web_mercator((minx, miny))
-            #    (maxx, maxy) = CocoDisplay.wgs84_to_web_mercator((maxx, maxy))
-            #else:
-                #minx, miny, maxx, maxy =  geopdwd_filtered['geometry'].total_bounds #self.boundary
             minx, miny, maxx, maxy =  geopdwd_filtered['geometry'].total_bounds #self.boundary
             if self.dbld[self.database_name][0] != 'WW':
                 ratio = 0.05
@@ -1495,8 +1483,8 @@ class CocoDisplay:
         '''
 
         date_slider = kwargs['date_slider']
-        percentcolormap =  kwargs.get('percentmap',self.dvisu_default['percentmap'])
         maplabel = kwargs.get('maplabel',self.dvisu_default['maplabel'])
+
         min_col, max_col = CocoDisplay.min_max_range(np.nanmin(geopdwd_filtered['cases']),
                                                      np.nanmax(geopdwd_filtered['cases']))
 
@@ -1507,7 +1495,8 @@ class CocoDisplay:
         color_bar = ColorBar(color_mapper=color_mapper, label_standoff=4,
                              border_line_color=None, location=(0, 0), orientation='horizontal', ticker=BasicTicker())
         color_bar.formatter = BasicTickFormatter(use_scientific=True, precision=1, power_limit_low=int(max_col))
-        if percentcolormap:
+
+        if 'tickmap%' in maplabel:
             color_bar.formatter = BasicTickFormatter(use_scientific=False)
             color_bar.formatter = NumeralTickFormatter(format="0.0%")
         standardfig.add_layout(color_bar, 'below')
@@ -1575,7 +1564,7 @@ class CocoDisplay:
                             fill_color = {'field': 'cases', 'transform': color_mapper},
                             line_color = 'black', line_width = 0.25, fill_alpha = 1)
 
-        if maplabel :
+        if 'text' in maplabel :
             labels = LabelSet(
                 x = 'centroidx',
                 y = 'centroidy',

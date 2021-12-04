@@ -1414,7 +1414,11 @@ class CocoDisplay:
 
                 dfLabel=pd.DataFrame({'clustername':sumgeo.clustername,'centroidx':centrosx,'centroidy':centrosy,'cases':cases,'spark':sparkos})
                 dfLabel['cases'] = dfLabel['cases'].round(2)
-                dfLabel['cases']=[str(i) for i in dfLabel['cases']]
+
+                if 'tickmap%' in maplabel:
+                    dfLabel['cases'] = [str(round(float(i*100),2))+'%' for i in dfLabel['cases']]
+                else:
+                    dfLabel['cases']=[str(i) for i in dfLabel['cases']]
                 sourcemaplabel = ColumnDataSource(dfLabel)
 
             minx, miny, maxx, maxy =  geopdwd_filtered['geometry'].total_bounds #self.boundary
@@ -1499,6 +1503,7 @@ class CocoDisplay:
         if 'tickmap%' in maplabel:
             color_bar.formatter = BasicTickFormatter(use_scientific=False)
             color_bar.formatter = NumeralTickFormatter(format="0.0%")
+
         standardfig.add_layout(color_bar, 'below')
 
         if date_slider:
@@ -1569,7 +1574,7 @@ class CocoDisplay:
                 x = 'centroidx',
                 y = 'centroidy',
                 text = 'cases',
-                source = sourcemaplabel, text_font_size='10px',text_color='white',background_fill_color='grey',background_fill_alpha=0.05)
+                source = sourcemaplabel, text_font_size='10px',text_color='white',background_fill_color='grey',background_fill_alpha=0.5)
             standardfig.add_layout(labels)
 
         cases_custom = CocoDisplay.rollerJS()

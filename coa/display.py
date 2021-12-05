@@ -75,7 +75,7 @@ class CocoDisplay:
         self.geopan = gpd.GeoDataFrame()
         self.location_geometry = None
         self.boundary_metropole = None
-
+        self.listfig = []
         self.options_stats  = ['when','input','input_field']
         self.options_charts = [ 'bins']
         self.options_front = ['where','option','which','what','visu']
@@ -169,7 +169,11 @@ class CocoDisplay:
         fig.add_layout(Title(text=self.uptitle, text_font_size="10pt"), 'above')
         fig.add_layout(Title(text=self.subtitle, text_font_size="8pt", text_font_style="italic"), 'below')
         return fig
+
+    def get_listfigures(self):
+        return  self.listfig
     ''' WRAPPER COMMUN FOR ALL'''
+
     def decowrapper(func):
         '''
             Main decorator it mainly deals with arg testings
@@ -435,6 +439,7 @@ class CocoDisplay:
             standardfig.legend.background_fill_alpha = 0.6
 
             standardfig.legend.location = "top_left"
+            self.listfig.append(standardfig)
             CocoDisplay.bokeh_legend(standardfig)
         tabs = Tabs(tabs=panels)
         return tabs
@@ -520,6 +525,7 @@ class CocoDisplay:
 
             standardfig.xaxis.formatter = DatetimeTickFormatter(
                 days = ["%d/%m/%y"], months = ["%d/%m/%y"], years = ["%b %Y"])
+            self.listfig.append(standardfig)
 
             CocoDisplay.bokeh_legend(standardfig)
         tabs = Tabs(tabs = panels)

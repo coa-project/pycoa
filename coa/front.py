@@ -549,10 +549,12 @@ def map(**kwargs):
     input_field = kwargs.pop('input_field')
     dateslider = kwargs.get('dateslider', None)
     maplabel = kwargs.get('maplabel', None)
-    if not isinstance(maplabel,list):
-        maplabel = [maplabel]
-    if not all([a for a in maplabel if a not in ['text','spark','tickmap%'] ]):
-        raise CoaTypeError('Waiting a correct maplabel value. See help.')
+
+    if maplabel is not None:
+        if not isinstance(maplabel,list):
+            maplabel = [maplabel]
+        if  not all([a for a in maplabel if a not in ['text','spark','tickmap%'] ]):
+            raise CoaTypeError('Waiting a correct maplabel value. See help.')
 
     sparkline = False
     if dateslider is not None:

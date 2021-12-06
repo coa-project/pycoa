@@ -75,7 +75,7 @@ class CocoDisplay:
         self.geopan = gpd.GeoDataFrame()
         self.location_geometry = None
         self.boundary_metropole = None
-        self.listfig = []
+        self.listfigs = []
         self.options_stats  = ['when','input','input_field']
         self.options_charts = [ 'bins']
         self.options_front = ['where','option','which','what','visu']
@@ -171,7 +171,11 @@ class CocoDisplay:
         return fig
 
     def get_listfigures(self):
-        return  self.listfig
+        return  self.listfigs
+    def set_listfigures(self,fig):
+            if not isinstance(fig,list):
+                fig = [fig]
+            self.listfigs = fig
     ''' WRAPPER COMMUN FOR ALL'''
 
     def decowrapper(func):
@@ -414,6 +418,9 @@ class CocoDisplay:
             raise CoaTypeError('Two variables are needed to plot a versus chart ... ')
         panels = []
         cases_custom = CocoDisplay.rollerJS()
+        if self.get_listfigures():
+            self.set_listfigures([])
+        listfigs=[]
         for axis_type in self.ax_type:
             standardfig = self.standardfig( x_axis_label = input_field[1], y_axis_label = input_field[0],
                                                 y_axis_type = axis_type, **kwargs )
@@ -439,8 +446,9 @@ class CocoDisplay:
             standardfig.legend.background_fill_alpha = 0.6
 
             standardfig.legend.location = "top_left"
-            self.listfig.append(standardfig)
+            listfigs.append(standardfig)
             CocoDisplay.bokeh_legend(standardfig)
+        self.set_listfigures(listfigs)
         tabs = Tabs(tabs=panels)
         return tabs
 
@@ -473,6 +481,7 @@ class CocoDisplay:
         '''
         guideline = kwargs.get('guideline',self.dvisu_default['guideline'])
         panels = []
+        listfigs = []
         cases_custom = CocoDisplay.rollerJS()
         if isinstance(input['rolloverdisplay'][0],list):
             input['rolloverdisplay'] = input['clustername']
@@ -525,9 +534,9 @@ class CocoDisplay:
 
             standardfig.xaxis.formatter = DatetimeTickFormatter(
                 days = ["%d/%m/%y"], months = ["%d/%m/%y"], years = ["%b %Y"])
-            self.listfig.append(standardfig)
-
             CocoDisplay.bokeh_legend(standardfig)
+            listfigs.append(standardfig)
+        self.set_listfigures(listfigs)
         tabs = Tabs(tabs = panels)
         return tabs
 

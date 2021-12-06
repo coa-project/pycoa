@@ -299,7 +299,7 @@ def generic_info(namedb, keys):
     elif namedb == 'phe':
         url='https://api.coronavirus.data.gov.uk/v2/data?areaType=ltla&metric='
         phe = {
-        'tot_deaths':['Total number of deaths (original name cumDeathsByDeathDate)',url+'cumDeathsByDeathDate'+'&format=csv'],\
+        'tot_deaths':['Total number of deaths (original name cumDeaths28DaysByDeathDate)',url+'cumDeaths28DaysByDeathDate'+'&format=csv'],\
         'tot_cases':['Total number of cases (originale name cumCasesBySpecimenDate)',url+'cumCasesBySpecimenDate'+'&format=csv'],
         'tot_tests':['Total number of cases (originale name cumTestByPublishDate)',url+'cumLFDTests'+'&format=csv'],
         'tot_vacc1':['Total number of cases (originale name cumCasesBySpecimenDate)',url+'cumPeopleVaccinatedFirstDoseByVaccinationDate'+'&format=csv'],

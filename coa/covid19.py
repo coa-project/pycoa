@@ -168,10 +168,10 @@ class DataBase(object):
                     rename_dict = { 'areaCode':'location',\
                         'cumDeaths28DaysByDeathDate':'tot_deaths',\
                         'cumCasesBySpecimenDate':'tot_cases',\
-                        'cumLFDTests':'tot_tests',\
+                        'cumLFDTestsBySpecimenDate':'tot_tests',\
                         'cumPeopleVaccinatedFirstDoseByVaccinationDate':'tot_vacc1',\
                         'cumPeopleVaccinatedSecondDoseByVaccinationDate':'tot_vacc2',\
-                        'cumPeopleVaccinatedThirdDoseByVaccinationDate':'tot_vacc3',\
+                        #'cumPeopleVaccinatedThirdInjectionByVaccinationDate':'tot_vacc3',\
                         #'covidOccupiedMVBeds':'cur_icu',\
                         #'cumPeopleVaccinatedFirstDoseByVaccinationDate':'tot_dose1',\
                         #'cumPeopleVaccinatedSecondDoseByVaccinationDate':'tot_dose2',\
@@ -758,6 +758,7 @@ class DataBase(object):
             pandas_db['semaine'] = [ week_to_date(i) for i in pandas_db['semaine']]
             #pandas_db = pandas_db.drop_duplicates(subset=['semaine'])
             pandas_db = pandas_db.rename(columns={'semaine':'date'})
+
         pandas_db['date'] = pandas.to_datetime(pandas_db['date'],errors='coerce').dt.date
         #self.dates  = pandas_db['date']
         if self.db == 'spfnational':

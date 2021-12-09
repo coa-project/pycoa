@@ -21,7 +21,7 @@ default value is 1 (print information to stdout). The 2 value grants a debug lev
 printing.
 """
 
-import pandas
+import pandas as pd
 import numpy
 import datetime
 import time
@@ -125,7 +125,7 @@ def tostdstring(s):
 def fill_missing_dates(p, date_field='date', loc_field='location', d1=None, d2=None):
     """Filling the input pandas dataframe p with missing dates
     """
-    if not isinstance(p, pandas.DataFrame):
+    if not isinstance(p, pd.DataFrame):
         raise CoaTypeError("Expecting input p as a pandas dataframe.")
     if not date_field in p.columns:
         raise CoaKeyError("The date_field is not a proper column of input pandas dataframe.")
@@ -144,20 +144,20 @@ def fill_missing_dates(p, date_field='date', loc_field='location', d1=None, d2=N
     if d1 > d2:
         raise CoaKeyError("Dates should be ordered as d1<d2.")
 
-    idx = pandas.date_range(d1, d2, freq = "D")
+    idx = pd.date_range(d1, d2, freq = "D")
     idx = idx.date
 
     all_loc=list(p[loc_field].unique())
-    pfill=pandas.DataFrame()
+    pfill=pd.DataFrame()
     for l in all_loc:
-        pp=p[p[loc_field]==l]
+        pp=p.loc[p[loc_field]==l]
         pp2=pp.set_index([date_field])
-        pp2.index = pandas.DatetimeIndex(pp2.index)
+        pp2.index = pd.DatetimeIndex(pp2.index)
         pp3 = pp2.reindex(idx,fill_value=numpy.nan)#pandas.NA)
         pp3['location'] = pp3['location'].fillna(l)  #pp3['location'].fillna(method='bfill')
         #pp3['codelocation'] = pp3['codelocation'].fillna(method='bfill')
         #pp3['codelocation'] = pp3['codelocation'].fillna(method='ffill')
-        pfill=pandas.concat([pfill, pp3])
+        pfill=pd.concat([pfill, pp3])
     pfill.reset_index(inplace=True)
     return pfill
 

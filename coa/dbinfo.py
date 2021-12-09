@@ -188,7 +188,10 @@ def generic_info(namedb, keys):
         'cur_reproduction_rate':['cur_reproduction_rate (original name reproduction_rate): Real-time estimate of the effective reproduction rate (R) of COVID-19. See https://github.com/crondonm/TrackingR/tree/main/Estimates-Database'],
         'cur_icu_patients':['cur_icu_patients (orignal name icu_patients): Number of COVID-19 patients in intensive care units (ICUs) on a given day'],
         'cur_hosp_patients':['cur_hosp_patients (original name hosp_patients): Number of COVID-19 patients in hospital on a given day'],
-        'cur_idx_positive_rate':['cur_idx_positive_rate (original name positive_rate): The share of COVID-19 tests that are positive, given as a rolling 7-day average (this is the inverse of tests_per_case)']
+        'cur_idx_positive_rate':['cur_idx_positive_rate (original name positive_rate): The share of COVID-19 tests that are positive, given as a rolling 7-day average (this is the inverse of tests_per_case)'],
+        'num_sequences':['num_sequences: Number of sequenced samples that fall into the category variant.'],
+        'perc_sequences':['perc_sequences: Percentage of the sequenced samples that fall into the category variant.'],
+        'num_sequences_total':['num_sequences_total: Total number of samples sequenced in the last two weeks'],
         }
         for k,v in owid.items():
             owid[k].append("https://raw.githubusercontent.com/owid/covid-19-data/master/public/data/owid-covid-data.csv")

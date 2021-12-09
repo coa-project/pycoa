@@ -379,6 +379,7 @@ class DataBase(object):
                         result = result.loc[~result['location'].isin(['00'])]
                         result = result.sort_values(by=['location','date'])
                         result.loc[result['location'].isin(['975','977','978','986','987']),'location']='980'
+                        result = result.drop_duplicates(subset=['location', 'date'], keep='last')
                         for w in ['incid_hosp', 'incid_rea', 'incid_rad', 'incid_dc', 'P', 'T', 'n_cum_dose1', 'n_cum_dose2','n_cum_dose3','n_cum_dose4','n_cum_rappel']:
                             result[w]=pd.to_numeric(result[w], errors = 'coerce')
                             if w.startswith('incid_'):
@@ -393,7 +394,6 @@ class DataBase(object):
                             if 'n_cum' not in w:
                                 result['tot_'+w]=result.groupby(['location'])[w].cumsum()#+result['offset_'+w]
 
-                        #
                         def dontneeeded():
                             for col in result.columns:
                                 if col.startswith('Prc'):
@@ -481,6 +481,7 @@ class DataBase(object):
                     #columns_skipped = ['granularite','maille_nom','source_nom','source_url','source_archive','source_type']
                     self.return_structured_pandas(opencovid19.rename(columns=dict_columns_keeped),columns_keeped=list(dict_columns_keeped.values())+['tot_'+c for c in column_to_integrate])
                 elif self.db == 'owid':
+                    variant = True
                     info('OWID aka \"Our World in Data\" database selected ...')
                     drop_field = {'location':['International']}#, 'World']}
                     owid = self.csv2pandas("https://raw.githubusercontent.com/owid/covid-19-data/master/public/data/owid-covid-data.csv",
@@ -493,9 +494,30 @@ class DataBase(object):
                     renamed_cols2=['total_'+i for i in col_to_rename2]
                     col_to_rename = col_to_rename1+col_to_rename2
                     renamed_cols = renamed_cols1 +renamed_cols2
-                    columns_keeped=['iso_code','total_deaths','total_cases','total_vaccinations']
-                    columns_keeped+=['total_cases_per_million','total_deaths_per_million','total_vaccinations_per_hundred','total_boosters','total_tests']
-                    owid['total_tests'] = owid.groupby(['location'])['new_tests'].cumsum()
+                    columns_keeped=['iso_code','total_deaths','total_cases','total_vaccinations','total_tests']
+                    columns_keeped+=['total_cases_per_million','total_deaths_per_million','total_vaccinations_per_hundred','total_boosters']
+                    #owid['total_tests_with_new_tests'] = owid.groupby(['location'])['new_tests'].cumsum()
+                    uniq=list(owid.location.unique())
+                    mask = (owid.loc[owid.location.isin(uniq)]['total_tests'].isnull() &\
+                                                owid.loc[owid.location.isin(uniq)]['new_tests'].isnull())
+                    #sometimes is new_tests sometimes total_tests
+                    owid_test         = owid[~mask]
+                    owid_new_test     = owid_test[owid_test['total_tests'].isnull()]
+                    owid_total_test   = owid_test[~owid_test['total_tests'].isnull()]
+                    owid_new_test     = owid_new_test.drop(columns='total_tests')
+
+                    owid_new_test.loc[:,'total_tests'] = owid_new_test.groupby(['location'])['new_tests'].cumsum()
+                    owid = pd.concat([owid[mask],owid_new_test,owid_total_test])
+
+                    if variant:
+                        constraints = {'variant': 'Omicron'}
+                        #cast={'num_sequences':float,'perc_sequences':float,'num_sequences_total':float}
+                        owidvar = self.csv2pandas("https://raw.githubusercontent.com/owid/covid-19-data/master/public/data/variants/covid-variants.csv",
+                        separator=',',constraints=constraints)
+                        info('... Omicron variant from other owid has been added ...')
+                        owid = pd.merge(owid,owidvar,on=['location','date'],how='left')
+                        #pandas_db = pandas_db.loc[(~pandas_db.iso_code.isnull())]
+                        columns_keeped += ['num_sequences','num_sequences_total','perc_sequences']
                     self.return_structured_pandas(owid.rename(columns=dict(zip(col_to_rename,renamed_cols))),columns_keeped=columns_keeped+renamed_cols)
             except:
                 raise CoaDbError("An error occured while parsing data of "+self.get_db()+". This may be due to a data format modification. "
@@ -764,8 +786,6 @@ class DataBase(object):
         if self.db == 'spfnational':
             pandas_db['location'] = 'France'
         pandas_db = pandas_db.sort_values(['location','date'])
-        if self.db == 'owid':
-            pandas_db = pandas_db.loc[(~pandas_db.iso_code.isnull())]
         return pandas_db
 
    def return_structured_pandas(self,mypandas,**kwargs):
@@ -778,7 +798,6 @@ class DataBase(object):
         absolutlyneeded = ['date','location']
         defaultkeept = list(set(mypandas.columns.to_list()) - set(absolutlyneeded))
         columns_keeped  = kwargs.get('columns_keeped', defaultkeept)
-
         if columns_skipped:
             columns_keeped = [x for x in mypandas.columns.values.tolist() if x not in columns_skipped + absolutlyneeded]
         mypandas = mypandas[absolutlyneeded + columns_keeped]
@@ -878,11 +897,9 @@ class DataBase(object):
         if self.db == 'dgs':
             mypandas = mypandas.reset_index(drop=True)
 
-        if self.db == 'spf':
-            mypandas = mypandas.drop_duplicates(subset=['location', 'date'], keep='last')
-
         if self.db != 'spfnational':
             mypandas = mypandas.groupby(['location','date']).sum(min_count=1).reset_index() # summing in case of multiple dates (e.g. in opencovid19 data). But keep nan if any
+
         mypandas = fill_missing_dates(mypandas)
 
         if location_is_code:
@@ -1178,16 +1195,6 @@ class DataBase(object):
             pdfiltered = pdfiltered[['location','date','codelocation',kwargs['which']]]
             pdfiltered['clustername'] = pdfiltered['location'].copy()
 
-        # deal with options now
-        #if fillnan: # which is the default. Use nofillnan option instead.
-            # fill with previous value
-        #    pdfiltered = pdfiltered.copy()
-            #if self.db_world:
-            #pdfiltered[kwargs['which']] = pdfiltered.groupby(['clustername'])[kwargs['which']].fillna(method='bfill')
-        #    pdfiltered.loc[:,kwargs['which']] = pdfiltered.groupby(['clustername'])[kwargs['which']].\
-        #    apply(lambda x: x.bfill())
-            # fill remaining nan with zeros
-            #pdfiltered = pdfiltered.fillna(0)
         if not isinstance(option,list):
             option=[option]
         if 'fillnan' not in option and 'nofillnan' not in option:
@@ -1208,10 +1215,7 @@ class DataBase(object):
                     loopover = location_exploded
                 else:
                     loopover = list(pdfiltered.location.unique())
-
                 for loca in loopover:
-                    # modify values in order that diff values is never negative
-
                     if not isinstance(location_exploded[0],list):
                         pdloc = pdfiltered.loc[ pdfiltered.location == loca ][kwargs['which']]
                     else:
@@ -1247,11 +1251,14 @@ class DataBase(object):
                     pdfilteredcopy.loc[ind,kwargs['which']]=np.cumsum(yy)+y0 # do not forget the offset
                     pdfiltered=pdfilteredcopy
             elif o == 'nofillnan':
+                pdfiltered_nofillnan = pdfiltered.copy().reset_index(drop=True)
                 fillnan=False
             elif o == 'fillnan':
                 fillnan=True
                 # fill with previous value
                 pdfiltered = pdfiltered.reset_index(drop=True)
+                pdfiltered_nofillnan = pdfiltered.copy()
+
                 pdfiltered.loc[:,kwargs['which']] =\
                 pdfiltered.groupby(['location','clustername'])[kwargs['which']].apply(lambda x: x.bfill())
                 #if kwargs['which'].startswith('total_') or kwargs['which'].startswith('tot_'):
@@ -1260,21 +1267,13 @@ class DataBase(object):
                     print(kwargs['which'], "has been selected. Some missing data has been interpolated from previous data.")
                     print("This warning appear right now due to some missing values at the latest date ", pdfiltered.date.max(),".")
                     print("Use the option='nofillnan' if you want to only display the original data")
-                    pdfiltered.loc[:,kwargs['which']] = pdfiltered.groupby(['clustername'])[kwargs['which']].apply(lambda x: x.ffill())
+                    pdfiltered.loc[:,kwargs['which']] = pdfiltered.groupby(['location','clustername'])[kwargs['which']].apply(lambda x: x.ffill())
                     pdfiltered = pdfiltered[pdfiltered[kwargs['which']].notna()]
             elif o == 'smooth7':
-                #pdfiltered[kwargs['which']] = pdfiltered.groupby(['clustername'])[kwargs['which']].rolling(7,min_periods=7,center=True).mean().reset_index(level=0,drop=True)
-                #pdfiltered[kwargs['which']] = pdfiltered.groupby(['location'])[kwargs['which']].rolling(7,min_periods=7,center=True).mean().reset_index(level=0,drop=True)
                 pdfiltered[kwargs['which']] = pdfiltered.groupby(['location'])[kwargs['which']].rolling(7,min_periods=7).mean().reset_index(level=0,drop=True)
-                #pdfiltered[kwargs['which']] = pdfiltered[kwargs['which']].fillna(0) # causes bug with fillnan procedure below
-                #pdfiltered = pdfiltered.groupby('location').apply(lambda x : x[3:-3]).reset_index(drop=True) # remove out of bound dates.
                 fillnan=True
-                #pdfiltered.loc[:,kwargs['which']] =\
-                #pdfiltered.groupby(['location','clustername'])[kwargs['which']].apply(lambda x: x.bfill())
             elif o == 'sumall':
                 sumall = True
-                #if kwargs['which'].startswith('cur_idx_Prc'):
-                #    print('Warning this data is from rolling value, ended date may be not correct ...')
             elif o == 'sumallandsmooth7':
                 sumall = True
                 sumallandsmooth7 = True
@@ -1288,21 +1287,15 @@ class DataBase(object):
             if origlistlistloc != None:
                uniqcluster = pdfiltered.clustername.unique()
                if kwargs['which'].startswith('cur_idx_'):
-                   tmp = pdfiltered.groupby(['clustername','date']).mean().reset_index()
+                  tmp = pdfiltered.groupby(['clustername','date']).mean().reset_index()
                else:
-                   tmp = pdfiltered.groupby(['clustername','date']).sum().reset_index()#.loc[pdfiltered.clustername.isin(uniqcluster)].\
-
-               #dicocode = {i:list(pdfiltered.loc[pdfiltered.clustername.isin(i)]['codelocation']) for i in uniqcluster}
+                  tmp = pdfiltered.groupby(['clustername','date']).sum().reset_index()#.loc[pdfiltered.clustername.isin(uniqcluster)].\
+                  
                codescluster = {i:list(pdfiltered.loc[pdfiltered.clustername==i]['codelocation'].unique()) for i in uniqcluster}
                namescluster = {i:list(pdfiltered.loc[pdfiltered.clustername==i]['location'].unique()) for i in uniqcluster}
                tmp['codelocation'] = tmp['clustername'].map(codescluster)
                tmp['location'] = tmp['clustername'].map(namescluster)
 
-               #if kwargs['which'].startswith('cur_idx_'):
-                    #print(len(tmp.clustername[0].split(',')),tmp.clustername[0])
-                    #tmp[kwargs['which']] = tmp.loc[tmp.clustername.isin(uniqcluster)].\
-                    #apply(lambda x: x[kwargs['which']]/len(x.clustername[0].split(',')),axis=1)
-                #    tmp[kwargs['which']]
                pdfiltered = tmp
                pdfiltered = pdfiltered.drop_duplicates(['date','clustername'])
                if sumallandsmooth7:
@@ -1331,19 +1324,21 @@ class DataBase(object):
             else:
                 pdfiltered['clustername'] = pdfiltered['location']
 
-        pdfiltered['daily'] = pdfiltered.groupby('clustername')[kwargs['which']].diff()
-        inx = pdfiltered.groupby('clustername').head(1).index
-        #First value of diff is always NaN
-        pdfiltered.loc[inx, 'daily'] = pdfiltered[kwargs['which']].iloc[inx]
         if 'cur_' in kwargs['which'] or 'total_' in kwargs['which'] or 'tot_' in kwargs['which']:
             pdfiltered['cumul'] = pdfiltered[kwargs['which']]
         else:
-            pdfiltered['cumul'] = pdfiltered.groupby('clustername')[kwargs['which']].cumsum()
-        pdfiltered['weekly'] = pdfiltered.groupby('clustername')[kwargs['which']].diff(7)
+            pdfiltered['cumul'] = pdfiltered_nofillnan.groupby('clustername')[kwargs['which']].cumsum()
+            if fillnan:
+                pdfiltered.loc[:,'cumul'] =\
+                pdfiltered.groupby('clustername')['cumul'].apply(lambda x: x.ffill())
+
+        pdfiltered['daily'] = pdfiltered.groupby('clustername')['cumul'].diff()
+        inx = pdfiltered.groupby('clustername').head(1).index
+        pdfiltered['weekly'] = pdfiltered.groupby('clustername')['cumul'].diff(7)
         inx7=pdfiltered.groupby('clustername').head(7).index
-        pdfiltered.loc[inx7, 'weekly'] = pdfiltered[kwargs['which']].iloc[inx7]
-        #if fillnan:
-        #    pdfiltered = pdfiltered.fillna(0) # for diff if needed
+        #First value of diff is always NaN
+        pdfiltered.loc[inx, 'daily'] = pdfiltered['daily'].iloc[inx]
+        pdfiltered.loc[inx7, 'weekly'] = pdfiltered['cumul'].iloc[inx7]
 
         unifiedposition=['location', 'date', kwargs['which'], 'daily', 'cumul', 'weekly', 'codelocation','clustername']
         pdfiltered = pdfiltered[unifiedposition]
@@ -1371,27 +1366,30 @@ class DataBase(object):
             print([ i.columns[2] for i in coapandas ])
             whichcol = [ i.columns[2] for i in coapandas ]
         else:
-            if len(whichcol) != len(coapandas):
-                raise CoaKeyError('whichcol value must have same length as  coapandas i.e' + len(coapandas) +'... ')
+            if not isinstance(whichcol,list):
+                whichcol = [whichcol]
+            else:
+                if len(whichcol) != 1 and len(whichcol) != len(coapandas) :
+                    raise CoaKeyError('len(whichcol) != 1 or != len(coapandas)'+str(len(coapandas)))
 
+        if len(whichcol)==1:
+            whichcol =  whichcol*len(coapandas)
 
-        if not all([j in i.columns for i,j in zip(coapandas,whichcol)]):
-            raise CoaKeyError('Please check your coapandas and the associate whichcol ')
-
+        def renamecol(pandy):
+            torename=['daily','cumul','weekly']
+            return pandy.rename(columns={i:pandy.columns[2]+'_'+i  for i in torename})
         base = coapandas[0].copy()
-        base = base[['date','clustername',whichcol[0]]]
+        coapandas = [ renamecol(p) for p in coapandas ]
+        base = coapandas[0].copy()
         j=1
         for p in coapandas[1:]:
-            p=p[['date','clustername',whichcol[j]]]
-            if whichcol[j] in p.columns:
-                whichcol[j] += '_'+str(j)
-            p=p.rename(columns={whichcol[j]:whichcol[j]})
-            base=pd.merge(base,p,on=['date','clustername'])
-            j+=1
-        if 'location' in list(coapandas[0].columns):
-            base[['where','codelocation']] = coapandas[0][['location','codelocation']]  #needed by display
-        else:
-            base[['where','codelocation']]= coapandas[0][['where','codelocation']]  #needed by display
+            base = pd.merge(base,p,on=['date','location','clustername'],how="inner",suffixes=('', '_drop'))
+        base.drop([col for col in base.columns if 'drop' in col], axis=1, inplace=True)
+
+        #if 'location' in list(coapandas[0].columns):
+        #    base[['where','codelocation']] = coapandas[0][['location','codelocation']]  #needed by display
+        #else:
+        #    base[['where','codelocation']]= coapandas[0][['where','codelocation']]  #needed by display
         return base
 
    def saveoutput(self,**kwargs):

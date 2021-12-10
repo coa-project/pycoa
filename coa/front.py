@@ -263,6 +263,52 @@ def getinfo(which):
     print(_db.get_keyword_definition(which),'\nurl:', _db.get_keyword_url(which)[0],'\n(more info ',_db.get_keyword_url(which)[1],')')
 
 # ----------------------------------------------------------------------
+# --- Normalisation by pop input pandas return pandas whith by pop new column
+# ---------------------------------------------------------------------
+def normbypop(pandy, val2norm,bypop):
+    global _gi
+    if isinstance(pandy['codelocation'].iloc[0],list):
+        pandy = pandy.explode('codelocation')
+
+    if _db.db_world == True:
+        if not isinstance(_gi,coa.geo.GeoInfo):
+            _gi = coge.GeoInfo()
+        pop_field='population'
+        pandy = _gi.add_field(input=pandy,field=pop_field,geofield='codelocation')
+    else:
+        if not isinstance(_gi,coa.geo.GeoCountry):
+            _gi=None
+        else:
+            if _gi.get_country() != _db.geo.get_country():
+                _gi=None
+
+        if _gi == None :
+            _gi = _db.geo
+        pop_field='population_subregion'
+        if pop_field not in _gi.get_list_properties():
+            raise CoaKeyError('The population information not available for this country. No normalization possible')
+
+        pandy=_gi.add_field(input=pandy,field=pop_field,input_key='codelocation')
+
+    clust = pandy['clustername'].unique()
+    df = pd.DataFrame()
+    for i in clust:
+        pandyi = pandy.loc[ pandy['clustername'] == i ].copy()
+        pandyi.loc[:,pop_field] = pandyi.groupby('codelocation')[pop_field].first().sum()
+        cody = [pandyi.groupby('codelocation')['codelocation'].first().tolist()]*len(pandyi)
+        pandyi = pandyi.assign(codelocation=cody)
+        if df.empty:
+            df = pandyi
+        else:
+            df = df.append(pandyi)
+    df = df.drop_duplicates(['date','clustername'])
+    pandy = df
+
+    pandy[pop_field]=pandy[pop_field].replace(0., np.nan)
+    pandy.loc[:,val2norm+' per '+bypop]=pandy[val2norm]/pandy[pop_field]*_dict_bypop[bypop]
+    return pandy
+
+# ----------------------------------------------------------------------
 # --- get(**kwargs) ----------------------------------------------------
 # ----------------------------------------------------------------------
 def get(**kwargs):
@@ -372,50 +418,12 @@ def get(**kwargs):
     pandy.reset_index()
     pop_field = ''
     # manage pop norm if asked
-
     if bypop != 'no':
-        if isinstance(pandy['codelocation'].iloc[0],list):
-            pandy = pandy.explode('codelocation')
-
-        if _db.db_world == True:
-            if not isinstance(_gi,coa.geo.GeoInfo):
-                _gi = coge.GeoInfo()
-            pop_field='population'
-            pandy = _gi.add_field(input=pandy,field=pop_field,geofield='codelocation')
-        else:
-            if not isinstance(_gi,coa.geo.GeoCountry):
-                _gi=None
-            else:
-                if _gi.get_country() != _db.geo.get_country():
-                    _gi=None
-
-            if _gi == None :
-                _gi = _db.geo
-            pop_field='population_subregion'
-            if pop_field not in _gi.get_list_properties():
-                raise CoaKeyError('The population information not available for this country. No normalization possible')
-
-            pandy=_gi.add_field(input=pandy,field=pop_field,input_key='codelocation')
-
-        clust = pandy['clustername'].unique()
-        df = pd.DataFrame()
-        for i in clust:
-            pandyi = pandy.loc[ pandy['clustername'] == i ].copy()
-            pandyi.loc[:,pop_field] = pandyi.groupby('codelocation')[pop_field].first().sum()
-            cody = [pandyi.groupby('codelocation')['codelocation'].first().tolist()]*len(pandyi)
-            pandyi = pandyi.assign(codelocation=cody)
-            if df.empty:
-                df = pandyi
-            else:
-                df = df.append(pandyi)
-        df = df.drop_duplicates(['date','clustername'])
-        pandy = df
-
-        pandy[pop_field]=pandy[pop_field].replace(0., np.nan)
         if what:
-            pandy[what+' per '+bypop]=pandy[what]/pandy[pop_field]*_dict_bypop[bypop]
+            val2norm=what
         else:
-            pandy[which+' per '+bypop]=pandy[which]/pandy[pop_field]*_dict_bypop[bypop]
+            val2norm=which
+        pandy = normbypop(pandy,val2norm,bypop)
     # casted_data = None
     if output == 'pandas':
         pandy = pandy.drop_duplicates(['date','clustername'])
@@ -495,10 +503,16 @@ def chartsinput_deco(f):
         input_field = kwargs.get('input_field')
         where = kwargs.get('where', None)
         what = kwargs.get('what', None)
+        which = kwargs.get('which', None)
         when = kwargs.get('when', None)
         option = kwargs.get('option', None)
 
+        bypop=kwargs.pop('bypop','no')
+
         if isinstance(input_arg, pd.DataFrame):
+            if bypop != 'no':
+                input_arg = normbypop(input_arg,input_field,bypop)
+
             input_field = kwargs.get('input_field', listwhich()[0])
             #if input_field not in input_arg.columns:
             #    raise CoaKeyError("Cannot find " + str(input_field) + " field in the pandas data. "
@@ -507,6 +521,7 @@ def chartsinput_deco(f):
                 raise CoaKeyError("Cannot use option with input pandas data. "
                                   "Use option within the get() function instead.")
             kwargs['input'] = input_arg
+
         elif input_arg == None:
             kwargs['input'] = get(**kwargs,output='pandas')
             which = kwargs.get('which', listwhich()[0])
@@ -516,14 +531,16 @@ def chartsinput_deco(f):
             raise CoaTypeError('Waiting input as valid pycoa pandas '
                                'dataframe. See help.')
 
-        bypop=kwargs.pop('bypop','no')
         if bypop != 'no':
             if what:
                 kwargs['what']=what+' per '+bypop
                 input_field=kwargs['what']
-            else:
+            elif which:
                 kwargs['which']=which+' per '+bypop
                 input_field=kwargs['which']
+            else:
+                input_field = input_field+' per '+bypop
+
         kwargs['input_field'] = input_field
         return f(**kwargs)
 
@@ -687,7 +704,6 @@ def plot(**kwargs):
 
     if 'typeofplot' in kwargs:
         typeofplot = kwargs.pop('typeofplot')
-
     if typeofplot == 'date':
         fig = _cocoplot.pycoa_date_plot(input,input_field, **kwargs)
     elif typeofplot == 'versus':

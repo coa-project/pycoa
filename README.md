@@ -32,9 +32,9 @@ cf.map(where='world',what='daily',when='01/04/2020')
 cf.hist(where='middle africa', which='confirmed',what='cumul')
 cf.get(where='usa', what='daily', which='recovered',output='pandas')
 ```
-|<img src="https://raw.githubusercontent.com/wiki/coa-project/pycoa/figs/pycoa_plot_example.png" height="240" align=top />|<img src="https://raw.githubusercontent.com/wiki/coa-project/pycoa/figs/pycoa_map_example.png" height="240" align=top />|
+<img src="https://raw.githubusercontent.com/wiki/coa-project/pycoa/figs/pycoa_plot_example.png" height="240" align=top /><img src="https://raw.githubusercontent.com/wiki/coa-project/pycoa/figs/pycoa_map_example.png" height="240" align=top />
 
-|<img src="https://raw.githubusercontent.com/wiki/coa-project/pycoa/figs/pycoa_hist_example.png" height="240" align=top />|<img src="https://raw.githubusercontent.com/wiki/coa-project/pycoa/figs/pycoa_get_example.png" height="240" width="300" align=top />|
+<img src="https://raw.githubusercontent.com/wiki/coa-project/pycoa/figs/pycoa_hist_example.png" height="240" align=top /><img src="https://raw.githubusercontent.com/wiki/coa-project/pycoa/figs/pycoa_get_example.png" height="240" width="300" align=top />
 
 ## About us
 

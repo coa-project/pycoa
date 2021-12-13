@@ -17,6 +17,9 @@
 - when option = sumall + smooth7 do sumall and smooth and not the opposite
 - use cumsum new_tests to produce total_test in owid since total_test was not available for France
 - change tot_* to cur_ for sciensano db 
+- in the front get uses the parser decorator , it wasn't the case so far ...
+- covid19india db change val to tot_val
+
 ## v2.10 - 
 - Map bug fixed for option='sumall'
 - maplabel added for bokeh map   

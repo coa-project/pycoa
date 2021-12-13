@@ -242,10 +242,10 @@ def generic_info(namedb, keys):
         mydico = mi
     elif namedb == 'covid19india':
         india = {
-        'Deceased':['Deceased:FILLIT'],\
-        'Confirmed':['Confirmed:FILLIT'],\
-        'Recovered':['Recovered:FILLIT'],\
-        'Tested':['Tested:FILLIT']
+        'tot_Deceased':['tot_Deceased (original name: Deceased): Total number of Deceased'],\
+        'tot_Confirmed':['tot_Confirmed (original name: Confirmed): Total number of Confirmed'],\
+        'tot_Recovered':['tot_Recovered ( original name:  Recovered): Total number of Recovered'],\
+        'tot_Tested':['tot_Tested ( original name:  Tested): Total number of Tested']
         }
         for k,v in india.items():
             india[k].append('https://api.covid19india.org/csv/latest/states.csv')
@@ -304,10 +304,10 @@ def generic_info(namedb, keys):
         phe = {
         'tot_deaths':['Total number of deaths (original name cumDeaths28DaysByDeathDate)',url+'cumDeaths28DaysByDeathDate'+'&format=csv'],\
         'tot_cases':['Total number of cases (originale name cumCasesBySpecimenDate)',url+'cumCasesBySpecimenDate'+'&format=csv'],
-        'tot_tests':['Total number of cases (originale name cumTestByPublishDate)',url+'cumLFDTests'+'&format=csv'],
-        'tot_vacc1':['Total number of cases (originale name cumCasesBySpecimenDate)',url+'cumPeopleVaccinatedFirstDoseByVaccinationDate'+'&format=csv'],
-        'tot_vacc2':['Total number of cases (originale name cumCasesBySpecimenDate)',url+'cumPeopleVaccinatedSecondDoseByVaccinationDate'+'&format=csv'],
-        'tot_vacc3':['Total number of cases (originale name cumCasesBySpecimenDate)',url+'cumPeopleVaccinatedThirddDoseByVaccinationDate'+'&format=csv'],
+        'tot_tests':['Total number of tests (originale name cumTestByPublishDate)',url+'cumLFDTests'+'&format=csv'],
+        'tot_vacc1':['Total number of tot_vacc1 (originale name cumCasesBySpecimenDate)',url+'cumPeopleVaccinatedFirstDoseByVaccinationDate'+'&format=csv'],
+        'tot_vacc2':['Total number of tot_vacc2 (originale name cumCasesBySpecimenDate)',url+'cumPeopleVaccinatedSecondDoseByVaccinationDate'+'&format=csv'],
+        'tot_vacc3':['Total number of tot_vacc3 (originale name cumCasesBySpecimenDate)',url+'cumPeopleVaccinatedThirddDoseByVaccinationDate'+'&format=csv'],
         'cur_B.1.617.2':['Current variant B.1.617.2',url +'https://covid-surveillance-data.cog.sanger.ac.uk/download/lineages_by_ltla_and_week.tsv'],
         }
         for k,v in phe.items():

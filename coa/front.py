@@ -266,6 +266,10 @@ def getinfo(which):
 # --- Normalisation by pop input pandas return pandas whith by pop new column
 # ---------------------------------------------------------------------
 def normbypop(pandy, val2norm,bypop):
+    """
+        Return a pandas with a normalisation column add by population
+        * can normalize by '100', '1k', '100k' or '1M'
+    """
     global _gi
     if isinstance(pandy['codelocation'].iloc[0],list):
         pandy = pandy.explode('codelocation')
@@ -304,13 +308,127 @@ def normbypop(pandy, val2norm,bypop):
     df = df.drop_duplicates(['date','clustername'])
     pandy = df
 
+    pandy=pandy.copy()
     pandy[pop_field]=pandy[pop_field].replace(0., np.nan)
     pandy.loc[:,val2norm+' per '+bypop]=pandy[val2norm]/pandy[pop_field]*_dict_bypop[bypop]
     return pandy
+# ----------------------------------------------------------------------
+# --- chartsinput_deco(f)
+# ------  with wraps
+# ----------  wrapper(*args, **kwargs)
+#---------------------------------------
+# ----------------------------------------------------------------------
+def chartsinput_deco(f):
+    '''
+        Main decorator it mainly deals with arg testings
+    '''
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        '''
+            wrapper dealing with arg testing
+        '''
+        kwargs_test(kwargs,
+                    ['where', 'what', 'which', 'whom', 'when', 'input', 'input_field','output',\
+                    'title','typeofplot','typeofhist','bins','visu','tile','dateslider','maplabel','option','mode','guideline','bypop',
+                    'plot_width','plot_height','textcopyright','textcopyrightposition'],
+                    'Bad args used in the pycoa function.')
 
+    # no dateslider currently
+        global _db, _whom, _gi
+        where = kwargs.get('where', None)
+        which = kwargs.get('which', None)
+        what = kwargs.get('what', None)
+
+        whom = kwargs.get('whom', None)
+        option = kwargs.get('option', None)
+        when = kwargs.get('when', None)
+        input_arg = kwargs.get('input', None)
+        input_field = kwargs.get('input_field',None)
+
+        if which:
+            kwargs['input_field'] = which
+        else:
+            which = listwhich()[0]
+        if what:
+            kwargs['input_field'] = what
+        else:
+            what = listwhat()[0]
+
+        if 'mode' in kwargs:
+            kwargs.pop('mode')
+
+        option = kwargs.get('option', None)
+        bypop = kwargs.get('bypop','no')
+
+        kwargs['output'] = kwargs.get('output', listoutput()[0])
+
+        if kwargs['output'] not in listoutput():
+            raise CoaKeyError('Output option ' + kwargs['output'] + ' not supported. See help().')
+
+        if whom is None:
+            whom = _whom
+        if whom != _whom:
+            setwhom(whom)
+
+        if not bool([s for s in listwhat() if what.startswith(s)]):
+            raise CoaKeyError('What option ' + what + ' not supported. '
+                                                      'See listwhat() for full list.')
+
+        if which not in listwhich():
+            raise CoaKeyError('Which option ' + which + ' not supported. '
+                                                        'See listwhich() for list.')
+        if bypop not in listbypop():
+            raise CoaKeyError('The bypop arg should be selected in '+str(listbypop)+' only.')
+
+        if isinstance(input_arg, pd.DataFrame):
+            pandy = input_arg #_db.get_stats(which=which, location=where, option=option).rename(columns={'location': 'where'})
+            if bypop != 'no':
+                input_arg = normbypop(pandy,input_field,bypop)
+                input_field = input_field+' per '+bypop
+            pandy = input_arg
+            if isinstance(input_field,list):
+                which = input_field[0]
+            else:
+                which = input_field
+            kwargs['input_field']=input_field
+            #input_field = kwargs.get('input_field', listwhich()[0])
+            #if input_field not in input_arg.columns:
+            #    raise CoaKeyError("Cannot find " + str(input_field) + " field in the pandas data. "
+            #                                                          "Set a proper input_field key.")
+        elif input_arg == None:
+            pandy = _db.get_stats(which=which, location=where, option=option).rename(columns={'location': 'where'})
+            if bypop != 'no':
+                pandy = normbypop(pandy ,which, bypop)
+                input_field = which + ' per ' + bypop
+                kwargs['input_field'] = input_field
+            option = kwargs.get('option', None)
+        else:
+            raise CoaTypeError('Waiting input as valid pycoa pandas '
+                               'dataframe. See help.')
+
+        when_beg, when_end = extract_dates(when)
+        if when_end > pandy[[which,'date']].date.max():
+            when_end = pandy[[which,'date']].date.max()
+
+        db_first_date = pandy[[which,'date']].date.min()
+        db_last_date = pandy[[which,'date']].date.max()
+        if when_beg < db_first_date:
+            when_beg = db_first_date
+        if when_end > db_last_date:
+            when_end = db_last_date
+        # when cut
+        if when_beg >  pandy[[which,'date']].date.max() or when_end >  pandy[[which,'date']].date.max():
+            raise CoaNoData("No available data after "+str( pandy[[which,'date']].date.max()))
+
+        pandy = pandy[(pandy.date >= when_beg) & (pandy.date <= when_end)]
+        kwargs['input'] = pandy
+        return f(**kwargs)
+
+    return wrapper
 # ----------------------------------------------------------------------
 # --- get(**kwargs) ----------------------------------------------------
 # ----------------------------------------------------------------------
+@chartsinput_deco
 def get(**kwargs):
     """Return covid19 data in specified format output (default, by list)
     for specified locations ('where' keyword).
@@ -359,76 +477,24 @@ def get(**kwargs):
                 * by default, 'no' normalization
                 * can normalize by '100', '1k', '100k' or '1M'
     """
-    kwargs_test(kwargs, ['where', 'what', 'which', 'whom', 'when', 'output', 'option', 'bins', 'title',\
-                        'visu', 'tile','typeofplot','dateslider','maplabel','typeofhist','mode','guideline','bypop',
-                        'plot_width','plot_height','textcopyright','textcopyrightposition'],
-                'Bad args used in the pycoa.get() function.')
-    # no dateslider currently
 
-    global _db, _whom, _gi
-    where = kwargs.get('where', None)
-    what = kwargs.get('what', listwhat()[0])
-    which = kwargs.get('which', None)
-    whom = kwargs.get('whom', None)
-    option = kwargs.get('option', None)
-    when = kwargs.get('when', None)
-    if 'mode' in kwargs:
-        kwargs.pop('mode')
-    option = kwargs.get('option', None)
-    bypop = kwargs.get('bypop','no')
-
-    output = kwargs.get('output', listoutput()[0])
-
-    if output not in listoutput():
-        raise CoaKeyError('Output option ' + output + ' not supported. See help().')
-
-    if whom is None:
-        whom = _whom
-    if whom != _whom:
-        setwhom(whom)
-
-    if not bool([s for s in listwhat() if what.startswith(s)]):
-        raise CoaKeyError('What option ' + what + ' not supported. '
-                                                  'See listwhat() for full list.')
-
-    if not which:
-        which = listwhich()[0]
-    elif which not in listwhich():
-        raise CoaKeyError('Which option ' + which + ' not supported. '
-                                                    'See listwhich() for list.')
-    if bypop not in listbypop():
-        raise CoaKeyError('The bypop arg should be selected in '+str(listbypop)+' only.')
-
-    pandy = _db.get_stats(which=which, location=where, option=option).rename(columns={'location': 'where'})
-    when_beg, when_end = extract_dates(when)
-    if when_end > pandy[[which,'date']].date.max():
-        when_end = pandy[[which,'date']].date.max()
-
-    db_first_date = pandy[[which,'date']].date.min()
-    db_last_date = pandy[[which,'date']].date.max()
-    if when_beg < db_first_date:
-        when_beg = db_first_date
-    if when_end > db_last_date:
-        when_end = db_last_date
-    # when cut
-    if when_beg >  pandy[[which,'date']].date.max() or when_end >  pandy[[which,'date']].date.max():
-        raise CoaNoData("No available data after "+str( pandy[[which,'date']].date.max()))
-
-    pandy = pandy[(pandy.date >= when_beg) & (pandy.date <= when_end)]
-    pandy.reset_index()
-    pop_field = ''
     # manage pop norm if asked
-    if bypop != 'no':
-        if what:
-            val2norm=what
-        else:
-            val2norm=which
-        pandy = normbypop(pandy,val2norm,bypop)
+    #if bypop != 'no':
+    #    if what:
+    #        val2norm=what
+    #    else:
+    #        val2norm=which
+    #    pandy = normbypop(pandy,val2norm,bypop)
     # casted_data = None
+    output = kwargs.get('output')
+    pandy = kwargs.get('input')
     if output == 'pandas':
+        #if 'option' in kwargs:
+        #    raise CoaKeyError("Cannot use option with input pandas data. "
+        #                      "Use option within the get() function instead.")
         pandy = pandy.drop_duplicates(['date','clustername'])
-        pandy = pandy.drop(columns=['cumul'])
-        pandy['cumul'] = pandy[which]
+        #pandy = pandy.drop(columns=['cumul'])
+        #pandy['cumul'] = pandy[which]
         casted_data = pandy
     # print(pandy)
     # casted_data = pd.pivot_table(pandy, index='date',columns='where',values=col_name).to_dict('series')
@@ -480,72 +546,6 @@ def merger(**kwargs):
        return _db.merger(coapandas = listpandy,whichcol = listcol)
 
 # ----------------------------------------------------------------------
-# --- chartsinput_deco(f)
-# ------  with wraps
-# ----------  wrapper(*args, **kwargs)
-#---------------------------------------
-# ----------------------------------------------------------------------
-def chartsinput_deco(f):
-    '''
-        Main decorator it mainly deals with arg testings
-    '''
-    @wraps(f)
-    def wrapper(*args, **kwargs):
-        '''
-            wrapper dealing with arg testing
-        '''
-        kwargs_test(kwargs,
-                    ['where', 'what', 'which', 'whom', 'when', 'input', 'input_field',\
-                    'title','typeofplot','typeofhist','bins','visu','tile','dateslider','maplabel','option','mode','guideline','bypop',
-                    'plot_width','plot_height','textcopyright','textcopyrightposition'],
-                    'Bad args used in the pycoa function.')
-        input_arg = kwargs.get('input', None)
-        input_field = kwargs.get('input_field')
-        where = kwargs.get('where', None)
-        what = kwargs.get('what', None)
-        which = kwargs.get('which', None)
-        when = kwargs.get('when', None)
-        option = kwargs.get('option', None)
-
-        bypop=kwargs.pop('bypop','no')
-
-        if isinstance(input_arg, pd.DataFrame):
-            if bypop != 'no':
-                input_arg = normbypop(input_arg,input_field,bypop)
-
-            input_field = kwargs.get('input_field', listwhich()[0])
-            #if input_field not in input_arg.columns:
-            #    raise CoaKeyError("Cannot find " + str(input_field) + " field in the pandas data. "
-            #                                                          "Set a proper input_field key.")
-            if 'option' in kwargs:
-                raise CoaKeyError("Cannot use option with input pandas data. "
-                                  "Use option within the get() function instead.")
-            kwargs['input'] = input_arg
-
-        elif input_arg == None:
-            kwargs['input'] = get(**kwargs,output='pandas')
-            which = kwargs.get('which', listwhich()[0])
-            what = kwargs.get('what', listwhat()[0])
-            option = kwargs.get('option', None)
-        else:
-            raise CoaTypeError('Waiting input as valid pycoa pandas '
-                               'dataframe. See help.')
-
-        if bypop != 'no':
-            if what:
-                kwargs['what']=what+' per '+bypop
-                input_field=kwargs['what']
-            elif which:
-                kwargs['which']=which+' per '+bypop
-                input_field=kwargs['which']
-            else:
-                input_field = input_field+' per '+bypop
-
-        kwargs['input_field'] = input_field
-        return f(**kwargs)
-
-    return wrapper
-# ----------------------------------------------------------------------
 # --- map(**kwargs) ----------------------------------------------------
 # ----------------------------------------------------------------------
 @chartsinput_deco
@@ -562,8 +562,16 @@ def map(**kwargs):
                    = tickmap%, colormap tick are in %
     """
     visu = kwargs.get('visu', listvisu()[0])
-    input = kwargs.pop('input')
-    input_field = kwargs.pop('input_field')
+    input = kwargs.get('input')
+    input_field = kwargs.get('input_field')
+
+    if not input.empty:
+        kwargs.pop('input')
+        kwargs.pop('input_field')
+    kwargs.pop('output')
+    if kwargs.get('bypop'):
+      kwargs.pop('bypop')
+
     dateslider = kwargs.get('dateslider', None)
     maplabel = kwargs.get('maplabel', None)
 
@@ -590,13 +598,13 @@ def map(**kwargs):
 
     if visu == 'bokeh':
         if sparkline == False:
-            return show(_cocoplot.pycoa_map(input, input_field, **kwargs))
+            return show(_cocoplot.pycoa_map(input,input_field,**kwargs))
         else:
-            return show(_cocoplot.pycoa_sparkmap(input, input_field, **kwargs))
+            return show(_cocoplot.pycoa_sparkmap(input,input_field,**kwargs))
     elif visu == 'folium':
         if dateslider or maplabel:
             raise CoaKeyError('Not available with folium map, you should considere to use bokeh map visu in this case')
-        return _cocoplot.pycoa_mapfolium(input, input_field, **kwargs)
+        return _cocoplot.pycoa_mapfolium(**kwargs)
     else:
         raise CoaTypeError('Waiting for a valid visualisation. So far: \'bokeh\' or \'folium\'.See help.')
 # ----------------------------------------------------------------------
@@ -638,6 +646,9 @@ def hist(**kwargs):
     input_field = kwargs.pop('input_field')
     dateslider = kwargs.get('dateslider', None)
     typeofhist = kwargs.pop('typeofhist', 'bylocation')
+    kwargs.pop('output')
+    if kwargs.get('bypop'):
+      kwargs.pop('bypop')
 
     if dateslider is not None:
         del kwargs['dateslider']
@@ -698,24 +709,31 @@ def plot(**kwargs):
                              Moreover dim(input_field) must be 2.
 
     """
-    input = kwargs.pop('input')
-    input_field = kwargs.pop('input_field')
-    typeofplot = kwargs.get('typeofplot', 'date')
+    input = kwargs.get('input')
+    input_field = kwargs.get('input_field')
+    if not input.empty:
+        kwargs.pop('input')
+        kwargs.pop('input_field')
+    typeofplot = kwargs.get('typeofplot','date')
+    kwargs.pop('output')
+    if kwargs.get('bypop'):
+        kwargs.pop('bypop')
 
     if 'typeofplot' in kwargs:
         typeofplot = kwargs.pop('typeofplot')
+
     if typeofplot == 'date':
-        fig = _cocoplot.pycoa_date_plot(input,input_field, **kwargs)
+        fig = _cocoplot.pycoa_date_plot(input,input_field,**kwargs)
     elif typeofplot == 'versus':
-        if input_field is not None and len(input_field) == 2:
-            fig = _cocoplot.pycoa_plot(input, input_field,**kwargs)
+        if isinstance(input_field,list) and len(input_field) == 2:
+            fig = _cocoplot.pycoa_plot(**kwargs)
         else:
             print('typeofplot is versus but dim(input_field)!=2, versus has not effect ...')
-            fig = _cocoplot.pycoa_date_plot(input, input_field, **kwargs)
+            fig = _cocoplot.pycoa_date_plot(input,input_field,**kwargs)
     elif typeofplot == 'menulocation':
-        if input_field is not None and len(input_field) > 1:
+        if isinstance(input_field,list) and len(input_field) > 1:
             print('typeofplot is menulocation but dim(input_field)>1, menulocation has not effect ...')
-        fig = _cocoplot.pycoa_scrollingmenu(input, input_field, **kwargs)
+        fig = _cocoplot.pycoa_scrollingmenu(input,input_field,**kwargs)
     else:
         raise CoaKeyError('Unknown typeofplot value. Should be date, versus or menulocation.')
     show(fig)

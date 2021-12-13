@@ -199,6 +199,7 @@ class CocoDisplay:
             when = kwargs.get('when', None)
             what = kwargs.get('what', 'cumul')  # cumul is the default
             which = kwargs.get('which', input.columns[2])
+
             if input_field is None:
                 input_field = what
             option = kwargs.get('option', None)
@@ -270,17 +271,17 @@ class CocoDisplay:
                   input_field = [input_field]
             else:
                   input_field = input_field
-
-            when_beg = input[[input_field[0],'date']].date.min()
-            when_end = input[[input_field[0],'date']].date.max()
+            col2=which
+            when_beg = input[[col2,'date']].date.min()
+            when_end = input[[col2,'date']].date.max()
 
             if when:
                 when_beg, when_end = extract_dates(when)
-                if when_end > input[[input_field[0],'date']].date.max():
-                    when_end = input[[input_field[0],'date']].date.max()
+                if when_end > input[[col2,'date']].date.max():
+                    when_end = input[[col2,'date']].date.max()
 
                 if when_beg == dt.date(1, 1, 1):
-                    when_beg = input[[input_field[0],'date']].date.min()
+                    when_beg = input[[col2,'date']].date.min()
 
                 if not isinstance(when_beg, dt.date):
                     raise CoaNoData("With your current cuts, there are no data to plot.")
@@ -288,7 +289,7 @@ class CocoDisplay:
                 if when_end <= when_beg:
                     print('Requested date below available one, take', when_beg)
                     when_end = when_beg
-                if when_beg > input[[input_field[0],'date']].date.max() or when_end > input[[input_field[0],'date']].date.max():
+                if when_beg > input[[col2,'date']].date.max() or when_end > input[[col2,'date']].date.max():
                     raise CoaNoData("No available data after "+str(input[[input_field[0],'date']].date.max()))
             when_end_change = when_end
 

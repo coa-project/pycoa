@@ -164,6 +164,7 @@ class CocoDisplay:
         for i in list(self.dvisu_default.keys())  + self.options_front + self.options_charts + ['textcopyright', 'textcopyrightposition'] + self.options_stats + ['date_slider']:
             if i in kwargs.keys():
                 kwargs.pop(i)
+        kwargs.pop('title')
         fig = figure(**kwargs, tools=['save', 'box_zoom,reset'], toolbar_location="right")
         fig.add_layout(citation)
         fig.add_layout(Title(text=self.uptitle, text_font_size="10pt"), 'above')
@@ -340,7 +341,7 @@ class CocoDisplay:
                 title  = titlefig
             self.uptitle = title
             self.subtitle = title_temporal
-            #kwargs['title'] = title
+            kwargs['title'] = title+title_temporal
             return func(self, input, input_field, **kwargs)
         return wrapper
     ''' DECORATORS FOR PLOT: DATE, VERSUS, SCROLLINGMENU '''
@@ -1412,7 +1413,6 @@ class CocoDisplay:
         def innerdecomap(self, geopdwd, geopdwd_filtered, **kwargs):
             title = kwargs.get('title', None)
             maplabel = kwargs.get('maplabel',self.dvisu_default['maplabel'])
-            title = kwargs.get('title', None)
             tile =  kwargs.get('tile', self.dvisu_default['tile'])
             tile = CocoDisplay.convert_tile(tile, 'bokeh')
 

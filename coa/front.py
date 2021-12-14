@@ -398,8 +398,12 @@ def chartsinput_deco(f):
         elif input_arg == None:
             pandy = _db.get_stats(which=which, location=where, option=option).rename(columns={'location': 'where'})
             if bypop != 'no':
-                pandy = normbypop(pandy ,which, bypop)
-                input_field = which + ' per ' + bypop
+                if what:
+                    val=what
+                else:
+                    val=wich
+                pandy = normbypop(pandy ,val, bypop)
+                input_field = val + ' per ' + bypop
                 kwargs['input_field'] = input_field
             option = kwargs.get('option', None)
         else:
@@ -604,7 +608,7 @@ def map(**kwargs):
     elif visu == 'folium':
         if dateslider or maplabel:
             raise CoaKeyError('Not available with folium map, you should considere to use bokeh map visu in this case')
-        return _cocoplot.pycoa_mapfolium(**kwargs)
+        return _cocoplot.pycoa_mapfolium(input,input_field,**kwargs)
     else:
         raise CoaTypeError('Waiting for a valid visualisation. So far: \'bokeh\' or \'folium\'.See help.')
 # ----------------------------------------------------------------------

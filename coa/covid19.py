@@ -1290,7 +1290,7 @@ class DataBase(object):
                   tmp = pdfiltered.groupby(['clustername','date']).mean().reset_index()
                else:
                   tmp = pdfiltered.groupby(['clustername','date']).sum().reset_index()#.loc[pdfiltered.clustername.isin(uniqcluster)].\
-                  
+
                codescluster = {i:list(pdfiltered.loc[pdfiltered.clustername==i]['codelocation'].unique()) for i in uniqcluster}
                namescluster = {i:list(pdfiltered.loc[pdfiltered.clustername==i]['location'].unique()) for i in uniqcluster}
                tmp['codelocation'] = tmp['clustername'].map(codescluster)
@@ -1357,23 +1357,9 @@ class DataBase(object):
         '''
 
         coapandas = kwargs.get('coapandas', None)
-        whichcol =  kwargs.get('whichcol', None)
 
         if coapandas is None or not isinstance(coapandas, list) or len(coapandas)<=1:
             raise CoaKeyError('coapandas value must be at least a list of 2 elements ... ')
-
-        if whichcol is None:
-            print([ i.columns[2] for i in coapandas ])
-            whichcol = [ i.columns[2] for i in coapandas ]
-        else:
-            if not isinstance(whichcol,list):
-                whichcol = [whichcol]
-            else:
-                if len(whichcol) != 1 and len(whichcol) != len(coapandas) :
-                    raise CoaKeyError('len(whichcol) != 1 or != len(coapandas)'+str(len(coapandas)))
-
-        if len(whichcol)==1:
-            whichcol =  whichcol*len(coapandas)
 
         def renamecol(pandy):
             torename=['daily','cumul','weekly']
@@ -1381,9 +1367,12 @@ class DataBase(object):
         base = coapandas[0].copy()
         coapandas = [ renamecol(p) for p in coapandas ]
         base = coapandas[0].copy()
+        if not 'clustername' in base.columns:
+            raise CoaKeyError('No "clustername" in your pandas columns ... don\'t know what to do ')
+
         j=1
         for p in coapandas[1:]:
-            base = pd.merge(base,p,on=['date','location','clustername'],how="inner",suffixes=('', '_drop'))
+            base = pd.merge(base,p,on=['date','clustername'],how="inner",suffixes=('', '_drop'))
         base.drop([col for col in base.columns if 'drop' in col], axis=1, inplace=True)
 
         #if 'location' in list(coapandas[0].columns):

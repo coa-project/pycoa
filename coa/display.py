@@ -846,6 +846,7 @@ class CocoDisplay:
             locunique = geopdwd_filter.clustername.unique()#geopdwd_filtered.location.unique()
             geopdwd_filter = geopdwd_filter.copy()
             nmaxdisplayed = 18
+            maplabel = kwargs.get('maplabel',None)
 
             if len(locunique) >= nmaxdisplayed :#and func.__name__ != 'pycoa_pie' :
                 if func.__name__ != 'pycoa_pie' :
@@ -876,8 +877,14 @@ class CocoDisplay:
                                                 geopdwd_filter.index.to_list()]
                 geopdwd_filter['horihistotexty'] =  geopdwd_filter['bottom'] + bthick/2
                 geopdwd_filter['horihistotextx'] = geopdwd_filter['right']
-                geopdwd_filter['horihistotext'] = [ '{:.3g}'.format(float(i)) if float(i)>1.e4 else round(float(i),2) for i in geopdwd_filter['right'] ]
-                geopdwd_filter['horihistotext'] = [str(i) for i in geopdwd_filter['horihistotext']]
+
+                if maplabel and 'label%' in maplabel:
+                    geopdwd_filter['right'] = geopdwd_filter['right'].apply(lambda x: 100.*x)
+                    geopdwd_filter['horihistotextx'] = geopdwd_filter['right']
+                    geopdwd_filter['horihistotext'] = [str(round(i))+'%' for i in geopdwd_filter['right']]
+                else:
+                    geopdwd_filter['horihistotext'] = [ '{:.3g}'.format(float(i)) if float(i)>1.e4 else round(float(i),2) for i in geopdwd_filter['right'] ]
+                    geopdwd_filter['horihistotext'] = [str(i) for i in geopdwd_filter['horihistotext']]
             if func.__name__ == 'pycoa_pie' :
                 geopdwd_filter = self.add_columns_for_pie_chart(geopdwd_filter,input_field)
                 geopdwd = self.add_columns_for_pie_chart(geopdwd,input_field)
@@ -893,9 +900,13 @@ class CocoDisplay:
                 plot_width = kwargs['plot_width']
                 plot_height = kwargs['plot_height']
                 standardfig = self.standardfig( x_axis_type = axis_type,  x_range = (1.05*min_value, 1.05 * max_value),**kwargs)
-
-                standardfig.xaxis[0].formatter = PrintfTickFormatter(format="%4.2e")
-                standardfig.x_range = Range1d(0.01, 1.2 * max_value)
+                if maplabel and 'label%' in maplabel:
+                    standardfig.x_range = Range1d(0.01, 1.2 * max_value*100)
+                    standardfig.xaxis.axis_label = 'percentage(%)'
+                    standardfig.xaxis.formatter = BasicTickFormatter(use_scientific=False)
+                else:
+                    standardfig.xaxis[0].formatter = PrintfTickFormatter(format="%4.2e")
+                    standardfig.x_range = Range1d(0.01, 1.2 * max_value)
                 if not input_filter[input_filter[input_field] < 0.].empty:
                     standardfig.x_range = Range1d(1.2 * min_value, 1.2 * max_value)
 
@@ -904,7 +915,10 @@ class CocoDisplay:
                         print('Some value are negative, can\'t display log scale in this context')
                     else:
                         if func.__name__ == 'pycoa_horizonhisto' :
-                            standardfig.x_range = Range1d(0.01, 50 * max_value)
+                            if maplabel and 'label%' in maplabel:
+                                standardfig.x_range = Range1d(0.01, 50 * max_value*100)
+                            else:
+                                standardfig.x_range = Range1d(0.01, 50 * max_value)
                             srcfiltered.data['left'] = [0.01] * len(srcfiltered.data['right'])
 
                 if func.__name__ == 'pycoa_pie' :
@@ -1139,6 +1153,7 @@ class CocoDisplay:
         label_dict = {}
         label_dict = {(len(loc) - k) : v for k, v in enumerate(loc) }
         new_panels = []
+
         for i in range(n):
             fig = panels[i].child
             fig.yaxis.ticker = list(range(1, len(loc)+1))
@@ -1431,7 +1446,7 @@ class CocoDisplay:
                 dfLabel=pd.DataFrame({'clustername':sumgeo.clustername,'centroidx':centrosx,'centroidy':centrosy,'cases':cases,'spark':sparkos})
                 dfLabel['cases'] = dfLabel['cases'].round(2)
 
-                if 'tickmap%' in maplabel:
+                if 'label%' in maplabel:
                     dfLabel['cases'] = [str(round(float(i*100),2))+'%' for i in dfLabel['cases']]
                 else:
                     dfLabel['cases']=[str(i) for i in dfLabel['cases']]
@@ -1516,7 +1531,7 @@ class CocoDisplay:
                              border_line_color=None, location=(0, 0), orientation='horizontal', ticker=BasicTicker())
         color_bar.formatter = BasicTickFormatter(use_scientific=True, precision=1, power_limit_low=int(max_col))
 
-        if 'tickmap%' in maplabel:
+        if 'label%' in maplabel:
             color_bar.formatter = BasicTickFormatter(use_scientific=False)
             color_bar.formatter = NumeralTickFormatter(format="0.0%")
 

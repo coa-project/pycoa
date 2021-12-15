@@ -541,13 +541,9 @@ def merger(**kwargs):
     'whichcol': list variable associate to the coapandas list to be retrieve
     '''
     global _db
-    kwargs_test(kwargs,['coapandas', 'whichcol'], 'Bad args used in the pycoa.merger function.')
+    kwargs_test(kwargs,['coapandas'], 'Bad args used in the pycoa.merger function.')
     listpandy = kwargs.get('coapandas',[])
-    listcol = kwargs.get('whichcol',[])
-    if len(listpandy)==0 or len(listcol)==0:
-       raise CoaKeyError('List of pandas / List of columns keep  is mandatory there is not default !')
-    else:
-       return _db.merger(coapandas = listpandy,whichcol = listcol)
+    return _db.merger(coapandas = listpandy)
 
 # ----------------------------------------------------------------------
 # --- map(**kwargs) ----------------------------------------------------
@@ -563,7 +559,7 @@ def map(**kwargs):
         - dateslider=True: a date slider is called and displayed on the right part of the map
         - maplabel = text, value are displayed directly on the map
                    = spark, sparkline are displayed directly on the map
-                   = tickmap%, colormap tick are in %
+                   = label%, label are in %
     """
     visu = kwargs.get('visu', listvisu()[0])
     input = kwargs.get('input')
@@ -582,7 +578,7 @@ def map(**kwargs):
     if maplabel is not None:
         if not isinstance(maplabel,list):
             maplabel = [maplabel]
-        if  not all([a for a in maplabel if a not in ['text','spark','tickmap%'] ]):
+        if  not all([a for a in maplabel if a not in ['text','spark','label%'] ]):
             raise CoaTypeError('Waiting a correct maplabel value. See help.')
 
     sparkline = False
@@ -593,12 +589,12 @@ def map(**kwargs):
         kwargs['maplabel'] = []
         if 'text' in maplabel:
             kwargs['maplabel'].append('text')
-            if 'tickmap%' in maplabel:
-                kwargs['maplabel'].append('tickmap%')
+            if 'label%' in maplabel:
+                kwargs['maplabel'].append('label%')
         elif 'spark' in maplabel:
             sparkline = True
         else:
-            raise CoaTypeError('Waiting for a valide label visualisation: text, spark or tickmap%')
+            raise CoaTypeError('Waiting for a valide label visualisation: text, spark or label%')
 
     if visu == 'bokeh':
         if sparkline == False:

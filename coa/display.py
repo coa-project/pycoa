@@ -198,8 +198,12 @@ class CocoDisplay:
             kwargs_test(kwargs, self.alloptions, 'Bad args used in the display function.')
 
             when = kwargs.get('when', None)
-            what = kwargs.get('what', 'cumul')  # cumul is the default
             which = kwargs.get('which', input.columns[2])
+            if input_field and 'cur_' in input_field:
+                what =  which
+            else:
+                 # cumul is the default
+                what = kwargs.get('what', 'cumul')
 
             if input_field is None:
                 input_field = what
@@ -222,7 +226,7 @@ class CocoDisplay:
                 input['permanentdisplay'] = 'dummy'
             else:
                 if self.dbld[self.database_name][0] == 'WW' :
-                    input['codelocation'] = input['codelocation'].apply(lambda x: str(x).replace('[', '').replace(']', '') if len(x)< 10 else x[0]+'...'+x[-1] )
+                    #input['codelocation'] = input['codelocation'].apply(lambda x: str(x).replace('[', '').replace(']', '') if len(x)< 10 else x[0]+'...'+x[-1] )
                     input['permanentdisplay'] = input.apply(lambda x: x.clustername if self.geo.get_GeoRegion().is_region(x.clustername) else str(x.codelocation), axis = 1)
                 else:
                     if self.dbld[self.database_name][1] == 'subregion' :
@@ -840,8 +844,10 @@ class CocoDisplay:
             my_date = geopdwd.date.unique()
             dico_utc = {i: DateSlider(value=i).value for i in my_date}
             geopdwd['date_utc'] = [dico_utc[i] for i in geopdwd.date]
-            geopdwd = geopdwd.drop_duplicates(["date", "codelocation","clustername"])#for sumall avoid duplicate
-            geopdwd_filter = geopdwd_filter.drop_duplicates(["date", "codelocation","clustername"])
+            #geopdwd = geopdwd.drop_duplicates(["date", "codelocation","clustername"])#for sumall avoid duplicate
+            #geopdwd_filter = geopdwd_filter.drop_duplicates(["date", "codelocation","clustername"])
+            geopdwd = geopdwd.drop_duplicates(["date","clustername"])#for sumall avoid duplicate
+            geopdwd_filter = geopdwd_filter.drop_duplicates(["date","clustername"])
             geopdwd_filter = geopdwd_filter.sort_values(by='cases', ascending = False).reset_index()
             locunique = geopdwd_filter.clustername.unique()#geopdwd_filtered.location.unique()
             geopdwd_filter = geopdwd_filter.copy()
@@ -1411,6 +1417,7 @@ class CocoDisplay:
             geolistmodified = gpd.GeoDataFrame({'location': ng['location'], 'geometry': gpd.GeoSeries(ng['geometry'])}, crs="epsg:3857")
             geopdwd_filtered = geopdwd_filtered.drop(columns='geometry')
             geopdwd_filtered = pd.merge(geolistmodified, geopdwd_filtered, on='location')
+
             #if kwargs['wanted_dates']:
             #    kwargs.pop('wanted_dates')
             return func(self, geopdwd, geopdwd_filtered, **kwargs)
@@ -1452,13 +1459,13 @@ class CocoDisplay:
                     dfLabel['cases']=[str(i) for i in dfLabel['cases']]
                 sourcemaplabel = ColumnDataSource(dfLabel)
 
-            minx, miny, maxx, maxy =  geopdwd_filtered['geometry'].total_bounds #self.boundary
-            if self.dbld[self.database_name][0] != 'WW':
-                ratio = 0.05
-                minx -= ratio*minx
-                maxx += ratio*maxx
-                miny -= ratio*miny
-                maxy += ratio*maxy
+            minx, miny, maxx, maxy =  geopdwd_filtered.total_bounds #self.boundary
+            #if self.dbld[self.database_name][0] != 'WW':
+            #    ratio = 0.05
+            #    minx -= ratio*minx
+            #    maxx += ratio*maxx
+            #    miny -= ratio*miny
+            #    maxy += ratio*maxy
 
             textcopyrightposition = 'left'
             if self.dbld[self.database_name][0] == 'ESP' :
@@ -1466,7 +1473,11 @@ class CocoDisplay:
 
             #if func.__name__ == 'pycoa_sparkmap':
             #    dico['titlebar']=tit[:-12]+' [ '+dico['when_beg'].strftime('%d/%m/%Y')+ '-'+ tit[-12:-1]+'])'
-            standardfig = self.standardfig(x_range=(minx, maxx), y_range=(miny, maxy),  x_axis_type="mercator", y_axis_type="mercator", **kwargs)
+
+            kwargs['plot_width']=kwargs['plot_height']
+            #x_range=(minx,maxx)
+            #y_range=(miny,maxy)
+            standardfig = self.standardfig(x_axis_type="mercator", y_axis_type="mercator",**kwargs,match_aspect=True)
 
             wmt = WMTSTileSource(
                         url=tile)
@@ -1609,11 +1620,17 @@ class CocoDisplay:
             standardfig.add_layout(labels)
 
         cases_custom = CocoDisplay.rollerJS()
-        loctips = ('location', '@rolloverdisplay')
-        standardfig.add_tools(HoverTool(
-            tooltips = [loctips, ('cases', '@{' + 'cases' + '}' + '{custom}'), ],
-            formatters = {'location': 'printf', '@{' + 'cases' + '}': cases_custom, },
-            point_policy = "snap_to_data"))  # ,PanTool())
+        callback = CustomJS(code="""
+        //document.getElementsByClassName('bk-tooltip')[0].style.backgroundColor="transparent";
+        document.getElementsByClassName('bk-tooltip')[0].style.opacity="0.7";
+        """ )
+        tooltips = """
+                    <b>location: @rolloverdisplay<br>
+                    cases: @{cases}{custom}</b>
+                   """
+        standardfig.add_tools(HoverTool(tooltips = tooltips,
+        formatters = {'location': 'printf', '@{' + 'cases' + '}': cases_custom,},
+        point_policy = "snap_to_data",callback=callback))  # ,PanTool())
         if date_slider:
             standardfig = column(date_slider, standardfig)
         return standardfig
@@ -1875,7 +1892,7 @@ class CocoDisplay:
         x = tuple_xy[0] * (k * np.pi / 180.0)
 
         if tuple_xy[1] == -90:
-            lat = -89
+            lat = -89.99
         else:
             lat = tuple_xy[1]
         y = np.log(np.tan((90 + lat) * np.pi / 360.0)) * k

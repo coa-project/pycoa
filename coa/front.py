@@ -377,7 +377,7 @@ def chartsinput_deco(f):
 
         if 'cur_' in  which and what == listwhat()[0]:
                 what = which
-                                                          
+
         if which not in listwhich():
             raise CoaKeyError('Which option ' + which + ' not supported. '
                                                         'See listwhich() for list.')
@@ -415,6 +415,9 @@ def chartsinput_deco(f):
                                'dataframe. See help.')
 
         when_beg, when_end = extract_dates(when)
+        if pandy[[which,'date']].isnull().values.all():
+            raise CoaKeyError('All values for '+ which + ' is nan nor empty')
+
         if when_end > pandy[[which,'date']].date.max():
             when_end = pandy[[which,'date']].date.max()
 
@@ -730,7 +733,7 @@ def plot(**kwargs):
         fig = _cocoplot.pycoa_date_plot(input,input_field,**kwargs)
     elif typeofplot == 'versus':
         if isinstance(input_field,list) and len(input_field) == 2:
-            fig = _cocoplot.pycoa_plot(**kwargs)
+            fig = _cocoplot.pycoa_plot(input,input_field,**kwargs)
         else:
             print('typeofplot is versus but dim(input_field)!=2, versus has not effect ...')
             fig = _cocoplot.pycoa_date_plot(input,input_field,**kwargs)

@@ -428,7 +428,7 @@ class CocoDisplay:
             self.set_listfigures([])
         listfigs=[]
         for axis_type in self.ax_type:
-            standardfig = self.standardfig( x_axis_label = input_field[1], y_axis_label = input_field[0],
+            standardfig = self.standardfig( x_axis_label = input_field[0], y_axis_label = input_field[1],
                                                 y_axis_type = axis_type, **kwargs )
 
             standardfig.add_tools(HoverTool(

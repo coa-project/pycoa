@@ -354,8 +354,9 @@ def chartsinput_deco(f):
         else:
             what = listwhat()[0]
 
-        if 'mode' in kwargs:
-            kwargs.pop('mode')
+
+        #if 'mode' in kwargs:
+        #    kwargs.pop('mode')
 
         option = kwargs.get('option', None)
         bypop = kwargs.get('bypop','no')
@@ -374,6 +375,9 @@ def chartsinput_deco(f):
             raise CoaKeyError('What option ' + what + ' not supported. '
                                                       'See listwhat() for full list.')
 
+        if 'cur_' in  which and what == listwhat()[0]:
+                what = which
+                                                          
         if which not in listwhich():
             raise CoaKeyError('Which option ' + which + ' not supported. '
                                                         'See listwhich() for list.')

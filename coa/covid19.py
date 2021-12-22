@@ -487,7 +487,7 @@ class DataBase(object):
                     owid = self.csv2pandas("https://raw.githubusercontent.com/owid/covid-19-data/master/public/data/owid-covid-data.csv",
                     separator=',',drop_field=drop_field)
                     # renaming some columns
-                    col_to_rename1=['reproduction_rate','icu_patients','hosp_patients','positive_rate']
+                    col_to_rename1=['reproduction_rate','icu_patients','hosp_patients','weekly_hosp_admissions','positive_rate']
                     renamed_cols1=['cur_'+c if c != 'positive_rate' else 'cur_idx_'+c for c in col_to_rename1]
                     col_to_rename2=['people_vaccinated','people_fully_vaccinated','people_fully_vaccinated_per_hundred',\
                     'people_vaccinated_per_hundred','population']

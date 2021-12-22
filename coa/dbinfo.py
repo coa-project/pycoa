@@ -188,6 +188,7 @@ def generic_info(namedb, keys):
         'cur_reproduction_rate':['cur_reproduction_rate (original name reproduction_rate): Real-time estimate of the effective reproduction rate (R) of COVID-19. See https://github.com/crondonm/TrackingR/tree/main/Estimates-Database'],
         'cur_icu_patients':['cur_icu_patients (orignal name icu_patients): Number of COVID-19 patients in intensive care units (ICUs) on a given day'],
         'cur_hosp_patients':['cur_hosp_patients (original name hosp_patients): Number of COVID-19 patients in hospital on a given day'],
+        'cur_weekly_hosp_admissions':['cur_weekly_hosp_admissions (original name weekly_hosp_admissions): Number of COVID-19 patients in hospital on a given week'],
         'cur_idx_positive_rate':['cur_idx_positive_rate (original name positive_rate): The share of COVID-19 tests that are positive, given as a rolling 7-day average (this is the inverse of tests_per_case)'],
         'num_sequences':['num_sequences: Number of sequenced samples that fall into the category variant.'],
         'perc_sequences':['perc_sequences: Percentage of the sequenced samples that fall into the category variant.'],

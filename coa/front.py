@@ -271,6 +271,8 @@ def normbypop(pandy, val2norm,bypop):
         * can normalize by '100', '1k', '100k' or '1M'
     """
     global _gi
+    if pandy.empty:
+        raise CoaKeyError('Seems to be an empty field')
     if isinstance(pandy['codelocation'].iloc[0],list):
         pandy = pandy.explode('codelocation')
 
@@ -585,7 +587,7 @@ def map(**kwargs):
     if maplabel is not None:
         if not isinstance(maplabel,list):
             maplabel = [maplabel]
-        if  not all([a for a in maplabel if a not in ['text','spark','label%'] ]):
+        if  [a for a in maplabel if a not in ['text','spark','label%']]:
             raise CoaTypeError('Waiting a correct maplabel value. See help.')
 
     sparkline = False
@@ -596,8 +598,8 @@ def map(**kwargs):
         kwargs['maplabel'] = []
         if 'text' in maplabel:
             kwargs['maplabel'].append('text')
-            if 'label%' in maplabel:
-                kwargs['maplabel'].append('label%')
+        elif 'label%' in maplabel:
+            kwargs['maplabel'].append('label%')
         elif 'spark' in maplabel:
             sparkline = True
         else:

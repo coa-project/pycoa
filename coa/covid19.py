@@ -518,6 +518,8 @@ class DataBase(object):
                         owid = pd.merge(owid,owidvar,on=['location','date'],how='left')
                         #pandas_db = pandas_db.loc[(~pandas_db.iso_code.isnull())]
                         columns_keeped += ['num_sequences','num_sequences_total','perc_sequences']
+
+                        owid = owid.apply(lambda x: x/100. if '_per_hundred' in x.name else x)
                     self.return_structured_pandas(owid.rename(columns=dict(zip(col_to_rename,renamed_cols))),columns_keeped=columns_keeped+renamed_cols)
             except:
                 raise CoaDbError("An error occured while parsing data of "+self.get_db()+". This may be due to a data format modification. "
@@ -1118,6 +1120,7 @@ class DataBase(object):
                             d.append(self.geo.get_GeoRegion().is_region(i))
                     fulllist.append(d)
                 dicooriglist = { ','.join(i):self.geo.to_standard(i,output='list',interpret_region=True) for i in fulllist}
+                location_exploded = list(dicooriglist.values())
             else:
                 owid_name = [c for c in origclist if c.startswith('owid_')]
                 clist = [c for c in origclist if not c.startswith('owid_')]
@@ -1337,8 +1340,8 @@ class DataBase(object):
         pdfiltered['weekly'] = pdfiltered.groupby('clustername')['cumul'].diff(7)
         inx7=pdfiltered.groupby('clustername').head(7).index
         #First value of diff is always NaN
-        pdfiltered.loc[inx, 'daily'] = pdfiltered['daily'].iloc[inx]
-        pdfiltered.loc[inx7, 'weekly'] = pdfiltered['cumul'].iloc[inx7]
+        pdfiltered.loc[inx, 'daily'] = pdfiltered['daily'].fillna(method="bfill")
+        pdfiltered.loc[inx7, 'weekly'] = pdfiltered['weekly'].fillna(method="bfill")
 
         unifiedposition=['location', 'date', kwargs['which'], 'daily', 'cumul', 'weekly', 'codelocation','clustername']
         pdfiltered = pdfiltered[unifiedposition]
@@ -1353,7 +1356,6 @@ class DataBase(object):
         '''
         Merge two or more pycoa pandas from get_stats operation
         'coapandas': list (min 2D) of pandas from stats
-        'whichcol': list variable associate to the coapandas list to be retrieve
         '''
 
         coapandas = kwargs.get('coapandas', None)
@@ -1372,14 +1374,32 @@ class DataBase(object):
 
         j=1
         for p in coapandas[1:]:
-            base = pd.merge(base,p,on=['date','clustername'],how="inner",suffixes=('', '_drop'))
-        base.drop([col for col in base.columns if 'drop' in col], axis=1, inplace=True)
+            p.drop(['location','codelocation'],axis=1, inplace=True)
+            base = pd.merge(base,p,on=['date','clustername'],how="inner")#,suffixes=('', '_drop'))
+            #base.drop([col for col in base.columns if 'drop' in col], axis=1, inplace=True)
 
         #if 'location' in list(coapandas[0].columns):
         #    base[['where','codelocation']] = coapandas[0][['location','codelocation']]  #needed by display
         #else:
         #    base[['where','codelocation']]= coapandas[0][['where','codelocation']]  #needed by display
         return base
+
+   def appender(self,**kwargs):
+      '''
+      Append two or more pycoa pandas from get_stats operation
+      'coapandas': list (min 2D) of pandas from stats
+      '''
+
+      coapandas = kwargs.get('coapandas', None)
+      if coapandas is None or not isinstance(coapandas, list) or len(coapandas)<=1:
+          raise CoaKeyError('coapandas value must be at least a list of 2 elements ... ')
+
+      coapandas = [ p.rename(columns={p.columns[2]:'cases'}) for p in coapandas ]
+      m = pd.concat(coapandas).reset_index(drop=True)
+      #m['clustername']=m.groupby('location')['clustername'].fillna(method='bfill')
+      #m['codelocation']=m.groupby('location')['codelocation'].fillna(method='bfill')
+      m=m.drop(columns=['codelocation','clustername'])
+      return fill_missing_dates(m)
 
    def saveoutput(self,**kwargs):
        '''

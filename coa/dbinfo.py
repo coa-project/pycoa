@@ -281,7 +281,7 @@ def generic_info(namedb, keys):
         'cur_cases_per100k':['Cumulative cases per 100,000 inhabitants (original name cases_per_cienmil)'],\
         'cur_icu_per1M' :['Intensive care per 1000,000 inhabitants (original name intensive_care_per_1000000)'],\
         'tot_deaths_per100k':['Cumulative deaths per 100,000 inhabitants (original name deceassed_per_100000)'],\
-        'cur_hosp_per100k':['Intensive care per 100,000 inhabitants, (original name hospitalized_per_100000)'],\
+        'tot_cases_per100k':['Intensive care per 100,000 inhabitants, (original name hospitalized_per_100000)'],\
         'deaths':['deaths:FILLIT','https://github.com/jgehrcke/covid-19-germany-gae/raw/master/deaths-rki-by-ags.csv'],
         'cases':['cases:FILLIT','https://github.com/jgehrcke/covid-19-germany-gae/raw/master/deaths-rki-by-ags.csv'],
         }

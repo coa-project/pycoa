@@ -597,14 +597,13 @@ def map(**kwargs):
     if maplabel is not None:
         kwargs['maplabel'] = []
         if 'text' in maplabel:
-            kwargs['maplabel'].append('text')
-        elif 'label%' in maplabel:
+            kwargs['maplabel'] = ['text']
+        if 'label%' in maplabel:
             kwargs['maplabel'].append('label%')
-        elif 'spark' in maplabel:
+        if 'spark' in maplabel:
             sparkline = True
-        else:
-            raise CoaTypeError('Waiting for a valide label visualisation: text, spark or label%')
-
+        if all([ True if i in ['text','spark','label%'] else False for i in kwargs['maplabel'] ]) :
+            CoaKeyError('Waiting for a valide label visualisation: text, spark or label%')
     if visu == 'bokeh':
         if sparkline == False:
             return show(_cocoplot.pycoa_map(input,input_field,**kwargs))

@@ -196,7 +196,6 @@ class CocoDisplay:
                 raise CoaTypeError(input + 'Must be a pandas, with pycoa structure !')
 
             kwargs_test(kwargs, self.alloptions, 'Bad args used in the display function.')
-
             when = kwargs.get('when', None)
             which = kwargs.get('which', input.columns[2])
             if input_field and 'cur_' in input_field:
@@ -218,12 +217,13 @@ class CocoDisplay:
             if 'where' in input.columns:
                 input = input.rename(columns={'where': 'location'})
 
+
             wallname = self.dbld[self.database_name][2]
             if 'codelocation' and 'clustername' not in input.columns:
-                input['codelocation'] = 'dummy'
-                input['clustername'] = 'dummy'
-                input['rolloverdisplay'] = 'dummy'
-                input['permanentdisplay'] = 'dummy'
+                input['codelocation'] = input['location']
+                input['clustername'] = input['location']
+                input['rolloverdisplay'] = input['location']
+                input['permanentdisplay'] = input['location']
             else:
                 if self.dbld[self.database_name][0] == 'WW' :
                     #input['codelocation'] = input['codelocation'].apply(lambda x: str(x).replace('[', '').replace(']', '') if len(x)< 10 else x[0]+'...'+x[-1] )
@@ -365,15 +365,13 @@ class CocoDisplay:
             kwargs['mode'] = mode
 
             if 'location' in input.columns:
-                new = pd.DataFrame(columns = input.columns)
                 location_ordered_byvalues = list(
                     input.loc[input.date == self.when_end].sort_values(by=input_field, ascending=False)['clustername'].unique())
                 input = input.copy()  # needed to avoid warning
-
                 input.loc[:,'clustername'] = pd.Categorical(input.clustername,
                                                        categories=location_ordered_byvalues, ordered=True)
 
-                input = input.sort_values(by=['clustername', 'date']).reset_index()
+                input = input.sort_values(by=['clustername', 'date']).reset_index(drop = True)
 
                 if len(location_ordered_byvalues) > 12:
                     input = input.loc[input.clustername.isin(location_ordered_byvalues[:12])]

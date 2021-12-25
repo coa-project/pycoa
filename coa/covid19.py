@@ -1377,11 +1377,6 @@ class DataBase(object):
             p.drop(['location','codelocation'],axis=1, inplace=True)
             base = pd.merge(base,p,on=['date','clustername'],how="inner")#,suffixes=('', '_drop'))
             #base.drop([col for col in base.columns if 'drop' in col], axis=1, inplace=True)
-
-        #if 'location' in list(coapandas[0].columns):
-        #    base[['where','codelocation']] = coapandas[0][['location','codelocation']]  #needed by display
-        #else:
-        #    base[['where','codelocation']]= coapandas[0][['where','codelocation']]  #needed by display
         return base
 
    def appender(self,**kwargs):

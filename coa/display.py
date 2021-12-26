@@ -1450,7 +1450,6 @@ class CocoDisplay:
 
                 dfLabel=pd.DataFrame({'clustername':sumgeo.clustername,'centroidx':centrosx,'centroidy':centrosy,'cases':cases,'spark':sparkos})
                 dfLabel['cases'] = dfLabel['cases'].round(2)
-
                 if 'label%' in maplabel:
                     dfLabel['cases'] = [str(round(float(i*100),2))+'%' for i in dfLabel['cases']]
                 else:
@@ -1458,12 +1457,12 @@ class CocoDisplay:
                 sourcemaplabel = ColumnDataSource(dfLabel)
 
             minx, miny, maxx, maxy =  geopdwd_filtered.total_bounds #self.boundary
-            #if self.dbld[self.database_name][0] != 'WW':
-            #    ratio = 0.05
-            #    minx -= ratio*minx
-            #    maxx += ratio*maxx
-            #    miny -= ratio*miny
-            #    maxy += ratio*maxy
+            if self.dbld[self.database_name][0] != 'WW':
+                ratio = 0.05
+                minx -= ratio*minx
+                maxx += ratio*maxx
+                miny -= ratio*miny
+                maxy += ratio*maxy
 
             textcopyrightposition = 'left'
             if self.dbld[self.database_name][0] == 'ESP' :
@@ -1473,9 +1472,12 @@ class CocoDisplay:
             #    dico['titlebar']=tit[:-12]+' [ '+dico['when_beg'].strftime('%d/%m/%Y')+ '-'+ tit[-12:-1]+'])'
 
             kwargs['plot_width']=kwargs['plot_height']
-            #x_range=(minx,maxx)
-            #y_range=(miny,maxy)
-            standardfig = self.standardfig(x_axis_type="mercator", y_axis_type="mercator",**kwargs,match_aspect=True)
+            x_range=(minx,maxx)
+            y_range=(miny,maxy)
+            if func.__name__ == 'pycoa_sparkmap':
+                standardfig = self.standardfig(x_range=(minx, maxx), y_range=(miny, maxy), x_axis_type="mercator", y_axis_type="mercator",**kwargs,match_aspect=True)
+            else:
+                standardfig = self.standardfig(x_axis_type="mercator", y_axis_type="mercator",**kwargs,match_aspect=True)
 
             wmt = WMTSTileSource(
                         url=tile)

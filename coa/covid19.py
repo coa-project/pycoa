@@ -117,7 +117,7 @@ class DataBase(object):
                         'hospitalized_accumulated':'tot_hosp',\
                         'intensive_care':'cur_icu',\
                         'recovered':'tot_recovered',\
-                        'cases_per_cienmil':'cur_cases_per100k',\
+                        'cases_per_cienmil':'tot_cases_per100k',\
                         'intensive_care_per_1000000':'cur_icu_per1M',\
                         'deceassed_per_100000':'tot_deaths_per100k',\
                         'hospitalized_per_100000':'cur_hosp_per100k',\
@@ -1374,7 +1374,8 @@ class DataBase(object):
 
         j=1
         for p in coapandas[1:]:
-            p.drop(['location','codelocation'],axis=1, inplace=True)
+            [ p.drop([i],axis=1, inplace=True) for i in ['location','where','codelocation'] if i in p.columns ]
+            #p.drop(['location','codelocation'],axis=1, inplace=True)
             base = pd.merge(base,p,on=['date','clustername'],how="inner")#,suffixes=('', '_drop'))
             #base.drop([col for col in base.columns if 'drop' in col], axis=1, inplace=True)
         return base

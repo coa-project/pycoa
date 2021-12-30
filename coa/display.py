@@ -241,7 +241,7 @@ class CocoDisplay:
                            cluster = [i for i in cluster]
                         for i in cluster:
                             if i == self.dbld[self.database_name][2]:
-                                input['permanentdisplay'] = [self.dbld[self.database_name][2]]*len(input)
+                                input['permanentdisplay'] = input.clustername #[self.dbld[self.database_name][2]]*len(input)
                             else:
                                 if self.geo.is_region(i):
                                     trad[i] = self.geo.is_region(i)
@@ -535,7 +535,8 @@ class CocoDisplay:
 
             standardfig.legend.location = "top_left"
             standardfig.legend.click_policy="hide"
-
+            if len(input_field) > 1 and len(input_field)*len(input.clustername.unique())>9:
+                standardfig.legend.visible=False
             standardfig.xaxis.formatter = DatetimeTickFormatter(
                 days = ["%d/%m/%y"], months = ["%d/%m/%y"], years = ["%b %Y"])
             CocoDisplay.bokeh_legend(standardfig)
@@ -675,7 +676,6 @@ class CocoDisplay:
 
             started = geopdwd.date.min()
             ended = geopdwd.date.max()
-
             if cursor_date:
                 date_slider = DateSlider(title = "Date: ", start = started, end = ended,
                                      value = ended, step=24 * 60 * 60 * 1000, orientation = orientation)
@@ -1415,7 +1415,6 @@ class CocoDisplay:
             geolistmodified = gpd.GeoDataFrame({'location': ng['location'], 'geometry': gpd.GeoSeries(ng['geometry'])}, crs="epsg:3857")
             geopdwd_filtered = geopdwd_filtered.drop(columns='geometry')
             geopdwd_filtered = pd.merge(geolistmodified, geopdwd_filtered, on='location')
-
             #if kwargs['wanted_dates']:
             #    kwargs.pop('wanted_dates')
             return func(self, geopdwd, geopdwd_filtered, **kwargs)
@@ -1437,6 +1436,7 @@ class CocoDisplay:
             tile = CocoDisplay.convert_tile(tile, 'bokeh')
 
             uniqloc = list(geopdwd_filtered.clustername.unique())
+            dfLabel = None
             if maplabel or func.__name__ == 'pycoa_sparkmap':
                 locsum = geopdwd_filtered.clustername.unique()
                 numberpercluster = geopdwd_filtered['clustername'].value_counts().to_dict()
@@ -1445,17 +1445,18 @@ class CocoDisplay:
                 centrosx = sumgeo['geometry'].centroid.x
                 centrosy = sumgeo['geometry'].centroid.y
                 cases = sumgeo['cases']/sumgeo['nb']
-                sparkos = CocoDisplay.sparkline(geopdwd.loc[(geopdwd.clustername.isin(locsum)) &
-                                (geopdwd.date >= self.when_beg) & (geopdwd.date <= self.when_end)].sort_values(by='date')['cases'])
-
-                dfLabel=pd.DataFrame({'clustername':sumgeo.clustername,'centroidx':centrosx,'centroidy':centrosy,'cases':cases,'spark':sparkos})
+                sparkos = {i: CocoDisplay.sparkline(geopdwd.loc[ (geopdwd.clustername==i) &
+                                (geopdwd.date >= self.when_beg) &
+                                (geopdwd.date <= self.when_end)].sort_values(by='date')['cases']) for i in locsum }
+                dfspark = pd.DataFrame(list(sparkos.items()), columns=['clustername', 'spark'])
+                dfLabel=pd.DataFrame({'clustername':sumgeo.clustername,'centroidx':centrosx,'centroidy':centrosy,'cases':cases,'geometry':sumgeo['geometry']})
+                dfLabel=pd.merge(dfLabel,dfspark,on=['clustername'],how="inner")
                 dfLabel['cases'] = dfLabel['cases'].round(2)
                 if 'label%' in maplabel:
                     dfLabel['cases'] = [str(round(float(i*100),2))+'%' for i in dfLabel['cases']]
                 else:
                     dfLabel['cases']=[str(i) for i in dfLabel['cases']]
-                sourcemaplabel = ColumnDataSource(dfLabel)
-
+                sourcemaplabel = ColumnDataSource(dfLabel.drop(columns='geometry'))
             minx, miny, maxx, maxy =  geopdwd_filtered.total_bounds #self.boundary
             if self.dbld[self.database_name][0] != 'WW':
                 ratio = 0.05
@@ -1483,7 +1484,11 @@ class CocoDisplay:
                         url=tile)
             standardfig.add_tile(wmt)
 
-            geopdwd_filtered = geopdwd_filtered[['cases','geometry','location','codelocation','rolloverdisplay']]
+            geopdwd_filtered = geopdwd_filtered[['cases','geometry','location','clustername','codelocation','rolloverdisplay']]
+            if not dfLabel.empty:
+                geopdwd_filtered = geopdwd_filtered.drop(columns = 'geometry')
+                geopdwd_filtered = pd.merge(geopdwd_filtered, dfLabel[['clustername','geometry']], on = 'clustername')
+                geopdwd_filtered = geopdwd_filtered.drop_duplicates(subset = ['clustername'])
             if self.dbld[self.database_name][0] == 'BEL' :
                 reorder = list(geopdwd_filtered.location.unique())
                 geopdwd_filtered = geopdwd_filtered.set_index('location')
@@ -1530,12 +1535,12 @@ class CocoDisplay:
 
         date_slider = kwargs['date_slider']
         maplabel = kwargs.get('maplabel',self.dvisu_default['maplabel'])
-
         min_col, max_col = CocoDisplay.min_max_range(np.nanmin(geopdwd_filtered['cases']),
                                                      np.nanmax(geopdwd_filtered['cases']))
 
         json_data = json.dumps(json.loads(geopdwd_filtered.to_json()))
         geopdwd_filtered = GeoJSONDataSource(geojson=json_data)
+
         invViridis256 = Viridis256[::-1]
         color_mapper = LinearColorMapper(palette=invViridis256, low=min_col, high=max_col, nan_color='#ffffff')
         color_bar = ColorBar(color_mapper=color_mapper, label_standoff=4,
@@ -1553,39 +1558,66 @@ class CocoDisplay:
             allcases_location = geopdwd.groupby('location')['cases'].apply(list)
             geopdwd_tmp = geopdwd.drop_duplicates(subset = ['location']).drop(columns = 'cases')
             geopdwd_tmp = pd.merge(geopdwd_tmp, allcases_location, on = 'location')
+            geopdwd_tmp  = geopdwd_tmp.drop_duplicates(subset = ['clustername'])
             geopdwd_tmp = ColumnDataSource(geopdwd_tmp.drop(columns=['geometry']))
 
+            sourcemaplabel.data['rolloverdisplay'] = sourcemaplabel.data['clustername']
             callback = CustomJS(args =  dict(source = geopdwd_tmp, source_filter = geopdwd_filtered,
                                           date_sliderjs = date_slider, title=standardfig.title,
                                           maplabeljs = sourcemaplabel),
                         code = """
                         var ind_date_max = (date_sliderjs.end-date_sliderjs.start)/(24*3600*1000);
                         var ind_date = (date_sliderjs.value-date_sliderjs.start)/(24*3600*1000);
-                        var val_cases = [];
-                        var val_loc = [];
-                        var val_ind = [];
                         var new_cases = [];
-                        var new_location = [];
                         var dict = {};
-                        var iloop = source_filter.data['location'].length;
+                        var iloop = source_filter.data['clustername'].length;
 
+                        function form(value) {
+                            if(value>1000)
+                             {
+                                 value =  Number.parseFloat(value).toExponential(2);
+                                 var s0 = value;
+                                 var sp1=value.split(".");
+                                 console.log(sp1);
+                                 var p1=sp1[0].length
+                                 if (sp1.length>1) {
+                                   var sp2=value.split("e");
+                                   var p2=sp2[0].length
+                                   var p3=p2
+                                   while(value[p2-1]=="0" && p2>p1) {
+                                       p2=p2-1;
+                                   }
+                                   value=s0.substring(0,p2)+s0.substring(p3,s0.length);
+                                 }
+                                 if (value.split(".")[0].length==value.length-1)
+                                   value=value.substring(0,value.length-1);
+                              }
+                            else
+                                value = Number.parseFloat(value).toPrecision(3)
+                             return value;
+                         }
                         for (var i = 0; i < source.get_length(); i++)
                         {
-                                new_cases.push(source.data['cases'][i][ind_date_max-ind_date]);
-                                new_location.push(source.data['location'][i][ind_date_max-ind_date]);
+                                var val=form(source.data['cases'][i][ind_date_max-ind_date]);
+                                new_cases.push(val);
                         }
                         if(source.get_length() == 1 && iloop>1)
                             for(var i = 0; i < iloop; i++)
-                                for(var j = 0; j < new_cases.length; j++)
+                                for(var j = 0; j < new_cases.length; j++){
                                 source_filter.data['cases'][i][j] = new_cases[j];
-
-                        else
+                                }
+                        else{
                             source_filter.data['cases'] = new_cases;
+                            }
 
                         if (maplabeljs.get_length() !== 0){
                             maplabeljs.data['cases'] = source_filter.data['cases'];
                             }
-                        for (var i = 0; i < maplabeljs.get_length(); i++)   maplabeljs.data['cases'][i] =  maplabeljs.data['cases'][i].toString();
+                        for (var i = 0; i < maplabeljs.get_length(); i++)
+                        {
+                            maplabeljs.data['cases'][i] = maplabeljs.data['cases'][i].toString();
+                            maplabeljs.data['rolloverdisplay'][i] = source_filter.data['rolloverdisplay'][i];
+                        }
                         var tmp = title.text;
                         tmp = tmp.slice(0, -11);
                         var dateconverted = new Date(date_sliderjs.value);
@@ -1597,11 +1629,11 @@ class CocoDisplay:
                         if (maplabeljs.get_length() !== 0)
                             maplabeljs.change.emit();
 
-                        console.log(maplabeljs.data['cases'])
-
+                        console.log(maplabeljs.data['cases']);
                         source_filter.change.emit();
                     """)
             date_slider.js_on_change('value', callback)
+
 
         standardfig.xaxis.visible = False
         standardfig.yaxis.visible = False
@@ -1670,6 +1702,25 @@ class CocoDisplay:
         standardfig.yaxis.visible = False
         standardfig.xgrid.grid_line_color = None
         standardfig.ygrid.grid_line_color = None
+
+        min_col, max_col = CocoDisplay.min_max_range(np.nanmin(geopdwd_filtered['cases']),
+                                                     np.nanmax(geopdwd_filtered['cases']))
+
+        json_data = json.dumps(json.loads(geopdwd_filtered.to_json()))
+        geopdwd_filtered = GeoJSONDataSource(geojson=json_data)
+
+        invViridis256 = Viridis256[::-1]
+        color_mapper = LinearColorMapper(palette=invViridis256, low=min_col, high=max_col, nan_color='#ffffff')
+        color_bar = ColorBar(color_mapper=color_mapper, label_standoff=4,
+                             border_line_color=None, location=(0, 0), orientation='horizontal', ticker=BasicTicker())
+        color_bar.formatter = BasicTickFormatter(use_scientific=True, precision=1, power_limit_low=int(max_col))
+
+
+        standardfig.add_layout(color_bar, 'below')
+
+        standardfig.patches('xs', 'ys', source = geopdwd_filtered,
+                                    fill_color = {'field': 'cases', 'transform': color_mapper},
+                                    line_color = 'black', line_width = 0.25, fill_alpha = 1)
         standardfig.image_url(url='spark', x='centroidx', y='centroidy',source=sourcemaplabel,anchor="center")
         return standardfig
     ######################
@@ -1906,8 +1957,15 @@ class CocoDisplay:
                  //       return value.toExponential(2);
                  //   else
                  //       return value.toFixed(2);
-
-                  var s=value.toPrecision(5);
+                 if(value>1000 && value <0.01)
+                     value =  Number.parseFloat(value).toExponential(2);
+                 else
+                     value = Number.parseFloat(value).toPrecision(3)
+                     return '
+                        <var>x<sup>12</sup></var>
+                     ';
+                     /*
+                  var s = value;
                   var s0=s;
                   var sp1=s.split(".");
                   var p1=sp1[0].length
@@ -1924,6 +1982,8 @@ class CocoDisplay:
                     s=s.substring(0,s.length-1);
                   }
                   return s;
+                  */
+
                 """)
     ######################
     @staticmethod
@@ -1933,7 +1993,7 @@ class CocoDisplay:
         """
         data = list(data)
         fig, ax = plt.subplots(1, 1, figsize=figsize, **kwags)
-        ax.patch.set_alpha(0.2)
+        ax.patch.set_alpha(0.3)
         ax.plot(data)
         for k,v in ax.spines.items():
             v.set_visible(False)

@@ -713,6 +713,7 @@ class GeoCountry():
                     # (simplification of 'https://github.com/coa-project/coadata/raw/main'https://dados.gov.pt/en/datasets/r/59368d37-cbdb-426a-9472-5a04cf30fbe4',\
                     'MYS':'https://stacks.stanford.edu/file/druid:zd362bc5680/data.zip',\
                     'CHL':'http://geonode.meteochile.gob.cl/geoserver/wfs?format_options=charset%3AUTF-8&typename=geonode%3Adivision_comunal_geo_ide_1&outputFormat=SHAPE-ZIP&version=1.0.0&service=WFS&request=GetFeature',\
+                    'EUR':'https://github.com/coa-project/coadata/raw/main/coastore/WHO_EUROsmall2.json',\
                     }
 
     _source_dict = {'FRA':{'Basics':_country_info_dict['FRA'],\
@@ -731,6 +732,7 @@ class GeoCountry():
                     #,'District':'https://raw.githubusercontent.com/JoaoFOliveira/portuguese-municipalities/master/municipalities.json'},\
                     'MYS':{'Basics':_country_info_dict['MYS']},\
                     'CHL':{'Basics':_country_info_dict['CHL']},\
+                    'EUR':{'Basics':_country_info_dict['EUR']},\
                     }
 
     def __init__(self,country=None,**kwargs):
@@ -1073,6 +1075,17 @@ class GeoCountry():
             self._country_data['code_region']=self._country_data.code_subregion.str.slice(stop=2)
             self._country_data=self._country_data[['name_subregion','code_subregion','name_region','code_region','geometry']]
 
+        # --- 'EUR' case, which is a pseudo country for Europe ---------------------------------------------------------
+        elif self._country == 'EUR':
+            self._country_data=gpd.read_file(get_local_from_url(url,0))
+            self._country_data.rename(columns={\
+                'UID':'code_subregion',\
+                'RegionName':'name_subregion',\
+                'ADM0_ISO3':'code_region',\
+                'ADM0_NAME':'name_region'},inplace=True)
+            self._country_data=self._country_data[['name_subregion','code_subregion','name_region','code_region','geometry']]
+            self._country_data.loc[self._country_data.geometry.is_empty,'geometry']=None
+
     # def get_region_from_municipality(self,lname):
     #     """  Return region list from a municipality list
     #     """
@@ -1263,6 +1276,9 @@ class GeoCountry():
                         #usa_col.remove('population_subregion') # Remove numeric column, if not, the dissolve does not work properly
                         #usa_col.remove('area_subregion') # idem
                         pr=pr[usa_col]
+
+                    elif self.get_country()=='EUR':
+                        pr.loc[pr.geometry.isnull(),'geometry']=sg.Point()
 
                     pr['code_subregion']=pr.code_subregion.apply(lambda x: [x])
                     pr['name_subregion']=pr.name_subregion.apply(lambda x: [x])

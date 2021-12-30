@@ -531,7 +531,8 @@ class DataBase(object):
                         rename_columns = rename_dict, separator = ',')
                     display(deur)
                     columns_keeped = list(rename_dict.values())
-                    columns_keeped.remove('location') # is already expected
+                    columns_keeped.remove('location')
+                    columns_keeped.remove('date')  # is already expected
                     self.return_structured_pandas(deur, columns_keeped = columns_keeped)
             except:
                 raise CoaDbError("An error occured while parsing data of "+self.get_db()+". This may be due to a data format modification. "

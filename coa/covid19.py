@@ -529,7 +529,6 @@ class DataBase(object):
                         'DateRpt':'date'}
                     deur = self.csv2pandas("https://docs.google.com/spreadsheets/d/e/2PACX-1vQ-JLawOH35vPyOk39w0tjn64YQLlahiD2AaNfjd82pgQ37Jr1K8KMHOqJbxoi4k2FZVYBGbZ-nsxhi/pub?output=csv",
                         rename_columns = rename_dict, separator = ',')
-
                     columns_keeped = list(rename_dict.values())
                     columns_keeped.remove('location') # is already expected
                     columns_keeped.remove('date') # is already expected

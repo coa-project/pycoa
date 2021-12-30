@@ -111,9 +111,8 @@ class DataBase(object):
                     info('ESP, EsCovid19Data ...')
                     rename_dict = {'ine_code': 'location',\
                         'deceased':'tot_deaths',\
-                        'cases_accumulated':'tot_cases',\
-                        'activos':'cur_cases',\
-                        'hospitalized':'cur_hosp',\
+                        'cases_accumulated_PCR':'tot_cases',\
+                        'hospitalized_new':'cur_hosp',\
                         'hospitalized_accumulated':'tot_hosp',\
                         'intensive_care':'cur_icu',\
                         'recovered':'tot_recovered',\
@@ -121,6 +120,7 @@ class DataBase(object):
                         'intensive_care_per_1000000':'cur_icu_per1M',\
                         'deceassed_per_100000':'tot_deaths_per100k',\
                         'hospitalized_per_100000':'cur_hosp_per100k',\
+                        'ia14':'incidence'
                     }
                     #url='https://github.com/montera34/escovid19data/raw/master/data/output/covid19-provincias-spain_consolidated.csv'
                     url='https://raw.githubusercontent.com/montera34/escovid19data/master/data/output/covid19-provincias-spain_consolidated.csv'
@@ -1069,6 +1069,7 @@ class DataBase(object):
             wallname = get_db_list_dict()[self.db][2]
         else:
             kwargs['location'] = kwargs['location']
+
         option = kwargs.get('option', 'fillnan')
         fillnan = True # default
         sumall = False # default
@@ -1104,7 +1105,6 @@ class DataBase(object):
                 else:
                     raise CoaWhereError("In the case of sumall all locations must have the same types i.e\
                     list or string but both is not accepted, could be confusing")
-
         owid_name=''
         if self.db_world:
             self.geo.set_standard('name')

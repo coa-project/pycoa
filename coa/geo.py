@@ -1231,7 +1231,7 @@ class GeoCountry():
                         pr=pr.append(pr_metropole,ignore_index=True).append(pr_outremer,ignore_index=True)
 
                     elif self.get_country()=='ESP' : # manage pseudo 'ESP' regions within and outside continent
-                        islands_cut=pr.code_region.astype(int).isin(['05'])
+                        islands_cut=pr.code_region.isin(['05'])
                         pr_metropole=pr[~islands_cut].copy()
                         pr_metropole['code_region']='99'
                         pr_metropole['name_region']='España peninsular'

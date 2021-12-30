@@ -1961,10 +1961,7 @@ class CocoDisplay:
                      value =  Number.parseFloat(value).toExponential(2);
                  else
                      value = Number.parseFloat(value).toPrecision(3)
-                     return '
-                        <var>x<sup>12</sup></var>
-                     ';
-                     /*
+
                   var s = value;
                   var s0=s;
                   var sp1=s.split(".");
@@ -1982,8 +1979,6 @@ class CocoDisplay:
                     s=s.substring(0,s.length-1);
                   }
                   return s;
-                  */
-
                 """)
     ######################
     @staticmethod

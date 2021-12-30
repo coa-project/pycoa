@@ -269,8 +269,8 @@ class DataBase(object):
                         'patients_reanimation':'cur_reanimation',
                         'patients_hospitalises':'cur_hospitalises'
                         }
-                        columns_keeped = ['cur_reanimation','cur_hospitalises',
-                        'total_cas_confirmes','total_deces_hopital','total_patients_gueris',
+                        columns_keeped = ['total_deces_hopital','cur_reanimation','cur_hospitalises',
+                        'total_cas_confirmes','total_patients_gueris',
                         'total_deces_ehpad','total_cas_confirmes_ehpad','total_cas_possibles_ehpad']
 
                         spfnat = self.csv2pandas("https://www.data.gouv.fr/fr/datasets/r/d3a98a30-893f-47f7-96c5-2f4bcaaa0d71",

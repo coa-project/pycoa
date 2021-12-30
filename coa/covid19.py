@@ -529,9 +529,10 @@ class DataBase(object):
                         'DateRpt':'date'}
                     deur = self.csv2pandas("https://docs.google.com/spreadsheets/d/e/2PACX-1vQ-JLawOH35vPyOk39w0tjn64YQLlahiD2AaNfjd82pgQ37Jr1K8KMHOqJbxoi4k2FZVYBGbZ-nsxhi/pub?output=csv",
                         rename_columns = rename_dict, separator = ',')
-                    display(deur)
+
                     columns_keeped = list(rename_dict.values())
                     columns_keeped.remove('location') # is already expected
+                    columns_keeped.remove('date') # is already expected
                     self.return_structured_pandas(deur, columns_keeped = columns_keeped)
             except:
                 raise CoaDbError("An error occured while parsing data of "+self.get_db()+". This may be due to a data format modification. "

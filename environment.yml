@@ -8,7 +8,6 @@ dependencies:
   - pip:
     - nbgitpuller
     - sphinx-gallery
-    - pandas
     - matplotlib
     - bokeh
     - branca
@@ -17,10 +16,10 @@ dependencies:
     - datetime
     - folium
     - lxml
-    - geopandas
+    - geopandas=0.7.0
+    - pandas=1.0.4
     - matplotlib
     - numpy
-    - pandas
     - pycountry
     - pycountry_convert
     - requests

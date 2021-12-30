@@ -347,6 +347,7 @@ def chartsinput_deco(f):
         input_arg = kwargs.get('input', None)
         input_field = kwargs.get('input_field',None)
 
+        kwargs['input_field'] = None
         if which:
             kwargs['input_field'] = which
         else:
@@ -435,6 +436,8 @@ def chartsinput_deco(f):
 
         pandy = pandy[(pandy.date >= when_beg) & (pandy.date <= when_end)]
         kwargs['input'] = pandy
+        if kwargs['input_field'] is None:
+            kwargs['input_field']=pandy.columns[2]
         return f(**kwargs)
 
     return wrapper
@@ -605,6 +608,7 @@ def map(**kwargs):
         if all([ True if i in ['text','spark','label%'] else False for i in kwargs['maplabel'] ]) :
             CoaKeyError('Waiting for a valide label visualisation: text, spark or label%')
     if visu == 'bokeh':
+        input.loc[:,input_field]=input[input_field].fillna(0) #needed in the case where there are nan else js pb
         if sparkline == False:
             return show(_cocoplot.pycoa_map(input,input_field,**kwargs))
         else:

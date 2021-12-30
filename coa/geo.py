@@ -1082,8 +1082,9 @@ class GeoCountry():
                 'UID':'code_subregion',\
                 'RegionName':'name_subregion',\
                 'ADM0_ISO3':'code_region',\
-                'ADM0_NAME':'name_region'},inplace=True)
-            self._country_data=self._country_data[['name_subregion','code_subregion','name_region','code_region','geometry']]
+                'ADM0_NAME':'name_region',\
+                'Population':'population_subregion'},inplace=True)
+            self._country_data=self._country_data[['name_subregion','code_subregion','population_subregion','name_region','code_region','geometry']]
             self._country_data.loc[self._country_data.geometry.is_empty,'geometry']=None
 
     # def get_region_from_municipality(self,lname):
@@ -1273,12 +1274,12 @@ class GeoCountry():
 
                     elif self.get_country()=='USA':
                         usa_col=pr.columns.tolist()
-                        #usa_col.remove('population_subregion') # Remove numeric column, if not, the dissolve does not work properly
+                        #usa_col.remove('_subregion') # Remove numeric column, if not, the dissolve does not work properly
                         #usa_col.remove('area_subregion') # idem
                         pr=pr[usa_col]
 
                     elif self.get_country()=='EUR':
-                        pr.loc[pr.geometry.isnull(),'geometry']=sg.Point()
+                        pr.loc[pr.geometry.isnull(),'geometry']=sg.Point()  # For correct geometry merge
 
                     pr['code_subregion']=pr.code_subregion.apply(lambda x: [x])
                     pr['name_subregion']=pr.name_subregion.apply(lambda x: [x])

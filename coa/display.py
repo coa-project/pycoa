@@ -119,7 +119,6 @@ class CocoDisplay:
                          list_dep_metro =  geo.get_subregions_from_region(name='España peninsular')
                     if list_dep_metro:
                         self.boundary_metropole = self.location_geometry.loc[self.location_geometry.code_subregion.isin(list_dep_metro)]['geometry'].total_bounds
-
             else:
                    self.geo=coge.GeoManager('name')
                    geopan = gpd.GeoDataFrame()#crs="EPSG:4326")
@@ -690,7 +689,6 @@ class CocoDisplay:
                 else:
                     geopdwd = pd.merge(geopdwd, self.location_geometry, on='location')
                 geopdwd = gpd.GeoDataFrame(geopdwd, geometry=geopdwd.geometry, crs="EPSG:4326")
-
             if func.__name__ == 'pycoa_histo':
                 pos = {}
                 new = pd.DataFrame()
@@ -1390,26 +1388,26 @@ class CocoDisplay:
             geopdwd_filtered = geopdwd_filtered.sort_values(by=['clustername', 'date'], ascending = [True, False]).drop(columns=['date', 'colors'])
             new_poly = []
             geolistmodified = dict()
-
             for index, row in geopdwd_filtered.iterrows():
                 split_poly = []
                 new_poly = []
-                for pt in self.get_polycoords(row):
-                    if type(pt) == tuple:
-                        new_poly.append(CocoDisplay.wgs84_to_web_mercator(pt))
-                    elif type(pt) == list:
-                        shifted = []
-                        for p in pt:
-                            shifted.append(CocoDisplay.wgs84_to_web_mercator(p))
-                        new_poly.append(sg.Polygon(shifted))
-                    else:
-                        raise CoaTypeError("Neither tuple or list don't know what to do with \
-                            your geometry description")
+                if row['geometry']:
+                    for pt in self.get_polycoords(row):
+                        if type(pt) == tuple:
+                            new_poly.append(CocoDisplay.wgs84_to_web_mercator(pt))
+                        elif type(pt) == list:
+                            shifted = []
+                            for p in pt:
+                                shifted.append(CocoDisplay.wgs84_to_web_mercator(p))
+                            new_poly.append(sg.Polygon(shifted))
+                        else:
+                            raise CoaTypeError("Neither tuple or list don't know what to do with \
+                                your geometry description")
 
-                if type(new_poly[0]) == tuple:
-                    geolistmodified[row['location']] = sg.Polygon(new_poly)
-                else:
-                    geolistmodified[row['location']] = sg.MultiPolygon(new_poly)
+                    if type(new_poly[0]) == tuple:
+                        geolistmodified[row['location']] = sg.Polygon(new_poly)
+                    else:
+                        geolistmodified[row['location']] = sg.MultiPolygon(new_poly)
 
             ng = pd.DataFrame(geolistmodified.items(), columns=['location', 'geometry'])
             geolistmodified = gpd.GeoDataFrame({'location': ng['location'], 'geometry': gpd.GeoSeries(ng['geometry'])}, crs="epsg:3857")
@@ -1434,7 +1432,6 @@ class CocoDisplay:
             maplabel = kwargs.get('maplabel',self.dvisu_default['maplabel'])
             tile =  kwargs.get('tile', self.dvisu_default['tile'])
             tile = CocoDisplay.convert_tile(tile, 'bokeh')
-
             uniqloc = list(geopdwd_filtered.clustername.unique())
             dfLabel = None
             if maplabel or func.__name__ == 'pycoa_sparkmap':

@@ -337,6 +337,15 @@ def generic_info(namedb, keys):
             cotra[k].append(url)
             cotra[k].append('https://covidtracking.com/analysis-updates/five-major-metrics-covid-19-data')
         mydico = cotra
+    elif namedb == 'risklayer':
+        url='https://docs.google.com/spreadsheets/d/e/2PACX-1vQ-JLawOH35vPyOk39w0tjn64YQLlahiD2AaNfjd82pgQ37Jr1K8KMHOqJbxoi4k2FZVYBGbZ-nsxhi/pub?output=csv'
+        risk = {
+            'tot_positive': ['FILLIT'],\
+            'tot_incidence': ['FILLIT'],\
+            }
+        for k,v in risk.items():
+            risk[k].append(url)
+        mydico = risk
     else:
         raise CoaKeyError('Error in the database selected, please check !')
     if keys not in mydico:

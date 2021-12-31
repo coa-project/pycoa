@@ -894,7 +894,7 @@ class DataBase(object):
             elif self.database_type[self.db][1] == 'subregion':
                 temp = self.geo_all[['code_subregion','name_subregion']]
                 codename=dict(temp.loc[temp.code_subregion.isin(uniqloc)].values)
-                if self.db in ['phe','covidtracking','spf','escovid19data','opencovid19','minciencia','moh']:
+                if self.db in ['phe','covidtracking','spf','escovid19data','opencovid19','minciencia','moh','risklayer']:
                     #codename={i:list(temp.loc[temp.code_subregion.isin([i])]['name_subregion'])[0] for i in uniqloc if not temp.loc[temp.code_subregion.isin([i])]['name_subregion'].empty }
                     #codename = collections.OrderedDict(zip(uniqloc,list(temp.loc[temp.code_subregion.isin(uniqloc)]['name_subregion'])))
                     self.slocation = list(codename.values())
@@ -973,8 +973,9 @@ class DataBase(object):
                 clist=self.geo.to_standard(clist,output='list', interpret_region=True)
             else:
                 clist=clist+self.geo.get_subregions_from_list_of_region_names(clist)
-                if clist == ['FRA'] or clist == ['USA'] or clist == ['ITA'] :
+                if clist in ['FRA','USA','ITA'] :
                     clist=self.geo_all['code_subregion'].to_list()
+
             clist=list(set(clist)) # to suppress duplicate countries
             diff_locations = list(set(clist) - set(self.get_locations()))
             clist = [i for i in clist if i not in diff_locations]
@@ -1145,6 +1146,7 @@ class DataBase(object):
                 a=self.geo.get_data()
                 for i in listloc:
                     if typeloc == 'subregion':
+
                         if self.geo.is_region(i):
                             i = [self.geo.is_region(i)]
                             tmp = self.geo.get_subregions_from_list_of_region_names(i,output='name')

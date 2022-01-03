@@ -205,6 +205,10 @@ class CocoDisplay:
 
             if input_field is None:
                 input_field = what
+
+            if input[[input_field,'date']].isnull().values.all():
+                raise CoaKeyError('All values for '+ which + ' is nan nor empty')
+
             option = kwargs.get('option', None)
             bins = kwargs.get('bins', 10)
             title = kwargs.get('title', None)
@@ -215,7 +219,6 @@ class CocoDisplay:
 
             if 'where' in input.columns:
                 input = input.rename(columns={'where': 'location'})
-
 
             wallname = self.dbld[self.database_name][2]
             if 'codelocation' and 'clustername' not in input.columns:
@@ -345,6 +348,7 @@ class CocoDisplay:
             self.uptitle = title
             self.subtitle = title_temporal
             kwargs['title'] = title+title_temporal
+
             return func(self, input, input_field, **kwargs)
         return wrapper
     ''' DECORATORS FOR PLOT: DATE, VERSUS, SCROLLINGMENU '''

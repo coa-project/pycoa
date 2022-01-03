@@ -112,7 +112,7 @@ class DataBase(object):
                     rename_dict = {'ine_code': 'location',\
                         'deceased':'tot_deaths',\
                         'cases_accumulated_PCR':'tot_cases',\
-                        'hospitalized_new':'cur_hosp',\
+                        'hospitalized':'cur_hosp',\
                         'hospitalized_accumulated':'tot_hosp',\
                         'intensive_care':'cur_icu',\
                         'recovered':'tot_recovered',\
@@ -522,7 +522,7 @@ class DataBase(object):
                         owid = owid.apply(lambda x: x/100. if '_per_hundred' in x.name else x)
                     self.return_structured_pandas(owid.rename(columns=dict(zip(col_to_rename,renamed_cols))),columns_keeped=columns_keeped+renamed_cols)
                 elif self.db == 'risklayer':
-                    info('EUR, Who Europe from RiskLaye ...')
+                    info('EUR, Who Europe from RiskLayer ...')
                     rename_dict = {'UID': 'location',
                         'CumulativePositive': 'tot_positive',
                         'IncidenceCumulative': 'tot_incidence',

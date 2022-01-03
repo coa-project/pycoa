@@ -1574,28 +1574,12 @@ class CocoDisplay:
                         var iloop = source_filter.data['clustername'].length;
 
                         function form(value) {
-                            if(value>1000)
-                             {
-                                 value =  Number.parseFloat(value).toExponential(2);
-                                 var s0 = value;
-                                 var sp1=value.split(".");
-                                 console.log(sp1);
-                                 var p1=sp1[0].length
-                                 if (sp1.length>1) {
-                                   var sp2=value.split("e");
-                                   var p2=sp2[0].length
-                                   var p3=p2
-                                   while(value[p2-1]=="0" && p2>p1) {
-                                       p2=p2-1;
-                                   }
-                                   value=s0.substring(0,p2)+s0.substring(p3,s0.length);
-                                 }
-                                 if (value.split(".")[0].length==value.length-1)
-                                   value=value.substring(0,value.length-1);
-                              }
-                            else
-                                value = Number.parseFloat(value).toPrecision(3)
-                             return value;
+                             if(value>10000 || value <0.01)
+                                value =  Number.parseFloat(value).toExponential(2);
+                             else
+                                 value = Number.parseFloat(value);
+                            console.log(value);
+                            return value;
                          }
                         for (var i = 0; i < source.get_length(); i++)
                         {
@@ -1616,7 +1600,7 @@ class CocoDisplay:
                             }
                         for (var i = 0; i < maplabeljs.get_length(); i++)
                         {
-                            maplabeljs.data['cases'][i] = maplabeljs.data['cases'][i].toString();
+                            maplabeljs.data['cases'][i] = form(maplabeljs.data['cases'][i]).toString();
                             maplabeljs.data['rolloverdisplay'][i] = source_filter.data['rolloverdisplay'][i];
                         }
                         var tmp = title.text;
@@ -1958,12 +1942,12 @@ class CocoDisplay:
                  //       return value.toExponential(2);
                  //   else
                  //       return value.toFixed(2);
-                 if(value>1000 && value <0.01)
-                     value =  Number.parseFloat(value).toExponential(2);
+                 if(value>10000 || value <0.01)
+                    value =  Number.parseFloat(value).toExponential(2);
                  else
-                     value = Number.parseFloat(value).toPrecision(3)
-
-                  var s = value;
+                     value = Number.parseFloat(value);
+                retrun value.toString();     
+                /*  var s = value;
                   var s0=s;
                   var sp1=s.split(".");
                   var p1=sp1[0].length
@@ -1979,7 +1963,7 @@ class CocoDisplay:
                   if (s.split(".")[0].length==s.length-1) {
                     s=s.substring(0,s.length-1);
                   }
-                  return s;
+                  return s;*/
                 """)
     ######################
     @staticmethod

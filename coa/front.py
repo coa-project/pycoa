@@ -590,7 +590,7 @@ def map(**kwargs):
     if maplabel is not None:
         if not isinstance(maplabel,list):
             maplabel = [maplabel]
-        if  [a for a in maplabel if a not in ['text','spark','label%']]:
+        if  [a for a in maplabel if a not in ['text','spark','label%','log']]:
             raise CoaTypeError('Waiting a correct maplabel value. See help.')
 
     sparkline = False
@@ -603,9 +603,11 @@ def map(**kwargs):
             kwargs['maplabel'] = ['text']
         if 'label%' in maplabel:
             kwargs['maplabel'].append('label%')
+        if 'log' in maplabel:
+            kwargs['maplabel'].append('log')    
         if 'spark' in maplabel:
             sparkline = True
-        if all([ True if i in ['text','spark','label%'] else False for i in kwargs['maplabel'] ]) :
+        if all([ True if i in ['text','spark','label%','log'] else False for i in kwargs['maplabel'] ]) :
             CoaKeyError('Waiting for a valide label visualisation: text, spark or label%')
     if visu == 'bokeh':
         input.loc[:,input_field]=input[input_field].fillna(0) #needed in the case where there are nan else js pb

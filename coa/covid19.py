@@ -120,7 +120,8 @@ class DataBase(object):
                         'intensive_care_per_1000000':'cur_icu_per1M',\
                         'deceassed_per_100000':'tot_deaths_per100k',\
                         'hospitalized_per_100000':'cur_hosp_per100k',\
-                        'ia14':'incidence'
+                        'ia14':'incidence',\
+                        'poblacion':'population',\
                     }
                     #url='https://github.com/montera34/escovid19data/raw/master/data/output/covid19-provincias-spain_consolidated.csv'
                     url='https://raw.githubusercontent.com/montera34/escovid19data/master/data/output/covid19-provincias-spain_consolidated.csv'

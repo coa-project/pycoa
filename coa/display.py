@@ -1286,6 +1286,7 @@ class CocoDisplay:
         title = kwargs.get('title', None)
         tile =  kwargs.get('tile', self.dvisu_default['tile'])
         tile = CocoDisplay.convert_tile(tile, 'folium')
+        maplabel = kwargs.get('maplabel',self.dvisu_default['maplabel'])
         plot_width = kwargs.get('plot_width',self.dfigure_default['plot_width'])
         plot_height = kwargs.get('plot_height',self.dfigure_default['plot_height'])
 
@@ -1299,7 +1300,8 @@ class CocoDisplay:
         #geopdwd = geopdwd.drop_duplicates(["date", "codelocation","clustername"])#for sumall avoid duplicate
         #geopdwd_filtered = geopdwd_filtered.sort_values(by='cases', ascending = False).reset_index()
         #locunique = geopdwd_filtered.clustername.unique()#geopdwd_filtered.location.unique()
-
+        if self.database_name == 'risklayer':
+            geopdwd_filtered = geopdwd_filtered.loc[geopdwd_filtered.geometry.notna()]
         zoom = 1
         if self.dbld[self.database_name] != 'WW':
             self.boundary = geopdwd_filtered['geometry'].total_bounds
@@ -1323,9 +1325,14 @@ class CocoDisplay:
         fig.add_child(mapa)
         min_col, max_col = CocoDisplay.min_max_range(np.nanmin(geopdwd_filtered[input_field]),
                                                      np.nanmax(geopdwd_filtered[input_field]))
+        min_col_non0 = (np.nanmin(geopdwd_filtered.loc[geopdwd_filtered['cases']>0.]['cases']))
 
         invViridis256 = Viridis256[::-1]
-        color_mapper = LinearColorMapper(palette=invViridis256, low=min_col, high=max_col, nan_color='#d9d9d9')
+        if 'log' in maplabel:
+            color_mapper = LogColorMapper(palette=invViridis256, low=min_col_non0, high=max_col, nan_color='#d9d9d9')
+        else:
+            color_mapper = LinearColorMapper(palette=invViridis256, low=min_col, high=max_col, nan_color='#d9d9d9')
+
         colormap = branca.colormap.LinearColormap(color_mapper.palette).scale(min_col, max_col)
         colormap.caption = 'Cases : ' + title
         colormap.add_to(mapa)
@@ -1447,7 +1454,7 @@ class CocoDisplay:
                 locsum = geopdwd_filtered.clustername.unique()
                 numberpercluster = geopdwd_filtered['clustername'].value_counts().to_dict()
                 sumgeo = geopdwd_filtered.copy()
-                sumgeo['geometry'] = sumgeo.buffer(0.01)
+                sumgeo['geometry'] = sumgeo.buffer(0.01) # Precision pb need to reconstruct your polygons with a buffer
                 sumgeo = sumgeo.dissolve(by='clustername', aggfunc='sum').reset_index()
                 sumgeo['nb'] = sumgeo['clustername'].map(numberpercluster)
                 centrosx = sumgeo['geometry'].centroid.x
@@ -1466,12 +1473,12 @@ class CocoDisplay:
                     dfLabel['cases']=[str(i) for i in dfLabel['cases']]
                 sourcemaplabel = ColumnDataSource(dfLabel.drop(columns='geometry'))
             minx, miny, maxx, maxy =  geopdwd_filtered.total_bounds #self.boundary
-            if self.dbld[self.database_name][0] != 'WW':
-                ratio = 0.05
-                minx -= ratio*minx
-                maxx += ratio*maxx
-                miny -= ratio*miny
-                maxy += ratio*maxy
+            #if self.dbld[self.database_name][0] != 'WW':
+            #    ratio = 0.05
+            #    minx -= ratio*minx
+            #    maxx += ratio*maxx
+            #    miny -= ratio*miny
+            #    maxy += ratio*maxy
 
             textcopyrightposition = 'left'
             if self.dbld[self.database_name][0] == 'ESP' :
@@ -1484,7 +1491,7 @@ class CocoDisplay:
             x_range=(minx,maxx)
             y_range=(miny,maxy)
             if func.__name__ == 'pycoa_sparkmap':
-                standardfig = self.standardfig(x_range=(minx, maxx), y_range=(miny, maxy), x_axis_type="mercator", y_axis_type="mercator",**kwargs,match_aspect=True)
+                standardfig = self.standardfig(x_range=x_range, y_range=y_range, x_axis_type="mercator", y_axis_type="mercator",**kwargs,match_aspect=True)
             else:
                 standardfig = self.standardfig(x_axis_type="mercator", y_axis_type="mercator",**kwargs,match_aspect=True)
 

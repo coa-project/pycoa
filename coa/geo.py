@@ -510,13 +510,13 @@ class GeoInfo():
                     # About countries that we artificially put on the east of the map
                     for newc in ['RUS','FJI','NZL','WSM']:
                         poly=self._data_geometry[self._data_geometry.id_tmp==newc].geometry.values[0]
-                        poly=so.unary_union(sg.MultiPolygon([sg.Polygon([(x,y) if x>=0 else (x+360,y) for x,y in p.exterior.coords]) for p in poly]))
+                        poly=so.unary_union(sg.MultiPolygon([sg.Polygon([(x,y) if x>=0 else (x+360,y) for x,y in p.exterior.coords]) for p in poly.geoms]))
                         self._data_geometry.loc[self._data_geometry.id_tmp==newc,'geometry']=gpd.GeoSeries(poly).values
 
                     # About countries that we artificially put on the west of the map
                     for newc in ['USA']:
                         poly=self._data_geometry[self._data_geometry.id_tmp==newc].geometry.values[0]
-                        poly=so.unary_union(sg.MultiPolygon([sg.Polygon([(x-360,y) if x>=0 else (x,y) for x,y in p.exterior.coords]) for p in poly]))
+                        poly=so.unary_union(sg.MultiPolygon([sg.Polygon([(x-360,y) if x>=0 else (x,y) for x,y in p.exterior.coords]) for p in poly.geoms]))
                         self._data_geometry.loc[self._data_geometry.id_tmp==newc,'geometry']=gpd.GeoSeries(poly).values
 
                 p=p.merge(self._data_geometry,how='left',\

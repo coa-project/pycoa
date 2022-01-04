@@ -282,6 +282,7 @@ def generic_info(namedb, keys):
         'tot_deaths_per100k':['Cumulative deaths per 100,000 inhabitants (original name deceassed_per_100000)'],\
         'tot_cases_per100k':['Intensive care per 100,000 inhabitants, (original name hospitalized_per_100000)'],\
         'incidence':['Cases in 14 days by 100,000 inhabitants (original name ia14'],\
+        'population':['Inhabitants of the province (orignal name poblacion)'],\
         }
         for k,v in esco.items():
             esco[k].append('https://raw.githubusercontent.com/montera34/escovid19data/master/data/output/covid19-provincias-spain_consolidated.csv')

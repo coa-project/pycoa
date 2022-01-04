@@ -112,7 +112,7 @@ class DataBase(object):
                     rename_dict = {'ine_code': 'location',\
                         'deceased':'tot_deaths',\
                         'cases_accumulated_PCR':'tot_cases',\
-                        'hospitalized_new':'cur_hosp',\
+                        'hospitalized':'cur_hosp',\
                         'hospitalized_accumulated':'tot_hosp',\
                         'intensive_care':'cur_icu',\
                         'recovered':'tot_recovered',\
@@ -120,7 +120,8 @@ class DataBase(object):
                         'intensive_care_per_1000000':'cur_icu_per1M',\
                         'deceassed_per_100000':'tot_deaths_per100k',\
                         'hospitalized_per_100000':'cur_hosp_per100k',\
-                        'ia14':'incidence'
+                        'ia14':'incidence',\
+                        'poblacion':'population',\
                     }
                     #url='https://github.com/montera34/escovid19data/raw/master/data/output/covid19-provincias-spain_consolidated.csv'
                     url='https://raw.githubusercontent.com/montera34/escovid19data/master/data/output/covid19-provincias-spain_consolidated.csv'
@@ -216,10 +217,14 @@ class DataBase(object):
                     self.return_structured_pandas(ciencia, columns_keeped = columns_keeped)
                 elif self.db == 'covid19india': # IND
                     info('COVID19India database selected ...')
-                    rename_dict = {'Date': 'date', 'State': 'location'}
+
+                    columns_keeped = ['Deceased', 'Confirmed', 'Recovered', 'Tested',]
+                    rename_dict = {i:'tot_'+i for i in columns_keeped}
+                    columns_keeped = list(rename_dict.values())
+                    rename_dict.update({'Date': 'date', 'State': 'location'})
                     drop_field  = {'State': ['India', 'State Unassigned']}
                     indi = self.csv2pandas("https://api.covid19india.org/csv/latest/states.csv",drop_field=drop_field,rename_columns=rename_dict,separator=',')
-                    columns_keeped = ['Deceased', 'Confirmed', 'Recovered', 'Tested',] # Removing 'Other' data, not identified
+                     # Removing 'Other' data, not identified
                     indi['location'] = indi['location'].apply(lambda x: x.replace('Andaman and Nicobar Islands','Andaman and Nicobar'))
                     locationvariant = self.geo.get_subregion_list()['variation_name_subregion'].to_list()
                     locationgeo = self.geo.get_subregion_list()['name_subregion'].to_list()
@@ -522,7 +527,7 @@ class DataBase(object):
                         owid = owid.apply(lambda x: x/100. if '_per_hundred' in x.name else x)
                     self.return_structured_pandas(owid.rename(columns=dict(zip(col_to_rename,renamed_cols))),columns_keeped=columns_keeped+renamed_cols)
                 elif self.db == 'risklayer':
-                    info('EUR, Who Europe from RiskLaye ...')
+                    info('EUR, Who Europe from RiskLayer ...')
                     rename_dict = {'UID': 'location',
                         'CumulativePositive': 'tot_positive',
                         'IncidenceCumulative': 'tot_incidence',

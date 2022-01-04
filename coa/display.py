@@ -32,7 +32,7 @@ import base64
 from IPython import display
 
 from bokeh.models import ColumnDataSource, TableColumn, DataTable, ColorBar, \
-    HoverTool, CrosshairTool, BasicTicker, GeoJSONDataSource, LinearColorMapper, Label, \
+    HoverTool, CrosshairTool, BasicTicker, GeoJSONDataSource, LinearColorMapper, LogColorMapper,Label, \
     PrintfTickFormatter, BasicTickFormatter, NumeralTickFormatter, CustomJS, CustomJSHover, Select, \
     Range1d, DatetimeTickFormatter, Legend, LegendItem, Text
 from bokeh.models.widgets import Tabs, Panel
@@ -205,6 +205,14 @@ class CocoDisplay:
 
             if input_field is None:
                 input_field = what
+
+            if isinstance(input_field,list):
+                test = input_field[0]
+            else:
+                test = input_field
+            if input[[test,'date']].isnull().values.all():
+                raise CoaKeyError('All values for '+ which + ' is nan nor empty')
+
             option = kwargs.get('option', None)
             bins = kwargs.get('bins', 10)
             title = kwargs.get('title', None)
@@ -215,7 +223,6 @@ class CocoDisplay:
 
             if 'where' in input.columns:
                 input = input.rename(columns={'where': 'location'})
-
 
             wallname = self.dbld[self.database_name][2]
             if 'codelocation' and 'clustername' not in input.columns:
@@ -345,6 +352,7 @@ class CocoDisplay:
             self.uptitle = title
             self.subtitle = title_temporal
             kwargs['title'] = title+title_temporal
+
             return func(self, input, input_field, **kwargs)
         return wrapper
     ''' DECORATORS FOR PLOT: DATE, VERSUS, SCROLLINGMENU '''
@@ -1433,7 +1441,8 @@ class CocoDisplay:
             tile =  kwargs.get('tile', self.dvisu_default['tile'])
             tile = CocoDisplay.convert_tile(tile, 'bokeh')
             uniqloc = list(geopdwd_filtered.clustername.unique())
-            dfLabel = None
+            dfLabel = pd.DataFrame()
+            sourcemaplabel = ColumnDataSource(dfLabel)
             if maplabel or func.__name__ == 'pycoa_sparkmap':
                 locsum = geopdwd_filtered.clustername.unique()
                 numberpercluster = geopdwd_filtered['clustername'].value_counts().to_dict()
@@ -1535,11 +1544,16 @@ class CocoDisplay:
         min_col, max_col = CocoDisplay.min_max_range(np.nanmin(geopdwd_filtered['cases']),
                                                      np.nanmax(geopdwd_filtered['cases']))
 
+        min_col_non0 = (np.nanmin(geopdwd_filtered.loc[geopdwd_filtered['cases']>0.]['cases']))
+
         json_data = json.dumps(json.loads(geopdwd_filtered.to_json()))
         geopdwd_filtered = GeoJSONDataSource(geojson=json_data)
 
         invViridis256 = Viridis256[::-1]
-        color_mapper = LinearColorMapper(palette=invViridis256, low=min_col, high=max_col, nan_color='#ffffff')
+        if 'log' in maplabel:
+            color_mapper = LogColorMapper(palette=invViridis256, low=min_col_non0, high=max_col, nan_color='#ffffff')
+        else:
+            color_mapper = LinearColorMapper(palette=invViridis256, low=min_col, high=max_col, nan_color='#ffffff')
         color_bar = ColorBar(color_mapper=color_mapper, label_standoff=4,
                              border_line_color=None, location=(0, 0), orientation='horizontal', ticker=BasicTicker())
         color_bar.formatter = BasicTickFormatter(use_scientific=True, precision=1, power_limit_low=int(max_col))
@@ -1570,28 +1584,12 @@ class CocoDisplay:
                         var iloop = source_filter.data['clustername'].length;
 
                         function form(value) {
-                            if(value>1000)
-                             {
-                                 value =  Number.parseFloat(value).toExponential(2);
-                                 var s0 = value;
-                                 var sp1=value.split(".");
-                                 console.log(sp1);
-                                 var p1=sp1[0].length
-                                 if (sp1.length>1) {
-                                   var sp2=value.split("e");
-                                   var p2=sp2[0].length
-                                   var p3=p2
-                                   while(value[p2-1]=="0" && p2>p1) {
-                                       p2=p2-1;
-                                   }
-                                   value=s0.substring(0,p2)+s0.substring(p3,s0.length);
-                                 }
-                                 if (value.split(".")[0].length==value.length-1)
-                                   value=value.substring(0,value.length-1);
-                              }
-                            else
-                                value = Number.parseFloat(value).toPrecision(3)
-                             return value;
+                             if(value>10000 || value <0.01)
+                                value =  Number.parseFloat(value).toExponential(2);
+                             else
+                                 value = Number.parseFloat(value).toFixed(2);
+                            console.log(value);
+                            return value;
                          }
                         for (var i = 0; i < source.get_length(); i++)
                         {
@@ -1612,7 +1610,7 @@ class CocoDisplay:
                             }
                         for (var i = 0; i < maplabeljs.get_length(); i++)
                         {
-                            maplabeljs.data['cases'][i] = maplabeljs.data['cases'][i].toString();
+                            maplabeljs.data['cases'][i] = form(maplabeljs.data['cases'][i]).toString();
                             maplabeljs.data['rolloverdisplay'][i] = source_filter.data['rolloverdisplay'][i];
                         }
                         var tmp = title.text;
@@ -1648,17 +1646,17 @@ class CocoDisplay:
                 source = sourcemaplabel, text_font_size='10px',text_color='white',background_fill_color='grey',background_fill_alpha=0.5)
             standardfig.add_layout(labels)
 
-        cases_custom = CocoDisplay.rollerJS()
+        #cases_custom = CocoDisplay.rollerJS()
         callback = CustomJS(code="""
         //document.getElementsByClassName('bk-tooltip')[0].style.backgroundColor="transparent";
         document.getElementsByClassName('bk-tooltip')[0].style.opacity="0.7";
         """ )
         tooltips = """
                     <b>location: @rolloverdisplay<br>
-                    cases: @{cases}{custom}</b>
+                    cases: @cases</b>
                    """
         standardfig.add_tools(HoverTool(tooltips = tooltips,
-        formatters = {'location': 'printf', '@{' + 'cases' + '}': cases_custom,},
+        formatters = {'location': 'printf', 'cases': 'printf',},
         point_policy = "snap_to_data",callback=callback))  # ,PanTool())
         if date_slider:
             standardfig = column(date_slider, standardfig)
@@ -1954,12 +1952,12 @@ class CocoDisplay:
                  //       return value.toExponential(2);
                  //   else
                  //       return value.toFixed(2);
-                 if(value>1000 && value <0.01)
-                     value =  Number.parseFloat(value).toExponential(2);
+                 if(value>10000 || value <0.01)
+                    value =  Number.parseFloat(value).toExponential(2);
                  else
-                     value = Number.parseFloat(value).toPrecision(3)
-
-                  var s = value;
+                     value = Number.parseFloat(value).toFixed(2);
+                return value.toString();
+                /*  var s = value;
                   var s0=s;
                   var sp1=s.split(".");
                   var p1=sp1[0].length
@@ -1975,7 +1973,7 @@ class CocoDisplay:
                   if (s.split(".")[0].length==s.length-1) {
                     s=s.substring(0,s.length-1);
                   }
-                  return s;
+                  return s;*/
                 """)
     ######################
     @staticmethod

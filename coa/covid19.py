@@ -217,10 +217,14 @@ class DataBase(object):
                     self.return_structured_pandas(ciencia, columns_keeped = columns_keeped)
                 elif self.db == 'covid19india': # IND
                     info('COVID19India database selected ...')
-                    rename_dict = {'Date': 'date', 'State': 'location'}
+
+                    columns_keeped = ['Deceased', 'Confirmed', 'Recovered', 'Tested',]
+                    rename_dict = {i:'tot_'+i for i in columns_keeped}
+                    columns_keeped = list(rename_dict.values())
+                    rename_dict.update({'Date': 'date', 'State': 'location'})
                     drop_field  = {'State': ['India', 'State Unassigned']}
                     indi = self.csv2pandas("https://api.covid19india.org/csv/latest/states.csv",drop_field=drop_field,rename_columns=rename_dict,separator=',')
-                    columns_keeped = ['Deceased', 'Confirmed', 'Recovered', 'Tested',] # Removing 'Other' data, not identified
+                     # Removing 'Other' data, not identified
                     indi['location'] = indi['location'].apply(lambda x: x.replace('Andaman and Nicobar Islands','Andaman and Nicobar'))
                     locationvariant = self.geo.get_subregion_list()['variation_name_subregion'].to_list()
                     locationgeo = self.geo.get_subregion_list()['name_subregion'].to_list()

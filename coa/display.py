@@ -1446,7 +1446,9 @@ class CocoDisplay:
             if maplabel or func.__name__ == 'pycoa_sparkmap':
                 locsum = geopdwd_filtered.clustername.unique()
                 numberpercluster = geopdwd_filtered['clustername'].value_counts().to_dict()
-                sumgeo = geopdwd_filtered.dissolve(by='clustername', aggfunc='sum').reset_index()
+                sumgeo = geopdwd_filtered.copy()
+                sumgeo['geometry'] = sumgeo.buffer(0.01)
+                sumgeo = sumgeo.dissolve(by='clustername', aggfunc='sum').reset_index()
                 sumgeo['nb'] = sumgeo['clustername'].map(numberpercluster)
                 centrosx = sumgeo['geometry'].centroid.x
                 centrosy = sumgeo['geometry'].centroid.y

@@ -1924,7 +1924,7 @@ class CocoDisplay:
         if geometry.type == 'Polygon':
             return list(geometry.exterior.coords)
         if geometry.type == 'MultiPolygon':
-            for ea in geometry:
+            for ea in geometry.geoms:
                 all.append(list(ea.exterior.coords))
             return all
     ######################

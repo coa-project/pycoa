@@ -812,7 +812,7 @@ class GeoCountry():
 
             # adding population information (departements)
             pop_fra = pd.read_html(get_local_from_url(self._source_dict['FRA']['Population']))[0]
-            pop_fra['population_subregion']=pop_fra['Population municipale'].str.replace(r"[ \xa0]","").astype(int)
+            pop_fra['population_subregion']=pop_fra['Population municipale'].str.replace(r"[ \xa0]","",regex=True).astype(int)
             # En l'absence de Mayotte dans ce document, car le recensement n'a pas eu lieu en phase, ajout à la main
             # En référence à la page pour Mayotte : https://www.insee.fr/fr/statistiques/3291775?sommaire=2120838
             mayotte_df=pd.DataFrame([{'Code département':'976','population_subregion':256518}])

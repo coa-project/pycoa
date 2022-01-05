@@ -689,7 +689,7 @@ class CocoDisplay:
                 #wanted_date = date_slider.value_as_datetime.date()
 
             #if func.__name__ == 'pycoa_mapfolium' or func.__name__ == 'pycoa_map' or func.__name__ == 'innerdecomap' or func.__name__ == 'innerdecopycoageo':
-            if func.__name__ == 'pycoa_mapfolium' or func.__name__ == 'pycoa_map' or func.__name__ == 'pycoa_sparkmap':
+            if func.__name__ in ['pycoa_mapfolium','pycoa_map','pycoageo' ,'pycoa_sparkmap']:
                 if isinstance(input.location.to_list()[0],list):
                     geom = self.location_geometry
                     geodic={loc:geom.loc[geom.location==loc]['geometry'].values[0] for loc in geopdwd.location.unique()}

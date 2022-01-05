@@ -616,8 +616,10 @@ def map(**kwargs):
         else:
             return show(_cocoplot.pycoa_sparkmap(input,input_field,**kwargs))
     elif visu == 'folium':
-        if dateslider or maplabel:
+        if dateslider:
             raise CoaKeyError('Not available with folium map, you should considere to use bokeh map visu in this case')
+        if  maplabel and set(maplabel) != set(['log']):
+            raise CoaKeyError('Not available with folium map, you should considere to use bokeh map visu in this case')    
         return _cocoplot.pycoa_mapfolium(input,input_field,**kwargs)
     else:
         raise CoaTypeError('Waiting for a valid visualisation. So far: \'bokeh\' or \'folium\'.See help.')

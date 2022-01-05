@@ -21,6 +21,8 @@
 - covid19india db change val to tot_val
 - log to maplabel
 - fixe folium boundaries
+- add geopandas output format in the front
+
 ## v2.10 - 
 - Map bug fixed for option='sumall'
 - maplabel added for bokeh map   

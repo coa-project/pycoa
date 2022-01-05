@@ -70,7 +70,7 @@ _listwhat = ['cumul',  # first one is default, nota:  we must avoid uppercases
              'daily',
              'weekly']
 
-_listoutput = ['pandas','list', 'dict', 'array']  # first one is default for get
+_listoutput = ['pandas','geopandas','list', 'dict', 'array']  # first one is default for get
 
 _listvisu = ['bokeh', 'folium']
 
@@ -515,6 +515,8 @@ def get(**kwargs):
     # print(pandy)
     # casted_data = pd.pivot_table(pandy, index='date',columns='where',values=col_name).to_dict('series')
     # print(pandy)
+    elif output == 'geopandas':
+        casted_data = _cocoplot.pycoageo(pandy)
     elif output == 'dict':
         casted_data = pandy.to_dict('split')
     elif output == 'list' or output == 'array':
@@ -619,7 +621,7 @@ def map(**kwargs):
         if dateslider:
             raise CoaKeyError('Not available with folium map, you should considere to use bokeh map visu in this case')
         if  maplabel and set(maplabel) != set(['log']):
-            raise CoaKeyError('Not available with folium map, you should considere to use bokeh map visu in this case')    
+            raise CoaKeyError('Not available with folium map, you should considere to use bokeh map visu in this case')
         return _cocoplot.pycoa_mapfolium(input,input_field,**kwargs)
     else:
         raise CoaTypeError('Waiting for a valid visualisation. So far: \'bokeh\' or \'folium\'.See help.')

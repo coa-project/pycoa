@@ -31,7 +31,7 @@ from io import BytesIO
 import base64
 from IPython import display
 
-from bokeh.models import ColumnDataSource, TableColumn, DataTable, ColorBar, \
+from bokeh.models import ColumnDataSource, TableColumn, DataTable, ColorBar, LogTicker,\
     HoverTool, CrosshairTool, BasicTicker, GeoJSONDataSource, LinearColorMapper, LogColorMapper,Label, \
     PrintfTickFormatter, BasicTickFormatter, NumeralTickFormatter, CustomJS, CustomJSHover, Select, \
     Range1d, DatetimeTickFormatter, Legend, LegendItem, Text
@@ -1302,24 +1302,19 @@ class CocoDisplay:
         #locunique = geopdwd_filtered.clustername.unique()#geopdwd_filtered.location.unique()
         if self.database_name == 'risklayer':
             geopdwd_filtered = geopdwd_filtered.loc[geopdwd_filtered.geometry.notna()]
-        zoom = 1
-        if self.dbld[self.database_name] != 'WW':
-            self.boundary = geopdwd_filtered['geometry'].total_bounds
-            name_location_displayed = 'name_subregion'
-            zoom = 1
+
         uniqloc = list(geopdwd_filtered.codelocation.unique())
         geopdwd_filtered = geopdwd_filtered.drop(columns=['date', 'colors'])
 
         if self.dbld[self.database_name][0] in ['FRA','ESP','PRT']:# and all(len(l) == 2 for l in geopdwd_filtered.codelocation.unique()):
-            minx, miny, maxx, maxy = self.boundary_metropole
             zoom = 1
         else:
-            minx, miny, maxx, maxy = self.boundary
             zoom = 1
 
         msg = "(data from: {})".format(self.database_name)
-        mapa = folium.Map(location=[(maxy + miny) / 2., (maxx + minx) / 2.], zoom_start=zoom,
-                          tiles=tile, attr='<a href=\"http://pycoa.fr\"> ©pycoa.fr </a>' + msg)  #
+        minx, miny, maxx, maxy =  geopdwd_filtered.total_bounds
+        mapa = folium.Map(tiles=tile, attr='<a href=\"http://pycoa.fr\"> ©pycoa.fr </a>' + msg)  #
+        mapa.fit_bounds([(miny, minx), (maxy, maxx)])
 
         fig = Figure(width=plot_width, height=plot_height)
         fig.add_child(mapa)
@@ -1329,11 +1324,12 @@ class CocoDisplay:
 
         invViridis256 = Viridis256[::-1]
         if 'log' in maplabel:
-            color_mapper = LogColorMapper(palette=invViridis256, low=min_col_non0, high=max_col, nan_color='#d9d9d9')
+            geopdwd_filtered['cases'] = geopdwd_filtered.loc[geopdwd_filtered['cases']>0]['cases']
+            color_mapper = LinearColorMapper(palette=invViridis256, low=min_col_non0, high=max_col, nan_color='#d9d9d9')
+            colormap =  branca.colormap.LinearColormap(color_mapper.palette).to_step(data=list(geopdwd_filtered['cases']),n=10,method='log')
         else:
             color_mapper = LinearColorMapper(palette=invViridis256, low=min_col, high=max_col, nan_color='#d9d9d9')
-
-        colormap = branca.colormap.LinearColormap(color_mapper.palette).scale(min_col, max_col)
+            colormap = branca.colormap.LinearColormap(color_mapper.palette).scale(min_col, max_col)
         colormap.caption = 'Cases : ' + title
         colormap.add_to(mapa)
         map_id = colormap.get_name()
@@ -1359,7 +1355,11 @@ class CocoDisplay:
         map_dict = geopdwd_filtered.set_index('location')[input_field].to_dict()
         if np.nanmin(geopdwd_filtered[input_field]) == np.nanmax(geopdwd_filtered[input_field]):
             map_dict['FakeCountry'] = 0.
-        color_scale = LinearColormap(color_mapper.palette, vmin=min(map_dict.values()), vmax=max(map_dict.values()))
+
+        if 'log' in maplabel:
+            color_scale =  branca.colormap.LinearColormap(color_mapper.palette).to_step(data=list(geopdwd_filtered['cases']),n=10,method='log')
+        else:
+            color_scale = LinearColormap(color_mapper.palette, vmin=min(map_dict.values()), vmax=max(map_dict.values()))
 
         def get_color(feature):
             value = map_dict.get(feature['properties']['location'])

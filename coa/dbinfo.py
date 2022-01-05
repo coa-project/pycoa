@@ -193,6 +193,7 @@ def generic_info(namedb, keys):
         'num_sequences':['num_sequences: Number of sequenced samples that fall into the category variant.'],
         'perc_sequences':['perc_sequences: Percentage of the sequenced samples that fall into the category variant.'],
         'num_sequences_total':['num_sequences_total: Total number of samples sequenced in the last two weeks'],
+        'total_gdp_per_capita':['gdp_per_capita'],
         }
         for k,v in owid.items():
             owid[k].append("https://raw.githubusercontent.com/owid/covid-19-data/master/public/data/owid-covid-data.csv")

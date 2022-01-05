@@ -62,7 +62,7 @@ from functools import wraps
 
 width_height_default = [500, 380]
 
-
+MAXCOUNTRIESDISPLAYED = 27
 class CocoDisplay:
     def __init__(self, db=None, geo = None):
         verb("Init of CocoDisplay() with db=" + str(db))
@@ -380,8 +380,8 @@ class CocoDisplay:
 
                 input = input.sort_values(by=['clustername', 'date']).reset_index(drop = True)
 
-                if len(location_ordered_byvalues) > 12:
-                    input = input.loc[input.clustername.isin(location_ordered_byvalues[:12])]
+                if len(location_ordered_byvalues) >= MAXCOUNTRIESDISPLAYED:
+                    input = input.loc[input.clustername.isin(location_ordered_byvalues[:MAXCOUNTRIESDISPLAYED])]
                 list_max = []
                 for i in input_field:
                     list_max.append(max(input.loc[input.clustername.isin(location_ordered_byvalues)][i]))
@@ -855,7 +855,7 @@ class CocoDisplay:
             geopdwd_filter = geopdwd_filter.sort_values(by='cases', ascending = False).reset_index()
             locunique = geopdwd_filter.clustername.unique()#geopdwd_filtered.location.unique()
             geopdwd_filter = geopdwd_filter.copy()
-            nmaxdisplayed = 18
+            nmaxdisplayed = MAXCOUNTRIESDISPLAYED
             maplabel = kwargs.get('maplabel',None)
 
             if len(locunique) >= nmaxdisplayed :#and func.__name__ != 'pycoa_pie' :

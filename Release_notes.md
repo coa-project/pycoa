@@ -19,6 +19,9 @@
 - change tot_* to cur_ for sciensano db 
 - in the front get uses the parser decorator , it wasn't the case so far ...
 - covid19india db change val to tot_val
+- log to maplabel
+- fixe folium boundaries
+- add geopandas output format in the front
 
 ## v2.10 - 
 - Map bug fixed for option='sumall'

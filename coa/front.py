@@ -70,7 +70,7 @@ _listwhat = ['cumul',  # first one is default, nota:  we must avoid uppercases
              'daily',
              'weekly']
 
-_listoutput = ['pandas','list', 'dict', 'array']  # first one is default for get
+_listoutput = ['pandas','geopandas','list', 'dict', 'array']  # first one is default for get
 
 _listvisu = ['bokeh', 'folium']
 
@@ -332,7 +332,7 @@ def chartsinput_deco(f):
         kwargs_test(kwargs,
                     ['where', 'what', 'which', 'whom', 'when', 'input', 'input_field','output',\
                     'title','typeofplot','typeofhist','bins','visu','tile','dateslider','maplabel','option','mode','guideline','bypop',
-                    'plot_width','plot_height','textcopyright','textcopyrightposition'],
+                    'plot_width','plot_height','textcopyright'],
                     'Bad args used in the pycoa function.')
 
     # no dateslider currently
@@ -515,6 +515,8 @@ def get(**kwargs):
     # print(pandy)
     # casted_data = pd.pivot_table(pandy, index='date',columns='where',values=col_name).to_dict('series')
     # print(pandy)
+    elif output == 'geopandas':
+        casted_data = _cocoplot.pycoageo(pandy)
     elif output == 'dict':
         casted_data = pandy.to_dict('split')
     elif output == 'list' or output == 'array':
@@ -590,7 +592,7 @@ def map(**kwargs):
     if maplabel is not None:
         if not isinstance(maplabel,list):
             maplabel = [maplabel]
-        if  [a for a in maplabel if a not in ['text','spark','label%','log']]:
+        if  [a for a in maplabel if a not in ['text','spark','label%','log','unsorted']]:
             raise CoaTypeError('Waiting a correct maplabel value. See help.')
 
     sparkline = False
@@ -604,19 +606,21 @@ def map(**kwargs):
         if 'label%' in maplabel:
             kwargs['maplabel'].append('label%')
         if 'log' in maplabel:
-            kwargs['maplabel'].append('log')    
+            kwargs['maplabel'].append('log')
         if 'spark' in maplabel:
             sparkline = True
-        if all([ True if i in ['text','spark','label%','log'] else False for i in kwargs['maplabel'] ]) :
-            CoaKeyError('Waiting for a valide label visualisation: text, spark or label%')
-    if visu == 'bokeh':
+        #if all([ True if i in ['text','spark','label%','log'] else False for i in kwargs['maplabel'] ]) :
+        #    CoaKeyError('Waiting for a valide label visualisation: text, spark or label%')
         input.loc[:,input_field]=input[input_field].fillna(0) #needed in the case where there are nan else js pb
+    if visu == 'bokeh':
         if sparkline == False:
             return show(_cocoplot.pycoa_map(input,input_field,**kwargs))
         else:
             return show(_cocoplot.pycoa_sparkmap(input,input_field,**kwargs))
     elif visu == 'folium':
-        if dateslider or maplabel:
+        if dateslider:
+            raise CoaKeyError('Not available with folium map, you should considere to use bokeh map visu in this case')
+        if  maplabel and set(maplabel) != set(['log']):
             raise CoaKeyError('Not available with folium map, you should considere to use bokeh map visu in this case')
         return _cocoplot.pycoa_mapfolium(input,input_field,**kwargs)
     else:

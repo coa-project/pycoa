@@ -495,7 +495,7 @@ class DataBase(object):
                     col_to_rename1=['reproduction_rate','icu_patients','hosp_patients','weekly_hosp_admissions','positive_rate']
                     renamed_cols1=['cur_'+c if c != 'positive_rate' else 'cur_idx_'+c for c in col_to_rename1]
                     col_to_rename2=['people_vaccinated','people_fully_vaccinated','people_fully_vaccinated_per_hundred',\
-                    'people_vaccinated_per_hundred','population']
+                    'people_vaccinated_per_hundred','population','gdp_per_capita']
                     renamed_cols2=['total_'+i for i in col_to_rename2]
                     col_to_rename = col_to_rename1+col_to_rename2
                     renamed_cols = renamed_cols1 +renamed_cols2
@@ -822,7 +822,7 @@ class DataBase(object):
         mypandas = mypandas[absolutlyneeded + columns_keeped]
 
         self.available_keys_words = columns_keeped #+ absolutlyneeded
-        not_un_nation_dict={'Kosovo':'Serbia','Northern Cyprus':'Cyprus'}
+        not_un_nation_dict={'Kosovo':'Serbia'}
         for subpart_country, main_country in not_un_nation_dict.items() :
             tmp=(mypandas.loc[mypandas.location.isin([subpart_country,main_country])].groupby('date').sum())
             tmp['location']=main_country

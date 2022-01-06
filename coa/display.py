@@ -31,7 +31,7 @@ from io import BytesIO
 import base64
 from IPython import display
 
-from bokeh.models import ColumnDataSource, TableColumn, DataTable, ColorBar, \
+from bokeh.models import ColumnDataSource, TableColumn, DataTable, ColorBar, LogTicker,\
     HoverTool, CrosshairTool, BasicTicker, GeoJSONDataSource, LinearColorMapper, LogColorMapper,Label, \
     PrintfTickFormatter, BasicTickFormatter, NumeralTickFormatter, CustomJS, CustomJSHover, Select, \
     Range1d, DatetimeTickFormatter, Legend, LegendItem, Text
@@ -62,7 +62,7 @@ from functools import wraps
 
 width_height_default = [500, 380]
 
-
+MAXCOUNTRIESDISPLAYED = 12
 class CocoDisplay:
     def __init__(self, db=None, geo = None):
         verb("Init of CocoDisplay() with db=" + str(db))
@@ -81,10 +81,9 @@ class CocoDisplay:
         self.options_front = ['where','option','which','what','visu']
         self.available_tiles = ['openstreet','esri','stamen','positron']
         self.available_modes = ['mouse','vline','hline']
-        self.available_textcopyrightposition = ['left','right']
         self.uptitle, self.subtitle = ' ',' '
 
-        self.dfigure_default = {'plot_height':width_height_default[1] ,'plot_width':width_height_default[0],'title':None, 'textcopyrightposition':'left','textcopyright':'default'}
+        self.dfigure_default = {'plot_height':width_height_default[1] ,'plot_width':width_height_default[0],'title':None,'textcopyright':'default'}
         self.dvisu_default = {'mode':'mouse','tile':self.available_tiles[0],'orientation':'horizontal','cursor_date':None,'maplabel':None,'guideline':False}
 
         self.when_beg = dt.date(1, 1, 1)
@@ -141,31 +140,23 @@ class CocoDisplay:
         plot_width = kwargs.get('plot_width', self.dfigure_default['plot_width'])
         plot_height = kwargs.get('plot_height', self.dfigure_default['plot_height'])
         textcopyright = kwargs.get('textcopyright', self.dfigure_default['textcopyright'])
-        textcopyrightposition = kwargs.get('textcopyrightposition', self.dfigure_default['textcopyrightposition'])
-
-        if textcopyrightposition == 'right':
-            xpos = 0.65
-        elif textcopyrightposition == 'left':
-            xpos = 0.08
-        else:
-            raise CoaKeyError('textcopyrightposition: must be right or left')
 
         if textcopyright  == 'default':
                 textcopyright = '©pycoa.fr (data from: {})'.format(self.database_name)
         else:
                 textcopyright = '©pycoa.fr ' + textcopyright
 
-        citation = Label(x=xpos * plot_width - len(textcopyright), y=0.01 * plot_height,
+        citation = Label(x=0.65 * plot_width - len(textcopyright), y=0.01 * plot_height,
                                           x_units='screen', y_units='screen',
                                           text_font_size='1.5vh', background_fill_color='white', background_fill_alpha=.75,
                                           text=textcopyright)
 
-        for i in list(self.dvisu_default.keys())  + self.options_front + self.options_charts + ['textcopyright', 'textcopyrightposition'] + self.options_stats + ['date_slider']:
+        for i in list(self.dvisu_default.keys())  + self.options_front + self.options_charts + ['textcopyright'] + self.options_stats + ['date_slider']:
             if i in kwargs.keys():
                 kwargs.pop(i)
         kwargs.pop('title')
         fig = figure(**kwargs, tools=['save', 'box_zoom,reset'], toolbar_location="right")
-        fig.add_layout(citation)
+        #fig.add_layout(citation)
         fig.add_layout(Title(text=self.uptitle, text_font_size="10pt"), 'above')
         fig.add_layout(Title(text=self.subtitle, text_font_size="8pt", text_font_style="italic"), 'below')
         return fig
@@ -217,7 +208,6 @@ class CocoDisplay:
             bins = kwargs.get('bins', 10)
             title = kwargs.get('title', None)
             #textcopyright = kwargs.get('textcopyright', 'default')
-            #textcopyrightposition = kwargs.get('textcopyrightposition', 'left')
             kwargs['plot_width'] = kwargs.get('plot_width', self.dfigure_default['plot_width'])
             kwargs['plot_height'] = kwargs.get('plot_height', self.dfigure_default['plot_height'])
 
@@ -267,7 +257,14 @@ class CocoDisplay:
                             input['permanentdisplay'] = input.codelocation
                 input['rolloverdisplay'] = input['location']
 
+            maplabel = kwargs.get('maplabel', None)
+            if maplabel and 'unsorted' in maplabel:
+                pass
+            else:
+                input = input.sort_values(by=input_field, ascending = False).reset_index(drop=True)
+
             uniqloc = input.clustername.unique()
+
             if len(uniqloc) < 5:
                 colors = self.scolors
             else:
@@ -350,7 +347,15 @@ class CocoDisplay:
             else:
                 title  = titlefig
             self.uptitle = title
-            self.subtitle = title_temporal
+
+            textcopyright = kwargs.get('textcopyright', None)
+            if textcopyright:
+                textcopyright = '©pycoa.fr ' + textcopyright + title_temporal
+                kwargs.pop('textcopyright')
+            else:
+                textcopyright = '©pycoa.fr data from: {}'.format(self.database_name)+' '+title_temporal
+
+            self.subtitle = textcopyright
             kwargs['title'] = title+title_temporal
 
             return func(self, input, input_field, **kwargs)
@@ -380,8 +385,8 @@ class CocoDisplay:
 
                 input = input.sort_values(by=['clustername', 'date']).reset_index(drop = True)
 
-                if len(location_ordered_byvalues) > 12:
-                    input = input.loc[input.clustername.isin(location_ordered_byvalues[:12])]
+                if len(location_ordered_byvalues) >= MAXCOUNTRIESDISPLAYED:
+                    input = input.loc[input.clustername.isin(location_ordered_byvalues[:MAXCOUNTRIESDISPLAYED])]
                 list_max = []
                 for i in input_field:
                     list_max.append(max(input.loc[input.clustername.isin(location_ordered_byvalues)][i]))
@@ -414,7 +419,6 @@ class CocoDisplay:
         - plot_heigh = width_height_default[1]
         - plot_width = width_height_default[0]
         - title = None
-        - textcopyrightposition = left
         - textcopyright = default
         - mode = mouse
         - cursor_date = None if True
@@ -478,7 +482,6 @@ class CocoDisplay:
         - plot_heigh= width_height_default[1]
         - plot_width = width_height_default[0]
         - title = None
-        - textcopyrightposition = left
         - textcopyright = default
         - mode = mouse
         - guideline = False
@@ -569,7 +572,6 @@ class CocoDisplay:
         - plot_heigh= width_height_default[1]
         - plot_width = width_height_default[0]
         - title = None
-        - textcopyrightposition = left
         - textcopyright = default
         - mode = mouse
         -guideline = False
@@ -678,8 +680,11 @@ class CocoDisplay:
             uniqloc = input.clustername.unique()
 
             geopdwd = input
-            geopdwd = geopdwd.sort_values(by = input_field, ascending=False)
-            geopdwd = geopdwd.reset_index(drop = True)
+
+            if maplabel and 'unsorted' in maplabel:
+                pass
+            else:
+                geopdwd = geopdwd.sort_values(by=input_field, ascending = False).reset_index()
 
             started = geopdwd.date.min()
             ended = geopdwd.date.max()
@@ -689,7 +694,7 @@ class CocoDisplay:
                 #wanted_date = date_slider.value_as_datetime.date()
 
             #if func.__name__ == 'pycoa_mapfolium' or func.__name__ == 'pycoa_map' or func.__name__ == 'innerdecomap' or func.__name__ == 'innerdecopycoageo':
-            if func.__name__ == 'pycoa_mapfolium' or func.__name__ == 'pycoa_map' or func.__name__ == 'pycoa_sparkmap':
+            if func.__name__ in ['pycoa_mapfolium','pycoa_map','pycoageo' ,'pycoa_sparkmap']:
                 if isinstance(input.location.to_list()[0],list):
                     geom = self.location_geometry
                     geodic={loc:geom.loc[geom.location==loc]['geometry'].values[0] for loc in geopdwd.location.unique()}
@@ -735,7 +740,6 @@ class CocoDisplay:
             - plot_heigh= width_height_default[1]
             - plot_width = width_height_default[0]
             - title = None
-            - textcopyrightposition = left
             - textcopyright = default
             - when : default min and max according to the inpude DataFrame.
                      Dates are given under the format dd/mm/yyyy.
@@ -840,6 +844,10 @@ class CocoDisplay:
             Horizontal histogram & Pie Chart
             """
             geopdwd['cases'] = geopdwd[input_field]
+            maplabel = kwargs.get('maplabel',None)
+            plot_width = kwargs.get('plot_width',self.dfigure_default['plot_width'])
+            plot_height = kwargs.get('plot_height',self.dfigure_default['plot_height'])
+
             geopdwd_filter = geopdwd.loc[geopdwd.date == self.when_end]
             geopdwd_filter = geopdwd_filter.reset_index(drop = True)
             geopdwd_filter['cases'] = geopdwd_filter[input_field]
@@ -852,11 +860,10 @@ class CocoDisplay:
             #geopdwd_filter = geopdwd_filter.drop_duplicates(["date", "codelocation","clustername"])
             geopdwd = geopdwd.drop_duplicates(["date","clustername"])#for sumall avoid duplicate
             geopdwd_filter = geopdwd_filter.drop_duplicates(["date","clustername"])
-            geopdwd_filter = geopdwd_filter.sort_values(by='cases', ascending = False).reset_index()
             locunique = geopdwd_filter.clustername.unique()#geopdwd_filtered.location.unique()
             geopdwd_filter = geopdwd_filter.copy()
-            nmaxdisplayed = 18
-            maplabel = kwargs.get('maplabel',None)
+            nmaxdisplayed = MAXCOUNTRIESDISPLAYED
+
 
             if len(locunique) >= nmaxdisplayed :#and func.__name__ != 'pycoa_pie' :
                 if func.__name__ != 'pycoa_pie' :
@@ -880,14 +887,15 @@ class CocoDisplay:
                 geopdwd_filter['right'] = geopdwd_filter['cases']
                 geopdwd_filter['left'] = geopdwd_filter['left'].apply(lambda x: 0 if x > 0 else x)
                 geopdwd_filter['right'] = geopdwd_filter['right'].apply(lambda x: 0 if x < 0 else x)
-                bthick = 0.95
-                geopdwd_filter['top'] = [len(geopdwd_filter.index) + bthick / 2 - i for i in
-                                             geopdwd_filter.index.to_list()]
-                geopdwd_filter['bottom'] = [len(geopdwd_filter.index) - bthick / 2 - i for i in
-                                                geopdwd_filter.index.to_list()]
-                geopdwd_filter['horihistotexty'] =  geopdwd_filter['bottom'] + bthick/2
-                geopdwd_filter['horihistotextx'] = geopdwd_filter['right']
 
+                n = len(geopdwd_filter.index)
+                d =  plot_height / n
+                ymax = plot_height - d/2
+
+                geopdwd_filter['top'] = [ymax*(n-i)/n + d/2   for i in range(n)]
+                geopdwd_filter['bottom'] = [ymax*(n-i)/n - d/2 for i in range(n)]
+                geopdwd_filter['horihistotexty'] = geopdwd_filter['bottom'] + d/2
+                geopdwd_filter['horihistotextx'] = geopdwd_filter['right']
                 if maplabel and 'label%' in maplabel:
                     geopdwd_filter['right'] = geopdwd_filter['right'].apply(lambda x: 100.*x)
                     geopdwd_filter['horihistotextx'] = geopdwd_filter['right']
@@ -895,9 +903,13 @@ class CocoDisplay:
                 else:
                     geopdwd_filter['horihistotext'] = [ '{:.3g}'.format(float(i)) if float(i)>1.e4 else round(float(i),2) for i in geopdwd_filter['right'] ]
                     geopdwd_filter['horihistotext'] = [str(i) for i in geopdwd_filter['horihistotext']]
+
             if func.__name__ == 'pycoa_pie' :
                 geopdwd_filter = self.add_columns_for_pie_chart(geopdwd_filter,input_field)
                 geopdwd = self.add_columns_for_pie_chart(geopdwd,input_field)
+                if maplabel and 'label%' in maplabel:
+                    geopdwd_filter['textdisplayed2'] = geopdwd_filter['percentage']
+                    geopdwd['textdisplayed2'] =  geopdwd['percentage']
 
             source = ColumnDataSource(data = geopdwd)
             input_filter = geopdwd_filter
@@ -1145,7 +1157,6 @@ class CocoDisplay:
             - plot_heigh= width_height_default[1]
             - plot_width = width_height_default[0]
             - title = None
-            - textcopyrightposition = left
             - textcopyright = default
             - mode = mouse
             - cursor_date = None if True
@@ -1157,17 +1168,12 @@ class CocoDisplay:
                          if [dd/mm/yyyy:] up to max date
         '''
         n = len(panels)
-        loc = srcfiltered.data['permanentdisplay']#srcfiltered.data['codelocation']
-        chars = [' ','-']
-        returnchars = [x for x in loc if x in chars]
-        label_dict = {}
-        label_dict = {(len(loc) - k) : v for k, v in enumerate(loc) }
         new_panels = []
-
         for i in range(n):
             fig = panels[i].child
-            fig.yaxis.ticker = list(range(1, len(loc)+1))
-            fig.yaxis.major_label_overrides = label_dict
+            fig.y_range = Range1d(min(srcfiltered.data['bottom']), max(srcfiltered.data['top']))
+            fig.yaxis.ticker = srcfiltered.data['horihistotexty']
+            fig.yaxis.major_label_overrides = {i:j for i,j in zip(srcfiltered.data['horihistotexty'],srcfiltered.data['permanentdisplay'])}
             fig.quad(source = srcfiltered,
                 top='top', bottom = 'bottom', left = 'left', right = 'right', color = 'colors', line_color = 'black',
                 line_width = 1, hover_line_width = 2)
@@ -1205,7 +1211,7 @@ class CocoDisplay:
 
         df['text_size'] = '10pt'
         df['text_angle'] = 0.
-        df.loc[:, 'percentage'] = (( df['percentage'] * 100 ).astype(np.double).round(2)).apply(lambda x: str(x))
+        df.loc[:, 'percentage'] = ((df[column_name]*100).astype(np.double).round(1).astype(str)+'%').str.pad(46, side = "left")
         df['textdisplayed']=df['permanentdisplay'].astype(str).str.pad(15, side = "left")
         df['textdisplayed2'] = df[column_name].astype(np.double).round(1).astype(str).str.pad(46, side = "left")
         df.loc[df['diff']<= np.pi/20,'textdisplayed']=''
@@ -1227,7 +1233,6 @@ class CocoDisplay:
             - plot_heigh= width_height_default[1]
             - plot_width = width_height_default[0]
             - title = None
-            - textcopyrightposition = left
             - textcopyright = default
             - mode = mouse
             - cursor_date = None if True
@@ -1272,7 +1277,6 @@ class CocoDisplay:
             - plot_heigh= width_height_default[1]
             - plot_width = width_height_default[0]
             - title = None
-            - textcopyrightposition = left
             - textcopyright = default
             - mode = mouse
             - cursor_date = None if True
@@ -1286,6 +1290,7 @@ class CocoDisplay:
         title = kwargs.get('title', None)
         tile =  kwargs.get('tile', self.dvisu_default['tile'])
         tile = CocoDisplay.convert_tile(tile, 'folium')
+        maplabel = kwargs.get('maplabel',self.dvisu_default['maplabel'])
         plot_width = kwargs.get('plot_width',self.dfigure_default['plot_width'])
         plot_height = kwargs.get('plot_height',self.dfigure_default['plot_height'])
 
@@ -1299,34 +1304,36 @@ class CocoDisplay:
         #geopdwd = geopdwd.drop_duplicates(["date", "codelocation","clustername"])#for sumall avoid duplicate
         #geopdwd_filtered = geopdwd_filtered.sort_values(by='cases', ascending = False).reset_index()
         #locunique = geopdwd_filtered.clustername.unique()#geopdwd_filtered.location.unique()
+        if self.database_name == 'risklayer':
+            geopdwd_filtered = geopdwd_filtered.loc[geopdwd_filtered.geometry.notna()]
 
-        zoom = 1
-        if self.dbld[self.database_name] != 'WW':
-            self.boundary = geopdwd_filtered['geometry'].total_bounds
-            name_location_displayed = 'name_subregion'
-            zoom = 1
         uniqloc = list(geopdwd_filtered.codelocation.unique())
         geopdwd_filtered = geopdwd_filtered.drop(columns=['date', 'colors'])
 
         if self.dbld[self.database_name][0] in ['FRA','ESP','PRT']:# and all(len(l) == 2 for l in geopdwd_filtered.codelocation.unique()):
-            minx, miny, maxx, maxy = self.boundary_metropole
             zoom = 1
         else:
-            minx, miny, maxx, maxy = self.boundary
             zoom = 1
 
         msg = "(data from: {})".format(self.database_name)
-        mapa = folium.Map(location=[(maxy + miny) / 2., (maxx + minx) / 2.], zoom_start=zoom,
-                          tiles=tile, attr='<a href=\"http://pycoa.fr\"> ©pycoa.fr </a>' + msg)  #
+        minx, miny, maxx, maxy =  geopdwd_filtered.total_bounds
+        mapa = folium.Map(tiles=tile, attr='<a href=\"http://pycoa.fr\"> ©pycoa.fr </a>' + msg)  #
+        mapa.fit_bounds([(miny, minx), (maxy, maxx)])
 
         fig = Figure(width=plot_width, height=plot_height)
         fig.add_child(mapa)
         min_col, max_col = CocoDisplay.min_max_range(np.nanmin(geopdwd_filtered[input_field]),
                                                      np.nanmax(geopdwd_filtered[input_field]))
+        min_col_non0 = (np.nanmin(geopdwd_filtered.loc[geopdwd_filtered['cases']>0.]['cases']))
 
         invViridis256 = Viridis256[::-1]
-        color_mapper = LinearColorMapper(palette=invViridis256, low=min_col, high=max_col, nan_color='#d9d9d9')
-        colormap = branca.colormap.LinearColormap(color_mapper.palette).scale(min_col, max_col)
+        if 'log' in maplabel:
+            geopdwd_filtered['cases'] = geopdwd_filtered.loc[geopdwd_filtered['cases']>0]['cases']
+            color_mapper = LinearColorMapper(palette=invViridis256, low=min_col_non0, high=max_col, nan_color='#d9d9d9')
+            colormap =  branca.colormap.LinearColormap(color_mapper.palette).to_step(data=list(geopdwd_filtered['cases']),n=10,method='log')
+        else:
+            color_mapper = LinearColorMapper(palette=invViridis256, low=min_col, high=max_col, nan_color='#d9d9d9')
+            colormap = branca.colormap.LinearColormap(color_mapper.palette).scale(min_col, max_col)
         colormap.caption = 'Cases : ' + title
         colormap.add_to(mapa)
         map_id = colormap.get_name()
@@ -1352,7 +1359,11 @@ class CocoDisplay:
         map_dict = geopdwd_filtered.set_index('location')[input_field].to_dict()
         if np.nanmin(geopdwd_filtered[input_field]) == np.nanmax(geopdwd_filtered[input_field]):
             map_dict['FakeCountry'] = 0.
-        color_scale = LinearColormap(color_mapper.palette, vmin=min(map_dict.values()), vmax=max(map_dict.values()))
+
+        if 'log' in maplabel:
+            color_scale =  branca.colormap.LinearColormap(color_mapper.palette).to_step(data=list(geopdwd_filtered['cases']),n=10,method='log')
+        else:
+            color_scale = LinearColormap(color_mapper.palette, vmin=min(map_dict.values()), vmax=max(map_dict.values()))
 
         def get_color(feature):
             value = map_dict.get(feature['properties']['location'])
@@ -1447,7 +1458,7 @@ class CocoDisplay:
                 locsum = geopdwd_filtered.clustername.unique()
                 numberpercluster = geopdwd_filtered['clustername'].value_counts().to_dict()
                 sumgeo = geopdwd_filtered.copy()
-                sumgeo['geometry'] = sumgeo.buffer(0.01)
+                sumgeo['geometry'] = sumgeo.buffer(0.01) # Precision pb need to reconstruct your polygons with a buffer
                 sumgeo = sumgeo.dissolve(by='clustername', aggfunc='sum').reset_index()
                 sumgeo['nb'] = sumgeo['clustername'].map(numberpercluster)
                 centrosx = sumgeo['geometry'].centroid.x
@@ -1466,17 +1477,12 @@ class CocoDisplay:
                     dfLabel['cases']=[str(i) for i in dfLabel['cases']]
                 sourcemaplabel = ColumnDataSource(dfLabel.drop(columns='geometry'))
             minx, miny, maxx, maxy =  geopdwd_filtered.total_bounds #self.boundary
-            if self.dbld[self.database_name][0] != 'WW':
-                ratio = 0.05
-                minx -= ratio*minx
-                maxx += ratio*maxx
-                miny -= ratio*miny
-                maxy += ratio*maxy
-
-            textcopyrightposition = 'left'
-            if self.dbld[self.database_name][0] == 'ESP' :
-                textcopyrightposition='right'
-
+            #if self.dbld[self.database_name][0] != 'WW':
+            #    ratio = 0.05
+            #    minx -= ratio*minx
+            #    maxx += ratio*maxx
+            #    miny -= ratio*miny
+            #    maxy += ratio*maxy
             #if func.__name__ == 'pycoa_sparkmap':
             #    dico['titlebar']=tit[:-12]+' [ '+dico['when_beg'].strftime('%d/%m/%Y')+ '-'+ tit[-12:-1]+'])'
 
@@ -1484,7 +1490,7 @@ class CocoDisplay:
             x_range=(minx,maxx)
             y_range=(miny,maxy)
             if func.__name__ == 'pycoa_sparkmap':
-                standardfig = self.standardfig(x_range=(minx, maxx), y_range=(miny, maxy), x_axis_type="mercator", y_axis_type="mercator",**kwargs,match_aspect=True)
+                standardfig = self.standardfig(x_range=x_range, y_range=y_range, x_axis_type="mercator", y_axis_type="mercator",**kwargs,match_aspect=True)
             else:
                 standardfig = self.standardfig(x_axis_type="mercator", y_axis_type="mercator",**kwargs,match_aspect=True)
 
@@ -1527,7 +1533,6 @@ class CocoDisplay:
             - plot_heigh= width_height_default[1]
             - plot_width = width_height_default[0]
             - title = None
-            - textcopyrightposition = left
             - textcopyright = default
             - mode = mouse
             - cursor_date = None if True
@@ -1682,7 +1687,6 @@ class CocoDisplay:
             - plot_heigh= width_height_default[1]
             - plot_width = width_height_default[0]
             - title = None
-            - textcopyrightposition = left
             - textcopyright = default
             - mode = mouse
             - cursor_date = None if True

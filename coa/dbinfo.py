@@ -193,7 +193,7 @@ def generic_info(namedb, keys):
         'num_sequences':['num_sequences: Number of sequenced samples that fall into the category variant.'],
         'perc_sequences':['perc_sequences: Percentage of the sequenced samples that fall into the category variant.'],
         'num_sequences_total':['num_sequences_total: Total number of samples sequenced in the last two weeks'],
-        'total_gdp_per_capita':['gdp_per_capita'],
+        'total_gdp_per_capita':['Gross domestic product at purchasing power parity (constant 2011 international dollars), most recent year available'],
         }
         for k,v in owid.items():
             owid[k].append("https://raw.githubusercontent.com/owid/covid-19-data/master/public/data/owid-covid-data.csv")
@@ -276,6 +276,7 @@ def generic_info(namedb, keys):
         'tot_cases':['Number of new COVID-19 cases detected with PCR (original name cases_accumulated_PCR)'],\
         'cur_hosp':['Hospitalized (original name hospitalized)'],\
         'tot_hosp':['Cumulative Hospitalized (original name hospitalized_accumulated)'],\
+        'cur_hosp_per100k':['Intensive care per 100,000 inhabitants (original name hospitalized_per_100000'],\
         'cur_icu':['UCI, intensive care patient, (original name intensive_care)'],\
         'tot_recovered':['Recovered (original name recovered)'],\
         'tot_cases_per100k':['Cumulative cases per 100,000 inhabitants (original name cases_per_cienmil)'],\

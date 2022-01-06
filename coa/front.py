@@ -332,7 +332,7 @@ def chartsinput_deco(f):
         kwargs_test(kwargs,
                     ['where', 'what', 'which', 'whom', 'when', 'input', 'input_field','output',\
                     'title','typeofplot','typeofhist','bins','visu','tile','dateslider','maplabel','option','mode','guideline','bypop',
-                    'plot_width','plot_height','textcopyright','textcopyrightposition'],
+                    'plot_width','plot_height','textcopyright'],
                     'Bad args used in the pycoa function.')
 
     # no dateslider currently
@@ -592,7 +592,7 @@ def map(**kwargs):
     if maplabel is not None:
         if not isinstance(maplabel,list):
             maplabel = [maplabel]
-        if  [a for a in maplabel if a not in ['text','spark','label%','log']]:
+        if  [a for a in maplabel if a not in ['text','spark','label%','log','unsorted']]:
             raise CoaTypeError('Waiting a correct maplabel value. See help.')
 
     sparkline = False
@@ -609,8 +609,8 @@ def map(**kwargs):
             kwargs['maplabel'].append('log')
         if 'spark' in maplabel:
             sparkline = True
-        if all([ True if i in ['text','spark','label%','log'] else False for i in kwargs['maplabel'] ]) :
-            CoaKeyError('Waiting for a valide label visualisation: text, spark or label%')
+        #if all([ True if i in ['text','spark','label%','log'] else False for i in kwargs['maplabel'] ]) :
+        #    CoaKeyError('Waiting for a valide label visualisation: text, spark or label%')
         input.loc[:,input_field]=input[input_field].fillna(0) #needed in the case where there are nan else js pb
     if visu == 'bokeh':
         if sparkline == False:

@@ -861,6 +861,9 @@ class GeoCountry():
                     tmp.append(g)
                 self._country_data['geometry']=tmp
 
+                # Remove COM with dense geometry true, too many islands to manage
+                self._country_data=self._country_data[self._country_data.code_subregion!='980']
+
             if main_area == True:
                 self._country_data = self._country_data[~self._country_data['code_subregion'].isin(list_translation.keys())]
 

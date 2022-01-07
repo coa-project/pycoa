@@ -830,7 +830,7 @@ class GeoCountry():
             list_translation={"Guadeloupe":(63,23),
                                  "Martinique":(63,23),
                                  "Guyane":(50,35),
-                                 "Réunion":(-51,60),
+                                 "La Réunion":(-51,60),
                                  "Mayotte":(-38,51.5)}
 
             if dense_geometry == True :

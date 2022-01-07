@@ -252,7 +252,7 @@ class CocoDisplay:
                                     input['permanentdisplay'] = input.clustername
                                 else:
                                     input['permanentdisplay'] = input.codelocation#input.clustername.map(trad)
-                    elif self.granumarity == 'region' :
+                    elif self.granularity == 'region' :
                         if all(i == self.namecountry for i in input.clustername.unique()):
                             input['permanentdisplay'] = [self.namecountry]*len(input)
                         else:
@@ -1493,7 +1493,7 @@ class CocoDisplay:
 
             wmt = WMTSTileSource(
                         url=tile)
-            if  self.iso3country != 'FRA':           
+            if  self.iso3country != 'FRA':
                 standardfig.add_tile(wmt)
 
             geopdwd_filtered = geopdwd_filtered[['cases','geometry','location','clustername','codelocation','rolloverdisplay']]

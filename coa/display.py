@@ -101,7 +101,6 @@ class CocoDisplay:
                 #self.boundary = geo['geometry'].total_bounds
                 if self.granularity == 'region':
                     self.location_geometry = self.geo.get_region_list()[['code_region', 'name_region', 'geometry']]
-                    print(self.location_geometry.geometry)
                     self.location_geometry = self.location_geometry.rename(columns={'name_region': 'location'})
                     if self.iso3country == 'PRT':
                          tmp=self.location_geometry.rename(columns={'name_region': 'location'})

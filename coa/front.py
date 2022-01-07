@@ -437,7 +437,11 @@ def chartsinput_deco(f):
         pandy = pandy[(pandy.date >= when_beg) & (pandy.date <= when_end)]
         kwargs['input'] = pandy
         if kwargs['input_field'] is None:
-            kwargs['input_field']=pandy.columns[2]
+            if bypop != 'no':
+                kwargs['input_field'] = [i for i in df.columns if ' per ' in i]
+            else:
+                kwargs['input_field'] = pandy.columns[2]
+
         return f(**kwargs)
 
     return wrapper

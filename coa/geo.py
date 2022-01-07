@@ -732,18 +732,12 @@ class GeoCountry():
                     'EUR':{'Basics':_country_info_dict['EUR']},\
                     }
 
-    def __init__(self,country=None,**kwargs):
+    def __init__(self,country=None):
 
         """ __init__ member function.
         Must give as arg the country to deal with, as a valid ISO3 string.
-
-        Various args :
-         - dense_geometry (boolean). If True , the geometry of subregions and
-           region is changed in order to have dense overall geometry.
-           Default False.
-         - main_area (boolean). If True, only the geometry of the main area of
-           the country is taken into account.
         """
+
         self._country=country
         if country == None:
             return None
@@ -751,17 +745,12 @@ class GeoCountry():
         if not country in self.get_list_countries():
             raise CoaKeyError("Country "+str(country)+" not supported. Please see get_list_countries() and help. ")
 
-        kwargs_test(kwargs,['dense_geometry','main_area'],'Vad args used in this init of GeoCountry object. See help.')
-
-        dense_geometry=kwargs.get("dense_geometry",False)
-        main_area=kwargs.get("main_area",False)
-
-        if not isinstance(dense_geometry,bool) or not isinstance(main_area,bool):
-            raise CoaKeyError("GeoCountry kwargs are boolean. See help.")
-
         self._country_data_region=None
         self._country_data_subregion=None
         self._municipality_region=None
+        self._is_dense_geometry=False
+        self._is_main_geometry=False
+
         url=self._country_info_dict[country]
         # country by country, adapt the read file informations
 
@@ -825,47 +814,12 @@ class GeoCountry():
             # Merging
             self._country_data=self._country_data.merge(pop_fra,left_on='code_subregion',right_on='Code département')
             self._country_data=self._country_data[['geometry','code_subregion','name_subregion','flag_subregion','code_region','name_region','population_subregion']]
-            #.drop(['id_geofla','code_reg','nom_reg','x_chf_lieu','y_chf_lieu','x_centroid','y_centroid','Code département','Nom du département','Population municipale'],axis=1,inplace=True) # removing some column without interest
-            # moving artificially (if needed) outre-mer area to be near to metropole for map representations
-            list_translation={'971':(63,23),   # Guadeloupe
-                                 '972':(63,23), # Martinique
-                                 '973':(50,35), # Guyane
-                                 '974':(-51,60), # Réunion
-                                 '976':(-38,51.5)}  # Mayotte
-
-            if dense_geometry == True :
-                # Moving DROM-COM near hexagon
-                tmp = []
-                for index, poi in self._country_data.iterrows():
-                    x=0
-                    y=0
-                    w=self._country_data.loc[index,"code_subregion"]
-                    if w in list_translation.keys():
-                        x=list_translation[w][0]
-                        y=list_translation[w][1]
-                    g = sa.translate(self._country_data.loc[index, 'geometry'], xoff=x, yoff=y)
-                    tmp.append(g)
-                self._country_data['geometry']=tmp
-
-                # Add Ile de France zoom
-                idf_translation=(-6.5,-5)
-                idf_scale=5
-                idf_center=(-4,44)
-                tmp = []
-                for index, poi in self._country_data.iterrows():
-                    g=self._country_data.loc[index, 'geometry']
-                    if self._country_data.loc[index,'code_subregion'] in ['75','92','93','94']:
-                        g2=sa.scale(sa.translate(g,xoff=idf_translation[0],yoff=idf_translation[1]),\
-                                                xfact=idf_scale,yfact=idf_scale,origin=idf_center)
-                        g=so.unary_union([g,g2])
-                    tmp.append(g)
-                self._country_data['geometry']=tmp
-
-                # Remove COM with dense geometry true, too many islands to manage
-                self._country_data=self._country_data[self._country_data.code_subregion!='980']
-
-            if main_area == True:
-                self._country_data = self._country_data[~self._country_data['code_subregion'].isin(list_translation.keys())]
+            #if needed, define translation for dense geometry
+            self._list_translation={'971':(63,23),   # Guadeloupe
+                     '972':(63,23), # Martinique
+                     '973':(50,35), # Guyane
+                     '974':(-51,60), # Réunion
+                     '976':(-38,51.5)}  # Mayotte
 
         # --- 'USA' case ---------------------------------------------------------------------------------------
         elif self._country == 'USA':
@@ -895,29 +849,10 @@ class GeoCountry():
             h_us['flag_subregion'] = [ h.split('\xa0')[0] for h in h_us['flag_subregion'] ]
             self._country_data=self._country_data.merge(h_us,how='left',on='code_subregion')
 
-            list_translation={"AK":(40,-40),"HI":(60,0)}
-            list_scale={"AK":0.4,"HI":1}
-            list_center={"AK":(-120,25),"HI":(-130,25)}
-
-            if dense_geometry == True:
-                tmp = []
-                for index, poi in self._country_data.iterrows():
-                    x=0
-                    y=0
-                    w=self._country_data.loc[index,"code_subregion"]
-                    if w in list_translation.keys():
-                        x=list_translation[w][0]
-                        y=list_translation[w][1]
-                        g=sa.scale(sa.translate(self._country_data.loc[index, 'geometry'],xoff=x,yoff=y),\
-                                                xfact=list_scale[w],yfact=list_scale[w],origin=list_center[w])
-                    else:
-                        g=self._country_data.loc[index, 'geometry']
-
-                    tmp.append(g)
-                self._country_data['geometry']=tmp
-
-            if main_area == True:
-                self._country_data=self._country_data[~self._country_data['code_subregion'].isin(list_translation.keys())]
+            # if needed, define some variable for dense / main geometry
+            self._list_translation={"AK":(40,-40),"HI":(60,0)}
+            self._list_scale={"AK":0.4,"HI":1}
+            self._list_center={"AK":(-120,25),"HI":(-130,25)}
 
         # --- 'ITA' case ---------------------------------------------------------------------------------------
         elif self._country == 'ITA':
@@ -1093,6 +1028,108 @@ class GeoCountry():
     #     if not isinstance(lname, list):
     #         lname=[lname]
     #     return self._municipality_region.loc[self._municipality_region.name.isin(lname)]['district'].to_list()
+
+    def set_dense_geometry(self):
+        """  If used, we're using for the current country a dense geometry forsubregions
+        and regions.
+        It's not possible to go back.
+        """
+
+        if self.is_dense_geometry():
+            return
+
+        if self.is_main_geometry():
+            raise CoaError("You already set the main geometry. Cannot set the dense geometry now.")
+
+        if self.get_country() == 'FRA':
+            #.drop(['id_geofla','code_reg','nom_reg','x_chf_lieu','y_chf_lieu','x_centroid','y_centroid','Code département','Nom du département','Population municipale'],axis=1,inplace=True) # removing some column without interest
+            # moving artificially (if needed) outre-mer area to be near to metropole for map representations
+
+            tmp = []
+            for index, poi in self._country_data.iterrows():
+                x=0
+                y=0
+                w=self._country_data.loc[index,"code_subregion"]
+                if w in self._list_translation.keys():
+                    x=self._list_translation[w][0]
+                    y=self._list_translation[w][1]
+                g = sa.translate(self._country_data.loc[index, 'geometry'], xoff=x, yoff=y)
+                tmp.append(g)
+            self._country_data['geometry']=tmp
+
+            # Add Ile de France zoom
+            idf_translation=(-6.5,-5)
+            idf_scale=5
+            idf_center=(-4,44)
+            tmp = []
+            for index, poi in self._country_data.iterrows():
+                g=self._country_data.loc[index, 'geometry']
+                if self._country_data.loc[index,'code_subregion'] in ['75','92','93','94']:
+                    g2=sa.scale(sa.translate(g,xoff=idf_translation[0],yoff=idf_translation[1]),\
+                                            xfact=idf_scale,yfact=idf_scale,origin=idf_center)
+                    g=so.unary_union([g,g2])
+                tmp.append(g)
+            self._country_data['geometry']=tmp
+
+            # Remove COM with dense geometry true, too many islands to manage
+            self._country_data=self._country_data[self._country_data.code_subregion!='980']
+
+        elif self.get_country() == 'USA':
+            tmp = []
+            for index, poi in self._country_data.iterrows():
+                x=0
+                y=0
+                w=self._country_data.loc[index,"code_subregion"]
+                if w in self._list_translation.keys():
+                    x=self._list_translation[w][0]
+                    y=self._list_translation[w][1]
+                    g=sa.scale(sa.translate(self._country_data.loc[index, 'geometry'],xoff=x,yoff=y),\
+                                            xfact=self._list_scale[w],yfact=self._list_scale[w],origin=self._list_center[w])
+                else:
+                    g=self._country_data.loc[index, 'geometry']
+
+                tmp.append(g)
+            self._country_data['geometry']=tmp
+        else:
+            raise CoaError("The current country does not have dense geometry support.")
+
+        self._country_data_region = None
+        self._country_data_subregion = None
+        self._is_dense_geometry = True
+
+    def set_main_geometry(self):
+        """  If used, we're using only for the current country the main
+        geometry for subregions and regions.
+        It's not possible to go back.
+        """
+        if self.is_main_geometry():
+            return
+
+        if self.is_dense_geometry():
+            raise CoaError("You already set the dense geometry. Cannot set the main geometry now.")
+
+        if self.get_country()=='FRA':
+            self._country_data = self._country_data[~self._country_data['code_subregion'].isin(self._list_translation.keys())]
+            # Remove COM with main geometry true, too many islands to manage
+            self._country_data=self._country_data[self._country_data.code_subregion!='980']
+        elif self.get_country()=='USA':
+            self._country_data = self._country_data[~self._country_data['code_subregion'].isin(self._list_translation.keys())]            
+        else:
+            raise CoaError("The current country does not have dense geometry support.")
+
+        self._country_data_region = None
+        self._country_data_subregion = None
+        self._is_main_geometry = True
+
+    def is_dense_geometry(self):
+        """Return the self._is_dense_geometry variable
+        """
+        return self._is_dense_geometry
+
+    def is_main_geometry(self):
+        """Return the self._is_main_geometry variable
+        """
+        return self._is_main_geometry
 
     def get_source(self):
         """ Return informations about URL sources

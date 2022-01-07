@@ -91,33 +91,34 @@ class CocoDisplay:
 
         self.alloptions =  self.options_stats + self.options_charts + self.options_front + list(self.dfigure_default.keys()) + list(self.dvisu_default.keys())
 
+        self.iso3country = self.dbld[self.database_name][0]
+        self.granularity = self.dbld[self.database_name][1]
+        self.namecountry = self.dbld[self.database_name][2]
         try:
-            if self.dbld[self.database_name][0] != 'WW' :
-                self.geo=coge.GeoCountry(self.dbld[self.database_name][0])
-                country = self.dbld[self.database_name][0]
+            if self.iso3country != 'WW' :
+                self.geo=coge.GeoCountry(self.iso3country,dense_geometry=True)
                 #self.boundary = geo['geometry'].total_bounds
-                if self.dbld[self.database_name][1] == 'region':
+                if self.granularity == 'region':
                     self.location_geometry = geo.get_region_list()[['code_region', 'name_region', 'geometry']]
                     self.location_geometry = self.location_geometry.rename(columns={'name_region': 'location'})
-                    if self.dbld[self.database_name][0] == 'PRT':
+                    if self.iso3country == 'PRT':
                          tmp=self.location_geometry.rename(columns={'name_region': 'location'})
                          tmp = tmp.loc[tmp.code_region=='PT.99']
                          self.boundary_metropole =tmp['geometry'].total_bounds
-                    if self.dbld[self.database_name][0] == 'FRA':
+                    if self.iso3country == 'FRA':
                          tmp=self.location_geometry.rename(columns={'name_region': 'location'})
                          tmp = tmp.loc[tmp.code_region=='999']
                          self.boundary_metropole =tmp['geometry'].total_bounds
-
-                elif self.dbld[self.database_name][1] == 'subregion':
+                elif self.granularity == 'subregion':
                     list_dep_metro = None
                     self.location_geometry = geo.get_subregion_list()[['code_subregion', 'name_subregion', 'geometry']]
                     self.location_geometry = self.location_geometry.rename(columns={'name_subregion': 'location'})
-                    if self.dbld[self.database_name][0] == 'FRA':
-                         list_dep_metro =  geo.get_subregions_from_region(name='Métropole')
-                    elif self.dbld[self.database_name][0] == 'ESP':
-                         list_dep_metro =  geo.get_subregions_from_region(name='España peninsular')
-                    if list_dep_metro:
-                        self.boundary_metropole = self.location_geometry.loc[self.location_geometry.code_subregion.isin(list_dep_metro)]['geometry'].total_bounds
+                    #if country == 'FRA':
+                    #     list_dep_metro =  geo.get_subregions_from_region(name='Métropole')
+                    #elif country == 'ESP':
+                    #     list_dep_metro =  geo.get_subregions_from_region(name='España peninsular')
+                    #if list_dep_metro:
+                    #    self.boundary_metropole = self.location_geometry.loc[self.location_geometry.code_subregion.isin(list_dep_metro)]['geometry'].total_bounds
             else:
                    self.geo=coge.GeoManager('name')
                    geopan = gpd.GeoDataFrame()#crs="EPSG:4326")
@@ -214,18 +215,17 @@ class CocoDisplay:
             if 'where' in input.columns:
                 input = input.rename(columns={'where': 'location'})
 
-            wallname = self.dbld[self.database_name][2]
             if 'codelocation' and 'clustername' not in input.columns:
                 input['codelocation'] = input['location']
                 input['clustername'] = input['location']
                 input['rolloverdisplay'] = input['location']
                 input['permanentdisplay'] = input['location']
             else:
-                if self.dbld[self.database_name][0] == 'WW' :
+                if self.iso3country == 'WW' :
                     #input['codelocation'] = input['codelocation'].apply(lambda x: str(x).replace('[', '').replace(']', '') if len(x)< 10 else x[0]+'...'+x[-1] )
                     input['permanentdisplay'] = input.apply(lambda x: x.clustername if self.geo.get_GeoRegion().is_region(x.clustername) else str(x.codelocation), axis = 1)
                 else:
-                    if self.dbld[self.database_name][1] == 'subregion' :
+                    if self.granularity == 'subregion' :
                         input = input.reset_index(drop=True)
                         if isinstance(input['codelocation'][0],list):
                             input['codelocation'] = input['codelocation'].apply(lambda x: str(x).replace("'", '')\
@@ -236,7 +236,7 @@ class CocoDisplay:
                         if isinstance(input.location[0],list):
                            cluster = [i for i in cluster]
                         for i in cluster:
-                            if i == self.dbld[self.database_name][2]:
+                            if i == self.namecountry:
                                 input['permanentdisplay'] = input.clustername #[self.dbld[self.database_name][2]]*len(input)
                             else:
                                 if self.geo.is_region(i):
@@ -250,9 +250,9 @@ class CocoDisplay:
                                     input['permanentdisplay'] = input.clustername
                                 else:
                                     input['permanentdisplay'] = input.codelocation#input.clustername.map(trad)
-                    elif self.dbld[self.database_name][1] == 'region' :
-                        if all(i == self.dbld[self.database_name][2] for i in input.clustername.unique()):
-                            input['permanentdisplay'] = [self.dbld[self.database_name][2]]*len(input)
+                    elif self.granumarity == 'region' :
+                        if all(i == self.namecountry for i in input.clustername.unique()):
+                            input['permanentdisplay'] = [self.namecountry]*len(input)
                         else:
                             input['permanentdisplay'] = input.codelocation
                 input['rolloverdisplay'] = input['location']
@@ -1310,7 +1310,7 @@ class CocoDisplay:
         uniqloc = list(geopdwd_filtered.codelocation.unique())
         geopdwd_filtered = geopdwd_filtered.drop(columns=['date', 'colors'])
 
-        if self.dbld[self.database_name][0] in ['FRA','ESP','PRT']:# and all(len(l) == 2 for l in geopdwd_filtered.codelocation.unique()):
+        if self.iso3country in ['FRA','ESP','PRT']:# and all(len(l) == 2 for l in geopdwd_filtered.codelocation.unique()):
             zoom = 1
         else:
             zoom = 1

@@ -97,9 +97,10 @@ class CocoDisplay:
         try:
             if self.iso3country != 'WW' :
                 self.geo=coge.GeoCountry(self.iso3country,dense_geometry=True)
+
                 #self.boundary = geo['geometry'].total_bounds
                 if self.granularity == 'region':
-                    self.location_geometry = geo.get_region_list()[['code_region', 'name_region', 'geometry']]
+                    self.location_geometry = self.geo.get_region_list()[['code_region', 'name_region', 'geometry']]
                     self.location_geometry = self.location_geometry.rename(columns={'name_region': 'location'})
                     if self.iso3country == 'PRT':
                          tmp=self.location_geometry.rename(columns={'name_region': 'location'})
@@ -111,7 +112,7 @@ class CocoDisplay:
                          self.boundary_metropole =tmp['geometry'].total_bounds
                 elif self.granularity == 'subregion':
                     list_dep_metro = None
-                    self.location_geometry = geo.get_subregion_list()[['code_subregion', 'name_subregion', 'geometry']]
+                    self.location_geometry = self.geo.get_subregion_list()[['code_subregion', 'name_subregion', 'geometry']]
                     self.location_geometry = self.location_geometry.rename(columns={'name_subregion': 'location'})
                     #if country == 'FRA':
                     #     list_dep_metro =  geo.get_subregions_from_region(name='Métropole')
@@ -123,8 +124,8 @@ class CocoDisplay:
                    self.geo=coge.GeoManager('name')
                    geopan = gpd.GeoDataFrame()#crs="EPSG:4326")
                    info = coge.GeoInfo()
-                   allcountries = geo.get_GeoRegion().get_countries_from_region('world')
-                   geopan['location'] = [geo.to_standard(c)[0] for c in allcountries]
+                   allcountries = self.geo.get_GeoRegion().get_countries_from_region('world')
+                   geopan['location'] = [self.geo.to_standard(c)[0] for c in allcountries]
                    geopan = info.add_field(field=['geometry'],input=geopan ,geofield='location')
                    geopan = gpd.GeoDataFrame(geopan, geometry=geopan.geometry, crs="EPSG:4326")
                    geopan = geopan[geopan.location != 'Antarctica']
@@ -250,7 +251,7 @@ class CocoDisplay:
                                     input['permanentdisplay'] = input.clustername
                                 else:
                                     input['permanentdisplay'] = input.codelocation#input.clustername.map(trad)
-                    elif self.granumarity == 'region' :
+                    elif self.granularity == 'region' :
                         if all(i == self.namecountry for i in input.clustername.unique()):
                             input['permanentdisplay'] = [self.namecountry]*len(input)
                         else:
@@ -1310,11 +1311,6 @@ class CocoDisplay:
         uniqloc = list(geopdwd_filtered.codelocation.unique())
         geopdwd_filtered = geopdwd_filtered.drop(columns=['date', 'colors'])
 
-        if self.iso3country in ['FRA','ESP','PRT']:# and all(len(l) == 2 for l in geopdwd_filtered.codelocation.unique()):
-            zoom = 1
-        else:
-            zoom = 1
-
         msg = "(data from: {})".format(self.database_name)
         minx, miny, maxx, maxy =  geopdwd_filtered.total_bounds
         mapa = folium.Map(tiles=tile, attr='<a href=\"http://pycoa.fr\"> ©pycoa.fr </a>' + msg)  #
@@ -1496,7 +1492,8 @@ class CocoDisplay:
 
             wmt = WMTSTileSource(
                         url=tile)
-            standardfig.add_tile(wmt)
+            if  self.iso3country != 'FRA':
+                standardfig.add_tile(wmt)
 
             geopdwd_filtered = geopdwd_filtered[['cases','geometry','location','clustername','codelocation','rolloverdisplay']]
             if not dfLabel.empty:

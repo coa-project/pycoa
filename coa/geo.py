@@ -827,11 +827,11 @@ class GeoCountry():
             self._country_data=self._country_data[['geometry','code_subregion','name_subregion','flag_subregion','code_region','name_region','population_subregion']]
             #.drop(['id_geofla','code_reg','nom_reg','x_chf_lieu','y_chf_lieu','x_centroid','y_centroid','Code département','Nom du département','Population municipale'],axis=1,inplace=True) # removing some column without interest
             # moving artificially (if needed) outre-mer area to be near to metropole for map representations
-            list_translation={"Guadeloupe":(63,23),
-                                 "Martinique":(63,23),
-                                 "Guyane":(50,35),
-                                 "La Réunion":(-51,60),
-                                 "Mayotte":(-38,51.5)}
+            list_translation={'971':(63,23),   # Guadeloupe
+                                 '972':(63,23), # Martinique
+                                 '973':(50,35), # Guyane
+                                 '974':(-51,60), # Réunion
+                                 '976':(-38,51.5)}  # Mayotte
 
             if dense_geometry == True :
                 # Moving DROM-COM near hexagon
@@ -839,7 +839,7 @@ class GeoCountry():
                 for index, poi in self._country_data.iterrows():
                     x=0
                     y=0
-                    w=self._country_data.loc[index,"name_subregion"]
+                    w=self._country_data.loc[index,"code_subregion"]
                     if w in list_translation.keys():
                         x=list_translation[w][0]
                         y=list_translation[w][1]
@@ -862,7 +862,7 @@ class GeoCountry():
                 self._country_data['geometry']=tmp
 
             if main_area == True:
-                self._country_data = self._country_data[~self._country_data['name_subregion'].isin(list_translation.keys())]
+                self._country_data = self._country_data[~self._country_data['code_subregion'].isin(list_translation.keys())]
 
         # --- 'USA' case ---------------------------------------------------------------------------------------
         elif self._country == 'USA':

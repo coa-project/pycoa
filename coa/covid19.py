@@ -1092,7 +1092,7 @@ class DataBase(object):
         fillnan = True # default
         sumall = False # default
         sumallandsmooth7 = False
-        if kwargs['which'] not in self.get_available_keys_words() :
+        if kwargs['which'] not in self.get_available_keys_words():
             raise CoaKeyError(kwargs['which']+' is not a available for ' + self.db + ' database name. '
             'See get_available_keys_words() for the full list.')
 

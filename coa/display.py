@@ -30,6 +30,7 @@ import io
 from io import BytesIO
 import base64
 from IPython import display
+import copy
 
 from bokeh.models import ColumnDataSource, TableColumn, DataTable, ColorBar, LogTicker,\
     HoverTool, CrosshairTool, BasicTicker, GeoJSONDataSource, LinearColorMapper, LogColorMapper,Label, \
@@ -96,9 +97,7 @@ class CocoDisplay:
         self.namecountry = self.dbld[self.database_name][2]
         try:
             if self.iso3country != 'WW' :
-                self.geo=coge.GeoCountry(self.iso3country,dense_geometry=True)
-
-                #self.boundary = geo['geometry'].total_bounds
+                self.geo = coge.GeoCountry(self.iso3country)
                 if self.granularity == 'region':
                     self.location_geometry = self.geo.get_region_list()[['code_region', 'name_region', 'geometry']]
                     self.location_geometry = self.location_geometry.rename(columns={'name_region': 'location'})
@@ -652,10 +651,6 @@ class CocoDisplay:
         @wraps(func)
         def inner_hm(self, input = None, input_field = None, **kwargs):
             tile = kwargs.get('tile', None)
-            if tile:
-                tile = tile
-            else:
-                tile = self.dvisu_default['tile']
 
             maplabel = kwargs.get('maplabel', None)
             if not isinstance(maplabel,list):
@@ -664,7 +659,6 @@ class CocoDisplay:
             #    maplabel = maplabel
 
             if 'map' in func.__name__:
-                kwargs['tile'] = tile
                 kwargs['maplabel'] = maplabel
 
             orientation = kwargs.get('orientation', self.dvisu_default['orientation'])
@@ -702,7 +696,28 @@ class CocoDisplay:
                     geopdwd['geometry'] = geopdwd['location'].map(geodic)
                 else:
                     geopdwd = pd.merge(geopdwd, self.location_geometry, on='location')
+
+                kwargs['tile'] = self.dvisu_default['tile']
+                if self.iso3country == 'FRA' :
+                    geo = copy.deepcopy(self.geo)
+                    if func.__name__ != 'pycoa_mapfolium':
+                        if [code for code in list(geopdwd.codelocation) if len(code) >=3]:
+                            geo.set_dense_geometry()
+                            kwargs.pop('tile')
+                        else:
+                            geo.set_main_geometry()
+                        if self.granularity == 'subregion':
+                            new_geo = geo.get_data()[['name_subregion','geometry']]
+                            new_geo = new_geo.rename(columns={'name_subregion':'location'})
+                            new_geo = new_geo.set_index('location')['geometry'].to_dict()
+                        else:
+                            new_geo = geo.get_data()[['name_region','geometry']]
+                            new_geo = new_geo.rename(columns={'name_region':'location'}).to_dict()
+                            new_geo = new_geo.set_index('location')['geometry'].to_dict()
+                        geopdwd['geometry'] = geopdwd['location'].map(new_geo)
                 geopdwd = gpd.GeoDataFrame(geopdwd, geometry=geopdwd.geometry, crs="EPSG:4326")
+                #geopdwd['geometry'] = geopdwd.buffer(0.01) # Precision pb need to reconstruct your polygons with a buffer
+
             if func.__name__ == 'pycoa_histo':
                 pos = {}
                 new = pd.DataFrame()
@@ -1445,8 +1460,10 @@ class CocoDisplay:
         def innerdecomap(self, geopdwd, geopdwd_filtered, **kwargs):
             title = kwargs.get('title', None)
             maplabel = kwargs.get('maplabel',self.dvisu_default['maplabel'])
-            tile =  kwargs.get('tile', self.dvisu_default['tile'])
-            tile = CocoDisplay.convert_tile(tile, 'bokeh')
+            tile =  kwargs.get('tile', None)
+            if tile:
+                tile = CocoDisplay.convert_tile(tile, 'bokeh')
+
             uniqloc = list(geopdwd_filtered.clustername.unique())
             dfLabel = pd.DataFrame()
             sourcemaplabel = ColumnDataSource(dfLabel)
@@ -1454,7 +1471,6 @@ class CocoDisplay:
                 locsum = geopdwd_filtered.clustername.unique()
                 numberpercluster = geopdwd_filtered['clustername'].value_counts().to_dict()
                 sumgeo = geopdwd_filtered.copy()
-                sumgeo['geometry'] = sumgeo.buffer(0.01) # Precision pb need to reconstruct your polygons with a buffer
                 sumgeo = sumgeo.dissolve(by='clustername', aggfunc='sum').reset_index()
                 sumgeo['nb'] = sumgeo['clustername'].map(numberpercluster)
                 centrosx = sumgeo['geometry'].centroid.x
@@ -1490,9 +1506,9 @@ class CocoDisplay:
             else:
                 standardfig = self.standardfig(x_axis_type="mercator", y_axis_type="mercator",**kwargs,match_aspect=True)
 
-            wmt = WMTSTileSource(
-                        url=tile)
-            if  self.iso3country != 'FRA':
+            if tile:
+                wmt = WMTSTileSource(
+                            url=tile)
                 standardfig.add_tile(wmt)
 
             geopdwd_filtered = geopdwd_filtered[['cases','geometry','location','clustername','codelocation','rolloverdisplay']]

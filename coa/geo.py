@@ -1121,7 +1121,6 @@ class GeoCountry():
         self._country_data_region = None
         self._country_data_subregion = None
         self._is_main_geometry = True
-        self._list_translation = {}
 
     def is_dense_geometry(self):
         """Return the self._is_dense_geometry variable

@@ -1097,6 +1097,7 @@ class GeoCountry():
         self._country_data_subregion = None
         self._is_dense_geometry = True
 
+
     def set_main_geometry(self):
         """  If used, we're using only for the current country the main
         geometry for subregions and regions.
@@ -1113,13 +1114,14 @@ class GeoCountry():
             # Remove COM with main geometry true, too many islands to manage
             self._country_data=self._country_data[self._country_data.code_subregion!='980']
         elif self.get_country()=='USA':
-            self._country_data = self._country_data[~self._country_data['code_subregion'].isin(self._list_translation.keys())]            
+            self._country_data = self._country_data[~self._country_data['code_subregion'].isin(self._list_translation.keys())]
         else:
             raise CoaError("The current country does not have dense geometry support.")
 
         self._country_data_region = None
         self._country_data_subregion = None
         self._is_main_geometry = True
+        self._list_translation = {}
 
     def is_dense_geometry(self):
         """Return the self._is_dense_geometry variable

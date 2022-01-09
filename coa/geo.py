@@ -1066,12 +1066,9 @@ class GeoCountry():
                 if self._country_data.loc[index,'code_subregion'] in ['75','92','93','94']:
                     g2=sa.scale(sa.translate(g,xoff=idf_translation[0],yoff=idf_translation[1]),\
                                             xfact=idf_scale,yfact=idf_scale,origin=idf_center)
-                    #g=so.unary_union([g,g2])
-                    ap=self._country_data.iloc[index].copy()
-                    ap[['name_subregion','geometry']]=[ap.name_subregion+'_trans',g2]
-                    self._country_data = self._country_data.append(ap)
-                #tmp.append(g)
-            #self._country_data['geometry']=tmp
+                    g=so.unary_union([g,g2])
+                tmp.append(g)
+            self._country_data['geometry']=tmp
 
             # Remove COM with dense geometry true, too many islands to manage
             self._country_data=self._country_data[self._country_data.code_subregion!='980']

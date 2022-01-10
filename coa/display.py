@@ -698,25 +698,23 @@ class CocoDisplay:
                     geopdwd = pd.merge(geopdwd, self.location_geometry, on='location')
 
                 kwargs['tile'] = self.dvisu_default['tile']
-                if self.iso3country == 'FRA' :
+                if self.iso3country in ['FRA','USA']:
                     geo = copy.deepcopy(self.geo)
+                    d = geo._list_translation
                     if func.__name__ != 'pycoa_mapfolium':
-                        if [code for code in list(geopdwd.codelocation) if len(code) >=3]:
+                        if any(i in list(geopdwd.codelocation.unique()) for i in d.keys()) \
+                        or any(True for i in d.keys() if ''.join(list(geopdwd.codelocation.unique())).find(i)!=-1):
                             geo.set_dense_geometry()
                             kwargs.pop('tile')
                         else:
                             geo.set_main_geometry()
-                        if self.granularity == 'subregion':
-                            new_geo = geo.get_data()[['name_subregion','geometry']]
-                            new_geo = new_geo.rename(columns={'name_subregion':'location'})
-                            new_geo = new_geo.set_index('location')['geometry'].to_dict()
-                        else:
-                            new_geo = geo.get_data()[['name_region','geometry']]
-                            new_geo = new_geo.rename(columns={'name_region':'location'}).to_dict()
-                            new_geo = new_geo.set_index('location')['geometry'].to_dict()
+                            d = {}
+                        new_geo = geo.get_data()[['name_'+self.granularity,'geometry']]
+                        new_geo = new_geo.rename(columns={'name_'+self.granularity:'location'})
+                        new_geo = new_geo.set_index('location')['geometry'].to_dict()
+
                         geopdwd['geometry'] = geopdwd['location'].map(new_geo)
                 geopdwd = gpd.GeoDataFrame(geopdwd, geometry=geopdwd.geometry, crs="EPSG:4326")
-                #geopdwd['geometry'] = geopdwd.buffer(0.01) # Precision pb need to reconstruct your polygons with a buffer
 
             if func.__name__ == 'pycoa_histo':
                 pos = {}
@@ -1228,7 +1226,8 @@ class CocoDisplay:
         df['text_size'] = '10pt'
         df['text_angle'] = 0.
         df.loc[:, 'percentage'] = ((df[column_name]*100).astype(np.double).round(1).astype(str)+'%').str.pad(46, side = "left")
-        df['textdisplayed']=df['permanentdisplay'].astype(str).str.pad(15, side = "left")
+        #df['textdisplayed'] = df['permanentdisplay'].apply(lambda x: str(x[:10]+'...').str.pad(20, side = "left"))
+        df['textdisplayed']=df['permanentdisplay'].apply(lambda x: x[:10]+'...').astype(str).str.pad(18, side = "left")
         df['textdisplayed2'] = df[column_name].astype(np.double).round(1).astype(str).str.pad(46, side = "left")
         df.loc[df['diff']<= np.pi/20,'textdisplayed']=''
         df.loc[df['diff']<= np.pi/20,'textdisplayed2']=''
@@ -1473,6 +1472,7 @@ class CocoDisplay:
                 sumgeo = geopdwd_filtered.copy()
                 sumgeo = sumgeo.dissolve(by='clustername', aggfunc='sum').reset_index()
                 sumgeo['nb'] = sumgeo['clustername'].map(numberpercluster)
+                #print(geopdwd_filtered.loc[geopdwd_filtered.clustername=='Île-de-France'].reset_index(drop=True).explode(index_parts=False))
                 centrosx = sumgeo['geometry'].centroid.x
                 centrosy = sumgeo['geometry'].centroid.y
                 cases = sumgeo['cases']/sumgeo['nb']
@@ -1510,6 +1510,8 @@ class CocoDisplay:
                 wmt = WMTSTileSource(
                             url=tile)
                 standardfig.add_tile(wmt)
+            else:
+                standardfig.background_fill_color = "lightgrey"
 
             geopdwd_filtered = geopdwd_filtered[['cases','geometry','location','clustername','codelocation','rolloverdisplay']]
             if not dfLabel.empty:

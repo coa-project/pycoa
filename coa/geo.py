@@ -1057,18 +1057,18 @@ class GeoCountry():
                 tmp.append(g)
             self._country_data['geometry']=tmp
             # Add Ile de France zoom
-            idf_translation=(-6.5,-5)
-            idf_scale=5
-            idf_center=(-4,44)
-            tmp = []
-            for index, poi in self._country_data.iterrows():
-                g=self._country_data.loc[index, 'geometry']
-                if self._country_data.loc[index,'code_subregion'] in ['75','92','93','94']:
-                    g2=sa.scale(sa.translate(g,xoff=idf_translation[0],yoff=idf_translation[1]),\
-                                            xfact=idf_scale,yfact=idf_scale,origin=idf_center)
-                    g=so.unary_union([g,g2])
-                tmp.append(g)
-            self._country_data['geometry']=tmp
+            #idf_translation=(-6.5,-5)
+            #idf_scale=5
+            #idf_center=(-4,44)
+            #tmp = []
+            #for index, poi in self._country_data.iterrows():
+            #    g=self._country_data.loc[index, 'geometry']
+            #    if self._country_data.loc[index,'code_subregion'] in ['75','92','93','94']:
+            #        g2=sa.scale(sa.translate(g,xoff=idf_translation[0],yoff=idf_translation[1]),\
+            #                                xfact=idf_scale,yfact=idf_scale,origin=idf_center)
+            #        g=so.unary_union([g,g2])
+            #    tmp.append(g)
+            #self._country_data['geometry']=tmp
 
             # Remove COM with dense geometry true, too many islands to manage
             self._country_data=self._country_data[self._country_data.code_subregion!='980']

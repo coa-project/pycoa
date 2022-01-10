@@ -27,10 +27,10 @@ L'outil `PyCoA` est pensé pour être utilisé dans un environnement [jupyter](h
 
 ```python
 import coa.front as cf
-cf.plot(where=['France', 'Italy', 'United kingdom'], which='deaths', what='cumul')
+cf.plot(where=['France', 'Italy', 'United kingdom'])
 cf.map(where='world',what='daily',when='01/04/2020')
-cf.hist(where='middle africa', which='confirmed',what='cumul')
-cf.get(where='usa', what='daily', which='recovered',output='pandas')
+cf.hist(where='middle africa', which='tot_confirmed',what='cumul')
+cf.get(where='usa', what='daily', which='tot_recovered',output='pandas')
 ```
 <img src="https://raw.githubusercontent.com/wiki/coa-project/pycoa/figs/pycoa_plot_example.png" height="240" align=top /><img src="https://raw.githubusercontent.com/wiki/coa-project/pycoa/figs/pycoa_map_example.png" height="240" align=top />
 

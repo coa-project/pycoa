@@ -35,6 +35,7 @@ It is designed to be accessible to non-specialists: teenagers learning Python™
 
 ```python
 import coa.front as cf
+<<<<<<< HEAD
 # default database is JHU
 cf.plot(option='sumall') # default is 'deaths', for all countries
 cf.plot(where='g20') # managing region
@@ -44,6 +45,12 @@ cf.setwhom('owid') # changing database
 cf.hist(which='total_vaccinations') # default is for all countries
 cf.hist(which='cur_icu_patients',typeofhist='pie',where='european union')
 cf.hist(which='total_people_fully_vaccinated_per_hundred',typeofhist='byvalue',where='asia')
+=======
+cf.plot(where=['France', 'Italy', 'United kingdom'])
+cf.map(where='world',what='daily',when='01/04/2020')
+cf.hist(where='middle africa', which='tot_confirmed',what='cumul')
+cf.get(where='usa', what='daily', which='tot_recovered',output='pandas')
+>>>>>>> 22939a06b6f2bf86fb419ae30fc025128719ceb0
 ```
 
 Since the `v2.0` version, PyCoA manages also local data :

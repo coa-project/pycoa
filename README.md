@@ -39,7 +39,7 @@ import coa.front as cf
 # default database is JHU
 cf.plot(option='sumall') # default is 'deaths', for all countries
 cf.plot(where='g20') # managing region
-cf.map(where='oecd',what='daily',when='01/02/2021',which='confirmed')
+cf.map(where='oecd',what='daily',when='01/02/2021',which='tot_confirmed')
 
 cf.setwhom('owid') # changing database
 cf.hist(which='total_vaccinations') # default is for all countries

@@ -513,18 +513,6 @@ class DataBase(object):
 
                     owid_new_test.loc[:,'total_tests'] = owid_new_test.groupby(['location'])['new_tests'].cumsum()
                     owid = pd.concat([owid[mask],owid_new_test,owid_total_test])
-
-                    if variant:
-                        constraints = {'variant': 'Omicron'}
-                        #cast={'num_sequences':float,'perc_sequences':float,'num_sequences_total':float}
-                        owidvar = self.csv2pandas("https://raw.githubusercontent.com/owid/covid-19-data/master/public/data/variants/covid-variants.csv",
-                        separator=',',constraints=constraints)
-                        info('... Omicron variant from other owid has been added ...')
-                        owid = pd.merge(owid,owidvar,on=['location','date'],how='left')
-                        #pandas_db = pandas_db.loc[(~pandas_db.iso_code.isnull())]
-                        columns_keeped += ['num_sequences','num_sequences_total','perc_sequences']
-
-                        owid = owid.apply(lambda x: x/100. if '_per_hundred' in x.name else x)
                     self.return_structured_pandas(owid.rename(columns=dict(zip(col_to_rename,renamed_cols))),columns_keeped=columns_keeped+renamed_cols)
                 elif self.db == 'risklayer':
                     info('EUR, Who Europe from RiskLayer ...')

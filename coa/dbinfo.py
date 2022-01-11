@@ -190,9 +190,6 @@ def generic_info(namedb, keys):
         'cur_hosp_patients':['cur_hosp_patients (original name hosp_patients): Number of COVID-19 patients in hospital on a given day'],
         'cur_weekly_hosp_admissions':['cur_weekly_hosp_admissions (original name weekly_hosp_admissions): Number of COVID-19 patients in hospital on a given week'],
         'cur_idx_positive_rate':['cur_idx_positive_rate (original name positive_rate): The share of COVID-19 tests that are positive, given as a rolling 7-day average (this is the inverse of tests_per_case)'],
-        'num_sequences':['num_sequences: Number of sequenced samples that fall into the category variant.'],
-        'perc_sequences':['perc_sequences: Percentage of the sequenced samples that fall into the category variant.'],
-        'num_sequences_total':['num_sequences_total: Total number of samples sequenced in the last two weeks'],
         'total_gdp_per_capita':['Gross domestic product at purchasing power parity (constant 2011 international dollars), most recent year available'],
         }
         for k,v in owid.items():

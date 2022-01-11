@@ -1470,7 +1470,7 @@ class CocoDisplay:
                 locsum = geopdwd_filtered.clustername.unique()
                 numberpercluster = geopdwd_filtered['clustername'].value_counts().to_dict()
                 sumgeo = geopdwd_filtered.copy()
-                sumgeo['geometry'] = sumgeo['geometry'].buffer(0.001)
+                sumgeo['geometry'] = sumgeo['geometry'].buffer(0.001) #needed with geopandas 0.10.2
                 sumgeo = sumgeo.dissolve(by='clustername', aggfunc='sum').reset_index()
                 sumgeo['nb'] = sumgeo['clustername'].map(numberpercluster)
                 #print(geopdwd_filtered.loc[geopdwd_filtered.clustername=='Île-de-France'].reset_index(drop=True).explode(index_parts=False))

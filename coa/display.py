@@ -1200,7 +1200,6 @@ class CocoDisplay:
             fig.y_range = Range1d(min(srcfiltered.data['bottom']), max(srcfiltered.data['top']))
             fig.yaxis[0].formatter = NumeralTickFormatter(format="0.0")
             ytick_loc = [int(i) for i in srcfiltered.data['horihistotexty']]
-            print(srcfiltered.data['horihistotexty'])
             fig.yaxis.ticker  = ytick_loc
             label_dict = dict(zip(ytick_loc,srcfiltered.data['permanentdisplay']))
             fig.yaxis.major_label_overrides = label_dict

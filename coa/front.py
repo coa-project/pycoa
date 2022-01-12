@@ -566,196 +566,233 @@ def merger(**kwargs):
 # ----------------------------------------------------------------------
 # --- map(**kwargs) ----------------------------------------------------
 # ----------------------------------------------------------------------
+def decomap(func):
+    def inner(**kwargs):
+        """
+        Create a map according to arguments and options.
+        See help(map).
+        - 2 types of visu are avalailable so far : bokeh or folium (see listvisu())
+        by default visu='bokeh'
+        - In the default case (i.e visu='bokeh') available option are :
+            - dateslider=True: a date slider is called and displayed on the right part of the map
+            - maplabel = text, value are displayed directly on the map
+                       = spark, sparkline are displayed directly on the map
+                       = label%, label are in %
+        """
+        visu = kwargs.get('visu', listvisu()[0])
+        input = kwargs.get('input')
+        input_field = kwargs.get('input_field')
+        if not input.empty:
+            kwargs.pop('input')
+            kwargs.pop('input_field')
+        kwargs.pop('output')
+        if kwargs.get('bypop'):
+          kwargs.pop('bypop')
+
+        dateslider = kwargs.get('dateslider', None)
+        maplabel = kwargs.get('maplabel', None)
+
+        if maplabel is not None:
+            if not isinstance(maplabel,list):
+                maplabel = [maplabel]
+            if  [a for a in maplabel if a not in ['text','spark','label%','log','unsorted']]:
+                raise CoaTypeError('Waiting a correct maplabel value. See help.')
+
+        sparkline = False
+        if dateslider is not None:
+            del kwargs['dateslider']
+            kwargs['cursor_date'] = dateslider
+        if maplabel is not None:
+            kwargs['maplabel'] = []
+            if 'text' in maplabel:
+                kwargs['maplabel'] = ['text']
+            if 'label%' in maplabel:
+                kwargs['maplabel'].append('label%')
+            if 'log' in maplabel:
+                kwargs['maplabel'].append('log')
+            if 'spark' in maplabel:
+                sparkline = True
+            #if all([ True if i in ['text','spark','label%','log'] else False for i in kwargs['maplabel'] ]) :
+            #    CoaKeyError('Waiting for a valide label visualisation: text, spark or label%')
+            input.loc[:,input_field]=input[input_field].fillna(0) #needed in the case where there are nan else js pb
+        return func(input,input_field,**kwargs)
+    return inner
+
 @chartsinput_deco
-def map(**kwargs):
-    """
-    Create a map according to arguments and options.
-    See help(map).
-    - 2 types of visu are avalailable so far : bokeh or folium (see listvisu())
-    by default visu='bokeh'
-    - In the default case (i.e visu='bokeh') available option are :
-        - dateslider=True: a date slider is called and displayed on the right part of the map
-        - maplabel = text, value are displayed directly on the map
-                   = spark, sparkline are displayed directly on the map
-                   = label%, label are in %
-    """
+@decomap
+def map(input,input_field,**kwargs):
     visu = kwargs.get('visu', listvisu()[0])
-    input = kwargs.get('input')
-    input_field = kwargs.get('input_field')
-
-    if not input.empty:
-        kwargs.pop('input')
-        kwargs.pop('input_field')
-    kwargs.pop('output')
-    if kwargs.get('bypop'):
-      kwargs.pop('bypop')
-
     dateslider = kwargs.get('dateslider', None)
     maplabel = kwargs.get('maplabel', None)
-
-    if maplabel is not None:
-        if not isinstance(maplabel,list):
-            maplabel = [maplabel]
-        if  [a for a in maplabel if a not in ['text','spark','label%','log','unsorted']]:
-            raise CoaTypeError('Waiting a correct maplabel value. See help.')
-
-    sparkline = False
-    if dateslider is not None:
-        del kwargs['dateslider']
-        kwargs['cursor_date'] = dateslider
-    if maplabel is not None:
-        kwargs['maplabel'] = []
-        if 'text' in maplabel:
-            kwargs['maplabel'] = ['text']
-        if 'label%' in maplabel:
-            kwargs['maplabel'].append('label%')
-        if 'log' in maplabel:
-            kwargs['maplabel'].append('log')
-        if 'spark' in maplabel:
-            sparkline = True
-        #if all([ True if i in ['text','spark','label%','log'] else False for i in kwargs['maplabel'] ]) :
-        #    CoaKeyError('Waiting for a valide label visualisation: text, spark or label%')
-        input.loc[:,input_field]=input[input_field].fillna(0) #needed in the case where there are nan else js pb
     if visu == 'bokeh':
-        if sparkline == False:
-            return show(_cocoplot.pycoa_map(input,input_field,**kwargs))
-        else:
+        if maplabel and 'sparkline' in maplabel:
             return show(_cocoplot.pycoa_sparkmap(input,input_field,**kwargs))
+        else:
+            return show(_cocoplot.pycoa_map(input,input_field,**kwargs))
+
+
     elif visu == 'folium':
-        if dateslider:
+        if dateslider is not None :
             raise CoaKeyError('Not available with folium map, you should considere to use bokeh map visu in this case')
         if  maplabel and set(maplabel) != set(['log']):
             raise CoaKeyError('Not available with folium map, you should considere to use bokeh map visu in this case')
         return _cocoplot.pycoa_mapfolium(input,input_field,**kwargs)
     else:
         raise CoaTypeError('Waiting for a valid visualisation. So far: \'bokeh\' or \'folium\'.See help.')
+
 # ----------------------------------------------------------------------
 # --- hist(**kwargs) ---------------------------------------------------
 # ----------------------------------------------------------------------
-@chartsinput_deco
-def hist(**kwargs):
-    """
-    Create histogram according to arguments.
-    See help(hist).
-    Keyword arguments
-    -----------------
+def decohist(func):
+    def inner(**kwargs):
+        """
+        Create histogram according to arguments.
+        See help(hist).
+        Keyword arguments
+        -----------------
 
-    where (mandatory if no input), what, which, whom, when : (see help(get))
+        where (mandatory if no input), what, which, whom, when : (see help(get))
 
-    input       --  input data to plot within the pycoa framework (e.g.
-                    after some analysis or filtering). Default is None which
-                    means that we use the basic raw data through the get
-                    function.
-                    When the 'input' keyword is set, where, what, which,
-                    whom when keywords are ignored.
-                    input should be given as valid pycoa pandas dataframe.
+        input       --  input data to plot within the pycoa framework (e.g.
+                        after some analysis or filtering). Default is None which
+                        means that we use the basic raw data through the get
+                        function.
+                        When the 'input' keyword is set, where, what, which,
+                        whom when keywords are ignored.
+                        input should be given as valid pycoa pandas dataframe.
 
-    input_field --  is the name of the field of the input pandas to plot.
-                    Default is 'deaths/cumul', the default output field of
-                    the get() function.
+        input_field --  is the name of the field of the input pandas to plot.
+                        Default is 'deaths/cumul', the default output field of
+                        the get() function.
 
-    width_height : width and height of the picture .
-                If specified should be a list of width and height.
-                For instance width_height=[400,500]
+        width_height : width and height of the picture .
+                    If specified should be a list of width and height.
+                    For instance width_height=[400,500]
 
-    typeofhist  --  'bylocation' (default), 'byvalue' or pie
+        typeofhist  --  'bylocation' (default), 'byvalue' or pie
 
-    bins        --  number of bins used, only available for 'byvalue' type of
-                    histograms.
-                    If none provided, a default value will be used.
-    """
-    input = kwargs.pop('input')
-    input_field = kwargs.pop('input_field')
-    dateslider = kwargs.get('dateslider', None)
-    typeofhist = kwargs.pop('typeofhist', 'bylocation')
-    kwargs.pop('output')
-    if kwargs.get('bypop'):
-      kwargs.pop('bypop')
+        bins        --  number of bins used, only available for 'byvalue' type of
+                        histograms.
+                        If none provided, a default value will be used.
+        """
+        input = kwargs.pop('input')
+        input_field = kwargs.pop('input_field')
+        dateslider = kwargs.get('dateslider', None)
+        typeofhist = kwargs.pop('typeofhist', 'bylocation')
+        kwargs.pop('output')
+        if kwargs.get('bypop'):
+          kwargs.pop('bypop')
 
-    if dateslider is not None:
-        del kwargs['dateslider']
-        kwargs['cursor_date'] = dateslider
+        if dateslider is not None:
+            del kwargs['dateslider']
+            kwargs['cursor_date'] = dateslider
 
-    if typeofhist == 'bylocation':
-        if 'bins' in kwargs:
-            raise CoaKeyError("The bins keyword cannot be set with histograms by location. See help.")
-        fig = _cocoplot.pycoa_horizonhisto(input, input_field, **kwargs)
-    elif typeofhist == 'byvalue':
-        if dateslider:
-            info('dateslider not implemented for typeofhist=\'byvalue\'.')
+        if typeofhist == 'bylocation':
+            if 'bins' in kwargs:
+                raise CoaKeyError("The bins keyword cannot be set with histograms by location. See help.")
             fig = _cocoplot.pycoa_horizonhisto(input, input_field, **kwargs)
-        else:
-            fig = _cocoplot.pycoa_histo(input, input_field, **kwargs)
-    elif typeofhist == 'pie':
-        fig = _cocoplot.pycoa_pie(input, input_field, **kwargs)
+        elif typeofhist == 'byvalue':
+            if dateslider:
+                info('dateslider not implemented for typeofhist=\'byvalue\'.')
+                fig = _cocoplot.pycoa_horizonhisto(input, input_field, **kwargs)
+            else:
+                fig = _cocoplot.pycoa_histo(input, input_field, **kwargs)
+        elif typeofhist == 'pie':
+            fig = _cocoplot.pycoa_pie(input, input_field, **kwargs)
 
-    else:
-        raise CoaKeyError('Unknown typeofhist value. Should be bylocation or byvalue.')
+        else:
+            raise CoaKeyError('Unknown typeofhist value. Should be bylocation or byvalue.')
+        return func(fig)
+    return inner
+
+@chartsinput_deco
+@decohist
+def figurehist(fig):
+    ''' Return fig Bohek object '''
+    return fig
+
+@chartsinput_deco
+@decohist
+def hist(fig):
+    ''' show hist '''
     show(fig)
 
 # ----------------------------------------------------------------------
 # --- plot(**kwargs) ---------------------------------------------------
 # ----------------------------------------------------------------------
-@chartsinput_deco
-def plot(**kwargs):
-    """
-    Create a date plot according to arguments. See help(plot).
-    Keyword arguments
-    -----------------
+def decoplot(func):
+    def inner(**kwargs):
+        """
+        Create a date plot according to arguments. See help(plot).
+        Keyword arguments
+        -----------------
 
-    where (mandatory), what, which, whom, when : (see help(get))
+        where (mandatory), what, which, whom, when : (see help(get))
 
-    input       --  input data to plot within the pycoa framework (e.g.
-                    after some analysis or filtering). Default is None which
-                    means that we use the basic raw data through the get
-                    function.
-                    When the 'input' keyword is set, where, what, which,
-                    whom when keywords are ignored.
-                    input should be given as valid pycoa pandas dataframe.
+        input       --  input data to plot within the pycoa framework (e.g.
+                        after some analysis or filtering). Default is None which
+                        means that we use the basic raw data through the get
+                        function.
+                        When the 'input' keyword is set, where, what, which,
+                        whom when keywords are ignored.
+                        input should be given as valid pycoa pandas dataframe.
 
-    input_field --  is the name of the field of the input pandas to plot.
-                    Default is 'deaths/cumul', the default output field of
-                    the get() function.
+        input_field --  is the name of the field of the input pandas to plot.
+                        Default is 'deaths/cumul', the default output field of
+                        the get() function.
 
-    width_height : width and height of the picture .
-                If specified should be a list of width and height. For instance width_height=[400,500]
+        width_height : width and height of the picture .
+                    If specified should be a list of width and height. For instance width_height=[400,500]
 
-    title       --  to force the title of the plot
+        title       --  to force the title of the plot
 
-    typeofplot  -- 'date' (default), 'menulocation' or 'versus'
-                   'date':date plot
-                   'menulocation': date plot with two scroll menu locations.
-                                    Usefull to study the behaviour of a variable for two different countries.
-                   'versus': plot variable against an other one.
-                             For this type of plot one should used 'input' and 'input_field' (not fully tested).
-                             Moreover dim(input_field) must be 2.
+        typeofplot  -- 'date' (default), 'menulocation' or 'versus'
+                       'date':date plot
+                       'menulocation': date plot with two scroll menu locations.
+                                        Usefull to study the behaviour of a variable for two different countries.
+                       'versus': plot variable against an other one.
+                                 For this type of plot one should used 'input' and 'input_field' (not fully tested).
+                                 Moreover dim(input_field) must be 2.
 
-    """
-    input = kwargs.get('input')
-    input_field = kwargs.get('input_field')
-    if not input.empty:
-        kwargs.pop('input')
-        kwargs.pop('input_field')
-    typeofplot = kwargs.get('typeofplot','date')
-    kwargs.pop('output')
-    if kwargs.get('bypop'):
-        kwargs.pop('bypop')
+        """
+        input = kwargs.get('input')
+        input_field = kwargs.get('input_field')
+        if not input.empty:
+            kwargs.pop('input')
+            kwargs.pop('input_field')
+        typeofplot = kwargs.get('typeofplot','date')
+        kwargs.pop('output')
+        if kwargs.get('bypop'):
+            kwargs.pop('bypop')
 
-    if 'typeofplot' in kwargs:
-        typeofplot = kwargs.pop('typeofplot')
+        if 'typeofplot' in kwargs:
+            typeofplot = kwargs.pop('typeofplot')
 
-    if typeofplot == 'date':
-        fig = _cocoplot.pycoa_date_plot(input,input_field,**kwargs)
-    elif typeofplot == 'versus':
-        if isinstance(input_field,list) and len(input_field) == 2:
-            fig = _cocoplot.pycoa_plot(input,input_field,**kwargs)
-        else:
-            print('typeofplot is versus but dim(input_field)!=2, versus has not effect ...')
+        if typeofplot == 'date':
             fig = _cocoplot.pycoa_date_plot(input,input_field,**kwargs)
-    elif typeofplot == 'menulocation':
-        if isinstance(input_field,list) and len(input_field) > 1:
-            print('typeofplot is menulocation but dim(input_field)>1, menulocation has not effect ...')
-        fig = _cocoplot.pycoa_scrollingmenu(input,input_field,**kwargs)
-    else:
-        raise CoaKeyError('Unknown typeofplot value. Should be date, versus or menulocation.')
+        elif typeofplot == 'versus':
+            if isinstance(input_field,list) and len(input_field) == 2:
+                fig = _cocoplot.pycoa_plot(input,input_field,**kwargs)
+            else:
+                print('typeofplot is versus but dim(input_field)!=2, versus has not effect ...')
+                fig = _cocoplot.pycoa_date_plot(input,input_field,**kwargs)
+        elif typeofplot == 'menulocation':
+            if isinstance(input_field,list) and len(input_field) > 1:
+                print('typeofplot is menulocation but dim(input_field)>1, menulocation has not effect ...')
+            fig = _cocoplot.pycoa_scrollingmenu(input,input_field,**kwargs)
+        else:
+            raise CoaKeyError('Unknown typeofplot value. Should be date, versus or menulocation.')
+        return func(fig)
+    return inner
+
+@chartsinput_deco
+@decoplot
+def figureplot(fig):
+    ''' Return fig Bohek object '''
+    return fig
+
+@chartsinput_deco
+@decoplot
+def plot(fig):
+    ''' show plot '''
     show(fig)

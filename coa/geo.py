@@ -716,7 +716,9 @@ class GeoCountry():
     _source_dict = {'FRA':{'Basics':_country_info_dict['FRA'],\
                     'Subregion Flags':'http://sticker-departement.com/',\
                     'Region Flags':'https://fr.wikipedia.org/w/index.php?title=R%C3%A9gion_fran%C3%A7aise&oldid=177269957',\
-                    'Population':'https://www.insee.fr/fr/statistiques/4989753?sommaire=4989761'},\
+                    'Population':'https://github.com/coa-project/coadata/raw/main/coastore/www.insee.fr_3658796960',\
+                    # previously (but sometimes broken : 'https://www.insee.fr/fr/statistiques/4989753?sommaire=4989761'
+                    },\
                     'USA':{'Basics':_country_info_dict['USA'],\
                     'Subregion informations':'https://en.wikipedia.org/wiki/List_of_states_and_territories_of_the_United_States'},\
                     'ITA':{'Basics':_country_info_dict['ITA']},\

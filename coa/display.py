@@ -63,7 +63,7 @@ from functools import wraps
 
 width_height_default = [500, 380]
 
-MAXCOUNTRIESDISPLAYED = 12
+MAXCOUNTRIESDISPLAYED = 27
 class CocoDisplay:
     def __init__(self, db=None, geo = None):
         verb("Init of CocoDisplay() with db=" + str(db))
@@ -904,7 +904,7 @@ class CocoDisplay:
 
                 n = len(geopdwd_filter.index)
                 d =  plot_height / n
-                ymax = plot_height - d/2
+                ymax = plot_height
 
                 geopdwd_filter['top'] = [ymax*(n-i)/n + d/2   for i in range(n)]
                 geopdwd_filter['bottom'] = [ymax*(n-i)/n - d/2 for i in range(n)]
@@ -917,7 +917,6 @@ class CocoDisplay:
                 else:
                     geopdwd_filter['horihistotext'] = [ '{:.3g}'.format(float(i)) if float(i)>1.e4 else round(float(i),2) for i in geopdwd_filter['right'] ]
                     geopdwd_filter['horihistotext'] = [str(i) for i in geopdwd_filter['horihistotext']]
-
             if func.__name__ == 'pycoa_pie' :
                 geopdwd_filter = self.add_columns_for_pie_chart(geopdwd_filter,input_field)
                 geopdwd = self.add_columns_for_pie_chart(geopdwd,input_field)
@@ -971,7 +970,8 @@ class CocoDisplay:
                                                   ylabel = standardfig.yaxis[0],
                                                   title = standardfig.title,
                                                   x_range = standardfig.x_range,
-                                                  x_axis_type = axis_type),
+                                                  x_axis_type = axis_type,
+                                                  figure = standardfig),
                             code = """
                             var date_slide = date_slider.value;
                             var dates = source.data['date_utc'];
@@ -999,7 +999,6 @@ class CocoDisplay:
 
                                 }
                             }
-                            console.log(newcodeloc);
                             var len = source_filter.data['clustername'].length;
 
                             var indices = new Array(len);
@@ -1021,9 +1020,10 @@ class CocoDisplay:
                                 if(typeof subregion !== 'undefined')
                                     ordername_subregion.push(newname_subregion[i]);
                                 ordercolors.push(newcolors[indices[i]]);
-                                labeldic[len-indices[i]] = newcodeloc[indices[i]];
+                                //labeldic[len-indices[i]] = newcodeloc[indices[i]];
                                 textdisplayed.push(newcodeloc[indices[i]].padStart(20,' '));
                             }
+
 
                             source_filter.data['cases'] = orderval;
                             const reducer = (accumulator, currentValue) => accumulator + currentValue;
@@ -1062,8 +1062,8 @@ class CocoDisplay:
                                 else
                                     text_size.push('6pt');*/
 
-                                top.push((orderval.length-i) + bthick/2);
-                                bottom.push((orderval.length-i) - bthick/2);
+                                //top.push((orderval.length-i) + bthick/2);
+                                //bottom.push((orderval.length-i) - bthick/2);
 
                                 if (isNaN(orderval[i])) orderval[i] = 0.;
                                 if(orderval[i]<=0.)
@@ -1096,30 +1096,42 @@ class CocoDisplay:
                             source_filter.data['percentage'] = percentage;
                             source_filter.data['angle'] = angle;
 
-                            ylabel.major_label_overrides = labeldic;
 
-                            source_filter.data['top'] = top;
-                            source_filter.data['bottom'] = bottom;
                             source_filter.data['left'] = left_quad;
                             source_filter.data['right'] = right_quad;
 
                             var mid =[];
                             var ht = [];
                             var textdisplayed2 = [];
+
+                            var n = right_quad.length;
+                            var d = figure.plot_height / n;
+                            var ymax = figure.plot_height;
+
                             for(i=0; i<right_quad.length;i++){
-                                mid.push(bottom[i]+(top[i] - bottom[i])/2);
+                                top.push(parseInt(ymax*(n-i)/n+d/2));
+                                bottom.push(parseInt(ymax*(n-i)/n-d/2));
+                                mid.push(parseInt(ymax*(n-i)/n));
+                                labeldic[parseInt(ymax*(n-i)/n)] = ordercodeloc[i];
+
                                 ht.push(right_quad[i].toFixed(2).toString());
                                 textdisplayed2.push(right_quad[i].toFixed(2).toString().padStart(45,' '));
+
                             }
+                            source_filter.data['top'] = top;
+                            source_filter.data['bottom'] = bottom;
 
                             source_filter.data['horihistotextxy'] =  mid;
                             source_filter.data['horihistotextx'] =  right_quad;
                             source_filter.data['horihistotext'] =  ht;
+                            source_filter.data['permanentdisplay'] = ordercodeloc;
                             source_filter.data['textdisplayed'] = textdisplayed;
                             source_filter.data['textdisplayed2'] = textdisplayed2;
                             var maxx = Math.max.apply(Math, right_quad);
                             var minx = Math.min.apply(Math, left_quad);
 
+                            ylabel.major_label_overrides = labeldic;
+                            console.log(labeldic);
                             x_range.end =  1.2 * maxx;
                             x_range.start =  1.05 * minx;
                             if(minx >= 0){
@@ -1186,8 +1198,14 @@ class CocoDisplay:
         for i in range(n):
             fig = panels[i].child
             fig.y_range = Range1d(min(srcfiltered.data['bottom']), max(srcfiltered.data['top']))
-            fig.yaxis.ticker = srcfiltered.data['horihistotexty']
-            fig.yaxis.major_label_overrides = {i:j for i,j in zip(srcfiltered.data['horihistotexty'],srcfiltered.data['permanentdisplay'])}
+            fig.yaxis[0].formatter = NumeralTickFormatter(format="0.0")
+            ytick_loc = [int(i) for i in srcfiltered.data['horihistotexty']]
+            print(srcfiltered.data['horihistotexty'])
+            fig.yaxis.ticker  = ytick_loc
+            label_dict = dict(zip(ytick_loc,srcfiltered.data['permanentdisplay']))
+            fig.yaxis.major_label_overrides = label_dict
+
+            #print(fig.y_range ,fig.yaxis.major_label_overrides)
             fig.quad(source = srcfiltered,
                 top='top', bottom = 'bottom', left = 'left', right = 'right', color = 'colors', line_color = 'black',
                 line_width = 1, hover_line_width = 2)

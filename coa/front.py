@@ -398,6 +398,8 @@ def chartsinput_deco(f):
             else:
                 which = input_field
             kwargs['input_field']=input_field
+            if option:
+                print('option has no effect here, please try do it when you construct your input pandas ')
             #input_field = kwargs.get('input_field', listwhich()[0])
             #if input_field not in input_arg.columns:
             #    raise CoaKeyError("Cannot find " + str(input_field) + " field in the pandas data. "
@@ -409,7 +411,7 @@ def chartsinput_deco(f):
                     val=what
                 else:
                     val=wich
-                pandy = normbypop(pandy ,val, bypop)
+                pandy = normbypop(pandy , val, bypop)
                 input_field = val + ' per ' + bypop
                 kwargs['input_field'] = input_field
             option = kwargs.get('option', None)
@@ -433,15 +435,14 @@ def chartsinput_deco(f):
         # when cut
         if when_beg >  pandy[[which,'date']].date.max() or when_end >  pandy[[which,'date']].date.max():
             raise CoaNoData("No available data after "+str( pandy[[which,'date']].date.max()))
-
         pandy = pandy[(pandy.date >= when_beg) & (pandy.date <= when_end)]
+        if bypop != 'no':
+            kwargs['input_field'] = [i for i in pandy.columns if ' per ' in i]
+            #name = [i for i in list(pandy.columns) if ' per ' in i]
+            pandy = pandy.rename(columns={kwargs['input_field'][0]:which + ' '+ what +' '+ bypop})
+        else:
+            kwargs['input_field'] = pandy.columns[2]
         kwargs['input'] = pandy
-        if kwargs['input_field'] is None:
-            if bypop != 'no':
-                kwargs['input_field'] = [i for i in df.columns if ' per ' in i]
-            else:
-                kwargs['input_field'] = pandy.columns[2]
-
         return f(**kwargs)
 
     return wrapper

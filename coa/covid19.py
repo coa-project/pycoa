@@ -437,11 +437,12 @@ class DataBase(object):
                             'tx_C1':'cur_idx_tx_C1',
                             'nbre_pass_corona':'cur_nbre_pass_corona',
                             }
+                        spf8keeped = ['nb_A0','nb_A1', 'nb_B0', 'nb_B1', 'nb_C0', 'nb_C1']
+                        rename_dict.update({i:'cur_'+i for i in spf8keeped})
                         result = result.rename(columns=rename_dict)
                         #coltocast=list(rename_dict.values())[:5]
                         #result[coltocast] = result[coltocast].astype('Int64')
-                        spf8keeped = ['nb_A0','nb_A1', 'nb_B0', 'nb_B1', 'nb_C0', 'nb_C1']
-                        columns_keeped  = list(rename_dict.values())+['tot_incid_hosp', 'tot_incid_rea', 'tot_incid_rad', 'tot_incid_dc', 'tot_P', 'tot_T']+spf8keeped
+                        columns_keeped  = list(rename_dict.values())+['tot_incid_hosp', 'tot_incid_rea', 'tot_incid_rad', 'tot_incid_dc', 'tot_P', 'tot_T']
                         self.return_structured_pandas(result,columns_keeped=columns_keeped) # with 'tot_dc' first
                 elif self.db == 'opencovid19' or  self.db == 'opencovid19national':
                     rename={'maille_code':'location'}
@@ -1356,6 +1357,7 @@ class DataBase(object):
         if wallname != None and sumall == True:
                pdfiltered.loc[:,'clustername'] = wallname
 
+        pdfiltered = pdfiltered.drop(columns='cumul')
         verb("Here the information I\'ve got on ", kwargs['which']," : ", self.get_keyword_definition(kwargs['which']))
         return pdfiltered
 

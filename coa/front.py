@@ -621,7 +621,7 @@ def decomap(func):
             if 'log' in maplabel:
                 kwargs['maplabel'].append('log')
             if 'spark' in maplabel:
-                sparkline = True
+                kwargs['maplabel'].append('spark')
             #if all([ True if i in ['text','spark','label%','log'] else False for i in kwargs['maplabel'] ]) :
             #    CoaKeyError('Waiting for a valide label visualisation: text, spark or label%')
             input.loc[:,input_field]=input[input_field].fillna(0) #needed in the case where there are nan else js pb
@@ -635,11 +635,10 @@ def map(input,input_field,**kwargs):
     dateslider = kwargs.get('dateslider', None)
     maplabel = kwargs.get('maplabel', None)
     if visu == 'bokeh':
-        if maplabel and 'sparkline' in maplabel:
+        if maplabel and 'spark' in maplabel:
             return show(_cocoplot.pycoa_sparkmap(input,input_field,**kwargs))
         else:
             return show(_cocoplot.pycoa_map(input,input_field,**kwargs))
-
 
     elif visu == 'folium':
         if dateslider is not None :

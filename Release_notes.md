@@ -22,6 +22,7 @@
 - log to maplabel
 - fixe folium boundaries
 - add geopandas output format in the front
+- remove cumul replace by standard
 
 ## v2.10 - 
 - Map bug fixed for option='sumall'

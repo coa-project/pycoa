@@ -66,7 +66,7 @@ _gi = None
 
 _dict_bypop = {'no':0,'100':100,'1k':1e3,'100k':1e5,'1M':1e6,'pop':1.}
 
-_listwhat = ['cumul',  # first one is default, nota:  we must avoid uppercases
+_listwhat = [ 'standard', # first one is default, nota:  we must avoid uppercases
              'daily',
              'weekly']
 
@@ -352,10 +352,11 @@ def chartsinput_deco(f):
             kwargs['input_field'] = which
         else:
             which = listwhich()[0]
+
         if what:
             kwargs['input_field'] = what
         else:
-            what = listwhat()[0]
+            what = _listwhat[0]
 
 
         #if 'mode' in kwargs:
@@ -378,8 +379,8 @@ def chartsinput_deco(f):
             raise CoaKeyError('What option ' + what + ' not supported. '
                                                       'See listwhat() for full list.')
 
-        if 'cur_' in  which and what == listwhat()[0]:
-                what = which
+        #if 'cur_' in  which and what == listwhat()[0]:
+        #        what = which
 
         if which not in listwhich():
             raise CoaKeyError('Which option ' + which + ' not supported. '
@@ -393,6 +394,7 @@ def chartsinput_deco(f):
                 input_arg = normbypop(pandy,input_field,bypop)
                 input_field = input_field+' per '+bypop
             pandy = input_arg
+            pandy['standard'] = pandy[input_field]
             if isinstance(input_field,list):
                 which = input_field[0]
             else:
@@ -406,11 +408,12 @@ def chartsinput_deco(f):
             #                                                          "Set a proper input_field key.")
         elif input_arg == None:
             pandy = _db.get_stats(which=which, location=where, option=option).rename(columns={'location': 'where'})
+            pandy['standard'] = pandy[which]
             if bypop != 'no':
                 if what:
-                    val=what
+                    val = what
                 else:
-                    val=wich
+                    val = _listwhat[0]
                 pandy = normbypop(pandy , val, bypop)
                 input_field = val + ' per ' + bypop
                 kwargs['input_field'] = input_field
@@ -439,11 +442,12 @@ def chartsinput_deco(f):
         if bypop != 'no':
             kwargs['input_field'] = [i for i in pandy.columns if ' per ' in i]
             #name = [i for i in list(pandy.columns) if ' per ' in i]
-            if 'tot_' in what:
+            if 'tot_' and not what or what=='standard':
                 renamed = which + ' per '+ bypop
             else:
                 renamed = which + ' '+ what +' per '+ bypop
             pandy = pandy.rename(columns={kwargs['input_field'][0]:renamed})
+            kwargs['input_field'] = renamed
         else:
             if not input_field:
                 kwargs['input_field'] = pandy.columns[2]
@@ -469,8 +473,8 @@ def get(**kwargs):
                 'recovered' for 'jhu' default database). See listwhich() function
                 for full list according to the used database.
 
-    what   --   which data are computed, either in cumulative mode
-                ('cumul', default value), or 'daily' (diff with previous day
+    what   --   which data are computed, either in standard mode
+                ('standard', default value), or 'daily' (diff with previous day
                 and 'weekly' (diff with previous week). See
                 listwhich() for fullist of available
                 Full list of what keyword with the listwhat() function.
@@ -514,6 +518,7 @@ def get(**kwargs):
     # casted_data = None
     output = kwargs.get('output')
     pandy = kwargs.get('input')
+    pandy = pandy.drop(columns='standard')
     if output == 'pandas':
         #if 'option' in kwargs:
         #    raise CoaKeyError("Cannot use option with input pandas data. "
@@ -668,7 +673,7 @@ def decohist(func):
                         input should be given as valid pycoa pandas dataframe.
 
         input_field --  is the name of the field of the input pandas to plot.
-                        Default is 'deaths/cumul', the default output field of
+                        Default is 'deaths/standard', the default output field of
                         the get() function.
 
         width_height : width and height of the picture .
@@ -744,7 +749,7 @@ def decoplot(func):
                         input should be given as valid pycoa pandas dataframe.
 
         input_field --  is the name of the field of the input pandas to plot.
-                        Default is 'deaths/cumul', the default output field of
+                        Default is 'deaths/standard', the default output field of
                         the get() function.
 
         width_height : width and height of the picture .

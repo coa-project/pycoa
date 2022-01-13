@@ -439,7 +439,11 @@ def chartsinput_deco(f):
         if bypop != 'no':
             kwargs['input_field'] = [i for i in pandy.columns if ' per ' in i]
             #name = [i for i in list(pandy.columns) if ' per ' in i]
-            pandy = pandy.rename(columns={kwargs['input_field'][0]:which + ' '+ what +' '+ bypop})
+            if 'tot_' in what:
+                renamed = which + ' per '+ bypop
+            else:
+                renamed = which + ' '+ what +' per '+ bypop
+            pandy = pandy.rename(columns={kwargs['input_field'][0]:renamed})
         else:
             if not input_field:
                 kwargs['input_field'] = pandy.columns[2]

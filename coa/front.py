@@ -339,7 +339,7 @@ def chartsinput_deco(f):
         global _db, _whom, _gi
         where = kwargs.get('where', None)
         which = kwargs.get('which', None)
-        what = kwargs.get('what', None)
+        what = kwargs.get('what', _listwhat[0])
 
         whom = kwargs.get('whom', None)
         option = kwargs.get('option', None)
@@ -355,8 +355,6 @@ def chartsinput_deco(f):
 
         if what:
             kwargs['input_field'] = what
-        else:
-            what = _listwhat[0]
 
 
         #if 'mode' in kwargs:
@@ -394,12 +392,12 @@ def chartsinput_deco(f):
                 input_arg = normbypop(pandy,input_field,bypop)
                 input_field = input_field+' per '+bypop
             pandy = input_arg
-            pandy['standard'] = pandy[input_field]
             if isinstance(input_field,list):
                 which = input_field[0]
             else:
                 which = input_field
-            kwargs['input_field']=input_field
+            pandy['standard'] = pandy[which]
+            kwargs['input_field'] = input_field
             if option:
                 print('option has no effect here, please try do it when you construct your input pandas ')
             #input_field = kwargs.get('input_field', listwhich()[0])
@@ -409,6 +407,7 @@ def chartsinput_deco(f):
         elif input_arg == None:
             pandy = _db.get_stats(which=which, location=where, option=option).rename(columns={'location': 'where'})
             pandy['standard'] = pandy[which]
+            input_field = what
             if bypop != 'no':
                 if what:
                     val = what
@@ -416,7 +415,7 @@ def chartsinput_deco(f):
                     val = _listwhat[0]
                 pandy = normbypop(pandy , val, bypop)
                 input_field = val + ' per ' + bypop
-                kwargs['input_field'] = input_field
+            kwargs['input_field'] = input_field
             option = kwargs.get('option', None)
         else:
             raise CoaTypeError('Waiting input as valid pycoa pandas '

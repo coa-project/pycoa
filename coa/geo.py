@@ -1036,7 +1036,7 @@ class GeoCountry():
             self._country_data['name_region']=self._country_data['name_subregion']
             self._country_data['code_region']=self._country_data['code_subregion'] # no region info
             self._country_data=self._country_data[['name_subregion','code_subregion','population_subregion','name_region','code_region','geometry']]
-
+            self._country_data=self._country_data.to_crs(epsg=4326)
     # def get_region_from_municipality(self,lname):
     #     """  Return region list from a municipality list
     #     """

@@ -346,6 +346,22 @@ def generic_info(namedb, keys):
         for k,v in risk.items():
             risk[k].append(url)
         mydico = risk
+    elif namedb == 'govcy':
+        mi = {
+        'tot_deaths':['total deaths attributed to Covid-19 disease (total deaths)'],\
+        'tot_cases':['total number of confirmed cases (total cases)'],\
+        'cur_hosp':['number of patients with covid-19 hospitalized cases (Hospitalised Cases)'],\
+        'cur_severe':['number of patients with covid-19 hospitalized in severe cases (Severe Cases)'],\
+        'cur_icu':['number of patients with covid-19 admitted to ICUs (Cases In ICUs)'],\
+        'cur_incub':['number of patients with covid-19 admitted to ICUs (Incubated Cases)'],\
+        'tot_pcr':['extract from PCR_daily tests performedtotal number of PCR tests performed (PCR_daily tests performed)'],\
+        'tot_rat':['total number of rapid antigen (RAT) tests performed (total RA tests)'],\
+        'tot_test':['total numbers of PCR and RA tests performed (total tests)'],\
+        }
+        for k,v in mi.items():
+            mi[k].append("https://www.data.gov.cy/sites/default/files/CY%20Covid19%20Open%20Data%20-%20Extended%20-%20new_247.csv")
+            mi[k].append("https://www.data.gov.cy/node/4617?language=en")
+        mydico = mi
     else:
         raise CoaKeyError('Error in the database selected, please check !')
     if keys not in mydico:

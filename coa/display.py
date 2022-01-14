@@ -193,10 +193,10 @@ class CocoDisplay:
                 what =  which
             else:
                  # cumul is the default
-                what = kwargs.get('what', 'cumul')
+                what = kwargs.get('what', 'standard')
 
             if input_field is None:
-                input_field = what
+                input_field = which #what
 
             if isinstance(input_field,list):
                 test = input_field[0]
@@ -1434,6 +1434,7 @@ class CocoDisplay:
             geopdwd_filtered = geopdwd_filtered.sort_values(by=['clustername', 'date'], ascending = [True, False]).drop(columns=['date', 'colors'])
             new_poly = []
             geolistmodified = dict()
+
             for index, row in geopdwd_filtered.iterrows():
                 split_poly = []
                 new_poly = []
@@ -1454,11 +1455,11 @@ class CocoDisplay:
                         geolistmodified[row['location']] = sg.Polygon(new_poly)
                     else:
                         geolistmodified[row['location']] = sg.MultiPolygon(new_poly)
-
             ng = pd.DataFrame(geolistmodified.items(), columns=['location', 'geometry'])
             geolistmodified = gpd.GeoDataFrame({'location': ng['location'], 'geometry': gpd.GeoSeries(ng['geometry'])}, crs="epsg:3857")
             geopdwd_filtered = geopdwd_filtered.drop(columns='geometry')
             geopdwd_filtered = pd.merge(geolistmodified, geopdwd_filtered, on='location')
+
             #if kwargs['wanted_dates']:
             #    kwargs.pop('wanted_dates')
             return func(self, geopdwd, geopdwd_filtered, **kwargs)
@@ -1975,7 +1976,6 @@ class CocoDisplay:
         """
         k = 6378137
         x = tuple_xy[0] * (k * np.pi / 180.0)
-
         if tuple_xy[1] == -90:
             lat = -89.99
         else:

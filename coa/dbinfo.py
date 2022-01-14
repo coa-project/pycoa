@@ -346,6 +346,16 @@ def generic_info(namedb, keys):
         for k,v in risk.items():
             risk[k].append(url)
         mydico = risk
+    elif namedb == 'imed':
+        imed = {
+        'tot_cases':['tot_cases (original name cases)',\
+        'https://github.com/iMEdD-Lab/open-data/blob/master/COVID-19/greece_cases_v2.csv'],
+        'tot_deaths':['tot_deaths (original name deaths)',\
+        'https://github.com/iMEdD-Lab/open-data/blob/master/COVID-19/greece_deaths_v2.csv']
+        }
+        for k,v in imed.items():
+             imed[k].append("https://github.com/iMEdD-Lab/open-data/tree/master/COVID-19")
+        mydico = imed
     else:
         raise CoaKeyError('Error in the database selected, please check !')
     if keys not in mydico:

@@ -96,7 +96,7 @@ class CocoDisplay:
         self.granularity = self.dbld[self.database_name][1]
         self.namecountry = self.dbld[self.database_name][2]
         try:
-            if self.iso3country != 'WW' :
+            if self.granularity != 'nation':
                 self.geo = coge.GeoCountry(self.iso3country)
                 if self.granularity == 'region':
                     self.location_geometry = self.geo.get_region_list()[['code_region', 'name_region', 'geometry']]
@@ -221,7 +221,7 @@ class CocoDisplay:
                 input['rolloverdisplay'] = input['location']
                 input['permanentdisplay'] = input['location']
             else:
-                if self.iso3country == 'WW' :
+                if self.granularity == 'nation' :
                     #input['codelocation'] = input['codelocation'].apply(lambda x: str(x).replace('[', '').replace(']', '') if len(x)< 10 else x[0]+'...'+x[-1] )
                     input['permanentdisplay'] = input.apply(lambda x: x.clustername if self.geo.get_GeoRegion().is_region(x.clustername) else str(x.codelocation), axis = 1)
                 else:
@@ -509,6 +509,7 @@ class CocoDisplay:
                 line_style = ['solid', 'dashed', 'dotted', 'dotdash']
                 for loc in list(input.clustername.unique()):
                     input_filter = input.loc[input.clustername == loc].reset_index(drop = True)
+
                     src = ColumnDataSource(input_filter)
                     leg = input_filter.permanentdisplay[0]
                     if len(input_field)>1:

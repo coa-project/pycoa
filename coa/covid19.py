@@ -83,7 +83,16 @@ class DataBase(object):
                     info('USA, JHU aka Johns Hopkins database selected ...')
                     self.return_jhu_pandas()
                 elif self.db == 'imed':
-                     self.return_jhu_pandas()
+                    info('Greece, imed database selected ...')
+                    self.return_jhu_pandas()
+                elif self.db == 'govcy': #CYP
+                    info('Cyprus, govcy database selected ...')
+                    rename_dict = {'daily deaths': 'tot_deaths'}
+                    gov = self.csv2pandas('https://www.data.gov.cy/sites/default/files/CY%20Covid19%20Open%20Data%20-%20Extended%20-%20new_247.csv'
+                    ,separator=',')
+                    columns_keeped = ['tot_deaths']
+                    gov['tot_deaths']=gov.groupby(['location'])['daily deaths'].cumsum()
+                    self.return_structured_pandas(gov, columns_keeped=columns_keeped)
                 elif self.db == 'dpc': #ITA
                     info('ITA, Dipartimento della Protezione Civile database selected ...')
                     rename_dict = {'data': 'date', 'denominazione_regione': 'location', 'totale_casi': 'tot_cases','deceduti':'tot_deaths'}
@@ -808,8 +817,8 @@ class DataBase(object):
 
         pandas_db['date'] = pandas.to_datetime(pandas_db['date'],errors='coerce').dt.date
         #self.dates  = pandas_db['date']
-        if self.db == 'spfnational':
-            pandas_db['location'] = 'France'
+        if self.database_type[self.db][1] == 'nation' and  self.database_type[self.db][0] in ['FRA','CYP']:
+            pandas_db['location'] = self.database_type[self.db][2]
         pandas_db = pandas_db.sort_values(['location','date'])
         return pandas_db
 
@@ -886,7 +895,10 @@ class DataBase(object):
 
         if self.db_world:
             uniqloc = [s for s in uniqloc if 'OWID_' not in s]
-            codename = collections.OrderedDict(zip(uniqloc,self.geo.to_standard(uniqloc,output='list',db=self.get_db(),interpret_region=True)))
+            db=self.get_db()
+            if self.db == 'govcy':
+                db=None
+            codename = collections.OrderedDict(zip(uniqloc,self.geo.to_standard(uniqloc,output='list',db=db,interpret_region=True)))
             self.slocation = list(codename.values())
             location_is_code = True
         else:
@@ -925,8 +937,11 @@ class DataBase(object):
         if self.db != 'spfnational':
             mypandas = mypandas.groupby(['location','date']).sum(min_count=1).reset_index() # summing in case of multiple dates (e.g. in opencovid19 data). But keep nan if any
 
-        mypandas = fill_missing_dates(mypandas)
+        if self.db == 'govcy':
+            location_is_code=False
 
+        mypandas = fill_missing_dates(mypandas)
+        
         if location_is_code:
             if self.db != 'dgs':
                 mypandas['codelocation'] =  mypandas['location'].astype(str)

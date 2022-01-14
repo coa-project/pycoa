@@ -24,6 +24,7 @@
 - add geopandas output format in the front
 - remove cumul replace by standard
 - add GRC DB 
+- add CYP DB 
 
 ## v2.10 - 
 - Map bug fixed for option='sumall'

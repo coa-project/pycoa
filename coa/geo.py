@@ -711,6 +711,7 @@ class GeoCountry():
                     'MYS':'https://stacks.stanford.edu/file/druid:zd362bc5680/data.zip',\
                     'CHL':'http://geonode.meteochile.gob.cl/geoserver/wfs?format_options=charset%3AUTF-8&typename=geonode%3Adivision_comunal_geo_ide_1&outputFormat=SHAPE-ZIP&version=1.0.0&service=WFS&request=GetFeature',\
                     'EUR':'https://github.com/coa-project/coadata/raw/main/coastore/WHO_EUROsmall2.json',\
+                    'GRC':'https://geodata.gov.gr/dataset/6deb6a12-1a54-41b4-b53b-6b36068b8348/resource/3e571f7f-42a4-4b49-8db0-311695d72fa3/download/nomoiokxe.zip',\
                     }
 
     _source_dict = {'FRA':{'Basics':_country_info_dict['FRA'],\
@@ -732,6 +733,7 @@ class GeoCountry():
                     'MYS':{'Basics':_country_info_dict['MYS']},\
                     'CHL':{'Basics':_country_info_dict['CHL']},\
                     'EUR':{'Basics':_country_info_dict['EUR']},\
+                    'GRC':{'Basics':_country_info_dict['GRC']},\
                     }
 
     def __init__(self,country=None):
@@ -1023,6 +1025,17 @@ class GeoCountry():
                 'Population':'population_subregion'},inplace=True)
             self._country_data=self._country_data[['name_subregion','code_subregion','population_subregion','name_region','code_region','geometry']]
             self._country_data.loc[self._country_data.geometry.is_empty,'geometry']=None
+
+        # --- 'GRC' case ------------------------------------------------------------------------------------------------
+        elif self._country == 'GRC':
+            self._country_data=gpd.read_file('zip://'+get_local_from_url(url,0,'.zip')+'!nomoi_okxe',encoding='ISO-8859-7')
+            self._country_data.rename(columns={\
+                'NAME_GR':'name_subregion',\
+                'POP':'population_subregion'},inplace=True)
+            self._country_data['code_subregion']=self._country_data.PARENT.astype(str).str.slice(stop=2)
+            self._country_data['name_region']=self._country_data['name_subregion']
+            self._country_data['code_region']=self._country_data['code_subregion'] # no region info
+            self._country_data=self._country_data[['name_subregion','code_subregion','population_subregion','name_region','code_region','geometry']]
 
     # def get_region_from_municipality(self,lname):
     #     """  Return region list from a municipality list

@@ -396,7 +396,7 @@ def chartsinput_deco(f):
                 which = input_field[0]
             else:
                 which = input_field
-            pandy['standard'] = pandy[which]
+            pandy.loc[:,'standard'] = pandy[which]
             kwargs['input_field'] = input_field
             if option:
                 print('option has no effect here, please try do it when you construct your input pandas ')

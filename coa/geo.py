@@ -1030,8 +1030,8 @@ class GeoCountry():
         elif self._country == 'GRC':
             self._country_data=gpd.read_file('zip://'+get_local_from_url(url,0,'.zip')+'!nomoi_okxe',encoding='ISO-8859-7')
             self._country_data.rename(columns={\
-                'NAME_GR':'name_subregion',\
                 'POP':'population_subregion'},inplace=True)
+            self._country_data['name_subregion']=self._country_data.NAME_GR.astype(str).str.slice(start=3)
             self._country_data['code_subregion']=self._country_data.PARENT.astype(str).str.slice(stop=2)
             self._country_data['name_region']=self._country_data['name_subregion']
             self._country_data['code_region']=self._country_data['code_subregion'] # no region info

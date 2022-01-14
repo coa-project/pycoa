@@ -82,6 +82,8 @@ class DataBase(object):
                 elif self.db == 'jhu-usa': #USA
                     info('USA, JHU aka Johns Hopkins database selected ...')
                     self.return_jhu_pandas()
+                elif self.db == 'imed':
+                     self.return_jhu_pandas()
                 elif self.db == 'dpc': #ITA
                     info('ITA, Dipartimento della Protezione Civile database selected ...')
                     rename_dict = {'data': 'date', 'denominazione_regione': 'location', 'totale_casi': 'tot_cases','deceduti':'tot_deaths'}
@@ -637,10 +639,15 @@ class DataBase(object):
             jhu_files_ext = ['deaths','cases']
             extension = '-rki-by-ags.csv'
             base_name = ''
+        elif self.db == 'imed': # 'GRC'
+            base_url = 'https://raw.githubusercontent.com/iMEdD-Lab/open-data/master/COVID-19/greece_'
+            jhu_files_ext = ['deaths','cases']
+            extension = '_v2.csv'
+            base_name = ''
         else:
             raise CoaDbError('Unknown JHU like db '+str(self.db))
 
-        self.available_keys_words = jhu_files_ext
+        self.available_keys_words = []
         if self.db == 'rki':
                 self.available_keys_words = ['tot_deaths','tot_cases']
         pandas_list = []
@@ -671,6 +678,12 @@ class DataBase(object):
                 pandas_jhu_db = pandas_jhu_db.melt(id_vars=["location"],var_name="date",value_name=ext)
                 pandas_jhu_db['location'] = pandas_jhu_db.location.astype(str)
                 pandas_jhu_db = pandas_jhu_db.rename(columns={'deaths':'tot_deaths','cases':'tot_cases'})
+            elif self.db == 'imed':
+                pandas_jhu_db = pandas_jhu_db.rename(columns={'county_normalized':'location'})
+                pandas_jhu_db = pandas_jhu_db.drop(columns=['Γεωγραφικό Διαμέρισμα','Περιφέρεια','county','pop_11'])
+                ext='tot_'+ext
+                pandas_jhu_db = pandas_jhu_db.melt(id_vars=["location"],var_name="date",value_name=ext)
+                self.available_keys_words += [ext]
             else:
                 raise CoaTypeError('jhu nor jhu-usa database selected ... ')
 
@@ -715,6 +728,10 @@ class DataBase(object):
                                     a.append(k)
                             return a
                         codedupli={i:findkeywithvalue(d_loc_s,i) for i in duplicates_location}
+            elif self.database_type[self.db][1] == 'region':
+                codename = self.geo.get_data().set_index('name_region')['code_region'].to_dict()
+                self.slocation = list(codename.keys())
+
 
         result = reduce(lambda x, y: pd.merge(x, y, on = ['location','date']), pandas_list)
 
@@ -1401,7 +1418,7 @@ class DataBase(object):
 
       coapandas = [ p.rename(columns={p.columns[2]:'cases'}) for p in coapandas ]
       m = pd.concat(coapandas).reset_index(drop=True)
-      #m['clustername']=m.groupby('location')['clustername'].fillna(method='bfill')
+      #m['clustername']=m.m('location')['clustername'].fillna(method='bfill')
       #m['codelocation']=m.groupby('location')['codelocation'].fillna(method='bfill')
       m=m.drop(columns=['codelocation','clustername'])
       return fill_missing_dates(m)

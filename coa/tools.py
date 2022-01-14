@@ -64,6 +64,7 @@ _db_list_dict = {'jhu': ['WW','nation','World'],
     'obepine':['FRA','region','France'],
     'moh':['MYS','subregion','Malaysia'],
     'risklayer':['EUR','subregion','Europe'],
+    'imed':['GRC','region','Greece'],
     #'minciencia':['CHL','subregion','Chile']
     }
 

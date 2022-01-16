@@ -941,7 +941,7 @@ class DataBase(object):
             location_is_code=False
 
         mypandas = fill_missing_dates(mypandas)
-        
+
         if location_is_code:
             if self.db != 'dgs':
                 mypandas['codelocation'] =  mypandas['location'].astype(str)
@@ -1253,46 +1253,47 @@ class DataBase(object):
             if o == 'nonneg':
                 if kwargs['which'].startswith('cur_'):
                     raise CoaKeyError('The option nonneg cannot be used with instantaneous data, such as cur_ which variables.')
-
-                if not isinstance(location_exploded[0],list):
-                    loopover = location_exploded
-                else:
-                    loopover = list(pdfiltered.location.unique())
-                for loca in loopover:
-                    if not isinstance(location_exploded[0],list):
-                        pdloc = pdfiltered.loc[ pdfiltered.location == loca ][kwargs['which']]
+                cluster=list(pdfiltered.clustername.unique())
+                separated = [ pdfiltered.loc[pdfiltered.clustername==i] for i in cluster]
+                reconstructed = pd.DataFrame()
+                for sub in separated:
+                    location = list(sub.location.unique())
+                    for loca in location:
+                        pdloc = sub.loc[sub.location == loca][kwargs['which']]
+                        try:
+                            y0=pdloc.values[0] # integrated offset at t=0
+                        except:
+                            y0=0
+                        if np.isnan(y0):
+                            y0=0
+                        pa = pdloc.diff()
+                        yy = pa.values
+                        ind = list(pa.index)
+                        where_nan = np.isnan(yy)
+                        yy[where_nan] = 0.
+                        indices=np.where(yy < 0)[0]
+                        for kk in np.where(yy < 0)[0]:
+                            k = int(kk)
+                            val_to_repart = -yy[k]
+                            if k < np.size(yy)-1:
+                                yy[k] = (yy[k+1]+yy[k-1])/2
+                            else:
+                                yy[k] = yy[k-1]
+                            val_to_repart = val_to_repart + yy[k]
+                            s = np.nansum(yy[0:k])
+                            if not any([i !=0 for i in yy[0:k]]) == True and s == 0:
+                                yy[0:k] = 0.
+                            elif s == 0:
+                                yy[0:k] = np.nan*np.ones(k)
+                            else:
+                                yy[0:k] = yy[0:k]*(1-float(val_to_repart)/s)
+                        sub=sub.copy()
+                        sub.loc[ind,kwargs['which']]=np.cumsum(yy)+y0 # do not forget the offset
+                    if reconstructed.empty:
+                        reconstructed = sub
                     else:
-                        pdloc = pdfiltered.loc[ pdfiltered.location == loca ][kwargs['which']]
-                    try:
-                        y0=pdloc.values[0] # integrated offset at t=0
-                    except:
-                        y0=0
-                    if np.isnan(y0):
-                        y0=0
-                    pa = pdloc.diff()
-                    yy = pa.values
-                    ind = list(pa.index)
-                    where_nan = np.isnan(yy)
-                    yy[where_nan] = 0.
-                    indices=np.where(yy < 0)[0]
-                    for kk in np.where(yy < 0)[0]:
-                        k = int(kk)
-                        val_to_repart = -yy[k]
-                        if k < np.size(yy)-1:
-                            yy[k] = (yy[k+1]+yy[k-1])/2
-                        else:
-                            yy[k] = yy[k-1]
-                        val_to_repart = val_to_repart + yy[k]
-                        s = np.nansum(yy[0:k])
-                        if not any([i !=0 for i in yy[0:k]]) == True and s == 0:
-                            yy[0:k] = 0.
-                        elif s == 0:
-                            yy[0:k] = np.nan*np.ones(k)
-                        else:
-                            yy[0:k] = yy[0:k]*(1-float(val_to_repart)/s)
-                    pdfilteredcopy=pdfiltered.copy()
-                    pdfilteredcopy.loc[ind,kwargs['which']]=np.cumsum(yy)+y0 # do not forget the offset
-                    pdfiltered=pdfilteredcopy
+                        reconstructed=reconstructed.append(sub)
+                    pdfiltered = reconstructed
             elif o == 'nofillnan':
                 pdfiltered_nofillnan = pdfiltered.copy().reset_index(drop=True)
                 fillnan=False

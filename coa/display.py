@@ -273,7 +273,8 @@ class CocoDisplay:
             dico_colors = {i: next(colors) for i in uniqloc}
 
             input = input.copy()
-            input.loc[:,'colors'] = input['clustername'].map(dico_colors)#(pd.merge(input, country_col, on='location'))
+            if not 'colors' in input.columns:
+                input.loc[:,'colors'] = input['clustername'].map(dico_colors)#(pd.merge(input, country_col, on='location'))
 
             if not isinstance(input_field, list):
                   input_field = [input_field]
@@ -511,7 +512,8 @@ class CocoDisplay:
                     input_filter = input.loc[input.clustername == loc].reset_index(drop = True)
 
                     src = ColumnDataSource(input_filter)
-                    leg = input_filter.permanentdisplay[0]
+                    leg = input_filter.clustername[0]
+                    #leg = input_filter.permanentdisplay[0]
                     if len(input_field)>1:
                         leg = input_filter.permanentdisplay[0] + ', ' + val
                     if len(list(input.clustername.unique())) == 1:

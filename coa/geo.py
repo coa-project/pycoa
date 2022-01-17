@@ -1037,6 +1037,15 @@ class GeoCountry():
             self._country_data['code_region']=self._country_data['code_subregion'] # no region info
             self._country_data=self._country_data[['name_subregion','code_subregion','population_subregion','name_region','code_region','geometry']]
             self._country_data=self._country_data.to_crs(epsg=4326)
+            # Merge region to fit with the CSV epidemiological data
+            ath=['ΔΥΤΙΚΗΣ ΑΤΤΙΚΗΣ', 'ΑΝΑΤΟΛΙΚΗΣ ΑΤΤΙΚΗΣ', 'ΠΕΙΡΑΙΩΣ ΚΑΙ ΝΗΣΩΝ','ΑΘΗΝΩΝ']
+            self._country_data.loc[(self._country_data.name_subregion=='ΑΘΗΝΩΝ'),['geometry','population_subregion']]=\
+                    self._country_data.loc[self._country_data.name_subregion.isin(ath)].dissolve(aggfunc='sum').values
+            self._country_data = self._country_data.loc[~self._country_data.name_subregion.isin(ath[:-1])]
+            changename={'Ο ΟΡΟΣ':'ΑΓΙΟ ΟΡΟΣ','ΑΘΗΝΩΝ':'ΑΤΤΙΚΗΣ'}
+            self._country_data['name_subregion'].replace(changename, inplace=True)
+            self._country_data['name_region'].replace(changename, inplace=True)
+
     # def get_region_from_municipality(self,lname):
     #     """  Return region list from a municipality list
     #     """

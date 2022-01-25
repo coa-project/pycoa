@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-""" 
+"""
 Project : PyCoA
 Date :    april 2020 - march 2021
 Authors : Olivier Dadoun, Julien Browaeys, Tristan Beau
@@ -33,7 +33,7 @@ setup(
         'datascroller',\
         'datetime',\
         'folium ~=0.12.1',\
-        'geopandas',\
+        'geopandas >=0.10.2',\
         'matplotlib',\
         'numpy',\
         'pandas',\

@@ -448,7 +448,7 @@ def chartsinput_deco(f):
             pandy = pandy.rename(columns={kwargs['input_field'][0]:renamed})
             kwargs['input_field'] = renamed
         else:
-            if not input_field:
+            if not input_field or input_field == 'standard':
                 kwargs['input_field'] = pandy.columns[2]
         kwargs['input'] = pandy
         return f(**kwargs)

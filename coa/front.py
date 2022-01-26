@@ -74,6 +74,9 @@ _listoutput = ['pandas','geopandas','list', 'dict', 'array']  # first one is def
 
 _listvisu = ['bokeh', 'folium']
 
+ _listhist = ['bylocation','byvalue','pie']
+
+_listplot = ['timeseries','menulocation','versus','spiral','yearly']
 
 # --- Front end functions ----------------------------------------------
 
@@ -143,6 +146,26 @@ def listwhat():
     """
     return _listwhat
 
+# ----------------------------------------------------------------------
+# --- listhist() -------------------------------------------------------
+# ----------------------------------------------------------------------
+
+def listhist():
+    """Return the list of currently avalailable type of hist available.
+     The first one is the default one.
+    """
+    return _listhist
+
+
+# ----------------------------------------------------------------------
+# --- listwhat() -------------------------------------------------------
+# ----------------------------------------------------------------------
+
+def listplot():
+    """Return the list of currently avalailable type of plots available.
+     The first one is the default one.
+    """
+    return _listplot
 
 # ----------------------------------------------------------------------
 # --- listoption() -----------------------------------------------------

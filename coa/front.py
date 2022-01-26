@@ -74,6 +74,9 @@ _listoutput = ['pandas','geopandas','list', 'dict', 'array']  # first one is def
 
 _listvisu = ['bokeh', 'folium']
 
+_listhist = ['bylocation','byvalue','pie']
+
+_listplot = ['timeseries','menulocation','versus','spiral','yearly']
 
 # --- Front end functions ----------------------------------------------
 
@@ -145,6 +148,29 @@ def listwhat():
 
 
 # ----------------------------------------------------------------------
+# --- listhist() -------------------------------------------------------
+# ----------------------------------------------------------------------
+
+def listhist():
+    """Return the list of currently avalailable type of hist available.
+     The first one is the default one.
+    """
+    return _listhist
+
+
+# ----------------------------------------------------------------------
+# --- listwhat() -------------------------------------------------------
+# ----------------------------------------------------------------------
+
+def listplot():
+    """Return the list of currently avalailable type of plots available.
+     The first one is the default one.
+    """
+    return _listplot
+
+
+
+# ----------------------------------------------------------------------
 # --- listoption() -----------------------------------------------------
 # ----------------------------------------------------------------------
 
@@ -153,7 +179,6 @@ def listoption():
      Default is no option.
     """
     return _db.get_available_options()
-
 
 # ----------------------------------------------------------------------
 # --- listtile() -------------------------------------------------------
@@ -164,7 +189,6 @@ def listtile():
      Default is the first one.
     """
     return _cocoplot.tiles_list()
-
 
 # ----------------------------------------------------------------------
 # --- listwhich() ------------------------------------------------------
@@ -330,7 +354,7 @@ def chartsinput_deco(f):
             wrapper dealing with arg testing
         '''
         kwargs_test(kwargs,
-                    ['where', 'what', 'which', 'whom', 'when', 'input', 'input_field','output',\
+                    ['where', 'what', 'which', 'whom', 'when', 'input', 'input_field','output','typeofplot'\
                     'title','typeofplot','typeofhist','bins','visu','tile','dateslider','maplabel','option','mode','guideline','bypop',
                     'plot_width','plot_height','textcopyright'],
                     'Bad args used in the pycoa function.')
@@ -687,7 +711,7 @@ def decohist(func):
         input = kwargs.pop('input')
         input_field = kwargs.pop('input_field')
         dateslider = kwargs.get('dateslider', None)
-        typeofhist = kwargs.pop('typeofhist', 'bylocation')
+        typeofhist = kwargs.pop('typeofhist',listhist()[0])
         kwargs.pop('output')
         if kwargs.get('bypop'):
           kwargs.pop('bypop')
@@ -710,7 +734,7 @@ def decohist(func):
             fig = _cocoplot.pycoa_pie(input, input_field, **kwargs)
 
         else:
-            raise CoaKeyError('Unknown typeofhist value. Should be bylocation or byvalue.')
+            raise CoaKeyError('Unknown typeofhist value. Available value : listhist().')
         return func(fig)
     return inner
 
@@ -762,14 +786,15 @@ def decoplot(func):
                        'versus': plot variable against an other one.
                                  For this type of plot one should used 'input' and 'input_field' (not fully tested).
                                  Moreover dim(input_field) must be 2.
-
+                        'spiral' : plot variable as a spiral angular plot, angle being the date
+                        'yearly' : same as date but modulo 1 year
         """
         input = kwargs.get('input')
         input_field = kwargs.get('input_field')
         if not input.empty:
             kwargs.pop('input')
             kwargs.pop('input_field')
-        typeofplot = kwargs.get('typeofplot','date')
+        typeofplot = kwargs.get('typeofplot',listplot()[0])
         kwargs.pop('output')
         if kwargs.get('bypop'):
             kwargs.pop('bypop')
@@ -789,6 +814,10 @@ def decoplot(func):
             if isinstance(input_field,list) and len(input_field) > 1:
                 print('typeofplot is menulocation but dim(input_field)>1, menulocation has not effect ...')
             fig = _cocoplot.pycoa_scrollingmenu(input,input_field,**kwargs)
+        elif typeofplot == 'spiral':
+            raise CoaKeyError('Spiral not yet implemented… but soon')
+        elif typeofplot == 'yearly':
+            raise CoaKeyError('Yearly plot not yet implemented… but soon')
         else:
             raise CoaKeyError('Unknown typeofplot value. Should be date, versus or menulocation.')
         return func(fig)

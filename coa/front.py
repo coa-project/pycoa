@@ -812,7 +812,7 @@ def decoplot(func):
 
         if typeofplot == 'date':
             fig = _cocoplot.pycoa_date_plot(input,input_field,**kwargs)
-        if typeofplot == 'spiral':
+        elif typeofplot == 'spiral':
             fig = _cocoplot.pycoa_spiral_plot(input,input_field,**kwargs)
         elif typeofplot == 'versus':
             if isinstance(input_field,list) and len(input_field) == 2:

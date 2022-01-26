@@ -732,7 +732,7 @@ class CocoDisplay:
         """
         @wraps(func)
         def inner_hm(self, input = None, input_field = None, **kwargs):
-            tile = kwargs.get('tile', None)
+            tile = kwargs.get('tile', self.dvisu_default['tile'])
 
             maplabel = kwargs.get('maplabel', None)
             if not isinstance(maplabel,list):
@@ -779,7 +779,7 @@ class CocoDisplay:
                 else:
                     geopdwd = pd.merge(geopdwd, self.location_geometry, on='location')
 
-                kwargs['tile'] = self.dvisu_default['tile']
+                kwargs['tile'] = tile
                 if self.iso3country in ['FRA','USA']:
                     geo = copy.deepcopy(self.geo)
                     d = geo._list_translation

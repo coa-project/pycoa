@@ -666,10 +666,10 @@ def map(input,input_field,**kwargs):
     dateslider = kwargs.get('dateslider', None)
     maplabel = kwargs.get('maplabel', None)
     if visu == 'bokeh':
-        if maplabel and ('spark' in maplabel or 'spiral' in maplabel):
-            return show(_cocoplot.pycoa_pimpmap(input,input_field,**kwargs))
-        else:
-            return show(_cocoplot.pycoa_map(input,input_field,**kwargs))
+        fig = _cocoplot.pycoa_map(input,input_field,**kwargs)
+        if maplabel and ('spark' or 'spiral' in maplabel):
+            fig = _cocoplot.pycoa_pimpmap(input,input_field,**kwargs)
+        return show(fig)
     elif visu == 'folium':
         if dateslider is not None :
             raise CoaKeyError('Not available with folium map, you should considere to use bokeh map visu in this case')

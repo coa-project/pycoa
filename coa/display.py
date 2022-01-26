@@ -193,10 +193,10 @@ class CocoDisplay:
                 what =  which
             else:
                  # cumul is the default
-                what = kwargs.get('what', 'standard')
+                what = kwargs.get('what', which)
 
             if input_field is None:
-                input_field = which #what
+                input_field = which
 
             if isinstance(input_field,list):
                 test = input_field[0]
@@ -335,6 +335,7 @@ class CocoDisplay:
                 titlefig = which + ', ' + 'day to day difference ' + title_option
             elif input_field_tostring == 'weekly':
                 titlefig = which + ', ' + 'week to week difference ' + title_option
+
             elif input_field_tostring == input.columns[2]:
                 if 'cur_' in  which:
                     titlefig = which + ', ' + 'current ' + which.replace('cur_','')+ title_option

@@ -67,7 +67,7 @@ def generic_info(namedb, keys):
         ['tot_vacc4: (nom initial n_cum_dose4)',url5,urlmaster5],
         'tot_rappel_vacc':
         ['tot_rappel_vacc: (nom initial n_rappel)',url5,urlmaster5],
-        'tot_incid_hosp':
+        'incid_hosp':
         ['tot_incid_hosp: Nombre total de personnes hospitalisées',url2,urlmaster2],
         'tot_incid_rea':
         ['tot_incid_rea: Nombre total d\'admissions en réanimation',url2,urlmaster2],

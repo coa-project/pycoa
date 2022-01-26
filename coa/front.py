@@ -156,6 +156,7 @@ def listhist():
     """
     return _listhist
 
+
 # ----------------------------------------------------------------------
 # --- listwhat() -------------------------------------------------------
 # ----------------------------------------------------------------------
@@ -607,6 +608,7 @@ def decomap(func):
             - dateslider=True: a date slider is called and displayed on the right part of the map
             - maplabel = text, value are displayed directly on the map
                        = spark, sparkline are displayed directly on the map
+                       = spiral, spiral are displayed directly on the map
                        = label%, label are in %
         """
         visu = kwargs.get('visu', listvisu()[0])
@@ -621,11 +623,11 @@ def decomap(func):
 
         dateslider = kwargs.get('dateslider', None)
         maplabel = kwargs.get('maplabel', None)
-
+        listmaplabel=['text','spark','spiral','label%','log','unsorted']
         if maplabel is not None:
             if not isinstance(maplabel,list):
                 maplabel = [maplabel]
-            if  [a for a in maplabel if a not in ['text','spark','label%','log','unsorted']]:
+            if  [a for a in maplabel if a not in listmaplabel]:
                 raise CoaTypeError('Waiting a correct maplabel value. See help.')
 
         sparkline = False
@@ -636,12 +638,9 @@ def decomap(func):
             kwargs['maplabel'] = []
             if 'text' in maplabel:
                 kwargs['maplabel'] = ['text']
-            if 'label%' in maplabel:
-                kwargs['maplabel'].append('label%')
-            if 'log' in maplabel:
-                kwargs['maplabel'].append('log')
-            if 'spark' in maplabel:
-                kwargs['maplabel'].append('spark')
+            for i in listmaplabel[1:]:
+                if i in maplabel:
+                    kwargs['maplabel'].append(i)
             #if all([ True if i in ['text','spark','label%','log'] else False for i in kwargs['maplabel'] ]) :
             #    CoaKeyError('Waiting for a valide label visualisation: text, spark or label%')
             input.loc[:,input_field]=input[input_field].fillna(0) #needed in the case where there are nan else js pb
@@ -650,16 +649,27 @@ def decomap(func):
 
 @chartsinput_deco
 @decomap
-def map(input,input_field,**kwargs):
+def figmap(input,input_field,**kwargs):
     visu = kwargs.get('visu', listvisu()[0])
     dateslider = kwargs.get('dateslider', None)
     maplabel = kwargs.get('maplabel', None)
     if visu == 'bokeh':
         if maplabel and 'spark' in maplabel:
-            return show(_cocoplot.pycoa_sparkmap(input,input_field,**kwargs))
+            return _cocoplot.pycoa_sparkmap(input,input_field,**kwargs)
+        else:
+            return _cocoplot.pycoa_map(input,input_field,**kwargs)
+
+@chartsinput_deco
+@decomap
+def map(input,input_field,**kwargs):
+    visu = kwargs.get('visu', listvisu()[0])
+    dateslider = kwargs.get('dateslider', None)
+    maplabel = kwargs.get('maplabel', None)
+    if visu == 'bokeh':
+        if maplabel and ('spark' in maplabel or 'spiral' in maplabel):
+            return show(_cocoplot.pycoa_pimpmap(input,input_field,**kwargs))
         else:
             return show(_cocoplot.pycoa_map(input,input_field,**kwargs))
-
     elif visu == 'folium':
         if dateslider is not None :
             raise CoaKeyError('Not available with folium map, you should considere to use bokeh map visu in this case')
@@ -777,6 +787,7 @@ def decoplot(func):
 
         typeofplot  -- 'date' (default), 'menulocation' or 'versus'
                        'date':date plot
+                       'spiral': spiral plot if several location only the first one
                        'menulocation': date plot with two scroll menu locations.
                                         Usefull to study the behaviour of a variable for two different countries.
                        'versus': plot variable against an other one.
@@ -800,6 +811,8 @@ def decoplot(func):
 
         if typeofplot == 'date':
             fig = _cocoplot.pycoa_date_plot(input,input_field,**kwargs)
+        elif typeofplot == 'spiral':
+            fig = _cocoplot.pycoa_spiral_plot(input,input_field,**kwargs)
         elif typeofplot == 'versus':
             if isinstance(input_field,list) and len(input_field) == 2:
                 fig = _cocoplot.pycoa_plot(input,input_field,**kwargs)
@@ -815,7 +828,7 @@ def decoplot(func):
         elif typeofplot == 'yearly':
             raise CoaKeyError('Yearly plot not yet implemented… but soon')
         else:
-            raise CoaKeyError('Unknown typeofplot value. Should be date, versus or menulocation.')
+            raise CoaKeyError('Unknown typeofplot value. Should be date, versus, menulocation or spiral.')
         return func(fig)
     return inner
 

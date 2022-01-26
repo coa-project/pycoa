@@ -74,7 +74,7 @@ _listoutput = ['pandas','geopandas','list', 'dict', 'array']  # first one is def
 
 _listvisu = ['bokeh', 'folium']
 
- _listhist = ['bylocation','byvalue','pie']
+_listhist = ['bylocation','byvalue','pie']
 
 _listplot = ['timeseries','menulocation','versus','spiral','yearly']
 

@@ -60,6 +60,7 @@ import matplotlib.pyplot as plt
 import datetime as dt
 import bisect
 from functools import wraps
+from IPython.core.display import display, HTML
 
 width_height_default = [500, 380]
 
@@ -169,7 +170,6 @@ class CocoDisplay:
                 fig = [fig]
             self.listfigs = fig
     ''' WRAPPER COMMUN FOR ALL'''
-
     def decowrapper(func):
         '''
             Main decorator it mainly deals with arg testings
@@ -308,7 +308,7 @@ class CocoDisplay:
                 else:
                     when_end_change = min(when_end_change,CocoDisplay.changeto_nonull_date(input, when_end, i))
 
-            if func.__name__ != 'pycoa_date_plot'  and func.__name__ != 'pycoa_plot'  and func.__name__ != 'pycoa_scrollingmenu':
+            if func.__name__ not in ['pycoa_date_plot', 'pycoa_plot', 'pycoa_scrollingmenu', 'pycoa_spiral_plot']:
                 if len(input_field) > 1:
                     print(str(input_field) + ' is dim = ' + str(len(input_field)) + '. No effect with ' + func.__name__ + '! Take the first input: ' + input_field[0])
                 input_field = input_field[0]
@@ -328,14 +328,14 @@ class CocoDisplay:
                 if 'sumallandsmooth7' in option:
                     option.remove('sumallandsmooth7')
                     option += ['sumall','smooth7']
-                title_option = ' option: ' + str(option)
+                title_option = '(option: ' + str(option)+')'
 
             input_field_tostring = str(input_field).replace('[', '').replace(']', '').replace('\'', '')
             if input_field_tostring == 'daily':
                 titlefig = which + ', ' + 'day to day difference ' + title_option
             elif input_field_tostring == 'weekly':
                 titlefig = which + ', ' + 'week to week difference ' + title_option
-            elif input_field_tostring == 'cumul':
+            elif input_field_tostring == input.columns[2]:
                 if 'cur_' in  which:
                     titlefig = which + ', ' + 'current ' + which.replace('cur_','')+ title_option
                 else:
@@ -358,9 +358,34 @@ class CocoDisplay:
 
             self.subtitle = textcopyright
             kwargs['title'] = title+title_temporal
-
             return func(self, input, input_field, **kwargs)
         return wrapper
+
+    @decowrapper
+    def pycoa_resume_data(self, input, input_field, **kwargs):
+        loc=list(input['clustername'].unique())
+        input['cases'] = input[input_field]
+        dspiral={i:CocoDisplay.spiral(input.loc[ (input.clustername==i) &
+                    (input.date >= self.when_beg) &
+                    (input.date <= self.when_end)].sort_values(by='date')) for i in loc}
+        input['resume']=input['clustername'].map(dspiral)
+        input = input.loc[input.date==input.date.max()].reset_index(drop=True)
+        def path_to_image_html(path):
+            return '<img src="'+ path + '" width="60" >'
+
+        input=input.drop(columns=['permanentdisplay','rolloverdisplay','colors','cases'])
+        input=input.apply(lambda x: x.round(2) if x.name in [input_field,'daily','weekly'] else x)
+        if isinstance(input['location'][0], list):
+            col=[i for i in list(input.columns) if i not in ['clustername','location','codelocation']]
+            col.insert(0,'clustername')
+            input = input[col]
+            input=input.set_index('clustername')
+        else:
+           input = input.drop(columns='clustername')
+           input=input.set_index('location')
+
+        return input.to_html(escape=False,formatters=dict(resume=path_to_image_html))
+
     ''' DECORATORS FOR PLOT: DATE, VERSUS, SCROLLINGMENU '''
     def decoplot(func):
         """
@@ -558,6 +583,58 @@ class CocoDisplay:
         tabs = Tabs(tabs = panels)
         return tabs
 
+
+    ''' SPIRAL PLOT '''
+    @decowrapper
+    @decoplot
+    def pycoa_spiral_plot(self, input = None, input_field = None, **kwargs):
+        guideline = kwargs.get('guideline',self.dvisu_default['guideline'])
+        panels = []
+        listfigs = []
+        cases_custom = CocoDisplay.rollerJS()
+        if isinstance(input['rolloverdisplay'][0],list):
+            input['rolloverdisplay'] = input['clustername']
+        borne=300
+        standardfig = self.standardfig(y_axis_type = None, x_axis_type = None,**kwargs,
+         x_range=[-borne, borne], y_range=[-borne, borne],match_aspect=True)
+
+        if len(input.clustername.unique()) > 1 :
+            print('Can only display spiral for ONE location. I took the first one:', input.clustername[0])
+            input = input.loc[input.clustername == input.clustername[0]].copy()
+        input['date']=pd.to_datetime(input["date"])
+        input["dayofyear"]=input.date.dt.dayofyear
+        input['year']=input.date.dt.year
+
+        K = 2*input[input_field].max()
+        input["dayofyear_angle"] = input["dayofyear"]*2 * np.pi/365 # gérer plus finement l'année bissextile
+        input["r_baseline"] = input.apply(lambda x : ((x["year"]-2020)*2 * np.pi + x["dayofyear_angle"])*K,axis=1)
+        size_factor = 16
+        input["r_cas_sup"] = input.apply(lambda x : x["r_baseline"] + 0.5*x[input_field]*size_factor,axis=1)
+        input["r_cas_inf"] = input.apply(lambda x : x["r_baseline"] - 0.5*x[input_field]*size_factor,axis=1)
+
+        radius = 150
+        def polar(theta,r,norm=radius/input["r_baseline"].max()):
+            x = norm*r*np.cos(theta)
+            y = norm*r*np.sin(theta)
+            return x,y
+        x_base,y_base=polar(input["dayofyear_angle"],input["r_baseline"])
+        x_cas_sup,y_cas_sup=polar(input["dayofyear_angle"],input["r_cas_sup"])
+        x_cas_inf,y_cas_inf=polar(input["dayofyear_angle"],input["r_cas_inf"])
+
+        outer_radius=200
+        standardfig.multi_line([x_base,x_cas_sup,x_cas_inf],[y_base,y_cas_sup,y_cas_inf],color=["firebrick", "navy","navy"])
+        [standardfig.annular_wedge(
+            x=0, y=0, inner_radius=0, outer_radius=outer_radius, start_angle=i*np.pi/4,\
+            end_angle=(i+1)*np.pi/4,fill_color=None,line_color='black',line_dash='dotted')
+        for i in range(12)]
+
+        label=['January','February','March','April','May','June','July','August','September','October','November','December']
+        xr,yr=polar(np.linspace(0, 2 * np.pi, 13),outer_radius,1)
+        standardfig.text(xr[:-1], yr[:-1], label,text_font_size="9pt", text_align="center", text_baseline="middle")
+
+        standardfig.text(300/np.sqrt(2),300/np.sqrt(2),input.codelocation.unique())
+        return standardfig
+
     ''' SCROLLINGMENU PLOT '''
     @decowrapper
     @decoplot
@@ -646,6 +723,7 @@ class CocoDisplay:
         label = standardfig.title
         return tabs
 
+
     ''' DECORATORS FOR HISTO VERTICAL, HISTO HORIZONTAL, PIE & MAP'''
     def decohistomap(func):
         """
@@ -692,7 +770,7 @@ class CocoDisplay:
                 #wanted_date = date_slider.value_as_datetime.date()
 
             #if func.__name__ == 'pycoa_mapfolium' or func.__name__ == 'pycoa_map' or func.__name__ == 'innerdecomap' or func.__name__ == 'innerdecopycoageo':
-            if func.__name__ in ['pycoa_mapfolium','pycoa_map','pycoageo' ,'pycoa_sparkmap']:
+            if func.__name__ in ['pycoa_mapfolium','pycoa_map','pycoageo' ,'pycoa_pimpmap']:
                 if isinstance(input.location.to_list()[0],list):
                     geom = self.location_geometry
                     geodic={loc:geom.loc[geom.location==loc]['geometry'].values[0] for loc in geopdwd.location.unique()}
@@ -1247,7 +1325,7 @@ class CocoDisplay:
         df['text_angle'] = 0.
         df.loc[:, 'percentage'] = ((df[column_name]*100).astype(np.double).round(1).astype(str)+'%').str.pad(46, side = "left")
         #df['textdisplayed'] = df['permanentdisplay'].apply(lambda x: str(x[:10]+'...').str.pad(20, side = "left"))
-        df['textdisplayed']=df['permanentdisplay'].apply(lambda x: x[:10]+'...').astype(str).str.pad(18, side = "left")
+        df['textdisplayed']=df['permanentdisplay'].astype(str).str.pad(14, side = "left")
         df['textdisplayed2'] = df[column_name].astype(np.double).round(1).astype(str).str.pad(46, side = "left")
         df.loc[df['diff']<= np.pi/20,'textdisplayed']=''
         df.loc[df['diff']<= np.pi/20,'textdisplayed2']=''
@@ -1462,7 +1540,6 @@ class CocoDisplay:
             geolistmodified = gpd.GeoDataFrame({'location': ng['location'], 'geometry': gpd.GeoSeries(ng['geometry'])}, crs="epsg:3857")
             geopdwd_filtered = geopdwd_filtered.drop(columns='geometry')
             geopdwd_filtered = pd.merge(geolistmodified, geopdwd_filtered, on='location')
-
             #if kwargs['wanted_dates']:
             #    kwargs.pop('wanted_dates')
             return func(self, geopdwd, geopdwd_filtered, **kwargs)
@@ -1487,7 +1564,7 @@ class CocoDisplay:
             uniqloc = list(geopdwd_filtered.clustername.unique())
             dfLabel = pd.DataFrame()
             sourcemaplabel = ColumnDataSource(dfLabel)
-            if maplabel or func.__name__ == 'pycoa_sparkmap':
+            if maplabel or func.__name__ == 'pycoa_pimpmap':
                 locsum = geopdwd_filtered.clustername.unique()
                 numberpercluster = geopdwd_filtered['clustername'].value_counts().to_dict()
                 sumgeo = geopdwd_filtered.copy()
@@ -1498,13 +1575,23 @@ class CocoDisplay:
                 centrosx = sumgeo['geometry'].centroid.x
                 centrosy = sumgeo['geometry'].centroid.y
                 cases = sumgeo['cases']/sumgeo['nb']
-                sparkos = {i: CocoDisplay.sparkline(geopdwd.loc[ (geopdwd.clustername==i) &
+                dfLabel=pd.DataFrame({'clustername':sumgeo.clustername,'centroidx':centrosx,'centroidy':centrosy,'cases':cases,'geometry':sumgeo['geometry']})
+
+                if 'spark' in maplabel:
+                    sparkos = {i: CocoDisplay.sparkline(geopdwd.loc[ (geopdwd.clustername==i) &
                                 (geopdwd.date >= self.when_beg) &
                                 (geopdwd.date <= self.when_end)].sort_values(by='date')['cases']) for i in locsum }
-                dfspark = pd.DataFrame(list(sparkos.items()), columns=['clustername', 'spark'])
-                dfLabel=pd.DataFrame({'clustername':sumgeo.clustername,'centroidx':centrosx,'centroidy':centrosy,'cases':cases,'geometry':sumgeo['geometry']})
-                dfLabel=pd.merge(dfLabel,dfspark,on=['clustername'],how="inner")
+                    dfpimp = pd.DataFrame(list(sparkos.items()), columns=['clustername', 'pimpmap'])
+                    dfLabel=pd.merge(dfLabel,dfpimp,on=['clustername'],how="inner")
+                if 'spiral' in maplabel:
+                    sparkos = {i: CocoDisplay.spiral(geopdwd.loc[ (geopdwd.clustername==i) &
+                                (geopdwd.date >= self.when_beg) &
+                                (geopdwd.date <= self.when_end)].sort_values(by='date')[['date','cases','clustername']]) for i in locsum }
+                    dfpimp = pd.DataFrame(list(sparkos.items()), columns=['clustername', 'pimpmap'])
+                    dfLabel=pd.merge(dfLabel,dfpimp,on=['clustername'],how="inner")
+
                 dfLabel['cases'] = dfLabel['cases'].round(2)
+                # Converting links to html tags
                 if 'label%' in maplabel:
                     dfLabel['cases'] = [str(round(float(i*100),2))+'%' for i in dfLabel['cases']]
                 else:
@@ -1517,13 +1604,13 @@ class CocoDisplay:
             #    maxx += ratio*maxx
             #    miny -= ratio*miny
             #    maxy += ratio*maxy
-            #if func.__name__ == 'pycoa_sparkmap':
+            #if func.__name__ == 'pycoa_pimpmap':
             #    dico['titlebar']=tit[:-12]+' [ '+dico['when_beg'].strftime('%d/%m/%Y')+ '-'+ tit[-12:-1]+'])'
 
             kwargs['plot_width']=kwargs['plot_height']
             x_range=(minx,maxx)
             y_range=(miny,maxy)
-            if func.__name__ == 'pycoa_sparkmap':
+            if func.__name__ == 'pycoa_pimpmap':
                 standardfig = self.standardfig(x_range=x_range, y_range=y_range, x_axis_type="mercator", y_axis_type="mercator",**kwargs,match_aspect=True)
             else:
                 standardfig = self.standardfig(x_axis_type="mercator", y_axis_type="mercator",**kwargs,match_aspect=True)
@@ -1706,15 +1793,15 @@ class CocoDisplay:
             standardfig = column(date_slider, standardfig)
         return standardfig
 
-    ''' SPARKMAP BOKEH '''
+    ''' PIMPMAP BOKEH '''
     @decowrapper
     @decohistomap
     @decopycoageo
     @decomap
-    def pycoa_sparkmap(self, geopdwd, geopdwd_filtered, sourcemaplabel, standardfig,**kwargs):
+    def pycoa_pimpmap(self, geopdwd, geopdwd_filtered, sourcemaplabel, standardfig,**kwargs):
         '''
             -----------------
-            Create a bokeh map with sparkline label and with to arguments.
+            Create a bokeh map with pimpline label and with to arguments.
             See help(pycoa_histo).
             Keyword arguments
             -----------------
@@ -1752,14 +1839,11 @@ class CocoDisplay:
         color_bar = ColorBar(color_mapper=color_mapper, label_standoff=4,
                              border_line_color=None, location=(0, 0), orientation='horizontal', ticker=BasicTicker())
         color_bar.formatter = BasicTickFormatter(use_scientific=True, precision=1, power_limit_low=int(max_col))
-
-
         standardfig.add_layout(color_bar, 'below')
-
         standardfig.patches('xs', 'ys', source = geopdwd_filtered,
                                     fill_color = {'field': 'cases', 'transform': color_mapper},
                                     line_color = 'black', line_width = 0.25, fill_alpha = 1)
-        standardfig.image_url(url='spark', x='centroidx', y='centroidy',source=sourcemaplabel,anchor="center")
+        standardfig.image_url(url='pimpmap', x='centroidx', y='centroidy',source=sourcemaplabel,anchor="center")
         return standardfig
     ######################
     def tiles_list(self):
@@ -1915,7 +1999,7 @@ class CocoDisplay:
     @staticmethod
     def changeto_nonan_date(df=None, when_end=None, field=None):
         if not isinstance(when_end, dt.date):
-            raise CoaTypeError(' Not a valide data ... ')
+            raise CoaTypeError(' Not a valid data ... ')
 
         boolval = True
         j = 0
@@ -1930,7 +2014,7 @@ class CocoDisplay:
     @staticmethod
     def changeto_nonull_date(df=None,when_end = None, field=None):
         if not isinstance(when_end, dt.date):
-            raise CoaTypeError(' Not a valide data ... ')
+            raise CoaTypeError(' Not a valid data ... ')
         boolval = True
         j = 0
         #df = df.fillna(0)
@@ -2040,3 +2124,44 @@ class CocoDisplay:
         plt.close()
         return 'data:image/png;base64,' + "{}".format(base64.b64encode(img.read()).decode())
     ###################### END Static Methods ##################
+    @staticmethod
+    def spiral(data, figsize=(0.5, 0.5), **kwags):
+        """
+        Returns a HTML image tag containing a base64 encoded spiral style plot
+        https://github.com/emilienschultz/researchnotebooks/blob/master/20220116%20-%20Visualisation%20polaire%20cas%20COVID-19.ipynb
+        """
+        data["date"] = pd.to_datetime(data["date"])
+        # Utiliser des méthodes de l'objet date de Pandas pour créer de nouvelles colonnes
+        data["dayofyear"] = data["date"].dt.dayofyear # j'ai cherché comment faire dayofyear et il se trouve qu'il y a une fonction
+        data["year"] = data["date"].dt.year
+
+        K = 2*data['cases'].max()
+        data["dayofyear_angle"] = data["dayofyear"]*2 * np.pi/365 # gérer plus finement l'année bissextile
+        data["r_baseline"] = data.apply(lambda x : ((x["year"]-2020)*2 * np.pi + x["dayofyear_angle"])*K,axis=1)
+
+        E = 8 # facteur d'expansion des données
+        data["r_cas_sup"] = data.apply(lambda x : x["r_baseline"] + E*x["cases"],axis=1)
+        data["r_cas_inf"] = data.apply(lambda x : x["r_baseline"] - E*x["cases"],axis=1)
+
+        fig, ax = plt.subplots(subplot_kw={'projection': 'polar'},figsize=(1,1))
+
+        #ax.set_xticklabels(['     january', '', 'april', '', 'july    ', '', 'october', ''])
+        ax.plot(data["dayofyear_angle"], data["r_baseline"])
+        ax.plot(data["dayofyear_angle"], data["r_cas_sup"],color="black")
+        ax.plot(data["dayofyear_angle"], data["r_cas_inf"],color="black")
+
+        ax.plot(data["dayofyear_angle"], data["r_cas_sup"],color="lightblue")
+        ax.plot(data["dayofyear_angle"], data["r_cas_inf"],color="lightblue")
+
+        ax.fill_between(data["dayofyear_angle"],data["r_baseline"], data["r_cas_sup"],color="lightblue")
+        ax.fill_between(data["dayofyear_angle"],data["r_baseline"], data["r_cas_inf"],color="lightblue")
+        ax.set_rticks([])
+        ax.grid(False)
+        ax.set_xticklabels([])
+        ax.set_yticklabels([])
+        #ax.fill_between(range(len(data)), data, len(data)*[min(data)], color='green',alpha=0.1)
+        img = BytesIO()
+        plt.savefig(img)
+        img.seek(0)
+        plt.close()
+        return 'data:image/png;base64,' + "{}".format(base64.b64encode(img.read()).decode())

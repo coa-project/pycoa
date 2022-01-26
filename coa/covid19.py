@@ -396,6 +396,7 @@ class DataBase(object):
                         result = result.sort_values(by=['location','date'])
                         result.loc[result['location'].isin(['975','977','978','986','987']),'location']='980'
                         result = result.drop_duplicates(subset=['location', 'date'], keep='last')
+
                         for w in ['incid_hosp', 'incid_rea', 'incid_rad', 'incid_dc', 'P', 'T', 'n_cum_dose1', 'n_cum_dose2','n_cum_dose3','n_cum_dose4','n_cum_rappel']:
                             result[w]=pd.to_numeric(result[w], errors = 'coerce')
                             if w.startswith('incid_'):
@@ -407,7 +408,7 @@ class DataBase(object):
                             else:
                                 pass
                                 #result['offset_'+w] = 0
-                            if 'n_cum' not in w:
+                            if w not in ['n_cum','incid_hosp', 'incid_rea', 'incid_rad', 'incid_dc']:
                                 result['tot_'+w]=result.groupby(['location'])[w].cumsum()#+result['offset_'+w]
 
                         def dontneeeded():
@@ -453,7 +454,9 @@ class DataBase(object):
                         result = result.rename(columns=rename_dict)
                         #coltocast=list(rename_dict.values())[:5]
                         #result[coltocast] = result[coltocast].astype('Int64')
-                        columns_keeped  = list(rename_dict.values())+['tot_incid_hosp', 'tot_incid_rea', 'tot_incid_rad', 'tot_incid_dc', 'tot_P', 'tot_T']
+                        rename_dict2={i:i.replace('incid_','tot_incid_') for i in ['incid_hosp', 'incid_rea', 'incid_rad', 'incid_dc']}
+                        result = result.rename(columns=rename_dict2)
+                        columns_keeped  = list(rename_dict.values()) + list(rename_dict2.values()) + ['tot_P', 'tot_T']
                         self.return_structured_pandas(result,columns_keeped=columns_keeped) # with 'tot_dc' first
                 elif self.db == 'opencovid19' or  self.db == 'opencovid19national':
                     rename={'maille_code':'location'}

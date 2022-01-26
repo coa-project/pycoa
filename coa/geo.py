@@ -376,7 +376,7 @@ class GeoInfo():
                     Mandatory.
         input    -- provide the input pandas dataframe. Mandatory.
         geofield -- provide the field name in the pandas where the
-                    location is stored. Default : 'location'
+                    location is stored. Default : 'where'
         overload -- Allow to overload a field. Boolean value.
                     Default : False
         """
@@ -409,7 +409,7 @@ class GeoInfo():
             raise CoaKeyError('Some fields already exist in you panda '
                 'dataframe columns. You may set overload to True.')
 
-        geofield=kwargs.get('geofield','location')
+        geofield=kwargs.get('geofield','where')
 
         if not isinstance(geofield,str):
             raise CoaTypeError('The geofield should be given as a '

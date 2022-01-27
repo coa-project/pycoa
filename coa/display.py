@@ -31,6 +31,7 @@ from io import BytesIO
 import base64
 from IPython import display
 import copy
+import locale
 
 from bokeh.models import ColumnDataSource, TableColumn, DataTable, ColorBar, LogTicker,\
     HoverTool, CrosshairTool, BasicTicker, GeoJSONDataSource, LinearColorMapper, LogColorMapper,Label, \
@@ -555,7 +556,7 @@ class CocoDisplay:
                 i += 1
             for r in r_list:
                 label = r.name
-                tooltips = [('Location', '@rolloverdisplay'), ('date', '@date{%F}'), (r.name, '@$name')]
+                tooltips = [('Location', '@rolloverdisplay'), ('date', '@date{%F}'), (r.name, '@$name{0,0.0}')]
                 formatters = {'location': 'printf', '@date': 'datetime', '@name': 'printf'}
                 hover=HoverTool(tooltips = tooltips, formatters = formatters, point_policy = "snap_to_data", mode = kwargs['mode'], renderers=[r])  # ,PanTool())
                 standardfig.add_tools(hover)
@@ -684,7 +685,7 @@ class CocoDisplay:
         src2 = ColumnDataSource(filter_data2)
 
         cases_custom = CocoDisplay.rollerJS()
-        hover_tool = HoverTool(tooltips=[('Cases', '@{cases}' + '{custom}'), ('date', '@date{%F}')],
+        hover_tool = HoverTool(tooltips=[('Cases', '@cases{0,0.0}'), ('date', '@date{%F}')],
                                formatters={'Cases': 'printf', '@{cases}': cases_custom, '@date': 'datetime'}, mode = mode,
                                point_policy="snap_to_data")  # ,PanTool())
 
@@ -1235,12 +1236,12 @@ class CocoDisplay:
                 cases_custom = CocoDisplay.rollerJS()
                 if func.__name__ == 'pycoa_pie' :
                     standardfig.add_tools(HoverTool(
-                        tooltips=[('Location', '@rolloverdisplay'), (input_field, '@{' + 'cases' + '}' + '{custom}'), ('%','@percentage'), ],
+                        tooltips=[('Location', '@rolloverdisplay'), (input_field, '@cases{0,0.0}'), ('%','@percentage'), ],
                         formatters={'location': 'printf', '@{' + 'cases' + '}': cases_custom, '%':'printf'},
                         point_policy="snap_to_data"))  # ,PanTool())
                 else:
                     standardfig.add_tools(HoverTool(
-                        tooltips=[('Location', '@rolloverdisplay'), (input_field, '@{' + 'cases' + '}' + '{custom}'), ],
+                        tooltips=[('Location', '@rolloverdisplay'), (input_field, '@cases{0,0.0}'), ],
                         formatters={'location': 'printf', '@{' + 'cases' + '}': cases_custom, },
                         point_policy="snap_to_data"))  # ,PanTool())
                 panel = Panel(child = standardfig, title = axis_type)
@@ -1309,28 +1310,27 @@ class CocoDisplay:
 
     ''' PIE '''
     def add_columns_for_pie_chart(self,df,column_name):
-        r = 0.9
         df = df.copy()
         column_sum = df[column_name].sum()
-        df['percentage'] = (df[column_name]/column_sum)
-        #(( df['percentage'] * 100 ).astype(np.double).round(2)).apply(lambda x: str(x)+'%')
+        df['percentage'] = df[column_name]/column_sum
         percentages = [0]  + df['percentage'].cumsum().tolist()
         df['angle'] = (df[column_name]/column_sum)*2 * np.pi
         df['starts'] = [p * 2 * np.pi for p in percentages[:-1]]
         df['ends'] = [p * 2 * np.pi for p in percentages[1:]]
-        #df['middle'] = (df['starts'] + df['ends'])/2
         df['diff'] = (df['ends'] - df['starts'])
         df['middle'] = df['starts']+np.abs(df['ends']-df['starts'])/2.
 
         df['text_size'] = '10pt'
-        df['text_angle'] = 0.
-        df.loc[:, 'percentage'] = ((df[column_name]*100).astype(np.double).round(1).astype(str)+'%').str.pad(46, side = "left")
-        #df['textdisplayed'] = df['permanentdisplay'].apply(lambda x: str(x[:10]+'...').str.pad(20, side = "left"))
-        df['textdisplayed']=df['permanentdisplay'].astype(str).str.pad(14, side = "left")
-        df['textdisplayed2'] = df[column_name].astype(np.double).round(1).astype(str).str.pad(46, side = "left")
-        df.loc[df['diff']<= np.pi/20,'textdisplayed']=''
-        df.loc[df['diff']<= np.pi/20,'textdisplayed2']=''
+        df['textdisplayed'] = df['permanentdisplay'].astype(str).str.pad(40, side = "left")
+        locale.setlocale(locale.LC_ALL, 'en_US')
+        df['textdisplayed2']=[ locale.format("%d", i, grouping=True)\
+                for i in df[column_name]]
+        df['textdisplayed2']  = df['textdisplayed2'].str.pad(26, side = "left")
+        df.loc[df['diff'] <= np.pi/20,'textdisplayed']=''
+        df.loc[df['diff'] <= np.pi/20,'textdisplayed2']=''
+        df['percentage'] = 100.*df['percentage']
         return df
+
     @decowrapper
     @decohistomap
     @decohistopie
@@ -1353,24 +1353,26 @@ class CocoDisplay:
                     - orientation = horizontal
         '''
         standardfig = panels[0].child
+        standardfig.plot_height=400
+        standardfig.plot_width=400
         standardfig.x_range = Range1d(-1.1, 1.1)
         standardfig.y_range = Range1d(-1.1, 1.1)
         standardfig.axis.visible = False
         standardfig.xgrid.grid_line_color = None
         standardfig.ygrid.grid_line_color = None
 
-        standardfig.wedge(x=0, y=0, radius=1.05,line_color='#E8E8E8',
+        standardfig.wedge(x=0, y=0, radius=1.,line_color='#E8E8E8',
         start_angle=cumsum('angle', include_zero=True), end_angle=cumsum('angle'),
         fill_color='colors', legend_label='clustername', source=srcfiltered)
         standardfig.legend.visible = False
 
-        labels = LabelSet(x=0, y=0, text='textdisplayed',
-        angle=cumsum('angle', include_zero=True), source=srcfiltered, render_mode='canvas',text_font_size="10pt")
-        labels2 = LabelSet(x=0, y=0, text='textdisplayed2',
-        angle=cumsum('angle', include_zero=True), source=srcfiltered, render_mode='canvas',text_font_size="8pt")
+        labels = LabelSet(x=0, y=0,text='textdisplayed',angle=cumsum('angle', include_zero=True),
+        text_font_size="10pt",source=srcfiltered)
+        #labels2 = LabelSet(x=0, y=0, text='textdisplayed2',
+        #angle=cumsum('angle', include_zero=True),text_font_size="8pt",source=srcfiltered)
 
         standardfig.add_layout(labels)
-        standardfig.add_layout(labels2)
+        #standardfig.add_layout(labels2)
         if date_slider:
             standardfig = column(date_slider,standardfig)
         return standardfig
@@ -1686,7 +1688,7 @@ class CocoDisplay:
             color_mapper = LogColorMapper(palette=invViridis256, low=min_col_non0, high=max_col, nan_color='#ffffff')
         else:
             color_mapper = LinearColorMapper(palette=invViridis256, low=min_col, high=max_col, nan_color='#ffffff')
-        color_bar = ColorBar(color_mapper=color_mapper, label_standoff=4,
+        color_bar = ColorBar(color_mapper=color_mapper, label_standoff=4, width=standardfig.plot_width, bar_line_cap='round',
                              border_line_color=None, location=(0, 0), orientation='horizontal', ticker=BasicTicker())
         color_bar.formatter = BasicTickFormatter(use_scientific=True, precision=1, power_limit_low=int(max_col))
 
@@ -1785,7 +1787,7 @@ class CocoDisplay:
         """ )
         tooltips = """
                     <b>location: @rolloverdisplay<br>
-                    cases: @cases</b>
+                    cases: @cases{0,0.0}</b>
                    """
         standardfig.add_tools(HoverTool(tooltips = tooltips,
         formatters = {'location': 'printf', 'cases': 'printf',},

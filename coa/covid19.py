@@ -547,7 +547,7 @@ class DataBase(object):
             # some info
             info('Few information concernant the selected database : ', self.get_db())
             info('Available key-words, which ∈',self.get_available_keys_words())
-            info('Example of location : ',  ', '.join(random.choices(self.get_locations(), k=5)), ' ...')
+            info('Example of location : ',  ', '.join(random.choices(self.get_locations(), k=min(5,len(self.get_locations() ))   )), ' ...')
             info('Last date data ', self.get_dates().max())
 
    @staticmethod

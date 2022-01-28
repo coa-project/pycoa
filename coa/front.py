@@ -207,11 +207,14 @@ def listwhere(clustered = False):
     """Get the list of available regions/subregions managed by the current database
     """
     def clust():
-        r = _db.geo.get_region_list()
-        if isinstance(r, list):
-            return r
+        if get_db_list_dict()[_whom][1] == 'nation':
+            return  _db.geo.to_standard(get_db_list_dict()[_whom][0])[0]
         else:
-            return sorted(r['name_region'].to_list())
+            r = _db.geo.get_region_list()
+            if isinstance(r, list):
+                return r
+            else:
+                return sorted(r['name_region'].to_list())
 
     if get_db_list_dict()[_whom][1] == 'nation' and get_db_list_dict()[_whom][2] != 'World':
         return [ get_db_list_dict()[_whom][2] ]
@@ -220,14 +223,19 @@ def listwhere(clustered = False):
         return clust()
     else:
         if _db.db_world == True:
-            r = _db.geo.get_GeoRegion().get_countries_from_region('world')
-            r = [_db.geo.to_standard(c)[0] for c in r]
+            if get_db_list_dict()[_whom][1] == 'nation':
+                r =  _db.geo.to_standard(get_db_list_dict()[_whom][0])[0]
+            else:
+                r = _db.geo.get_GeoRegion().get_countries_from_region('world')
+                r = [_db.geo.to_standard(c)[0] for c in r]
         else:
             if get_db_list_dict()[_whom][1] == 'subregion':
                 pan = _db.geo.get_subregion_list()
                 r = list(pan.name_subregion.unique())
-            else:
+            elif get_db_list_dict()[_whom][1] == 'region':
                 r = clust()
+            else:
+                raise CoaKeyError('What is the granularity of your DB ?')
         return r
 
 # ----------------------------------------------------------------------

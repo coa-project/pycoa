@@ -208,7 +208,7 @@ def listwhere(clustered = False):
     """
     def clust():
         if get_db_list_dict()[_whom][1] == 'nation':
-            return  _db.geo.to_standard(get_db_list_dict()[_whom][0])[0]
+            return  _db.geo.to_standard(get_db_list_dict()[_whom][0])
         else:
             r = _db.geo.get_region_list()
             if isinstance(r, list):
@@ -223,8 +223,8 @@ def listwhere(clustered = False):
         return clust()
     else:
         if _db.db_world == True:
-            if get_db_list_dict()[_whom][1] == 'nation':
-                r =  _db.geo.to_standard(get_db_list_dict()[_whom][0])[0]
+            if get_db_list_dict()[_whom][1] == 'nation' and get_db_list_dict()[_whom][2] != 'World':
+                r =  _db.geo.to_standard(get_db_list_dict()[_whom][0])
             else:
                 r = _db.geo.get_GeoRegion().get_countries_from_region('world')
                 r = [_db.geo.to_standard(c)[0] for c in r]

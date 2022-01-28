@@ -1436,9 +1436,14 @@ class CocoDisplay:
         geopdwd_filtered = geopdwd_filtered.drop(columns=['date', 'colors'])
 
         msg = "(data from: {})".format(self.database_name)
+
         minx, miny, maxx, maxy =  geopdwd_filtered.total_bounds
-        mapa = folium.Map(tiles=tile, attr='<a href=\"http://pycoa.fr\"> ©pycoa.fr </a>' + msg)  #
-        mapa.fit_bounds([(miny, minx), (maxy, maxx)])
+
+        mapa = folium.Map(tiles=tile, attr='<a href=\"http://pycoa.fr\"> ©pycoa.fr </a>' + msg)
+        #min_lat=minx, max_lat=maxx, min_lon=miny, max_lon=maxy)
+        #location=[geopdwd_filtered.centroid.y.mean(),geopdwd_filtered.centroid.x.mean()],)
+        if self.dbld[self.database_name][0] != 'WW':
+            mapa.fit_bounds([(miny, minx), (maxy, maxx)])
 
         fig = Figure(width=plot_width, height=plot_height)
         fig.add_child(mapa)
@@ -1454,7 +1459,7 @@ class CocoDisplay:
         else:
             color_mapper = LinearColorMapper(palette=invViridis256, low=min_col, high=max_col, nan_color='#d9d9d9')
             colormap = branca.colormap.LinearColormap(color_mapper.palette).scale(min_col, max_col)
-        colormap.caption = 'Cases : ' + title
+        colormap.caption =  title
         colormap.add_to(mapa)
         map_id = colormap.get_name()
 
@@ -1697,7 +1702,7 @@ class CocoDisplay:
             color_mapper = LogColorMapper(palette=invViridis256, low=min_col_non0, high=max_col, nan_color='#ffffff')
         else:
             color_mapper = LinearColorMapper(palette=invViridis256, low=min_col, high=max_col, nan_color='#ffffff')
-        color_bar = ColorBar(color_mapper=color_mapper, label_standoff=4, width=standardfig.plot_width, bar_line_cap='round',
+            color_bar = ColorBar(color_mapper=color_mapper, label_standoff=4, width=standardfig.plot_width, bar_line_cap='round',
                              border_line_color=None, location=(0, 0), orientation='horizontal', ticker=BasicTicker())
         color_bar.formatter = BasicTickFormatter(use_scientific=True, precision=1, power_limit_low=int(max_col))
 

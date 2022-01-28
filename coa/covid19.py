@@ -547,10 +547,7 @@ class DataBase(object):
             # some info
             info('Few information concernant the selected database : ', self.get_db())
             info('Available key-words, which ∈',self.get_available_keys_words())
-            if self.database_type[self.db][0] != 'WW' and self.database_type[self.db][1] == 'nation':
-                info('The granularity of the database selected gives you only one location: ',self.database_type[self.db][0])
-            else:
-                info('Example of location : ',  ', '.join(random.choices(self.get_locations(), k=min(5,len(self.get_locations() ))   )), ' ...')
+            info('Example of location : ',  ', '.join(random.choices(self.get_locations(), k=min(5,len(self.get_locations() ))   )), ' ...')
             info('Last date data ', self.get_dates().max())
 
    @staticmethod

@@ -778,7 +778,6 @@ class CocoDisplay:
                     geodic={loc:geom.loc[geom.location==loc]['geometry'].values[0] for loc in geopdwd.location.unique()}
                     geopdwd['geometry'] = geopdwd['location'].map(geodic)
                 else:
-                    self.location_geometry = self.location_geometry.loc[~self.location_geometry.geometry.isna()]
                     geopdwd = pd.merge(geopdwd, self.location_geometry, on='location')
 
                 kwargs['tile'] = tile

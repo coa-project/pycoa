@@ -216,6 +216,9 @@ def listwhere(clustered = False):
             else:
                 return sorted(r['name_region'].to_list())
 
+    if get_db_list_dict()[_whom][1] == 'nation' and get_db_list_dict()[_whom][2] != 'World':
+        return [ get_db_list_dict()[_whom][2] ]
+
     if clustered:
         return clust()
     else:

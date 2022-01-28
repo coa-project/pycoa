@@ -1104,7 +1104,7 @@ class CocoDisplay:
                                     ordername_subregion.push(newname_subregion[i]);
                                 ordercolors.push(newcolors[indices[i]]);
                                 //labeldic[len-indices[i]] = newcodeloc[indices[i]];
-                                textdisplayed.push(newcodeloc[indices[i]].padStart(20,' '));
+                                textdisplayed.push(newcodeloc[indices[i]].padStart(40,' '));
                             }
 
 
@@ -1198,7 +1198,9 @@ class CocoDisplay:
                                 labeldic[parseInt(ymax*(n-i)/n)] = ordercodeloc[i];
 
                                 ht.push(right_quad[i].toFixed(2).toString());
-                                textdisplayed2.push(right_quad[i].toFixed(2).toString().padStart(45,' '));
+                                var a=new Intl.NumberFormat().format(right_quad[i])
+                                textdisplayed2.push(a.toString().padStart(26,' '));
+                                //textdisplayed2.push(right_quad[i].toFixed(2).toString().padStart(40,' '));
 
                             }
                             source_filter.data['top'] = top;
@@ -1320,10 +1322,16 @@ class CocoDisplay:
         df['diff'] = (df['ends'] - df['starts'])
         df['middle'] = df['starts']+np.abs(df['ends']-df['starts'])/2.
 
-        df['text_size'] = '10pt'
-        df['textdisplayed'] = df['permanentdisplay'].astype(str).str.pad(40, side = "left")
+        value = list(df[column_name])
+        df["cumulative_angle"] = [(sum(value[0:i + 1]) - (item / 2)) / sum(value) * 2 * np.pi for i, item in enumerate(value)]
+        df['cos'] = np.cos(df['middle']) * 0.9
+        df['sin'] = np.sin(df['middle']) * 0.9
+
+        df['text_size'] = '8pt'
+
+        df['textdisplayed'] = df['permanentdisplay'].str.pad(40, side = "left")
         locale.setlocale(locale.LC_ALL, 'en_US')
-        df['textdisplayed2']=[ locale.format("%d", i, grouping=True)\
+        df['textdisplayed2'] = [ locale.format("%d", i, grouping=True)\
                 for i in df[column_name]]
         df['textdisplayed2']  = df['textdisplayed2'].str.pad(26, side = "left")
         df.loc[df['diff'] <= np.pi/20,'textdisplayed']=''
@@ -1367,12 +1375,13 @@ class CocoDisplay:
         standardfig.legend.visible = False
 
         labels = LabelSet(x=0, y=0,text='textdisplayed',angle=cumsum('angle', include_zero=True),
-        text_font_size="10pt",source=srcfiltered)
-        #labels2 = LabelSet(x=0, y=0, text='textdisplayed2',
-        #angle=cumsum('angle', include_zero=True),text_font_size="8pt",source=srcfiltered)
+        text_font_size="10pt",source=srcfiltered,render_mode='canvas')
+
+        labels2 = LabelSet(x=0, y=0, text='textdisplayed2',
+        angle=cumsum('angle', include_zero=True),text_font_size="8pt",source=srcfiltered)
 
         standardfig.add_layout(labels)
-        #standardfig.add_layout(labels2)
+        standardfig.add_layout(labels2)
         if date_slider:
             standardfig = column(date_slider,standardfig)
         return standardfig

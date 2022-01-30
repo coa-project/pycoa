@@ -35,6 +35,7 @@ import shapely.geometry as sg
 import shapely.affinity as sa
 import shapely.ops as so
 import bs4
+import numpy as np
 
 from coa.tools import verb,kwargs_test,get_local_from_url,dotdict,tostdstring
 from coa.error import *
@@ -1025,6 +1026,7 @@ class GeoCountry():
                 'Population':'population_subregion'},inplace=True)
             self._country_data=self._country_data[['name_subregion','code_subregion','population_subregion','name_region','code_region','geometry']]
             self._country_data.loc[self._country_data.geometry.is_empty,'geometry']=None
+            self._country_data=self._country_data[self._country_data.geometry!=None]
 
         # --- 'GRC' case ------------------------------------------------------------------------------------------------
         elif self._country == 'GRC':

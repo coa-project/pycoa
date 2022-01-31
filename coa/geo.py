@@ -1026,7 +1026,7 @@ class GeoCountry():
                 'Population':'population_subregion'},inplace=True)
             self._country_data=self._country_data[['name_subregion','code_subregion','population_subregion','name_region','code_region','geometry']]
             self._country_data.loc[self._country_data.geometry.is_empty,'geometry']=None
-            self._country_data=self._country_data[self._country_data.geometry!=None]
+            # self._country_data=self._country_data[self._country_data.geometry!=None] to remove subregion without geometry
 
         # --- 'GRC' case ------------------------------------------------------------------------------------------------
         elif self._country == 'GRC':
@@ -1346,6 +1346,7 @@ class GeoCountry():
 
                     pr['code_subregion']=pr.code_subregion.apply(lambda x: [x])
                     pr['name_subregion']=pr.name_subregion.apply(lambda x: [x])
+                    pr['geometry'] = pr['geometry'].buffer(0.001) # needed with geopandas 0.10.2'
                     self._country_data_region=pr.dissolve(by=col_reg,aggfunc=(lambda x: x.sum())).sort_values(by='code_region').reset_index()
                     for x in ['population','area']:
                         if x+'_subregion' in self._country_data_region.columns:

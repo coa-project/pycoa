@@ -1026,7 +1026,7 @@ class GeoCountry():
                 'Population':'population_subregion'},inplace=True)
             self._country_data=self._country_data[['name_subregion','code_subregion','population_subregion','name_region','code_region','geometry']]
             self._country_data.loc[self._country_data.geometry.is_empty,'geometry']=None
-            self._country_data=self._country_data[self._country_data.geometry!=None]
+            # self._country_data=self._country_data[self._country_data.geometry!=None] to remove subregion without geometry
 
         # --- 'GRC' case ------------------------------------------------------------------------------------------------
         elif self._country == 'GRC':

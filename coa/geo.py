@@ -1332,8 +1332,11 @@ class GeoCountry():
         if input in r_out:
             r_out.remove(input)
 
-        # And append it to the end of the list.
-        r_out.append(input)
+        # Append the input in the right position, the macro region should be at the end
+        if len(r_out) == 1: # the input is not a macro region but just a region
+            r_out.insert(0,input)
+        else: # the input is a real macro region
+            r_out.append(input)
 
         return r_out
 

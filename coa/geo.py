@@ -1316,21 +1316,24 @@ class GeoCountry():
         dict_input={k:v for k,v in kwargs.items() if k in ['code','name']}
         r_out=self.get_regions_from_list_of_subregion_codes(self.get_subregions_from_region(**dict_input),output=out)
 
-        # # remove the input 
-        # rl=self.get_region_list()
-        # if code != None:
-        #     if out=='code':
-        #         input=rl[rl.code_region==code].name_region.item()
-        #     else:
-        #         input=code
-        # else:
-        #     if out=='name':
-        #         input=name
-        #     else:
-        #         input=rl[rl.name_region==code].code_region.item()
-        #
-        # if input in r_out:
-        #     r_out.remove(input)
+        # remove the input
+        rl=self.get_region_list()
+        if code != None:
+            if out=='code':
+                input=rl[rl.code_region==code].name_region.item()
+            else:
+                input=code
+        else:
+            if out=='name':
+                input=name
+            else:
+                input=rl[rl.name_region==code].code_region.item()
+
+        if input in r_out:
+            r_out.remove(input)
+
+        # And append it to the end of the list.
+        r_out.append(input)
 
         return r_out
 

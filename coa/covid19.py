@@ -1175,7 +1175,6 @@ class DataBase(object):
                 a=self.geo.get_data()
                 for i in listloc:
                     if typeloc == 'subregion':
-
                         if self.geo.is_region(i):
                             i = [self.geo.is_region(i)]
                             tmp = self.geo.get_subregions_from_list_of_region_names(i,output='name')
@@ -1188,7 +1187,8 @@ class DataBase(object):
                         if i.isdigit():
                             tmp = list(tmp.loc[tmp.code_region==i]['name_region'])
                         elif self.geo.is_region(i):
-                            tmp = i
+                            tmp = self.geo.get_regions_from_macroregion(name=i,output='name')
+                            tmp = tmp[:-1] 
                         else:
                             if self.geo.is_subregion(i):
                                 raise CoaTypeError(i+ ' is a subregion ... not compatible with a region DB granularity?')
@@ -1210,7 +1210,6 @@ class DataBase(object):
                 listloc = explosion(listloc,self.database_type[self.db][1])
                 listloc = DataBase.flat_list(listloc)
                 location_exploded = listloc
-
         def sticky(lname):
             if len(lname)>0:
                 tmp=''
@@ -1240,7 +1239,6 @@ class DataBase(object):
             pdfiltered = mainpandas.loc[mainpandas.location.isin(location_exploded)]
             pdfiltered = pdfiltered[['location','date','codelocation',kwargs['which']]]
             pdfiltered['clustername'] = pdfiltered['location'].copy()
-
         if not isinstance(option,list):
             option=[option]
         if 'fillnan' not in option and 'nofillnan' not in option:

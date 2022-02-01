@@ -1267,6 +1267,37 @@ class GeoCountry():
             s=s+self.get_subregions_from_region(name=r,output=output)
         return s
 
+    def get_regions_from_subregion(self,code,output='code'):
+        """ Return the list of regions where the subregion, given by a code, is.
+        Output default is 'code' of subregions. Can be changer with output='name'.
+        """
+
+        if not output in ['code','name']:
+            raise CoaKeyError('The output option should be "code" or "name" only')
+
+        if not code in self.get_subregion_list()['code_subregion'].to_list():
+            raise CoaWhereError("The subregion "+code+" does not exist for country "+self.get_country()+". See get_subregion_list().")
+
+        l=[]
+        for k,v in self.get_data(True).iterrows():
+            if code in v.code_subregion:
+                if output == 'code':
+                    l.append(v.code_region)
+                else: # due to first test, that's for sure name
+                    l.append(v.name_region)
+        return list(dict.fromkeys(l))
+
+    def get_regions_from_list_of_subregion_codes(self,l,output='code'):
+        """ Return the list of regions according to list of subregion names given.
+        The output argument ('code' as default) is given to the get_regions_from_subregion function.
+        """
+        if not isinstance(l,list):
+            raise CoaTypeError("Should provide list as argument")
+        s=[]
+        for sr in l:
+            s=s+self.get_regions_from_subregion(sr,output=output)
+        return list(dict.fromkeys(s))
+
     def get_list_properties(self):
         """Return the list of available properties for the current country
         """

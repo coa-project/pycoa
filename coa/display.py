@@ -758,11 +758,10 @@ class CocoDisplay:
             uniqloc = input.clustername.unique()
 
             geopdwd = input
-
             if maplabel and 'unsorted' in maplabel:
                 pass
             else:
-                geopdwd = geopdwd.sort_values(by=input_field, ascending = False).reset_index()
+                geopdwd = geopdwd.sort_values(by=input_field, ascending = False).reset_index(drop=True)
 
             started = geopdwd.date.min()
             ended = geopdwd.date.max()
@@ -781,7 +780,7 @@ class CocoDisplay:
                     geopdwd = pd.merge(geopdwd, self.location_geometry, on='location')
 
                 kwargs['tile'] = tile
-                if self.iso3country in ['FRA','USA']:
+                if self.iso3country in ['USA']:#['FRA','USA']
                     geo = copy.deepcopy(self.geo)
                     d = geo._list_translation
                     if func.__name__ != 'pycoa_mapfolium':

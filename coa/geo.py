@@ -1229,7 +1229,7 @@ class GeoCountry():
     def get_subregions_from_region(self,**kwargs):
         """ Return the list of subregions within a specified region.
         Should give either the code or the name of the region as strings in kwarg : code=# or name=#
-        Output default is 'code' of subregions. Can be changer with output='name'.
+        Output default is 'code' of subregions. Can be changed with output='name'.
         """
         kwargs_test(kwargs,['name','code','output'],'Should give either name or code of region. Output can be changed with the output option.')
         code=kwargs.get("code",None)
@@ -1297,6 +1297,41 @@ class GeoCountry():
         for sr in l:
             s=s+self.get_regions_from_subregion(sr,output=output)
         return list(dict.fromkeys(s))
+
+    def get_regions_from_macroregion(self,**kwargs):
+        """ Return the list of regions included in another macroregion
+        Can provide input as code= or name=
+        Can provide output as 'name' or 'code' (default).
+        """
+        kwargs_test(kwargs,['name','code','output'],'Should give either name or code of region. Output can be changed with the output option.')
+        code=kwargs.get("code",None)
+        name=kwargs.get("name",None)
+        out=kwargs.get("output",'code')
+
+        if not (code == None) ^ (name == None):
+            raise CoaKeyError("Should give either code or name of region, not both.")
+        if not out in ['code','name']:
+            raise CoaKeyError("Should set output either as 'code' or 'name' for subregions.")
+
+        dict_input={k:v for k,v in kwargs.items() if k in ['code','name']}
+        r_out=self.get_regions_from_list_of_subregion_codes(self.get_subregions_from_region(**dict_input),output=out)
+
+        rl=self.get_region_list()
+        if code != None:
+            if out=='code':
+                input=rl[rl.code_region==code].name_region.item()
+            else:
+                input=code
+        else:
+            if out=='name':
+                input=name
+            else:
+                input=rl[rl.name_region==code].code_region.item()
+
+        if input in r_out:
+            r_out.remove(input)
+
+        return r_out
 
     def get_list_properties(self):
         """Return the list of available properties for the current country

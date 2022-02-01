@@ -1229,7 +1229,7 @@ class GeoCountry():
     def get_subregions_from_region(self,**kwargs):
         """ Return the list of subregions within a specified region.
         Should give either the code or the name of the region as strings in kwarg : code=# or name=#
-        Output default is 'code' of subregions. Can be changer with output='name'.
+        Output default is 'code' of subregions. Can be changed with output='name'.
         """
         kwargs_test(kwargs,['name','code','output'],'Should give either name or code of region. Output can be changed with the output option.')
         code=kwargs.get("code",None)
@@ -1266,6 +1266,79 @@ class GeoCountry():
         for r in l:
             s=s+self.get_subregions_from_region(name=r,output=output)
         return s
+
+    def get_regions_from_subregion(self,code,output='code'):
+        """ Return the list of regions where the subregion, given by a code, is.
+        Output default is 'code' of subregions. Can be changer with output='name'.
+        """
+
+        if not output in ['code','name']:
+            raise CoaKeyError('The output option should be "code" or "name" only')
+
+        if not code in self.get_subregion_list()['code_subregion'].to_list():
+            raise CoaWhereError("The subregion "+code+" does not exist for country "+self.get_country()+". See get_subregion_list().")
+
+        l=[]
+        for k,v in self.get_data(True).iterrows():
+            if code in v.code_subregion:
+                if output == 'code':
+                    l.append(v.code_region)
+                else: # due to first test, that's for sure name
+                    l.append(v.name_region)
+        return list(dict.fromkeys(l))
+
+    def get_regions_from_list_of_subregion_codes(self,l,output='code'):
+        """ Return the list of regions according to list of subregion names given.
+        The output argument ('code' as default) is given to the get_regions_from_subregion function.
+        """
+        if not isinstance(l,list):
+            raise CoaTypeError("Should provide list as argument")
+        s=[]
+        for sr in l:
+            s=s+self.get_regions_from_subregion(sr,output=output)
+        return list(dict.fromkeys(s))
+
+    def get_regions_from_macroregion(self,**kwargs):
+        """ Return the list of regions included in another macroregion
+        Can provide input as code= or name=
+        Can provide output as 'name' or 'code' (default).
+        """
+        kwargs_test(kwargs,['name','code','output'],'Should give either name or code of region. Output can be changed with the output option.')
+        code=kwargs.get("code",None)
+        name=kwargs.get("name",None)
+        out=kwargs.get("output",'code')
+
+        if not (code == None) ^ (name == None):
+            raise CoaKeyError("Should give either code or name of region, not both.")
+        if not out in ['code','name']:
+            raise CoaKeyError("Should set output either as 'code' or 'name' for subregions.")
+
+        dict_input={k:v for k,v in kwargs.items() if k in ['code','name']}
+        r_out=self.get_regions_from_list_of_subregion_codes(self.get_subregions_from_region(**dict_input),output=out)
+
+        # remove the input
+        rl=self.get_region_list()
+        if code != None:
+            if out=='code':
+                input=rl[rl.code_region==code].name_region.item()
+            else:
+                input=code
+        else:
+            if out=='name':
+                input=name
+            else:
+                input=rl[rl.name_region==code].code_region.item()
+
+        if input in r_out:
+            r_out.remove(input)
+
+        # Append the input in the right position, the macro region should be at the end
+        if len(r_out) == 1: # the input is not a macro region but just a region
+            r_out.insert(0,input)
+        else: # the input is a real macro region
+            r_out.append(input)
+
+        return r_out
 
     def get_list_properties(self):
         """Return the list of available properties for the current country

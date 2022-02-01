@@ -99,7 +99,7 @@ class DataBase(object):
                     dpc1 = self.csv2pandas('https://raw.githubusercontent.com/pcm-dpc/COVID-19/master/dati-regioni/dpc-covid19-ita-regioni.csv',\
                     rename_columns = rename_dict, separator=',')
                     #dpc1 = self.csv2pandas("https://github.com/pcm-dpc/COVID-19/raw/master/dati-province/dpc-covid19-ita-province.csv",\
-                    columns_keeped = ['tot_cases','tot_deaths']
+                    columns_keeped = ['tot_deaths','tot_cases']
                     self.return_structured_pandas(dpc1, columns_keeped=columns_keeped)
                 elif self.db == 'rki': # DEU
                     info('DEU, Robert Koch Institut data selected ...')
@@ -1188,7 +1188,7 @@ class DataBase(object):
                             tmp = list(tmp.loc[tmp.code_region==i]['name_region'])
                         elif self.geo.is_region(i):
                             tmp = self.geo.get_regions_from_macroregion(name=i,output='name')
-                            tmp = tmp[:-1] 
+                            tmp = tmp[:-1]
                         else:
                             if self.geo.is_subregion(i):
                                 raise CoaTypeError(i+ ' is a subregion ... not compatible with a region DB granularity?')

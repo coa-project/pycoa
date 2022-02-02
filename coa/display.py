@@ -82,7 +82,7 @@ class CocoDisplay:
         self.options_stats  = ['when','input','input_field']
         self.options_charts = [ 'bins']
         self.options_front = ['where','option','which','what','visu']
-        self.available_tiles = ['openstreet','esri','stamen','positron']
+        self.available_tiles = ['openstreet','esri','stamen']
         self.available_modes = ['mouse','vline','hline']
         self.uptitle, self.subtitle = ' ',' '
 
@@ -1328,7 +1328,7 @@ class CocoDisplay:
 
         df['text_size'] = '8pt'
 
-        df['textdisplayed'] = df['permanentdisplay'].str.pad(40, side = "left")
+        df['textdisplayed'] = df['permanentdisplay'].str.pad(36, side = "left")
         locale.setlocale(locale.LC_ALL, 'en_US')
         df['textdisplayed2'] = [ locale.format("%d", i, grouping=True)\
                 for i in df[column_name]]

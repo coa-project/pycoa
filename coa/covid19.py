@@ -1320,6 +1320,8 @@ class DataBase(object):
                     pdfiltered = pdfiltered[pdfiltered[kwargs['which']].notna()]
             elif o == 'smooth7':
                 pdfiltered[kwargs['which']] = pdfiltered.groupby(['location'])[kwargs['which']].rolling(7,min_periods=7).mean().reset_index(level=0,drop=True)
+                inx7=pdfiltered.groupby('location').head(7).index
+                pdfiltered.loc[inx7, kwargs['which']] = pdfiltered[kwargs['which']].fillna(method="bfill")
                 fillnan=True
             elif o == 'sumall':
                 sumall = True
@@ -1395,7 +1397,7 @@ class DataBase(object):
         if wallname != None and sumall == True:
                pdfiltered.loc[:,'clustername'] = wallname
 
-        pdfiltered = pdfiltered.drop(columns='cumul') 
+        pdfiltered = pdfiltered.drop(columns='cumul')
         verb("Here the information I\'ve got on ", kwargs['which']," : ", self.get_keyword_definition(kwargs['which']))
         return pdfiltered
 

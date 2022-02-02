@@ -1328,7 +1328,7 @@ class CocoDisplay:
 
         df['text_size'] = '8pt'
 
-        df['textdisplayed'] = df['permanentdisplay'].str.pad(40, side = "left")
+        df['textdisplayed'] = df['permanentdisplay'].str.pad(36, side = "left")
         locale.setlocale(locale.LC_ALL, 'en_US')
         df['textdisplayed2'] = [ locale.format("%d", i, grouping=True)\
                 for i in df[column_name]]

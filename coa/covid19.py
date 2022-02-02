@@ -800,7 +800,12 @@ class DataBase(object):
         constraints = kwargs.get('constraints', None)
         rename_columns = kwargs.get('rename_columns', None)
         drop_field = kwargs.get('drop_field', None)
-
+        if self.db == 'obepine':
+            pandas_db = pandas_db.replace('"','')
+            pandas_db = pandas_db.split(';')
+            for i,j in enumerate(rename_columns.values):
+                pandas_db[i]=pandas_db[j]
+            pandas_db = pandas_db.rename(columns=rename_columns)
         if constraints:
             for key,val in constraints.items():
                 pandas_db = pandas_db.loc[pandas_db[key] == val]
@@ -812,12 +817,10 @@ class DataBase(object):
         if rename_columns:
             for key,val in rename_columns.items():
                 pandas_db = pandas_db.rename(columns={key:val})
-
         if 'semaine' in  pandas_db.columns:
             pandas_db['semaine'] = [ week_to_date(i) for i in pandas_db['semaine']]
             #pandas_db = pandas_db.drop_duplicates(subset=['semaine'])
             pandas_db = pandas_db.rename(columns={'semaine':'date'})
-
         pandas_db['date'] = pandas.to_datetime(pandas_db['date'],errors='coerce').dt.date
         #self.dates  = pandas_db['date']
         if self.database_type[self.db][1] == 'nation' and  self.database_type[self.db][0] in ['FRA','CYP']:
@@ -865,7 +868,7 @@ class DataBase(object):
             mypandas = mypandasori
 
         if self.db == 'dpc':
-            gd = self.geo.get_data()[['code_region','name_region']]
+            gd = self.geo.get_data()[['name_region','code_region']]
             A=['P.A. Bolzano','P.A. Trento']
             tmp=mypandas.loc[mypandas.location.isin(A)].groupby('date').sum()
             tmp['location']='Trentino-Alto Adige'
@@ -1188,7 +1191,8 @@ class DataBase(object):
                             tmp = list(tmp.loc[tmp.code_region==i]['name_region'])
                         elif self.geo.is_region(i):
                             tmp = self.geo.get_regions_from_macroregion(name=i,output='name')
-                            tmp = tmp[:-1]
+                            if get_db_list_dict()[self.db][0] in ['USA, FRA, ESP, PRT']:
+                                tmp = tmp[:-1]
                         else:
                             if self.geo.is_subregion(i):
                                 raise CoaTypeError(i+ ' is a subregion ... not compatible with a region DB granularity?')
@@ -1391,7 +1395,7 @@ class DataBase(object):
         if wallname != None and sumall == True:
                pdfiltered.loc[:,'clustername'] = wallname
 
-        pdfiltered = pdfiltered.drop(columns='cumul')
+        pdfiltered = pdfiltered.drop(columns='cumul') 
         verb("Here the information I\'ve got on ", kwargs['which']," : ", self.get_keyword_definition(kwargs['which']))
         return pdfiltered
 

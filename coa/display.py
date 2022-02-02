@@ -82,7 +82,7 @@ class CocoDisplay:
         self.options_stats  = ['when','input','input_field']
         self.options_charts = [ 'bins']
         self.options_front = ['where','option','which','what','visu']
-        self.available_tiles = ['openstreet','esri','stamen','positron']
+        self.available_tiles = ['openstreet','esri','stamen']
         self.available_modes = ['mouse','vline','hline']
         self.uptitle, self.subtitle = ' ',' '
 

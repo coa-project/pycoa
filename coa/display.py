@@ -1320,19 +1320,17 @@ class CocoDisplay:
         df['ends'] = [p * 2 * np.pi for p in percentages[1:]]
         df['diff'] = (df['ends'] - df['starts'])
         df['middle'] = df['starts']+np.abs(df['ends']-df['starts'])/2.
-
-        value = list(df[column_name])
-        df["cumulative_angle"] = [(sum(value[0:i + 1]) - (item / 2)) / sum(value) * 2 * np.pi for i, item in enumerate(value)]
         df['cos'] = np.cos(df['middle']) * 0.9
         df['sin'] = np.sin(df['middle']) * 0.9
 
         df['text_size'] = '8pt'
-
         df['textdisplayed'] = df['permanentdisplay'].str.pad(36, side = "left")
         locale.setlocale(locale.LC_ALL, 'en_US')
         df['textdisplayed2'] = [ locale.format("%d", i, grouping=True)\
                 for i in df[column_name]]
-        df['textdisplayed2']  = df['textdisplayed2'].str.pad(26, side = "left")
+        #df['textdisplayed2'] = df[column_name].astype(str) #[i.str for i in df[column_name]]
+        df['textdisplayed2'] = df['textdisplayed2'].str.pad(26, side = "left")
+        #df['textdisplayed2']  = df[column_name].str.pad(26, side = "left")
         df.loc[df['diff'] <= np.pi/20,'textdisplayed']=''
         df.loc[df['diff'] <= np.pi/20,'textdisplayed2']=''
         df['percentage'] = 100.*df['percentage']

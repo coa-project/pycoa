@@ -18,7 +18,6 @@ dependencies:
     - folium
     - lxml
     - pandas
-    - gdal 
     - geopandas
     - matplotlib
     - numpy

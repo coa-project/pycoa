@@ -12,7 +12,7 @@ _April 2020/October 2021_
 [<img src="https://github.com/coa-project/coa-project.github.io/raw/main/fig/FR.png" height="14px" alt="FR flag"> Version française ](https://github.com/coa-project/pycoa/blob/main/README_FR.md)
 
 <center>
-<a href="https://github.com/coa-project/coa-project.github.io/raw/main/fig/mapFranceVariant.html" target="_blank"><img src="https://github.com/coa-project/coa-project.github.io/raw/main/fig/pycoa_v2.10_mapFranceVariant.html"></a>
+<a href="https://github.com/coa-project/coa-project.github.io/raw/main/fig/mapFranceVariant.html" target="_blank"><img src="https://github.com/coa-project/coa-project.github.io/raw/main/fig/mapFranceVariant.png"></a>
 </center>
 
 `PyCoA` (Python Covid Analysis) is a Python™ framework which provides:
@@ -35,7 +35,6 @@ It is designed to be accessible to non-specialists: teenagers learning Python™
 
 ```python
 import coa.front as cf
-<<<<<<< HEAD
 # default database is JHU
 cf.plot(option='sumall') # default is 'deaths', for all countries
 cf.plot(where='g20') # managing region
@@ -45,12 +44,6 @@ cf.setwhom('owid') # changing database
 cf.hist(which='total_vaccinations') # default is for all countries
 cf.hist(which='cur_icu_patients',typeofhist='pie',where='european union')
 cf.hist(which='total_people_fully_vaccinated_per_hundred',typeofhist='byvalue',where='asia')
-=======
-cf.plot(where=['France', 'Italy', 'United kingdom'])
-cf.map(where='world',what='daily',when='01/04/2020')
-cf.hist(where='middle africa', which='tot_confirmed',what='cumul')
-cf.get(where='usa', what='daily', which='tot_recovered',output='pandas')
->>>>>>> 22939a06b6f2bf86fb419ae30fc025128719ceb0
 ```
 
 Since the `v2.0` version, PyCoA manages also local data :
@@ -69,7 +62,7 @@ Then we get plots like the ones just below. Other databases has been added for I
 
 |SPF data | JHU-USA data |
 |------------|-------------|
-|<a href="https://github.com/coa-project/coa-project.github.io/raw/main/fig/pycoa_v2.10_spf.html" target="_blank"><img src="https://github.com/coa-project/coa-project.github.io/raw/main/fig/pycoa_v2.10_spf.png" width=504></a>|<a href="https://github.com/coa-project/coa-project.github.io/raw/main/fig/pycoa_v2.10_jhu-usafolium.html" target="_blank"><img src="https://github.com/coa-project/coa-project.github.io/raw/main/fig/pycoa_v2.10_jhu-usafolium.png" width=504></a>|
+|<a href="https://github.com/coa-project/coa-project.github.io/raw/main/fig/pycoa_v2.10_spf.html" target="_blank"><img src="https://github.com/coa-project/coa-project.github.io/raw/main/fig/pycoa_v2.10_spf.png" width=504></a>|<a href="https://github.com/coa-project/coa-project.github.io/raw/main/fig/pycoa_v2.10_jhu-usafolium.html" target="_blank"><img src="https://github.com/coa-project/coa-project.github.io/blob/main/fig/pycoa_v2.0_jhu-usafolium.jpg" width=504></a>|
 
 ```python
 cf.setwhom('spf') # Santé Publique France database

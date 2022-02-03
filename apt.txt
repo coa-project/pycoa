@@ -1,2 +1,2 @@
 #this is for binder
-python-gdal
+libgdal-dev

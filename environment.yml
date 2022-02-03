@@ -16,8 +16,8 @@ dependencies:
     - datetime
     - folium
     - lxml
-    - geopandas
     - pandas
+    - geopandas
     - matplotlib
     - numpy
     - pycountry

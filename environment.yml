@@ -1,8 +1,9 @@
+#this is for binder
 name: pycoa-environment
 channels:
   - conda-forge
 dependencies:
-  - python=3.9
+  - python
   - numpy
   - pip
   - pip:

@@ -48,6 +48,7 @@ setup(
         'unidecode',\
         'openpyxl',\
         ],
+    dependency_links=['git+https://github.com/Toblerity/Fiona.git'],
     # The license can be anything you like
     license='MIT',
     description='PyCoA stands for Python COvid19 Analysis project, which is an open source project initially designed to run in the Google colab environment. See pycoa.fr website.',

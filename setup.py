@@ -33,7 +33,7 @@ setup(
         'datascroller',\
         'datetime',\
         'folium ~=0.12.1',\
-        'geopandas >=0.10.2',\
+        'geopandas',\
         'matplotlib',\
         'numpy',\
         'pandas',\

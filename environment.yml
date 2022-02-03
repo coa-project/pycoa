@@ -1,3 +1,6 @@
+name: python 3.9
+dependencies:
+  - python=3.9
 name: pycoa-environment
 channels:
   - conda-forge
@@ -17,6 +20,7 @@ dependencies:
     - folium
     - lxml
     - pandas
+    - gdal 
     - geopandas
     - matplotlib
     - numpy

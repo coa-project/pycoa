@@ -642,7 +642,7 @@ class DataBase(object):
 
         if self.db == 'jhu': # worldwide
             extension =  "_global.csv"
-            jhu_files_ext = ['deaths', 'confirmed', 'recovered']
+            jhu_files_ext = ['deaths', 'confirmed']
         elif self.db == 'jhu-usa': # 'USA'
             extension = "_US.csv"
             jhu_files_ext = ['deaths','confirmed']

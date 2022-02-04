@@ -118,6 +118,7 @@ class DataBase(object):
                     rename_dict={'Code_Region':'location','Date':'date','Indicateur"':'idx_obepine'} # adding a " to Indicateur" due to change of data coding
                     cast = {'Code_Region': 'string'}
                     obepine_data=self.csv2pandas(url,cast=cast,separator=';',rename_columns=rename_dict,quotechar=";")
+                    obepine_data["idx_obepine"] = pd.to_numeric(obepine_data["idx_obepine"], downcast="float")
                     self.return_structured_pandas(obepine_data,columns_keeped=['idx_obepine'])
                 elif self.db == 'escovid19data': # ESP
                     info('ESP, EsCovid19Data ...')

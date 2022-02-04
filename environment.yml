@@ -1,3 +1,4 @@
+#this is for binder
 name: pycoa-environment
 channels:
   - conda-forge

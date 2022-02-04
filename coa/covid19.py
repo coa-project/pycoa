@@ -113,10 +113,12 @@ class DataBase(object):
                     self.return_structured_pandas(prt_data, columns_keeped=columns_keeped)
                 elif self.db == 'obepine' : # FRA
                     info('FRA, réseau Obepine, surveillance Sars-Cov-2 dans les eaux usées')
-                    url='https://www.data.gouv.fr/fr/datasets/r/89196725-56cf-4a83-bab0-170ad1e8ef85'
-                    rename_dict={'Code_Region':'location','Date':'date','Indicateur':'idx_obepine'}
+                    url='https://www.data.gouv.fr/fr/datasets/r/69b8af15-c8c5-465a-bdb6-1ac73430e590'
+                    #url='https://www.data.gouv.fr/fr/datasets/r/89196725-56cf-4a83-bab0-170ad1e8ef85'
+                    rename_dict={'Code_Region':'location','Date':'date','Indicateur"':'idx_obepine'} # adding a " to Indicateur" due to change of data coding
                     cast = {'Code_Region': 'string'}
-                    obepine_data=self.csv2pandas(url,cast=cast,separator=';',rename_columns=rename_dict)
+                    obepine_data=self.csv2pandas(url,cast=cast,separator=';',rename_columns=rename_dict,quotechar=";")
+                    obepine_data["idx_obepine"] = pd.to_numeric(obepine_data["idx_obepine"], downcast="float")
                     self.return_structured_pandas(obepine_data,columns_keeped=['idx_obepine'])
                 elif self.db == 'escovid19data': # ESP
                     info('ESP, EsCovid19Data ...')
@@ -642,7 +644,7 @@ class DataBase(object):
 
         if self.db == 'jhu': # worldwide
             extension =  "_global.csv"
-            jhu_files_ext = ['deaths', 'confirmed', 'recovered']
+            jhu_files_ext = ['deaths', 'confirmed']
         elif self.db == 'jhu-usa': # 'USA'
             extension = "_US.csv"
             jhu_files_ext = ['deaths','confirmed']
@@ -779,7 +781,7 @@ class DataBase(object):
         Parse and convert the database cvs file to a pandas structure
         '''
         self.database_url.append(url)
-        kwargs_test(kwargs,['cast','separator','encoding','constraints','rename_columns','drop_field'],
+        kwargs_test(kwargs,['cast','separator','encoding','constraints','rename_columns','drop_field','quotechar'],
             'Bad args used in the csv2pandas() function.')
 
         cast = kwargs.get('cast', None)
@@ -793,18 +795,21 @@ class DataBase(object):
         encoding = kwargs.get('encoding', None)
         if encoding:
             encoding = encoding
+        quotechar = kwargs.get('quotechar','"')
+
         pandas_db = pandas.read_csv(get_local_from_url(url,7200),sep=separator,dtype=dico_cast, encoding = encoding,
-            keep_default_na=False,na_values='') # cached for 2 hours
+            keep_default_na=False,na_values='',quotechar=quotechar) # cached for 2 hours
 
         #pandas_db = pandas.read_csv(self.database_url,sep=separator,dtype=dico_cast, encoding = encoding )
         constraints = kwargs.get('constraints', None)
         rename_columns = kwargs.get('rename_columns', None)
         drop_field = kwargs.get('drop_field', None)
         if self.db == 'obepine':
-            pandas_db = pandas_db.replace('"','')
-            pandas_db = pandas_db.split(';')
-            for i,j in enumerate(rename_columns.values):
-                pandas_db[i]=pandas_db[j]
+            #pandas_db = pandas_db.replace('"','')
+            #pandas_db = pandas_db.split(';')
+            # for i,j in enumerate(rename_columns.values):
+            #     pandas_db[i]=pandas_db[j]
+            pandas_db = pandas_db.replace('"','',regex=True)
             pandas_db = pandas_db.rename(columns=rename_columns)
         if constraints:
             for key,val in constraints.items():

@@ -801,10 +801,10 @@ class DataBase(object):
         rename_columns = kwargs.get('rename_columns', None)
         drop_field = kwargs.get('drop_field', None)
         if self.db == 'obepine':
-            pandas_db = pandas_db.replace('"','')
-            pandas_db = pandas_db.split(';')
-            for i,j in enumerate(rename_columns.values):
-                pandas_db[i]=pandas_db[j]
+            #pandas_db = pandas_db.replace('"','')
+            #pandas_db = pandas_db.split(';')
+            # for i,j in enumerate(rename_columns.values):
+            #     pandas_db[i]=pandas_db[j]
             pandas_db = pandas_db.rename(columns=rename_columns)
         if constraints:
             for key,val in constraints.items():

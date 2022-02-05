@@ -640,7 +640,6 @@ def decomap(func):
                 maplabel = [maplabel]
             if  [a for a in maplabel if a not in listmaplabel]:
                 raise CoaTypeError('Waiting a correct maplabel value. See help.')
-
         sparkline = False
         if dateslider is not None:
             del kwargs['dateslider']
@@ -668,6 +667,7 @@ def figmap(input,input_field,**kwargs):
         if maplabel and 'spark' in maplabel:
             return _cocoplot.pycoa_sparkmap(input,input_field,**kwargs)
         else:
+
             return _cocoplot.pycoa_map(input,input_field,**kwargs)
 
 @chartsinput_deco
@@ -677,9 +677,15 @@ def map(input,input_field,**kwargs):
     dateslider = kwargs.get('dateslider', None)
     maplabel = kwargs.get('maplabel', None)
     if visu == 'bokeh':
-        fig = _cocoplot.pycoa_map(input,input_field,**kwargs)
-        if maplabel and ('spark' or 'spiral' in maplabel):
-            fig = _cocoplot.pycoa_pimpmap(input,input_field,**kwargs)
+        if maplabel:
+            if 'spark' in maplabel or 'spiral' in maplabel:
+                fig = _cocoplot.pycoa_pimpmap(input,input_field,**kwargs)
+            elif 'text' in maplabel:
+                fig = _cocoplot.pycoa_map(input,input_field,**kwargs)
+            else:
+                CoaError("What kind of pimp map you want ?!")
+        else:
+            fig = _cocoplot.pycoa_map(input,input_field,**kwargs)
         return show(fig)
     elif visu == 'folium':
         if dateslider is not None :

@@ -781,7 +781,7 @@ class DataBase(object):
         Parse and convert the database cvs file to a pandas structure
         '''
         self.database_url.append(url)
-        kwargs_test(kwargs,['cast','separator','encoding','constraints','rename_columns','drop_field'],
+        kwargs_test(kwargs,['cast','separator','encoding','constraints','rename_columns','drop_field','quotechar'],
             'Bad args used in the csv2pandas() function.')
 
         cast = kwargs.get('cast', None)

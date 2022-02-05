@@ -113,10 +113,12 @@ class DataBase(object):
                     self.return_structured_pandas(prt_data, columns_keeped=columns_keeped)
                 elif self.db == 'obepine' : # FRA
                     info('FRA, réseau Obepine, surveillance Sars-Cov-2 dans les eaux usées')
-                    url='https://www.data.gouv.fr/fr/datasets/r/89196725-56cf-4a83-bab0-170ad1e8ef85'
-                    rename_dict={'Code_Region':'location','Date':'date','Indicateur':'idx_obepine'}
+                    url='https://www.data.gouv.fr/fr/datasets/r/69b8af15-c8c5-465a-bdb6-1ac73430e590'
+                    #url='https://www.data.gouv.fr/fr/datasets/r/89196725-56cf-4a83-bab0-170ad1e8ef85'
+                    rename_dict={'Code_Region':'location','Date':'date','Indicateur\"':'idx_obepine'}
                     cast = {'Code_Region': 'string'}
                     obepine_data=self.csv2pandas(url,cast=cast,separator=';',rename_columns=rename_dict)
+                    obepine_data['idx_obepine']=obepine_data['idx_obepine'].astype(float)
                     self.return_structured_pandas(obepine_data,columns_keeped=['idx_obepine'])
                 elif self.db == 'escovid19data': # ESP
                     info('ESP, EsCovid19Data ...')
@@ -793,19 +795,19 @@ class DataBase(object):
         encoding = kwargs.get('encoding', None)
         if encoding:
             encoding = encoding
+        quoting=0
+        if self.db == 'obepine':
+              quoting=3
         pandas_db = pandas.read_csv(get_local_from_url(url,7200),sep=separator,dtype=dico_cast, encoding = encoding,
-            keep_default_na=False,na_values='') # cached for 2 hours
+            keep_default_na=False,na_values='',header=0,quoting=quoting) # cached for 2 hours
 
         #pandas_db = pandas.read_csv(self.database_url,sep=separator,dtype=dico_cast, encoding = encoding )
         constraints = kwargs.get('constraints', None)
         rename_columns = kwargs.get('rename_columns', None)
         drop_field = kwargs.get('drop_field', None)
         if self.db == 'obepine':
-            pandas_db = pandas_db.replace('"','')
-            pandas_db = pandas_db.split(';')
-            for i,j in enumerate(rename_columns.values):
-                pandas_db[i]=pandas_db[j]
             pandas_db = pandas_db.rename(columns=rename_columns)
+            pandas_db = pandas_db.applymap(lambda x: x.replace('"', ''))
         if constraints:
             for key,val in constraints.items():
                 pandas_db = pandas_db.loc[pandas_db[key] == val]

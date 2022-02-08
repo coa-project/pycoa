@@ -362,7 +362,7 @@ def chartsinput_deco(f):
             wrapper dealing with arg testing
         '''
         kwargs_test(kwargs,
-                    ['where', 'what', 'which', 'whom', 'when', 'input', 'input_field','output','typeofplot'\
+                    ['where', 'what', 'which', 'whom', 'when', 'input', 'input_field','output','typeofplot',\
                     'title','typeofplot','typeofhist','bins','visu','tile','dateslider','maplabel','option','mode','guideline','bypop',
                     'plot_width','plot_height','textcopyright'],
                     'Bad args used in the pycoa function.')

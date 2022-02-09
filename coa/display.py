@@ -309,7 +309,7 @@ class CocoDisplay:
                 else:
                     when_end_change = min(when_end_change,CocoDisplay.changeto_nonull_date(input, when_end, i))
 
-            if func.__name__ not in ['pycoa_date_plot', 'pycoa_plot', 'pycoa_scrollingmenu', 'pycoa_spiral_plot']:
+            if func.__name__ not in ['pycoa_date_plot', 'pycoa_plot', 'pycoa_scrollingmenu', 'pycoa_spiral_plot','pycoa_yearly_plot']:
                 if len(input_field) > 1:
                     print(str(input_field) + ' is dim = ' + str(len(input_field)) + '. No effect with ' + func.__name__ + '! Take the first input: ' + input_field[0])
                 input_field = input_field[0]
@@ -322,7 +322,7 @@ class CocoDisplay:
             input = input.loc[(input['date'] >=  self.when_beg) & (input['date'] <=  self.when_end)]
 
             title_temporal = ' (' + 'between ' + when_beg.strftime('%d/%m/%Y') + ' and ' + when_end.strftime('%d/%m/%Y') + ')'
-            if func.__name__ != 'pycoa_date_plot'  and func.__name__ != 'pycoa_plot':
+            if func.__name__ != 'pycoa_date_plot' and func.__name__ != 'pycoa_yearly_plot'  and func.__name__ != 'pycoa_plot':
                 title_temporal = ' (' + when_end.strftime('%d/%m/%Y')  + ')'
             title_option=''
             if option:
@@ -338,10 +338,11 @@ class CocoDisplay:
                 titlefig = which + ', ' + 'week to week difference' + title_option
 
             elif input_field_tostring == input.columns[2]:
-                if 'cur_' in  which:
-                    titlefig = which + ', ' + 'current ' + which.replace('cur_','')+ title_option
+                if 'cur_' in  which or 'idx_' in  which:
+                    #titlefig = which + ', ' + 'current ' + which.replace('cur_','').replace('idx_','')+ title_option
+                    titlefig = which + ', ' + 'current value' + title_option
                 else:
-                    titlefig = which + ', ' + 'cumulative sum '+ title_option
+                    titlefig = which + ', ' + 'cumulative'+ title_option
             else:
                 titlefig = input_field_tostring + title_option
 
@@ -585,7 +586,6 @@ class CocoDisplay:
         tabs = Tabs(tabs = panels)
         return tabs
 
-
     ''' SPIRAL PLOT '''
     @decowrapper
     @decoplot
@@ -725,6 +725,117 @@ class CocoDisplay:
         label = standardfig.title
         return tabs
 
+    ''' YEARLY PLOT '''
+    @decowrapper
+    @decoplot
+    def pycoa_yearly_plot(self, input = None, input_field = None, **kwargs):
+        '''
+        -----------------
+        Create a date plot according to arguments. See help(pycoa_date_plot).
+        Keyword arguments
+        -----------------
+        - input = None : if None take first element. A DataFrame with a Pycoa struture is mandatory
+        |location|date|Variable desired|daily|cumul|weekly|codelocation|clustername|permanentdisplay|rolloverdisplay|
+        - input_field = if None take second element could be a list
+        - plot_heigh= width_height_default[1]
+        - plot_width = width_height_default[0]
+        - title = None
+        - textcopyright = default
+        - mode = mouse
+        - guideline = False
+        - cursor_date = None if True
+                - orientation = horizontal
+        - when : default min and max according to the inpude DataFrame.
+                 Dates are given under the format dd/mm/yyyy.
+                 when format [dd/mm/yyyy : dd/mm/yyyy]
+                 if [:dd/mm/yyyy] min date up to
+                 if [dd/mm/yyyy:] up to max date
+        '''
+        guideline = kwargs.get('guideline',self.dvisu_default['guideline'])
+        if len(input.clustername.unique()) > 1 :
+            print('Can only display yearly plot for ONE location. I took the first one:', input.clustername[0])
+        input = input.loc[input.clustername == input.clustername[0]].copy()
+
+        panels = []
+        listfigs = []
+        cases_custom = CocoDisplay.rollerJS()
+        input['date']=pd.to_datetime(input["date"])
+
+        input = input.loc[~(input['date'].dt.month.eq(2) & input['date'].dt.day.eq(29))].reset_index(drop=True)
+        input = input.copy()
+        input.loc[:,'allyears']=input['date'].apply(lambda x : x.year)
+        input['allyears'] = input['allyears'].astype(int)
+        input.loc[:,'dayofyear']= input['date'].apply(lambda x : x.dayofyear)
+        allyears = list(input.allyears.unique())
+        if isinstance(input['rolloverdisplay'][0],list):
+            input['rolloverdisplay'] = input['clustername']
+        for axis_type in self.ax_type:
+            standardfig = self.standardfig( y_axis_type = axis_type,**kwargs)
+            i = 0
+            r_list=[]
+            maxou=-1000
+            if len(input_field)>1:
+                CoaError('Only one variable could be displayed')
+            else:
+                input_field=input_field[0]
+            input['cases']=input[input_field]
+
+            line_style = ['solid', 'dashed', 'dotted', 'dotdash']
+            colors = itertools.cycle(self.lcolors)
+            for loc in list(input.clustername.unique()):
+                for year in allyears:
+                    input_filter = input.loc[(input.clustername == loc) & (input['date'].dt.year.eq(year))].reset_index(drop = True)
+                    src = ColumnDataSource(input_filter)
+                    leg = loc + ' ' + str(year)
+                    r = standardfig.line(x = 'dayofyear', y = input_field, source = src,
+                                     color = next(colors), line_width = 3,
+                                     legend_label = leg,
+                                     hover_line_width = 4, name = input_field)
+                    maxou=max(maxou,np.nanmax(input_filter[input_field].values))
+
+            label = input_field
+            tooltips = [('Location', '@rolloverdisplay'), ('date', '@date{%F}'), ('Cases', '@cases{0,0.0}')]
+            formatters = {'location': 'printf', '@date': 'datetime', '@name': 'printf'}
+            hover=HoverTool(tooltips = tooltips, formatters = formatters, point_policy = "snap_to_data", mode = kwargs['mode'])  # ,PanTool())
+            standardfig.add_tools(hover)
+            if guideline:
+                cross= CrosshairTool()
+                standardfig.add_tools(cross)
+
+            if axis_type == 'linear':
+                if maxou  < 1e4 :
+                    standardfig.yaxis.formatter = BasicTickFormatter(use_scientific=False)
+
+            standardfig.legend.label_text_font_size = "12px"
+            panel = Panel(child=standardfig, title = axis_type)
+            panels.append(panel)
+            standardfig.legend.background_fill_alpha = 0.6
+
+            standardfig.legend.location = "top_left"
+            standardfig.legend.click_policy="hide"
+            if len(input_field) > 1 and len(input_field)*len(input.clustername.unique())>9:
+                standardfig.legend.visible=False
+
+            labelspd=input.loc[(input.allyears.eq(2020)) & (input.date.dt.day.eq(1))]
+
+            standardfig.xaxis.ticker = list(labelspd['dayofyear'].astype(int))
+            replacelabelspd =  labelspd['date'].apply(lambda x: str(x.strftime("%b")))
+            #label_dict = dict(zip(input.loc[input.allyears.eq(2020)]['daymonth'],input.loc[input.allyears.eq(2020)]['date'].apply(lambda x: str(x.day)+'/'+str(x.month))))
+            standardfig.xaxis.major_label_overrides = dict(zip(list(labelspd['dayofyear'].astype(int)),list(replacelabelspd)))
+
+            CocoDisplay.bokeh_legend(standardfig)
+            listfigs.append(standardfig)
+
+        tooltips = [('Location', '@rolloverdisplay'), ('date', '@date{%F}'), (r.name, '@$name{0,0.0}')]
+        formatters = {'location': 'printf', '@date': 'datetime', '@name': 'printf'}
+        hover=HoverTool(tooltips = tooltips, formatters = formatters, point_policy = "snap_to_data", mode = kwargs['mode'], renderers=[r])  # ,PanTool())
+        standardfig.add_tools(hover)
+        if guideline:
+            cross= CrosshairTool()
+            standardfig.add_tools(cross)
+        self.set_listfigures(listfigs)
+        tabs = Tabs(tabs = panels)
+        return tabs
 
     ''' DECORATORS FOR HISTO VERTICAL, HISTO HORIZONTAL, PIE & MAP'''
     def decohistomap(func):

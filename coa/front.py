@@ -362,7 +362,7 @@ def chartsinput_deco(f):
             wrapper dealing with arg testing
         '''
         kwargs_test(kwargs,
-                    ['where', 'what', 'which', 'whom', 'when', 'input', 'input_field','output','typeofplot'\
+                    ['where', 'what', 'which', 'whom', 'when', 'input', 'input_field','output','typeofplot',\
                     'title','typeofplot','typeofhist','bins','visu','tile','dateslider','maplabel','option','mode','guideline','bypop',
                     'plot_width','plot_height','textcopyright'],
                     'Bad args used in the pycoa function.')
@@ -640,7 +640,6 @@ def decomap(func):
                 maplabel = [maplabel]
             if  [a for a in maplabel if a not in listmaplabel]:
                 raise CoaTypeError('Waiting a correct maplabel value. See help.')
-
         sparkline = False
         if dateslider is not None:
             del kwargs['dateslider']
@@ -668,6 +667,7 @@ def figmap(input,input_field,**kwargs):
         if maplabel and 'spark' in maplabel:
             return _cocoplot.pycoa_sparkmap(input,input_field,**kwargs)
         else:
+
             return _cocoplot.pycoa_map(input,input_field,**kwargs)
 
 @chartsinput_deco
@@ -677,9 +677,15 @@ def map(input,input_field,**kwargs):
     dateslider = kwargs.get('dateslider', None)
     maplabel = kwargs.get('maplabel', None)
     if visu == 'bokeh':
-        fig = _cocoplot.pycoa_map(input,input_field,**kwargs)
-        if maplabel and ('spark' or 'spiral' in maplabel):
-            fig = _cocoplot.pycoa_pimpmap(input,input_field,**kwargs)
+        if maplabel:
+            if 'spark' in maplabel or 'spiral' in maplabel:
+                fig = _cocoplot.pycoa_pimpmap(input,input_field,**kwargs)
+            elif 'text' in maplabel:
+                fig = _cocoplot.pycoa_map(input,input_field,**kwargs)
+            else:
+                CoaError("What kind of pimp map you want ?!")
+        else:
+            fig = _cocoplot.pycoa_map(input,input_field,**kwargs)
         return show(fig)
     elif visu == 'folium':
         if dateslider is not None :
@@ -834,10 +840,8 @@ def decoplot(func):
             if isinstance(input_field,list) and len(input_field) > 1:
                 print('typeofplot is menulocation but dim(input_field)>1, menulocation has not effect ...')
             fig = _cocoplot.pycoa_scrollingmenu(input,input_field,**kwargs)
-        elif typeofplot == 'spiral':
-            raise CoaKeyError('Spiral not yet implemented… but soon')
         elif typeofplot == 'yearly':
-            raise CoaKeyError('Yearly plot not yet implemented… but soon')
+            fig = _cocoplot.pycoa_yearly_plot(input,input_field,**kwargs)
         else:
             raise CoaKeyError('Unknown typeofplot value. Should be date, versus, menulocation or spiral.')
         return func(fig)

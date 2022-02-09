@@ -33,6 +33,11 @@ from scipy import stats as sps
 import random
 from functools import reduce
 import collections
+from bs4 import BeautifulSoup
+import json
+import requests
+import datetime
+import math
 
 class DataBase(object):
    """
@@ -543,6 +548,74 @@ class DataBase(object):
                     columns_keeped.remove('location') # is already expected
                     columns_keeped.remove('date') # is already expected
                     self.return_structured_pandas(deur, columns_keeped = columns_keeped)
+                elif self.db == 'insee':
+                    info('FRA, INSEE global deaths statistics...')
+                    url = "https://www.data.gouv.fr/fr/datasets/fichier-des-personnes-decedees/"
+                    soup = BeautifulSoup(requests.get(url).content,features="lxml")
+                    ld_json=soup.find('script', {'type':'application/ld+json'}).contents
+                    data=json.loads(ld_json[0])
+                    deces_url={}
+                    for d in data['distribution']:
+                        deces_url.update({d['name']:d['url']})
+                    print(deces_url)
+                    d={}
+                    for i in ['2021','2020','2019']:#,'2017']:# ['2000','2001','2002','2003','2004','2005','2020-t1','2020-t2','2020-t3','2019','2018']:
+                        d.update({i:requests.get(deces_url['deces-'+i+'.txt'])})
+                    print(d)
+
+                    pdict={}
+
+                    def string_to_date(s):
+                        date=None
+                        y=int(s[0:4])
+                        m=int(s[4:6])
+                        d=int(s[6:8])
+                        if m==0:
+                            m=1
+                        if d==0:
+                            d=1
+                        if y==0:
+                            raise ValueError
+                        try:
+                            date=datetime.date(y,m,d)
+                        except:
+                            if m==2 and d==29:
+                                d=28
+                                date=datetime.date(y,m,d)
+                                raise ValueError
+                        return date
+
+                    for i in list(d.keys()):
+                        data=[]
+
+                        for l in d[i].text.splitlines():
+                            [last_name,first_name]=(l[0:80].split("/")[0]).split("*")
+                            sex=int(l[80])
+                            birthlocationcode=l[89:94]
+                            birthlocationname=l[94:124].rstrip()
+                            try:
+                                birthdate=string_to_date(l[81:89])
+                                deathdate=string_to_date(l[154:].strip()[0:8]) # sometimes, heading space
+                                lbis=list(l[154:].strip()[0:8])
+                                lbis[0:4]=list('2003')
+                                lbis=''.join(lbis)
+                                deathdatebis=string_to_date(lbis)
+                            except ValueError:
+                                if lbis!='20030229':
+                                    print(l,lbis)
+                            deathlocationcode=l[162:167]
+                            deathid=l[167:176]
+                            data.append([first_name,last_name,sex,birthdate,birthlocationcode,birthlocationname,deathdate,deathlocationcode,deathid,deathdatebis,1])
+                        p=pd.DataFrame(data)
+                        p.columns=['first_name','last_name','sex','birth_date','birth_location_code','birth_location_name','death_date','death_location_code','death_id','death_date_bis','i']
+                        p["age"]=[k.days/365 for k in p["death_date"]-p["birth_date"]]
+                        p["age_class"]=[math.floor(k/20) for k in p["age"]]
+                        pdict.update({i:p})
+
+                        z=pdict['2020']
+                        y=z.groupby('death_date_bis').sum()
+                        y.i.plot()
+
             except:
                 raise CoaDbError("An error occured while parsing data of "+self.get_db()+". This may be due to a data format modification. "
                     "You may contact support@pycoa.fr. Thanks.")

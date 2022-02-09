@@ -840,10 +840,8 @@ def decoplot(func):
             if isinstance(input_field,list) and len(input_field) > 1:
                 print('typeofplot is menulocation but dim(input_field)>1, menulocation has not effect ...')
             fig = _cocoplot.pycoa_scrollingmenu(input,input_field,**kwargs)
-        elif typeofplot == 'spiral':
-            raise CoaKeyError('Spiral not yet implemented… but soon')
         elif typeofplot == 'yearly':
-            raise CoaKeyError('Yearly plot not yet implemented… but soon')
+            fig = _cocoplot.pycoa_yearly_plot(input,input_field,**kwargs)
         else:
             raise CoaKeyError('Unknown typeofplot value. Should be date, versus, menulocation or spiral.')
         return func(fig)

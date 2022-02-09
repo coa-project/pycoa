@@ -813,11 +813,8 @@ class CocoDisplay:
 
             standardfig.legend.location = "top_left"
             standardfig.legend.click_policy="hide"
-            if len(input_field) > 1 and len(input_field)*len(input.clustername.unique())>9:
-                standardfig.legend.visible=False
-
-            labelspd=input.loc[(input.allyears.eq(2020)) & (input.date.dt.day.eq(1))]
-
+            
+            labelspd=input.loc[(input.allyears.eq(2021)) & (input.date.dt.day.eq(1))]
             standardfig.xaxis.ticker = list(labelspd['dayofyear'].astype(int))
             replacelabelspd =  labelspd['date'].apply(lambda x: str(x.strftime("%b")))
             #label_dict = dict(zip(input.loc[input.allyears.eq(2020)]['daymonth'],input.loc[input.allyears.eq(2020)]['date'].apply(lambda x: str(x.day)+'/'+str(x.month))))

@@ -584,6 +584,7 @@ class DataBase(object):
                         return date
 
                     pdict={}
+                    insee_pd=pd.DataFrame()
                     for i in list(dc.keys()):
                         data=[]
 
@@ -610,20 +611,27 @@ class DataBase(object):
                         p.columns=['first_name','last_name','sex','birth_date','birth_location_code','birth_location_name','death_date','death_location_code','location','death_id','death_date_bis','i']
                         p["age"]=[k.days/365 for k in p["death_date"]-p["birth_date"]]
                         p["age_class"]=[math.floor(k/20) for k in p["age"]]
-                        pdict.update({i:p})
 
-                    p=pd.DataFrame()
+                        p=p[['location','death_date']].reset_index(drop=True)
+                        p['death_date']=pd.to_datetime(p['death_date']).dt.date
+                        p['location']=p['location'].astype(str)
+                        p['daily_number_of_deaths'] = p.groupby(['death_date','location'])['death_date'].transform('count')
+                        insee_pd=insee_pd.append(p)
+                        #pdict.update({i:p})
+
+                    #p=pd.DataFrame()
 
                     #p=p[p.death_date>=fromisoformat('2019-01-01')]
-                    for k in pdict.keys():
-                        p=p.append(pdict[k].groupby(['death_date','location']).sum())
-                    p['daily_number_of_deaths']=p.i
-                    p=p.reset_index()
-                    p['date']=p.death_date
-                    p=p[p.death_date>=datetime.date.fromisoformat('2019-01-01')]
-                    display(p)
-
-                    self.return_structured_pandas(p,columns_keeped=['daily_numer_of_deaths'])
+                    #for k in pdict.keys():
+                    #    p=p.append(pdict[k].groupby(['death_date','location']).sum())
+                    #p['daily_number_of_deaths']=p.i
+                    #p=p.reset_index()
+                    #p['date']=p.death_date
+                    #p=p[p.death_date>=datetime.date.fromisoformat('2019-01-01')]
+                    insee_pd = insee_pd[insee_pd.death_date>=datetime.date.fromisoformat('2019-01-01')]
+                    insee_pd =  insee_pd.rename(columns={'death_date':'date'})
+                    #display(insee_pd)
+                    self.return_structured_pandas(insee_pd,columns_keeped=['daily_number_of_deaths'])
             except:
                 raise CoaDbError("An error occured while parsing data of "+self.get_db()+". This may be due to a data format modification. "
                     "You may contact support@pycoa.fr. Thanks.")
@@ -1006,7 +1014,7 @@ class DataBase(object):
             elif self.database_type[self.db][1] == 'subregion':
                 temp = self.geo_all[['code_subregion','name_subregion']]
                 codename=dict(temp.loc[temp.code_subregion.isin(uniqloc)].values)
-                if self.db in ['phe','covidtracking','spf','escovid19data','opencovid19','minciencia','moh','risklayer']:
+                if self.db in ['phe','covidtracking','spf','escovid19data','opencovid19','minciencia','moh','risklayer','insee']:
                     #codename={i:list(temp.loc[temp.code_subregion.isin([i])]['name_subregion'])[0] for i in uniqloc if not temp.loc[temp.code_subregion.isin([i])]['name_subregion'].empty }
                     #codename = collections.OrderedDict(zip(uniqloc,list(temp.loc[temp.code_subregion.isin(uniqloc)]['name_subregion'])))
                     self.slocation = list(codename.values())

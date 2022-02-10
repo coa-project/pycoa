@@ -127,7 +127,13 @@ def generic_info(namedb, keys):
               spfn[k].append('https://www.data.gouv.fr/fr/datasets/r/d3a98a30-893f-47f7-96c5-2f4bcaaa0d71')
               spfn[k].append('https://www.data.gouv.fr/en/datasets/donnees-relatives-a-lepidemie-de-covid-19-en-france-vue-densemble/')
         mydico = spfn
-
+    elif namedb == 'insee':
+        insee = {
+        'daily_number_of_deaths':['daily_number_of_deaths FILL IT PLEASE '],\
+        }
+        for k,v in insee.items():
+            insee[k].append('https://www.data.gouv.fr/fr/datasets/fichier-des-personnes-decedees/')
+        mydico = insee
     elif namedb == 'opencovid19':
         op19 = {
         'tot_deces':['tot_deces: total cumulé du nombre de décès au niveau national'],

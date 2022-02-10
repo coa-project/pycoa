@@ -633,8 +633,7 @@ class CocoDisplay:
         label=['January','February','March','April','May','June','July','August','September','October','November','December']
         xr,yr=polar(np.linspace(0, 2 * np.pi, 13),outer_radius,1)
         standardfig.text(xr[:-1], yr[:-1], label,text_font_size="9pt", text_align="center", text_baseline="middle")
-
-        standardfig.text(300/np.sqrt(2),300/np.sqrt(2),input.codelocation.unique())
+        standardfig.text(300/np.sqrt(2),300/np.sqrt(2),input.clustername.unique())
         return standardfig
 
     ''' SCROLLINGMENU PLOT '''
@@ -813,7 +812,7 @@ class CocoDisplay:
 
             standardfig.legend.location = "top_left"
             standardfig.legend.click_policy="hide"
-            
+
             labelspd=input.loc[(input.allyears.eq(2021)) & (input.date.dt.day.eq(1))]
             standardfig.xaxis.ticker = list(labelspd['dayofyear'].astype(int))
             replacelabelspd =  labelspd['date'].apply(lambda x: str(x.strftime("%b")))

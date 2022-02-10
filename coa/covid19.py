@@ -630,6 +630,7 @@ class DataBase(object):
                     since_date='2018-01-01'
                     insee_pd = insee_pd[insee_pd.death_date>=datetime.date.fromisoformat(since_date)]
                     insee_pd =  insee_pd.rename(columns={'death_date':'date'})
+                    insee_pd.sort_values(by=['date', 'location'],inplace=True)
                     insee_pd['deaths_since_'+since_date]=insee_pd.groupby(['location'])['daily_number_of_deaths'].cumsum()
                     #display(insee_pd)
                     self.return_structured_pandas(insee_pd,columns_keeped=['deaths_since_'+since_date])

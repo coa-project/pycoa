@@ -129,7 +129,7 @@ def generic_info(namedb, keys):
         mydico = spfn
     elif namedb == 'insee':
         insee = {
-        'daily_number_of_deaths':['daily_number_of_deaths FILL IT PLEASE '],\
+        'deaths_since_2018-01-01':['daily_number_of_deaths integrated since 2018-01-01 '],\
         }
         for k,v in insee.items():
             insee[k].append('https://www.data.gouv.fr/fr/datasets/fichier-des-personnes-decedees/')

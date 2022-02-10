@@ -388,7 +388,6 @@ def chartsinput_deco(f):
         if what:
             kwargs['input_field'] = what
 
-
         #if 'mode' in kwargs:
         #    kwargs.pop('mode')
 
@@ -428,6 +427,8 @@ def chartsinput_deco(f):
                 which = input_field[0]
             else:
                 which = input_field
+            if which is None:
+                which = pandy.columns[2]
             pandy.loc[:,'standard'] = pandy[which]
             kwargs['input_field'] = input_field
             if option:

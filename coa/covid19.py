@@ -551,17 +551,21 @@ class DataBase(object):
                 elif self.db == 'insee':
                     info('FRA, INSEE global deaths statistics...')
                     url = "https://www.data.gouv.fr/fr/datasets/fichier-des-personnes-decedees/"
-                    soup = BeautifulSoup(requests.get(url).content,features="lxml")
+                    with open(get_local_from_url(url,86400*7)) as fp: # update each week
+                        soup = BeautifulSoup(fp,features="lxml")
                     ld_json=soup.find('script', {'type':'application/ld+json'}).contents
                     data=json.loads(ld_json[0])
                     deces_url={}
                     for d in data['distribution']:
                         deces_url.update({d['name']:d['url']})
-                    print(deces_url)
-                    d={}
+                    #display(deces_url)
+                    dc={}
                     for i in ['2021','2020','2019']:#,'2017']:# ['2000','2001','2002','2003','2004','2005','2020-t1','2020-t2','2020-t3','2019','2018']:
-                        d.update({i:requests.get(deces_url['deces-'+i+'.txt'])})
-                    print(d)
+                        with open(get_local_from_url(deces_url['deces-'+i+'.txt'],86400*7)) as f:
+                            dc.update({i:f.readlines()})
+                    #display(dc)
+                    #display(dc['2020'])
+                    #display(type(dc['2020']))
 
                     pdict={}
 
@@ -585,10 +589,10 @@ class DataBase(object):
                                 raise ValueError
                         return date
 
-                    for i in list(d.keys()):
+                    for i in list(dc.keys()):
                         data=[]
 
-                        for l in d[i].text.splitlines():
+                        for l in dc[i]:#.splitlines():
                             [last_name,first_name]=(l[0:80].split("/")[0]).split("*")
                             sex=int(l[80])
                             birthlocationcode=l[89:94]
@@ -612,6 +616,9 @@ class DataBase(object):
                         p["age_class"]=[math.floor(k/20) for k in p["age"]]
                         pdict.update({i:p})
 
+                        display(pdict)
+                        display(type(pdict))
+                        display(pdict.keys())
                         z=pdict['2020']
                         y=z.groupby('death_date_bis').sum()
                         y.i.plot()

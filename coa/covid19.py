@@ -615,10 +615,9 @@ class DataBase(object):
                         p=p[['location','death_date']].reset_index(drop=True)
                         p['death_date']=pd.to_datetime(p['death_date']).dt.date
                         p['location']=p['location'].astype(str)
-                        p['daily_number_of_deaths'] = p.groupby(['death_date','location'])['death_date'].transform('count')
                         insee_pd=insee_pd.append(p)
                         #pdict.update({i:p})
-
+                    insee_pd['daily_number_of_deaths'] = insee_pd.groupby(['death_date','location'])['death_date'].transform('count')
                     #p=pd.DataFrame()
 
                     #p=p[p.death_date>=fromisoformat('2019-01-01')]

@@ -558,16 +558,10 @@ class DataBase(object):
                     deces_url={}
                     for d in data['distribution']:
                         deces_url.update({d['name']:d['url']})
-                    #display(deces_url)
                     dc={}
                     for i in ['2021','2020','2019']:#,'2017']:# ['2000','2001','2002','2003','2004','2005','2020-t1','2020-t2','2020-t3','2019','2018']:
                         with open(get_local_from_url(deces_url['deces-'+i+'.txt'],86400*7)) as f:
                             dc.update({i:f.readlines()})
-                    #display(dc)
-                    #display(dc['2020'])
-                    #display(type(dc['2020']))
-
-                    pdict={}
 
                     def string_to_date(s):
                         date=None
@@ -589,10 +583,11 @@ class DataBase(object):
                                 raise ValueError
                         return date
 
+                    pdict={}
                     for i in list(dc.keys()):
                         data=[]
 
-                        for l in dc[i]:#.splitlines():
+                        for l in dc[i]:
                             [last_name,first_name]=(l[0:80].split("/")[0]).split("*")
                             sex=int(l[80])
                             birthlocationcode=l[89:94]
@@ -606,22 +601,25 @@ class DataBase(object):
                                 deathdatebis=string_to_date(lbis)
                             except ValueError:
                                 if lbis!='20030229':
-                                    print(l,lbis)
+                                    verb('Problem in a date parsing insee data for : ',l,lbis)
                             deathlocationcode=l[162:167]
+                            deathlocationshortcode=l[162:164]
                             deathid=l[167:176]
-                            data.append([first_name,last_name,sex,birthdate,birthlocationcode,birthlocationname,deathdate,deathlocationcode,deathid,deathdatebis,1])
+                            data.append([first_name,last_name,sex,birthdate,birthlocationcode,birthlocationname,deathdate,deathlocationcode,deathlocationshortcode,deathid,deathdatebis,1])
                         p=pd.DataFrame(data)
-                        p.columns=['first_name','last_name','sex','birth_date','birth_location_code','birth_location_name','death_date','death_location_code','death_id','death_date_bis','i']
+                        p.columns=['first_name','last_name','sex','birth_date','birth_location_code','birth_location_name','death_date','death_location_code','location','death_id','death_date_bis','i']
                         p["age"]=[k.days/365 for k in p["death_date"]-p["birth_date"]]
                         p["age_class"]=[math.floor(k/20) for k in p["age"]]
                         pdict.update({i:p})
 
-                        display(pdict)
-                        display(type(pdict))
-                        display(pdict.keys())
-                        z=pdict['2020']
-                        y=z.groupby('death_date_bis').sum()
-                        y.i.plot()
+                    p=pd.DataFrame()
+
+                    display(p)
+                    #p=p[p.death_date>=fromisoformat('2019-01-01')]
+                    for k in pdict.keys():
+                        p=p.append(pdict[k].groupby(['death_date','location']).sum())
+                    p['daily_number_of_deaths']=p.i
+                    display(p)
 
             except:
                 raise CoaDbError("An error occured while parsing data of "+self.get_db()+". This may be due to a data format modification. "

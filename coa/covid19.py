@@ -559,8 +559,8 @@ class DataBase(object):
                     for d in data['distribution']:
                         deces_url.update({d['name']:d['url']})
                     dc={}
-                    for i in ['2021','2020','2019']:#,'2017']:# ['2000','2001','2002','2003','2004','2005','2020-t1','2020-t2','2020-t3','2019','2018']:
-                        with open(get_local_from_url(deces_url['deces-'+i+'.txt'],86400*7)) as f:
+                    for i in ['2021','2020','2019','2018']:#,'2017']:# ['2000','2001','2002','2003','2004','2005','2020-t1','2020-t2','2020-t3','2019','2018']:
+                        with open(get_local_from_url(deces_url['deces-'+i+'.txt'],86400*30)) as f:
                             dc.update({i:f.readlines()})
 
                     def string_to_date(s):
@@ -614,13 +614,16 @@ class DataBase(object):
 
                     p=pd.DataFrame()
 
-                    display(p)
                     #p=p[p.death_date>=fromisoformat('2019-01-01')]
                     for k in pdict.keys():
                         p=p.append(pdict[k].groupby(['death_date','location']).sum())
                     p['daily_number_of_deaths']=p.i
+                    p=p.reset_index()
+                    p['date']=p.death_date
+                    p=p[p.death_date>=datetime.date.fromisoformat('2019-01-01')]
                     display(p)
 
+                    self.return_structured_pandas(p,columns_keeped=['daily_numer_of_deaths'])
             except:
                 raise CoaDbError("An error occured while parsing data of "+self.get_db()+". This may be due to a data format modification. "
                     "You may contact support@pycoa.fr. Thanks.")

@@ -559,7 +559,7 @@ class DataBase(object):
                     for d in data['distribution']:
                         deces_url.update({d['name']:d['url']})
                     dc={}
-                    for i in ['2021','2020','2019','2018']:#,'2017']:# ['2000','2001','2002','2003','2004','2005','2020-t1','2020-t2','2020-t3','2019','2018']:
+                    for i in ['2021','2020','2019','2018','2017']:# ['2000','2001','2002','2003','2004','2005','2020-t1','2020-t2','2020-t3','2019','2018']:
                         with open(get_local_from_url(deces_url['deces-'+i+'.txt'],86400*30)) as f:
                             dc.update({i:f.readlines()})
 
@@ -627,10 +627,12 @@ class DataBase(object):
                     #p=p.reset_index()
                     #p['date']=p.death_date
                     #p=p[p.death_date>=datetime.date.fromisoformat('2019-01-01')]
-                    insee_pd = insee_pd[insee_pd.death_date>=datetime.date.fromisoformat('2019-01-01')]
+                    since_date='2018-01-01'
+                    insee_pd = insee_pd[insee_pd.death_date>=datetime.date.fromisoformat(since_date)]
                     insee_pd =  insee_pd.rename(columns={'death_date':'date'})
+                    insee_pd['deaths_since_'+since_date]=insee_pd.groupby(['location'])['daily_number_of_deaths'].cumsum()
                     #display(insee_pd)
-                    self.return_structured_pandas(insee_pd,columns_keeped=['daily_number_of_deaths'])
+                    self.return_structured_pandas(insee_pd,columns_keeped=['deaths_since_'+since_date])
             except:
                 raise CoaDbError("An error occured while parsing data of "+self.get_db()+". This may be due to a data format modification. "
                     "You may contact support@pycoa.fr. Thanks.")

@@ -625,6 +625,12 @@ class CocoDisplay:
 
         outer_radius=200
         standardfig.multi_line([x_base,x_cas_sup,x_cas_inf],[y_base,y_cas_sup,y_cas_inf],color=["firebrick", "navy","navy"])
+
+        xcol,ycol=[],[]
+        [ xcol.append([i,j]) for i,j in zip(x_cas_inf,x_cas_sup)]
+        [ ycol.append([i,j]) for i,j in zip(y_cas_inf,y_cas_sup)]
+        standardfig.patches(xcol,ycol,color='blue',fill_alpha = 0.5)
+
         [standardfig.annular_wedge(
             x=0, y=0, inner_radius=0, outer_radius=outer_radius, start_angle=i*np.pi/4,\
             end_angle=(i+1)*np.pi/4,fill_color=None,line_color='black',line_dash='dotted')

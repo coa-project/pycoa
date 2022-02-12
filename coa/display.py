@@ -597,8 +597,9 @@ class CocoDisplay:
         if isinstance(input['rolloverdisplay'][0],list):
             input['rolloverdisplay'] = input['clustername']
         borne=300
-        standardfig = self.standardfig(y_axis_type = None, x_axis_type = None,**kwargs,
-        width=borne,height=borne,
+        kwargs.pop('plot_width')
+        standardfig = self.standardfig(y_axis_type = None, x_axis_type = None,**kwargs
+        ,width=kwargs['plot_height'],
         x_range=[-borne, borne], y_range=[-borne, borne],match_aspect=True)
 
         if len(input.clustername.unique()) > 1 :
@@ -640,7 +641,7 @@ class CocoDisplay:
 
         label = ['January','February','March','April','May','June','July','August','September','October','November','December']
         xr,yr = polar(np.linspace(0, 2 * np.pi, 13),outer_radius,1)
-
+        
         standardfig.text(xr[:-1], yr[:-1], label,text_font_size="9pt", text_align="center", text_baseline="middle")
         #standardfig.text(300/np.sqrt(2),300/np.sqrt(2),input.clustername.unique())
         return standardfig
@@ -1154,7 +1155,7 @@ class CocoDisplay:
                                 standardfig.x_range = Range1d(0.01, 50 * max_value)
                             srcfiltered.data['left'] = [0.01] * len(srcfiltered.data['right'])
 
-                if func.__name__ == 'pycoa_pie' :
+                if func.__name__ == 'pycoa_pie':
                     if not input_filter[input_filter[input_field] < 0.].empty:
                         raise CoaKeyError('Some values are negative, can\'t display a Pie chart, try histo by location')
                     standardfig.plot_width = plot_height

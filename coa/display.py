@@ -598,7 +598,8 @@ class CocoDisplay:
             input['rolloverdisplay'] = input['clustername']
         borne=300
         standardfig = self.standardfig(y_axis_type = None, x_axis_type = None,**kwargs,
-         x_range=[-borne, borne], y_range=[-borne, borne],match_aspect=True)
+        width=borne,height=borne,
+        x_range=[-borne, borne], y_range=[-borne, borne],match_aspect=True)
 
         if len(input.clustername.unique()) > 1 :
             print('Can only display spiral for ONE location. I took the first one:', input.clustername[0])
@@ -608,13 +609,15 @@ class CocoDisplay:
         input['year']=input.date.dt.year
 
         K = 2*input[input_field].max()
-        input["dayofyear_angle"] = input["dayofyear"]*2 * np.pi/365 # gérer plus finement l'année bissextile
+        #drop bissextile fine tuning in needed in the future
+        input = input.loc[~(input['date'].dt.month.eq(2) & input['date'].dt.day.eq(29))].reset_index(drop=True)
+        input["dayofyear_angle"] = input["dayofyear"]*2 * np.pi/365
         input["r_baseline"] = input.apply(lambda x : ((x["year"]-2020)*2 * np.pi + x["dayofyear_angle"])*K,axis=1)
         size_factor = 16
         input["r_cas_sup"] = input.apply(lambda x : x["r_baseline"] + 0.5*x[input_field]*size_factor,axis=1)
         input["r_cas_inf"] = input.apply(lambda x : x["r_baseline"] - 0.5*x[input_field]*size_factor,axis=1)
 
-        radius = 150
+        radius = 200
         def polar(theta,r,norm=radius/input["r_baseline"].max()):
             x = norm*r*np.cos(theta)
             y = norm*r*np.sin(theta)
@@ -623,23 +626,23 @@ class CocoDisplay:
         x_cas_sup,y_cas_sup=polar(input["dayofyear_angle"],input["r_cas_sup"])
         x_cas_inf,y_cas_inf=polar(input["dayofyear_angle"],input["r_cas_inf"])
 
-        outer_radius=200
+        outer_radius=250
         standardfig.multi_line([x_base,x_cas_sup,x_cas_inf],[y_base,y_cas_sup,y_cas_inf],color=["firebrick", "navy","navy"])
-
         xcol,ycol=[],[]
         [ xcol.append([i,j]) for i,j in zip(x_cas_inf,x_cas_sup)]
         [ ycol.append([i,j]) for i,j in zip(y_cas_inf,y_cas_sup)]
         standardfig.patches(xcol,ycol,color='blue',fill_alpha = 0.5)
 
         [standardfig.annular_wedge(
-            x=0, y=0, inner_radius=0, outer_radius=outer_radius, start_angle=i*np.pi/4,\
-            end_angle=(i+1)*np.pi/4,fill_color=None,line_color='black',line_dash='dotted')
+            x=0, y=0, inner_radius=0, outer_radius=outer_radius, start_angle=i*np.pi/6,\
+            end_angle=(i+1)*np.pi/6,fill_color=None,line_color='black',line_dash='dotted')
         for i in range(12)]
 
-        label=['January','February','March','April','May','June','July','August','September','October','November','December']
-        xr,yr=polar(np.linspace(0, 2 * np.pi, 13),outer_radius,1)
+        label = ['January','February','March','April','May','June','July','August','September','October','November','December']
+        xr,yr = polar(np.linspace(0, 2 * np.pi, 13),outer_radius,1)
+
         standardfig.text(xr[:-1], yr[:-1], label,text_font_size="9pt", text_align="center", text_baseline="middle")
-        standardfig.text(300/np.sqrt(2),300/np.sqrt(2),input.clustername.unique())
+        #standardfig.text(300/np.sqrt(2),300/np.sqrt(2),input.clustername.unique())
         return standardfig
 
     ''' SCROLLINGMENU PLOT '''
@@ -765,7 +768,7 @@ class CocoDisplay:
         listfigs = []
         cases_custom = CocoDisplay.rollerJS()
         input['date']=pd.to_datetime(input["date"])
-
+        #drop bissextile fine tuning in needed in the future
         input = input.loc[~(input['date'].dt.month.eq(2) & input['date'].dt.day.eq(29))].reset_index(drop=True)
         input = input.copy()
         input.loc[:,'allyears']=input['date'].apply(lambda x : x.year)

@@ -617,7 +617,7 @@ class DataBase(object):
                         p['location']=p['location'].astype(str)
                         insee_pd=insee_pd.append(p)
                         #pdict.update({i:p})
-                    insee_pd['daily_number_of_deaths'] = insee_pd.groupby(['death_date','location'])['death_date'].transform('count')
+                    insee_pd = insee_pd.groupby(['death_date','location']).size().reset_index(name='daily_number_of_deaths')
                     #p=pd.DataFrame()
 
                     #p=p[p.death_date>=fromisoformat('2019-01-01')]
@@ -631,8 +631,8 @@ class DataBase(object):
                     insee_pd = insee_pd[insee_pd.death_date>=datetime.date.fromisoformat(since_date)]
                     insee_pd =  insee_pd.rename(columns={'death_date':'date'})
                     insee_pd.sort_values(by=['date','location'],inplace=True)
+
                     insee_pd['deaths_since_'+since_date]=insee_pd.groupby(['location'])['daily_number_of_deaths'].cumsum()
-                    #display(insee_pd)
                     self.return_structured_pandas(insee_pd,columns_keeped=['deaths_since_'+since_date,'daily_number_of_deaths'])
             except:
                 raise CoaDbError("An error occured while parsing data of "+self.get_db()+". This may be due to a data format modification. "

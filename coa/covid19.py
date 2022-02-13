@@ -609,31 +609,24 @@ class DataBase(object):
                             data.append([first_name,last_name,sex,birthdate,birthlocationcode,birthlocationname,deathdate,deathlocationcode,deathlocationshortcode,deathid,deathdatebis,1])
                         p=pd.DataFrame(data)
                         p.columns=['first_name','last_name','sex','birth_date','birth_location_code','birth_location_name','death_date','death_location_code','location','death_id','death_date_bis','i']
-                        p["age"]=[k.days/365 for k in p["death_date"]-p["birth_date"]]
-                        p["age_class"]=[math.floor(k/20) for k in p["age"]]
+                        #p["age"]=[k.days/365 for k in p["death_date"]-p["birth_date"]]
+                        #p["age_class"]=[math.floor(k/20) for k in p["age"]]
 
-                        p=p[['location','death_date']].reset_index(drop=True)
-                        p['death_date']=pd.to_datetime(p['death_date']).dt.date
-                        p['location']=p['location'].astype(str)
+                        #p=p[['location','death_date']].reset_index(drop=True)
+                        #p['death_date']=pd.to_datetime(p['death_date']).dt.date
+                        #p['location']=p['location'].astype(str)
                         insee_pd=insee_pd.append(p)
                         #pdict.update({i:p})
-                    insee_pd = insee_pd.groupby(['death_date','location']).size().reset_index(name='daily_number_of_deaths')
-                    #p=pd.DataFrame()
+                    insee_pd = insee_pd[['location','death_date']].reset_index(drop=True)
+                    insee_pd = insee_pd.rename(columns={'death_date':'date'})
+                    insee_pd['date']=pd.to_datetime(insee_pd['date']).dt.date
+                    insee_pd['location']=insee_pd['location'].astype(str)
+                    insee_pd = insee_pd.groupby(['date','location']).size().reset_index(name='daily_number_of_deaths')
 
-                    #p=p[p.death_date>=fromisoformat('2019-01-01')]
-                    #for k in pdict.keys():
-                    #    p=p.append(pdict[k].groupby(['death_date','location']).sum())
-                    #p['daily_number_of_deaths']=p.i
-                    #p=p.reset_index()
-                    #p['date']=p.death_date
-                    #p=p[p.death_date>=datetime.date.fromisoformat('2019-01-01')]
                     since_date='2018-01-01'
-                    insee_pd = insee_pd[insee_pd.death_date>=datetime.date.fromisoformat(since_date)]
-                    insee_pd =  insee_pd.rename(columns={'death_date':'date'})
-                    insee_pd.sort_values(by=['date','location'],inplace=True)
-
-                    insee_pd['deaths_since_'+since_date]=insee_pd.groupby(['location'])['daily_number_of_deaths'].cumsum()
-                    self.return_structured_pandas(insee_pd,columns_keeped=['deaths_since_'+since_date,'daily_number_of_deaths'])
+                    insee_pd = insee_pd[insee_pd.date>=datetime.date.fromisoformat(since_date)].reset_index(drop=True)
+                    insee_pd['tot_deaths_since_'+since_date]=insee_pd.groupby('location')['daily_number_of_deaths'].cumsum()
+                    self.return_structured_pandas(insee_pd,columns_keeped=['tot_deaths_since_'+since_date])
             except:
                 raise CoaDbError("An error occured while parsing data of "+self.get_db()+". This may be due to a data format modification. "
                     "You may contact support@pycoa.fr. Thanks.")

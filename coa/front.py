@@ -838,9 +838,13 @@ def decoplot(func):
                 print('typeofplot is versus but dim(input_field)!=2, versus has not effect ...')
                 fig = _cocoplot.pycoa_date_plot(input,input_field,**kwargs)
         elif typeofplot == 'menulocation':
-            if isinstance(input_field,list) and len(input_field) > 1:
-                print('typeofplot is menulocation but dim(input_field)>1, menulocation has not effect ...')
-            fig = _cocoplot.pycoa_scrollingmenu(input,input_field,**kwargs)
+            if get_db_list_dict()[_whom][1] == 'nation' and get_db_list_dict()[_whom][0] != 'WW':
+                print('typeofplot is menulocation with a national DB granularity, use date plot instead ...')
+                fig = _cocoplot.pycoa_date_plot(input,input_field,**kwargs)
+            else:
+                if isinstance(input_field,list) and len(input_field) > 1:
+                    print('typeofplot is menulocation but dim(input_field)>1, menulocation has not effect ...')
+                fig = _cocoplot.pycoa_scrollingmenu(input,input_field,**kwargs)
         elif typeofplot == 'yearly':
             fig = _cocoplot.pycoa_yearly_plot(input,input_field,**kwargs)
         else:

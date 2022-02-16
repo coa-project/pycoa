@@ -430,7 +430,7 @@ class CocoDisplay:
                         input_field = input_field[0]
                     print(self.dbld[self.database_name][1],self.dbld[self.database_name][0])
                     if self.dbld[self.database_name][1] == 'nation' and self.dbld[self.database_name][0] != 'WW':
-                        raise CoaTypeError('Menu location not available for national granularity DB')
+                        func.__name__ = 'pycoa_date_plot'
             return func(self, input, input_field, **kwargs)
         return inner_plot
 

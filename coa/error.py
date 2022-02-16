@@ -27,8 +27,7 @@ class CoaError(Exception):
         + ' '*center+pycoatexterror+' '*center+'\n'\
         + message.center(30)+'\n'+' '*len(message)
         print('\033[1;30;41m'+self.message)
-        return 0
-        #Exception(message)
+        Exception(message)
 
 
 class CoaNoData(CoaError, IndexError):

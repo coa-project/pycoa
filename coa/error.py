@@ -7,7 +7,7 @@ License: See joint LICENSE file
 
 Module : coa.error
 
-About : 
+About :
 -------
 
 Main class definitions for error management within the pycoa framework.
@@ -19,8 +19,16 @@ class CoaError(Exception):
     """Base class for exceptions in PyCoa."""
 
     def __init__(self, message):
-        self.message = message
-        Exception(message)
+        #self.message = message
+        message = '  ' + message + '  '
+        pycoatexterror = 'PYCOA Error ! '
+        center=int((len(message)-len(pycoatexterror))/2)
+        self.message = ' '*len(message)+'\n'\
+        + ' '*center+pycoatexterror+' '*center+'\n'\
+        + message.center(30)+'\n'+' '*len(message)
+        print('\033[1;30;41m'+self.message)
+        return 0
+        #Exception(message)
 
 
 class CoaNoData(CoaError, IndexError):

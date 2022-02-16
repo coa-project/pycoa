@@ -428,6 +428,9 @@ class CocoDisplay:
                         if len(input_field) > 1:
                             print(str(input_field) + ' is dim = ' + str(len(input_field)) + '. No effect with ' + func.__name__ + '! Take the first input: ' + input_field[0])
                         input_field = input_field[0]
+                    print(self.dbld[self.database_name][1],self.dbld[self.database_name][0])
+                    if self.dbld[self.database_name][1] == 'nation' and self.dbld[self.database_name][0] != 'WW':
+                        raise CoaTypeError('Menu location not available for national granularity DB')
             return func(self, input, input_field, **kwargs)
         return inner_plot
 
@@ -641,7 +644,7 @@ class CocoDisplay:
 
         label = ['January','February','March','April','May','June','July','August','September','October','November','December']
         xr,yr = polar(np.linspace(0, 2 * np.pi, 13),outer_radius,1)
-        
+
         standardfig.text(xr[:-1], yr[:-1], label,text_font_size="9pt", text_align="center", text_baseline="middle")
         #standardfig.text(300/np.sqrt(2),300/np.sqrt(2),input.clustername.unique())
         return standardfig

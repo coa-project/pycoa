@@ -548,6 +548,27 @@ class DataBase(object):
                     columns_keeped.remove('location') # is already expected
                     columns_keeped.remove('date') # is already expected
                     self.return_structured_pandas(deur, columns_keeped = columns_keeped)
+                elif self.db == 'europa':
+                    info('EUR, Rationale for the JRC COVID-19 website - data monitoring and national measures ...')
+                    rename_dict = {'Region': 'location',
+                        'CumulativeDeceased':'tot_deaths',
+                        'Hospitalized':'cur_hosp',
+                        'IntensiveCare':'cur_icu',
+                        'Date':'date'}
+                    euro = self.csv2pandas("https://raw.githubusercontent.com/ec-jrc/COVID-19/master/data-by-region/jrc-covid-19-all-days-by-regions.csv",
+                    rename_columns = rename_dict, separator = ',')
+                    euro=euro.loc[euro.EUcountry==True]
+                    todrop=['Ciudad Autónoma de Melilla','Gorenjske','Goriške','Greenland','Itä-Savo','Jugovzhodne','Koroške','Länsi-Pohja',\
+                            'Mainland','NOT SPECIFIED','Obalno-kraške','Osrednjeslovenske','Podravske','Pomurske','Posavske','Primorsko-notranjske',\
+                            'Repatriierte','Savinjske','West North','Zasavske']
+                    euro=euro.loc[~euro['location'].isin(todrop)]
+                    euro=euro.dropna(subset=['location'])
+
+                    euro['tot_positive']=euro.groupby('location')['CurrentlyPositive'].cumsum()
+                    columns_keeped = list(rename_dict.values())+['tot_positive']
+                    columns_keeped.remove('location') # is already expected
+                    columns_keeped.remove('date') # is already expected
+                    self.return_structured_pandas(euro, columns_keeped = columns_keeped)
                 elif self.db == 'insee':
                     info('FRA, INSEE global deaths statistics...')
                     url = "https://www.data.gouv.fr/fr/datasets/fichier-des-personnes-decedees/"

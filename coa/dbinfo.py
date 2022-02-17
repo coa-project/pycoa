@@ -352,6 +352,18 @@ def generic_info(namedb, keys):
         for k,v in risk.items():
             risk[k].append(url)
         mydico = risk
+    elif namedb == 'europa':
+        url='https://raw.githubusercontent.com/ec-jrc/COVID-19/master/data-by-region/jrc-covid-19-all-days-by-regions.csv'
+        euro = {
+            'tot_deaths':['Orginal name CumulativeDeceased'],
+            'tot_positive':['sum the Original name CurrentlyPositive'],
+            'cur_hosp':['Orginal name Hospitalized'],
+            'cur_icu':['Orginal name IntensiveCare'],
+            }
+        for k,v in euro.items():
+            euro[k].append(url)
+            euro[k].append('https://github.com/ec-jrc/COVID-19/tree/master/data-by-region')
+        mydico = euro
     elif namedb == 'imed':
         imed = {
         'tot_cases':['tot_cases (original name cases)',\

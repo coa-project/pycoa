@@ -984,23 +984,23 @@ class CocoDisplay:
                 else:
                     bins = 11
 
-            delta = (max_val - min_val ) / (bins-1)
-            interval = [ min_val + (i-1)*delta for i in range(1,(bins+1)+1)]
+            delta = (max_val - min_val ) / bins
+            interval = [ min_val + i*delta for i in range(bins+1)]
 
-            contributors = {  i : [] for i in range(bins)}
+            contributors = {  i : [] for i in range(bins+1)}
             for i in range(len(allval)):
                 rank = bisect.bisect_left(interval, allval.iloc[i][input_field])
                 contributors[rank].append(allval.iloc[i]['clustername'])
 
             colors = itertools.cycle(self.lcolors)
-            lcolors = [next(colors) for i in range(bins)]
+            lcolors = [next(colors) for i in range(bins+1)]
             contributors = dict(sorted(contributors.items()))
             frame_histo = pd.DataFrame({
-                              'left': interval[:-1],
-                              'right':interval[1:],
-                              'middle_bin': [format((i+j)/2, ".1f") for i,j in zip(interval[:-1],interval[1:])],
+                              'left': [0]+interval[:-1],
+                              'right':interval,
+                              'middle_bin': [format((i+j)/2, ".1f") for i,j in zip([0]+interval[:-1],interval)],
                               'top': [len(i) for i in list(contributors.values())],
-                              'contributors': [', '.join(i) for i in contributors.values() ],
+                              'contributors': [', '.join(i) for i in contributors.values()],
                               'colors': lcolors})
         #tooltips = """
         #<div style="width: 400px">

@@ -257,6 +257,7 @@ class GeoManager():
                 "Summer Olympics 2020":"",\
                 "Micronesia":"FSM",\
                 "Winter Olympics 2022":"",\
+                "Antarctica":"",\
                     })  # last two are names of boats
         elif db=='worldometers':
             translation_dict.update({\

@@ -137,7 +137,7 @@ def fill_missing_dates(p, date_field='date', loc_field='location', d1=None, d2=N
     if not loc_field in p.columns:
         raise CoaKeyError("The loc_field is not a proper column of input pandas dataframe.")
     # datatoilettage :)
-    p = p.loc[~p.location.isin([''])]
+    p = p.loc[~p[loc_field].isin([''])]
 
     if d2==None:
         d2=p[date_field].max()
@@ -159,7 +159,7 @@ def fill_missing_dates(p, date_field='date', loc_field='location', d1=None, d2=N
         pp2=pp.set_index([date_field])
         pp2.index = pd.DatetimeIndex(pp2.index)
         pp3 = pp2.reindex(idx,fill_value=numpy.nan)#pandas.NA)
-        pp3['location'] = pp3['location'].fillna(l)  #pp3['location'].fillna(method='bfill')
+        pp3[loc_field] = pp3[loc_field].fillna(l)  #pp3['location'].fillna(method='bfill')
         #pp3['codelocation'] = pp3['codelocation'].fillna(method='bfill')
         #pp3['codelocation'] = pp3['codelocation'].fillna(method='ffill')
         pfill=pd.concat([pfill, pp3])

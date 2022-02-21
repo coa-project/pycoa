@@ -660,7 +660,7 @@ def decomap(func):
 
 @chartsinput_deco
 @decomap
-def figmap(input,input_field,**kwargs):
+def figuremap(input,input_field,**kwargs):
     visu = kwargs.get('visu', listvisu()[0])
     dateslider = kwargs.get('dateslider', None)
     maplabel = kwargs.get('maplabel', None)

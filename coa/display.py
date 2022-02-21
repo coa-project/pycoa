@@ -994,8 +994,7 @@ class CocoDisplay:
                     min_val = 0.
                 else:
                     bins = 11
-
-            bins +=1         
+   
             delta = (max_val - min_val ) / bins
             interval = [ min_val + i*delta for i in range(bins+1)]
 

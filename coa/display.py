@@ -345,7 +345,10 @@ class CocoDisplay:
                 else:
                     titlefig = which + ', ' + 'cumulative'+ title_option
             else:
-                titlefig = input_field_tostring + title_option
+                if ' per ' in input_field_tostring:
+                    titlefig = input_field_tostring + ' population' + title_option
+                else:
+                    titlefig = input_field_tostring + title_option
 
             if title:
                 title = title
@@ -994,7 +997,7 @@ class CocoDisplay:
                     min_val = 0.
                 else:
                     bins = 11
-   
+
             delta = (max_val - min_val ) / bins
             interval = [ min_val + i*delta for i in range(bins+1)]
 

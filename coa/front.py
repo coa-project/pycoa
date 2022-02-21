@@ -333,7 +333,7 @@ def normbypop(pandy, val2norm,bypop):
     for i in clust:
         pandyi = pandy.loc[ pandy['clustername'] == i ].copy()
         pandyi.loc[:,pop_field] = pandyi.groupby('codelocation')[pop_field].first().sum()
-        cody = [pandyi.groupby('codelocation')['codelocation'].first().tolist()]*len(pandyi)
+        cody = pandyi.groupby('codelocation')['codelocation'].first().tolist()*len(pandyi)
         pandyi = pandyi.assign(codelocation=cody)
         if df.empty:
             df = pandyi
@@ -344,7 +344,7 @@ def normbypop(pandy, val2norm,bypop):
 
     pandy=pandy.copy()
     pandy[pop_field]=pandy[pop_field].replace(0., np.nan)
-    pandy.loc[:,val2norm+' per '+bypop]=pandy[val2norm]/pandy[pop_field]*_dict_bypop[bypop]
+    pandy.loc[:,val2norm+' per '+bypop + ' population']=pandy[val2norm]/pandy[pop_field]*_dict_bypop[bypop]
     return pandy
 # ----------------------------------------------------------------------
 # --- chartsinput_deco(f)

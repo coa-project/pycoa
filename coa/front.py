@@ -336,7 +336,7 @@ def normbypop(pandy, val2norm,bypop):
         if len(pandyi.groupby('codelocation')['codelocation'].first().tolist()) == 1:
             cody = pandyi.groupby('codelocation')['codelocation'].first().tolist()*len(pandyi)
         else:
-            cody = [pandyi.groupby('codelocation')['codelocation'].first().tolist()]*len(pandyi)    
+            cody = [pandyi.groupby('codelocation')['codelocation'].first().tolist()]*len(pandyi)
         pandyi = pandyi.assign(codelocation=cody)
         if df.empty:
             df = pandyi
@@ -841,7 +841,7 @@ def decoplot(func):
                 print('typeofplot is versus but dim(input_field)!=2, versus has not effect ...')
                 fig = _cocoplot.pycoa_date_plot(input,input_field,**kwargs)
         elif typeofplot == 'menulocation':
-            if get_db_list_dict()[_whom][1] == 'nation' and get_db_list_dict()[_whom][0] != 'WW':
+            if get_db_list_dict()[_whom][1] == 'nation' and get_db_list_dict()[_whom][2] != 'World':
                 print('typeofplot is menulocation with a national DB granularity, use date plot instead ...')
                 fig = _cocoplot.pycoa_date_plot(input,input_field,**kwargs)
             else:

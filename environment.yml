@@ -6,6 +6,8 @@ dependencies:
   - firefox
   - python
   - numpy
+  - selenium 
+  - geckodriver 
   - pip
   - pip:
     - nbgitpuller
@@ -30,5 +32,4 @@ dependencies:
     - pytest
     - unidecode
     - openpyxl 
-    - selenium 
-    - geckodriver  
+

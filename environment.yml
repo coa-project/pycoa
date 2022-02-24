@@ -3,9 +3,6 @@ name: pycoa-environment
 channels:
   - conda-forge
 dependencies:
-  - firefox
-  - chromium-browser
-  - chromium-chromedriver
   - python
   - numpy
   - pip

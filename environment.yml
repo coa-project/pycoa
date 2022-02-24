@@ -29,3 +29,4 @@ dependencies:
     - pytest
     - unidecode
     - openpyxl 
+    - selenium 

@@ -31,3 +31,4 @@ dependencies:
     - unidecode
     - openpyxl 
     - selenium 
+    - geckodriver  

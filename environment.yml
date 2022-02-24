@@ -4,6 +4,7 @@ channels:
   - conda-forge
 dependencies:
   - firefox
+  - chromium-chromedriver
   - python
   - numpy
   - pip

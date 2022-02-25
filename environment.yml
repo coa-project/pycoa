@@ -8,7 +8,7 @@ dependencies:
   - numpy
   - selenium 
   - geckodriver 
-  - libgtk-3-0 
+  - libgtk 
   - pip
   - pip:
     - nbgitpuller

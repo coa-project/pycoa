@@ -266,7 +266,8 @@ def setwhom(base):
         _db, _cocoplot = coco.DataBase.factory(base)
         _whom = base
 
-    return listwhich()
+    pass    
+    #return listwhich()
 
 
 # ----------------------------------------------------------------------

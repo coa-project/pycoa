@@ -266,7 +266,8 @@ def setwhom(base):
         _db, _cocoplot = coco.DataBase.factory(base)
         _whom = base
 
-    return listwhich()
+    pass
+    #return listwhich()
 
 
 # ----------------------------------------------------------------------
@@ -333,7 +334,10 @@ def normbypop(pandy, val2norm,bypop):
     for i in clust:
         pandyi = pandy.loc[ pandy['clustername'] == i ].copy()
         pandyi.loc[:,pop_field] = pandyi.groupby('codelocation')[pop_field].first().sum()
-        cody = [pandyi.groupby('codelocation')['codelocation'].first().tolist()]*len(pandyi)
+        if len(pandyi.groupby('codelocation')['codelocation'].first().tolist()) == 1:
+            cody = pandyi.groupby('codelocation')['codelocation'].first().tolist()*len(pandyi)
+        else:
+            cody = [pandyi.groupby('codelocation')['codelocation'].first().tolist()]*len(pandyi)
         pandyi = pandyi.assign(codelocation=cody)
         if df.empty:
             df = pandyi
@@ -344,7 +348,7 @@ def normbypop(pandy, val2norm,bypop):
 
     pandy=pandy.copy()
     pandy[pop_field]=pandy[pop_field].replace(0., np.nan)
-    pandy.loc[:,val2norm+' per '+bypop]=pandy[val2norm]/pandy[pop_field]*_dict_bypop[bypop]
+    pandy.loc[:,val2norm+' per '+bypop + ' population']=pandy[val2norm]/pandy[pop_field]*_dict_bypop[bypop]
     return pandy
 # ----------------------------------------------------------------------
 # --- chartsinput_deco(f)
@@ -660,13 +664,13 @@ def decomap(func):
 
 @chartsinput_deco
 @decomap
-def figmap(input,input_field,**kwargs):
+def figuremap(input,input_field,**kwargs):
     visu = kwargs.get('visu', listvisu()[0])
     dateslider = kwargs.get('dateslider', None)
     maplabel = kwargs.get('maplabel', None)
     if visu == 'bokeh':
         if maplabel and 'spark' in maplabel:
-            return _cocoplot.pycoa_sparkmap(input,input_field,**kwargs)
+            return _cocoplot.pycoa_pimpmap(input,input_field,**kwargs)
         else:
 
             return _cocoplot.pycoa_map(input,input_field,**kwargs)
@@ -838,7 +842,7 @@ def decoplot(func):
                 print('typeofplot is versus but dim(input_field)!=2, versus has not effect ...')
                 fig = _cocoplot.pycoa_date_plot(input,input_field,**kwargs)
         elif typeofplot == 'menulocation':
-            if get_db_list_dict()[_whom][1] == 'nation' and get_db_list_dict()[_whom][0] != 'WW':
+            if get_db_list_dict()[_whom][1] == 'nation' and get_db_list_dict()[_whom][2] != 'World':
                 print('typeofplot is menulocation with a national DB granularity, use date plot instead ...')
                 fig = _cocoplot.pycoa_date_plot(input,input_field,**kwargs)
             else:

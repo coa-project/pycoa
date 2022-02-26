@@ -92,7 +92,8 @@ class CocoDisplay:
         self.when_beg = dt.date(1, 1, 1)
         self.when_end = dt.date(1, 1, 1)
 
-        self.alloptions =  self.options_stats + self.options_charts + self.options_front + list(self.dfigure_default.keys()) + list(self.dvisu_default.keys())
+        self.alloptions =  self.options_stats + self.options_charts + self.options_front + list(self.dfigure_default.keys()) +\
+                           list(self.dvisu_default.keys()) + ['resumetype']
 
         self.iso3country = self.dbld[self.database_name][0]
         self.granularity = self.dbld[self.database_name][1]
@@ -344,7 +345,10 @@ class CocoDisplay:
                 else:
                     titlefig = which + ', ' + 'cumulative'+ title_option
             else:
-                titlefig = input_field_tostring + title_option
+                if ' per ' in input_field_tostring:
+                    titlefig = input_field_tostring + ' population' + title_option
+                else:
+                    titlefig = input_field_tostring + title_option
 
             if title:
                 title = title
@@ -368,10 +372,19 @@ class CocoDisplay:
     def pycoa_resume_data(self, input, input_field, **kwargs):
         loc=list(input['clustername'].unique())
         input['cases'] = input[input_field]
-        dspiral={i:CocoDisplay.spiral(input.loc[ (input.clustername==i) &
-                    (input.date >= self.when_beg) &
-                    (input.date <= self.when_end)].sort_values(by='date')) for i in loc}
-        input['resume']=input['clustername'].map(dspiral)
+        resumetype = kwargs.get('resumetype','spiral')
+        if resumetype == 'spiral':
+            dspiral={i:CocoDisplay.spiral(input.loc[ (input.clustername==i) &
+                        (input.date >= self.when_beg) &
+                        (input.date <= self.when_end)].sort_values(by='date')) for i in loc}
+            input['resume']=input['clustername'].map(dspiral)
+        elif resumetype == 'spark':
+            spark={i:CocoDisplay.sparkline(input.loc[ (input.clustername==i) &
+                        (input.date >= self.when_beg) &
+                        (input.date <= self.when_end)].sort_values(by='date')) for i in loc}
+            input['resume']=input['clustername'].map(spark)
+        else:
+            raise CoaError('pycoa_resume_data can use spiral or spark ... here what ?')
         input = input.loc[input.date==input.date.max()].reset_index(drop=True)
         def path_to_image_html(path):
             return '<img src="'+ path + '" width="60" >'
@@ -536,9 +549,9 @@ class CocoDisplay:
             i = 0
             r_list=[]
             maxou=-1000
-            smcolors = iter(self.scolors)
+            lcolors = iter(self.lcolors)
+            line_style = ['solid', 'dashed', 'dotted', 'dotdash','dashdot']
             for val in input_field:
-                line_style = ['solid', 'dashed', 'dotted', 'dotdash']
                 for loc in list(input.clustername.unique()):
                     input_filter = input.loc[input.clustername == loc].reset_index(drop = True)
 
@@ -548,13 +561,13 @@ class CocoDisplay:
                     if len(input_field)>1:
                         leg = input_filter.permanentdisplay[0] + ', ' + val
                     if len(list(input.clustername.unique())) == 1:
-                        color = next(smcolors)
+                        color = next(lcolors)
                     else:
                         color = input_filter.colors[0]
                     r = standardfig.line(x = 'date', y = val, source = src,
                                      color = color, line_width = 3,
                                      legend_label = leg,
-                                     hover_line_width = 4, name = val, line_dash=line_style[i])
+                                     hover_line_width = 4, name = val, line_dash=line_style[i%4])
                     r_list.append(r)
                     maxou=max(maxou,np.nanmax(input_filter[val].values))
                 i += 1
@@ -579,7 +592,8 @@ class CocoDisplay:
 
             standardfig.legend.location = "top_left"
             standardfig.legend.click_policy="hide"
-            if len(input_field) > 1 and len(input_field)*len(input.clustername.unique())>9:
+            standardfig.legend.label_text_font_size = '8pt'
+            if len(input_field) > 1 and len(input_field)*len(input.clustername.unique())>16:
                 standardfig.legend.visible=False
             standardfig.xaxis.formatter = DatetimeTickFormatter(
                 days = ["%d/%m/%y"], months = ["%d/%m/%y"], years = ["%b %Y"])
@@ -990,6 +1004,8 @@ class CocoDisplay:
             contributors = {  i : [] for i in range(bins+1)}
             for i in range(len(allval)):
                 rank = bisect.bisect_left(interval, allval.iloc[i][input_field])
+                if rank == bins+1:
+                    rank = bins
                 contributors[rank].append(allval.iloc[i]['clustername'])
 
             colors = itertools.cycle(self.lcolors)

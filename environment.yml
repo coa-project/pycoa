@@ -3,8 +3,11 @@ name: pycoa-environment
 channels:
   - conda-forge
 dependencies:
+  - firefox
   - python
   - numpy
+  - selenium 
+  - geckodriver 
   - pip
   - pip:
     - nbgitpuller
@@ -29,3 +32,4 @@ dependencies:
     - pytest
     - unidecode
     - openpyxl 
+

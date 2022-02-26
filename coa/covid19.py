@@ -570,6 +570,7 @@ class DataBase(object):
                     columns_keeped.remove('date') # is already expected
                     self.return_structured_pandas(euro, columns_keeped = columns_keeped)
                 elif self.db == 'insee':
+                    since_year=2018 # Define the first year for stats
                     info('FRA, INSEE global deaths statistics...')
                     url = "https://www.data.gouv.fr/fr/datasets/fichier-des-personnes-decedees/"
                     with open(get_local_from_url(url,86400*7)) as fp: # update each week
@@ -580,8 +581,26 @@ class DataBase(object):
                     for d in data['distribution']:
                         deces_url.update({d['name']:d['url']})
                     dc={}
-                    for i in ['2021','2020','2019','2018','2017']:# ['2000','2001','2002','2003','2004','2005','2020-t1','2020-t2','2020-t3','2019','2018']:
-                        with open(get_local_from_url(deces_url['deces-'+i+'.txt'],86400*30)) as f:
+
+                    current_year=datetime.date.today().year
+                    current_month=datetime.date.today().month
+
+                    # manage year between since_year-1 and current_year(excluded)
+                    for y in range(since_year-1,current_year):
+                        i=str(y) #  in string
+                        filename='deces-'+i+'.txt'
+                        if filename not in list(deces_url.keys()):
+                            continue
+                        with open(get_local_from_url(deces_url[filename],86400*30)) as f:
+                            dc.update({i:f.readlines()})
+
+                    # manage months for the current_year
+                    for m in range(current_month):
+                        i=str(m+1).zfill(2) #  in string with leading 0
+                        filename='deces-'+str(current_year)+'-m'+i+'.txt'
+                        if filename not in list(deces_url.keys()):
+                            continue
+                        with open(get_local_from_url(deces_url[filename],86400)) as f:
                             dc.update({i:f.readlines()})
 
                     def string_to_date(s):
@@ -644,7 +663,7 @@ class DataBase(object):
                     insee_pd['location']=insee_pd['location'].astype(str)
                     insee_pd = insee_pd.groupby(['date','location']).size().reset_index(name='daily_number_of_deaths')
 
-                    since_date='2018-01-01'
+                    since_date=str(since_year)+'-01-01'
                     insee_pd = insee_pd[insee_pd.date>=datetime.date.fromisoformat(since_date)].reset_index(drop=True)
                     insee_pd['tot_deaths_since_'+since_date]=insee_pd.groupby('location')['daily_number_of_deaths'].cumsum()
                     self.return_structured_pandas(insee_pd,columns_keeped=['tot_deaths_since_'+since_date])

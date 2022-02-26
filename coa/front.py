@@ -266,7 +266,7 @@ def setwhom(base):
         _db, _cocoplot = coco.DataBase.factory(base)
         _whom = base
 
-    pass    
+    pass
     #return listwhich()
 
 
@@ -670,7 +670,7 @@ def figuremap(input,input_field,**kwargs):
     maplabel = kwargs.get('maplabel', None)
     if visu == 'bokeh':
         if maplabel and 'spark' in maplabel:
-            return _cocoplot.pycoa_sparkmap(input,input_field,**kwargs)
+            return _cocoplot.pycoa_pimpmap(input,input_field,**kwargs)
         else:
 
             return _cocoplot.pycoa_map(input,input_field,**kwargs)

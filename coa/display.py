@@ -795,17 +795,16 @@ class CocoDisplay:
         allyears = list(input.allyears.unique())
         if isinstance(input['rolloverdisplay'][0],list):
             input['rolloverdisplay'] = input['clustername']
+        if len(input_field)>1:
+            CoaError('Only one variable could be displayed')
+        else:
+            input_field=input_field[0]
         for axis_type in self.ax_type:
             standardfig = self.standardfig( y_axis_type = axis_type,**kwargs)
             i = 0
             r_list=[]
             maxou=-1000
-            if len(input_field)>1:
-                CoaError('Only one variable could be displayed')
-            else:
-                input_field=input_field[0]
             input['cases']=input[input_field]
-
             line_style = ['solid', 'dashed', 'dotted', 'dotdash']
             colors = itertools.cycle(self.lcolors)
             for loc in list(input.clustername.unique()):

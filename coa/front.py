@@ -348,7 +348,10 @@ def normbypop(pandy, val2norm,bypop):
 
     pandy=pandy.copy()
     pandy[pop_field]=pandy[pop_field].replace(0., np.nan)
-    pandy.loc[:,val2norm+' per '+bypop + ' population']=pandy[val2norm]/pandy[pop_field]*_dict_bypop[bypop]
+    if bypop == 'pop':
+        pandy.loc[:,val2norm+' per total population']=pandy[val2norm]/pandy[pop_field]*_dict_bypop[bypop]
+    else:
+        pandy.loc[:,val2norm+' per '+bypop + ' population']=pandy[val2norm]/pandy[pop_field]*_dict_bypop[bypop]
     return pandy
 # ----------------------------------------------------------------------
 # --- chartsinput_deco(f)
@@ -425,7 +428,10 @@ def chartsinput_deco(f):
             pandy = input_arg #_db.get_stats(which=which, location=where, option=option).rename(columns={'location': 'where'})
             if bypop != 'no':
                 input_arg = normbypop(pandy,input_field,bypop)
-                input_field = input_field+' per '+bypop
+                if bypop=='pop':
+                    input_field = input_field+' per total population'
+                else:
+                    input_field = input_field+' per '+ bypop + ' population'
             pandy = input_arg
             if isinstance(input_field,list):
                 which = input_field[0]
@@ -451,7 +457,10 @@ def chartsinput_deco(f):
                 else:
                     val = _listwhat[0]
                 pandy = normbypop(pandy , val, bypop)
-                input_field = val + ' per ' + bypop
+                if bypop=='pop':
+                    input_field = input_field+' per total population'
+                else:
+                    input_field = input_field+' per '+ bypop + ' population'
             kwargs['input_field'] = input_field
             option = kwargs.get('option', None)
         else:
@@ -478,12 +487,17 @@ def chartsinput_deco(f):
         if bypop != 'no':
             kwargs['input_field'] = [i for i in pandy.columns if ' per ' in i]
             #name = [i for i in list(pandy.columns) if ' per ' in i]
+            if bypop=='pop':
+                bypop='total population'
+            else:
+                bypop+=' population'    
             if 'tot_' and not what or what=='standard':
                 renamed = which + ' per '+ bypop
             else:
                 renamed = which + ' '+ what +' per '+ bypop
             pandy = pandy.rename(columns={kwargs['input_field'][0]:renamed})
             kwargs['input_field'] = renamed
+            pass
         else:
             if not input_field or input_field == 'standard':
                 kwargs['input_field'] = pandy.columns[2]

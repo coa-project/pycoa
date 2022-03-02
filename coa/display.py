@@ -333,25 +333,18 @@ class CocoDisplay:
                 title_option = ' (option: ' + str(option)+')'
 
             input_field_tostring = str(input_field).replace('[', '').replace(']', '').replace('\'', '')
-            if input_field_tostring == 'daily':
-                titlefig = which + ', ' + 'day to day difference' + title_option
-            elif input_field_tostring == 'weekly':
-                titlefig = which + ', ' + 'week to week difference' + title_option
-
+            if 'daily' in input_field_tostring == 'daily':
+                titlefig = input_field_tostring + ', ' + 'day to day difference' + title_option
+            elif 'weekly' in input_field_tostring == 'weekly':
+                titlefig = input_field_tostring + ', ' + 'week to week difference' + title_option
             elif input_field_tostring == input.columns[2]:
                 if 'cur_' in  which or 'idx_' in  which:
                     #titlefig = which + ', ' + 'current ' + which.replace('cur_','').replace('idx_','')+ title_option
-                    titlefig = which + ', ' + 'current value' + title_option
+                    titlefig = which + ', current value' + title_option
                 else:
-                    titlefig = which + ', ' + 'cumulative'+ title_option
+                    titlefig = which + ', cumulative'+ title_option
             else:
-                if ' per ' in input_field_tostring:
-                    if ' per pop' in input_field_tostring:
-                        titlefig = ' per total population' + title_option
-                    else:
-                        titlefig = input_field_tostring + ' population' + title_option
-                else:
-                    titlefig = input_field_tostring + title_option
+                titlefig = input_field_tostring + title_option
 
             if title:
                 title = title

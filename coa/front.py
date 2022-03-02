@@ -207,7 +207,7 @@ def listwhere(clustered = False):
     """Get the list of available regions/subregions managed by the current database
     """
     def clust():
-        if get_db_list_dict()[_whom][1] == 'nation':
+        if get_db_list_dict()[_whom][1] == 'nation' and get_db_list_dict()[_whom][2] != 'World':
             return  _db.geo.to_standard(get_db_list_dict()[_whom][0])
         else:
             r = _db.geo.get_region_list()

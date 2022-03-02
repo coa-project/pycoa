@@ -334,9 +334,9 @@ class CocoDisplay:
 
             input_field_tostring = str(input_field).replace('[', '').replace(']', '').replace('\'', '')
             if 'daily' in input_field_tostring == 'daily':
-                titlefig = input_field_tostring + ', ' + 'day to day difference' + title_option
+                titlefig = which + ', ' + 'day to day difference' + title_option
             elif 'weekly' in input_field_tostring == 'weekly':
-                titlefig = input_field_tostring + ', ' + 'week to week difference' + title_option
+                titlefig = which + ', ' + 'week to week difference' + title_option
             elif input_field_tostring == input.columns[2]:
                 if 'cur_' in  which or 'idx_' in  which:
                     #titlefig = which + ', ' + 'current ' + which.replace('cur_','').replace('idx_','')+ title_option

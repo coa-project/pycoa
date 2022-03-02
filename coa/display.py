@@ -346,7 +346,10 @@ class CocoDisplay:
                     titlefig = which + ', ' + 'cumulative'+ title_option
             else:
                 if ' per ' in input_field_tostring:
-                    titlefig = input_field_tostring + ' population' + title_option
+                    if ' per pop' in input_field_tostring:
+                        titlefig = ' per total population' + title_option
+                    else:
+                        titlefig = input_field_tostring + ' population' + title_option
                 else:
                     titlefig = input_field_tostring + title_option
 
@@ -610,7 +613,6 @@ class CocoDisplay:
         guideline = kwargs.get('guideline',self.dvisu_default['guideline'])
         panels = []
         listfigs = []
-        cases_custom = CocoDisplay.rollerJS()
         if isinstance(input['rolloverdisplay'][0],list):
             input['rolloverdisplay'] = input['clustername']
         borne=300
@@ -618,13 +620,13 @@ class CocoDisplay:
         standardfig = self.standardfig(y_axis_type = None, x_axis_type = None,**kwargs
         ,width=kwargs['plot_height'],
         x_range=[-borne, borne], y_range=[-borne, borne],match_aspect=True)
-
         if len(input.clustername.unique()) > 1 :
             print('Can only display spiral for ONE location. I took the first one:', input.clustername[0])
             input = input.loc[input.clustername == input.clustername[0]].copy()
         input['date']=pd.to_datetime(input["date"])
         input["dayofyear"]=input.date.dt.dayofyear
         input['year']=input.date.dt.year
+        input['cases'] = input[input_field]
 
         K = 2*input[input_field].max()
         #drop bissextile fine tuning in needed in the future
@@ -644,13 +646,29 @@ class CocoDisplay:
         x_cas_sup,y_cas_sup=polar(input["dayofyear_angle"],input["r_cas_sup"])
         x_cas_inf,y_cas_inf=polar(input["dayofyear_angle"],input["r_cas_inf"])
 
-        outer_radius=250
-        standardfig.multi_line([x_base,x_cas_sup,x_cas_inf],[y_base,y_cas_sup,y_cas_inf],color=["firebrick", "navy","navy"])
         xcol,ycol=[],[]
         [ xcol.append([i,j]) for i,j in zip(x_cas_inf,x_cas_sup)]
         [ ycol.append([i,j]) for i,j in zip(y_cas_inf,y_cas_sup)]
         standardfig.patches(xcol,ycol,color='blue',fill_alpha = 0.5)
 
+        src = ColumnDataSource(data=dict(
+        x=x_base,
+        y=y_base,
+        date=input['date'],
+        cases=input['cases']
+        ))
+        standardfig.line( x = 'x', y = 'y', source = src, legend_label = input.clustername[0],
+                        line_width = 3, line_color = 'firebrick')
+        circle = standardfig.circle('x', 'y', size=2, source=src)
+
+        cases_custom = CocoDisplay.rollerJS()
+        hover_tool = HoverTool(tooltips=[('Cases', '@cases{0,0.0}'), ('date', '@date{%F}')],
+                               formatters={'Cases': 'printf', '@{cases}': cases_custom, '@date': 'datetime'},
+                               renderers=[circle],
+                               point_policy="snap_to_data")
+        standardfig.add_tools(hover_tool)
+
+        outer_radius=250
         [standardfig.annular_wedge(
             x=0, y=0, inner_radius=0, outer_radius=outer_radius, start_angle=i*np.pi/6,\
             end_angle=(i+1)*np.pi/6,fill_color=None,line_color='black',line_dash='dotted')
@@ -658,9 +676,11 @@ class CocoDisplay:
 
         label = ['January','February','March','April','May','June','July','August','September','October','November','December']
         xr,yr = polar(np.linspace(0, 2 * np.pi, 13),outer_radius,1)
-
         standardfig.text(xr[:-1], yr[:-1], label,text_font_size="9pt", text_align="center", text_baseline="middle")
-        #standardfig.text(300/np.sqrt(2),300/np.sqrt(2),input.clustername.unique())
+
+        standardfig.legend.background_fill_alpha = 0.6
+        standardfig.legend.location = "top_left"
+        standardfig.legend.click_policy="hide"
         return standardfig
 
     ''' SCROLLINGMENU PLOT '''

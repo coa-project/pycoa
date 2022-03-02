@@ -333,18 +333,20 @@ class CocoDisplay:
                 title_option = ' (option: ' + str(option)+')'
 
             input_field_tostring = str(input_field).replace('[', '').replace(']', '').replace('\'', '')
-            if 'daily' in input_field_tostring == 'daily':
-                titlefig = which + ', ' + 'day to day difference' + title_option
-            elif 'weekly' in input_field_tostring == 'weekly':
-                titlefig = which + ', ' + 'week to week difference' + title_option
-            elif input_field_tostring == input.columns[2]:
+            whichtitle = which
+            if 'pop' in input_field_tostring:
+                whichtitle = input_field_tostring
+
+            if 'daily' in input_field_tostring:
+                titlefig = whichtitle + ', ' + 'day to day difference' + title_option
+            elif 'weekly' in input_field_tostring:
+                titlefig = whichtitle + ', ' + 'week to week difference' + title_option
+            else:
                 if 'cur_' in  which or 'idx_' in  which:
                     #titlefig = which + ', ' + 'current ' + which.replace('cur_','').replace('idx_','')+ title_option
-                    titlefig = which + ', current value' + title_option
+                    titlefig = whichtitle + ', current value' + title_option
                 else:
-                    titlefig = which + ', cumulative'+ title_option
-            else:
-                titlefig = input_field_tostring + title_option
+                    titlefig = whichtitle + ', cumulative'+ title_option
 
             if title:
                 title = title

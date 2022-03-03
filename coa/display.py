@@ -335,8 +335,8 @@ class CocoDisplay:
             input_field_tostring = str(input_field).replace('[', '').replace(']', '').replace('\'', '')
             whichtitle = which
             if 'pop' in input_field_tostring:
-                whichtitle = input_field_tostring.replace('weekly','').replace('daily','')
-
+                whichtitle = input_field_tostring.replace('weekly ','').replace('daily ','')
+                
             if 'daily' in input_field_tostring:
                 titlefig = whichtitle + ', ' + 'day to day difference' + title_option
             elif 'weekly' in input_field_tostring:

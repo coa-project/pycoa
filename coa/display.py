@@ -336,7 +336,7 @@ class CocoDisplay:
             whichtitle = which
             if 'pop' in input_field_tostring:
                 whichtitle = input_field_tostring.replace('weekly ','').replace('daily ','')
-                
+
             if 'daily' in input_field_tostring:
                 titlefig = whichtitle + ', ' + 'day to day difference' + title_option
             elif 'weekly' in input_field_tostring:
@@ -425,8 +425,9 @@ class CocoDisplay:
 
                 input = input.sort_values(by=['clustername', 'date']).reset_index(drop = True)
 
-                if len(location_ordered_byvalues) >= MAXCOUNTRIESDISPLAYED:
-                    input = input.loc[input.clustername.isin(location_ordered_byvalues[:MAXCOUNTRIESDISPLAYED])]
+                if func.__name__ != 'pycoa_scrollingmenu' :
+                    if len(location_ordered_byvalues) >= MAXCOUNTRIESDISPLAYED:
+                        input = input.loc[input.clustername.isin(location_ordered_byvalues[:MAXCOUNTRIESDISPLAYED])]
                 list_max = []
                 for i in input_field:
                     list_max.append(max(input.loc[input.clustername.isin(location_ordered_byvalues)][i]))

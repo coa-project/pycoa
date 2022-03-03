@@ -439,7 +439,6 @@ class CocoDisplay:
                         if len(input_field) > 1:
                             print(str(input_field) + ' is dim = ' + str(len(input_field)) + '. No effect with ' + func.__name__ + '! Take the first input: ' + input_field[0])
                         input_field = input_field[0]
-                    print(self.dbld[self.database_name][1],self.dbld[self.database_name][0])
                     if self.dbld[self.database_name][1] == 'nation' and self.dbld[self.database_name][0] != 'WW':
                         func.__name__ = 'pycoa_date_plot'
             return func(self, input, input_field, **kwargs)
@@ -710,13 +709,17 @@ class CocoDisplay:
         guideline = kwargs.get('guideline',self.dvisu_default['guideline'])
 
         uniqloc = input.clustername.unique().to_list()
+        uniqloc.sort()
         if 'location' in input.columns:
             if len(uniqloc) < 2:
                 raise CoaTypeError('What do you want me to do ? You have selected, only one country.'
                                    'There is no sens to use this method. See help.')
         input = input[['date', 'clustername', input_field]]
+        input = input.sort_values(by='clustername', ascending = True).reset_index(drop=True)
 
         mypivot = pd.pivot_table(input, index='date', columns='clustername', values=input_field)
+        column_order = uniqloc
+        mypivot = mypivot.reindex(column_order, axis=1)
         source = ColumnDataSource(mypivot)
 
         filter_data1 = mypivot[[uniqloc[0]]].rename(columns={uniqloc[0]: 'cases'})

@@ -13,6 +13,12 @@
 - Can switch between dense and standard geometry for countries allowing it (ESP, FRA, USA)
 - Adding usefull geo function for regions / subregions
 - Fixing text boundaries and size for pies
+- Add Insee, Risklayer, Greece and Cyprus db
+- Add spiral plot
+- Map label uniformization using  pycoa_pimpmap method (maplabel: text, spiral and spark)
+- Add geopandas output in the front get method
+- Figure can retrieve in the front so axis and various figure aspect can be pimped 
+(axis, colormap ...)
 
 ## v2.11
 - Mv coabook to the current folder

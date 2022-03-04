@@ -17,8 +17,7 @@
 - Add spiral plot
 - Map label uniformization using  pycoa_pimpmap method (maplabel: text, spiral and spark)
 - Add geopandas output in the front get method
-- Figure can retrieve in the front so axis and various figure aspect can be pimped 
-(axis, colormap ...)
+- Figure bokeh can be retrieved in the front (this give the opportunity to have a pointer to the axis, colormap ...)
 
 ## v2.11
 - Mv coabook to the current folder

@@ -56,7 +56,11 @@ Since the `v2.0` version, PyCoA manages also local data :
 - [PHE](https://api.coronavirus.data.gov.uk) for United Kingdom,
 - [Sciensano](https://epistat.sciensano.be) for Belgium,
 - [DGS](https://github.com/dssg-pt/covid19pt-data) for Portugal,
-- [MOH](https://github.com/MoH-Malaysia) for Malaysia.
+- [MOH](https://github.com/MoH-Malaysia) for Malaysia,
+- [RiskLayer](https://www.risklayer-explorer.com) for region oriented Europe or [Europa](https://github.com/ec-jrc/COVID-19/)_
+- [IMED](https://github.com/iMEdD-Lab/open-data/tree/master/COVID-19) for Greece,
+- [GOVCY](https://www.data.gov.cy/) for Cyprus,
+- [INSEE](https://www.insee.fr) for France (all deceases, not only covid)
 
 Then we get plots like the ones just below. Other databases has been added for Italy or India.
 

@@ -1,11 +1,11 @@
-#  PyCoA release v2 <img src="https://github.com/coa-project/coa-project.github.io/blob/main/fig/logo-anime.gif" width="140px" align=bottom > 
+#  PyCoA release v2 <img src="https://github.com/coa-project/coa-project.github.io/blob/main/fig/logo-anime.gif" width="140px" align=bottom >
 
 [![forthebadge made-with-python](http://ForTheBadge.com/images/badges/made-with-python.svg)](https://www.python.org/)
 [![Made withJupyter](https://img.shields.io/badge/Made%20with-Jupyter-orange?style=for-the-badge&logo=Jupyter)](https://jupyter.org/try)
 ![GitHub last commit](https://img.shields.io/github/last-commit/pycoa/coa/dev?style=for-the-badge)
 ![GitHub](https://img.shields.io/github/license/pycoa/coa?style=for-the-badge)
 
-_April 2020/October 2021_
+_April 2020 / March 2022_
 
 [<img src="https://github.com/coa-project/coa-project.github.io/raw/main/fig/UK.png" height="14px" alt="UK flag"> English  version ](https://github.com/coa-project/pycoa)
 /
@@ -23,7 +23,7 @@ _April 2020/October 2021_
 |------------|-------------|
 |<a href="https://github.com/coa-project/coa-project.github.io/raw/main/fig/pycoa_v2.10_plot_sumall.html" target="_blank"><img src="https://github.com/coa-project/coa-project.github.io/raw/main/fig/pycoa_v2.10_plot_sumall.png"></a>|<a href="https://github.com/coa-project/coa-project.github.io/raw/main/fig/pycoa_v2.10_plot_g20.html" target="_blank"><img src="https://github.com/coa-project/coa-project.github.io/raw/main/fig/pycoa_v2.10_plot_g20.png"></a>|
 
-|MAP (OECD) | Histogram (World| 
+|MAP (OECD) | Histogram (World|
 |------------|-------------|
 |<a href="https://github.com/coa-project/coa-project.github.io/raw/main/fig/pycoa_v2.10_plot_oecd.html" target="_blank"><img src="https://github.com/coa-project/coa-project.github.io/raw/main/fig/pycoa_v2.10_plot_oecd.png"></a>|<a href="https://github.com/coa-project/coa-project.github.io/raw/main/fig/pycoa_v2.10_hist_bycountry.html" target="_blank"><img src="https://github.com/coa-project/coa-project.github.io/raw/main/fig/pycoa_v2.10_hist_bycountry.png"></a>|
 
@@ -47,7 +47,7 @@ cf.hist(which='total_people_fully_vaccinated_per_hundred',typeofhist='byvalue',w
 ```
 
 Since the `v2.0` version, PyCoA manages also local data :
-- [JHU-USA](https://coronavirus.jhu.edu/) or [CovidTracking](https://covidtracking.com) for the United-States, 
+- [JHU-USA](https://coronavirus.jhu.edu/) or [CovidTracking](https://covidtracking.com) for the United-States,
 - [SPF](https://www.santepubliquefrance.fr/dossiers/coronavirus-covid-19), [OpenCovid19](https://github.com/opencovid19-fr) or [Obepine](https://www.reseau-obepine.fr/donnees-ouvertes/) for France,
 - [DPC](https://github.com/pcm-dpc/COVID-19) for Italy,
 - [Covid19India](https://api.covid19india.org) for India,
@@ -66,7 +66,7 @@ Then we get plots like the ones just below. Other databases has been added for I
 
 ```python
 cf.setwhom('spf') # Santé Publique France database
-cf.map(which='tot_vacc',tile='esri') # Vaccinations, map view optional tile 
+cf.map(which='tot_vacc',tile='esri') # Vaccinations, map view optional tile
 
 cf.setwhom('jhu-usa') # JHU USA database
 cf.map(visu='folium') # deaths, map view with folium visualization output

@@ -1,11 +1,11 @@
-#  PyCoA version v2 <img src="https://github.com/coa-project/coa-project.github.io/blob/main/fig/logo-anime.gif" width="140px" align=bottom > 
+#  PyCoA version v2 <img src="https://github.com/coa-project/coa-project.github.io/blob/main/fig/logo-anime.gif" width="140px" align=bottom >
 
 [![forthebadge made-with-python](http://ForTheBadge.com/images/badges/made-with-python.svg)](https://www.python.org/)
 [![Made withJupyter](https://img.shields.io/badge/Made%20with-Jupyter-orange?style=for-the-badge&logo=Jupyter)](https://jupyter.org/try)
 ![GitHub last commit](https://img.shields.io/github/last-commit/pycoa/coa/dev?style=for-the-badge)
 ![GitHub](https://img.shields.io/github/license/pycoa/coa?style=for-the-badge)
 
-_Avril 2020 / Octobre 2021_
+_Avril 2020 / Mars 2022_
 
 [<img src="https://github.com/coa-project/coa-project.github.io/raw/main/fig/UK.png" height="14px" alt="UK flag"> English  version ](https://github.com/coa-project/pycoa)
 /
@@ -23,7 +23,7 @@ _Avril 2020 / Octobre 2021_
 |------------|-------------|
 |<a href="https://github.com/coa-project/coa-project.github.io/raw/main/fig/pycoa_v2.10_plot_sumall.html" target="_blank"><img src="https://github.com/coa-project/coa-project.github.io/raw/main/fig/pycoa_v2.10_plot_sumall.png"></a>|<a href="https://github.com/coa-project/coa-project.github.io/raw/main/fig/pycoa_v2.10_plot_g20.html" target="_blank"><img src="https://github.com/coa-project/coa-project.github.io/raw/main/fig/pycoa_v2.10_plot_g20.png"></a>|
 
-|Carte (OCDE) | Histogramme (Monde) | 
+|Carte (OCDE) | Histogramme (Monde) |
 |------------|-------------|
 |<a href="https://github.com/coa-project/coa-project.github.io/raw/main/fig/pycoa_v2.10_plot_oecd.html" target="_blank"><img src="https://github.com/coa-project/coa-project.github.io/raw/main/fig/pycoa_v2.10_plot_oecd.png"></a>|<a href="https://github.com/coa-project/coa-project.github.io/raw/main/fig/pycoa_v2.10_hist_bycountry.html" target="_blank"><img src="https://github.com/coa-project/coa-project.github.io/raw/main/fig/pycoa_v2.10_hist_bycountry.png"></a>|
 
@@ -46,7 +46,7 @@ cf.hist(which='cur_icu_patients',typeofhist='pie',where='european union')
 cf.hist(which='total_people_fully_vaccinated_per_hundred',typeofhist='byvalue',where='asia')
 ```
 Depuis la version `v2.0`, PyCoA accède également à des données locales :
-- [JHU-USA](https://coronavirus.jhu.edu/) ou [CovidTracking](https://covidtracking.com) pour les États-Unis, 
+- [JHU-USA](https://coronavirus.jhu.edu/) ou [CovidTracking](https://covidtracking.com) pour les États-Unis,
 - [SPF](https://www.santepubliquefrance.fr/dossiers/coronavirus-covid-19), [OpenCovid19](https://github.com/opencovid19-fr) ou [Obepine](https://www.reseau-obepine.fr/donnees-ouvertes/) pour la France,
 - [DPC](https://github.com/pcm-dpc/COVID-19) pour l'Italie,
 - [Covid19India](https://api.covid19india.org) pour l'Inde,
@@ -56,6 +56,10 @@ Depuis la version `v2.0`, PyCoA accède également à des données locales :
 - [Sciensano](https://epistat.sciensano.be) pour la Belgique,
 - [DGS](https://github.com/dssg-pt/covid19pt-data) pour le Portugal,
 - [MOH](https://github.com/MoH-Malaysia) pour la Malaysie.
+- [RiskLayer](https://www.risklayer-explorer.com) pour un découpage Européen par région ou [Europa](https://github.com/ec-jrc/COVID-19/)_
+- [IMED](https://github.com/iMEdD-Lab/open-data/tree/master/COVID-19) pour la Grèce,
+- [GOVCY](https://www.data.gov.cy/) for Chypre,
+- [INSEE](https://www.insee.fr) pour la France (tous décès, pas uniquement liés au COVID)
 
 Nous pouvons allons obtenir des graphes comme ci-après. D'autres bases ont également été ajouté, pour l'Italie ou l'Inde par exemple.
 
@@ -64,7 +68,7 @@ Nous pouvons allons obtenir des graphes comme ci-après. D'autres bases ont éga
 |<a href="https://github.com/coa-project/coa-project.github.io/raw/main/fig/pycoa_v2.10_spf.html" target="_blank"><img src="https://github.com/coa-project/coa-project.github.io/raw/main/fig/pycoa_v2.10_spf.png" width=504></a>|<a href="https://github.com/coa-project/coa-project.github.io/raw/main/fig/pycoa_v2.10_jhu-usafolium.html" target="_blank"><img src="https://github.com/coa-project/coa-project.github.io/blob/main/fig/pycoa_v2.0_jhu-usafolium.jpg" width=504></a>|
 ```python
 cf.setwhom('spf') # Santé Publique France database
-cf.map(which='tot_vacc',tile='esri') # Vaccinations, map view optional tile 
+cf.map(which='tot_vacc',tile='esri') # Vaccinations, map view optional tile
 
 cf.setwhom('jhu-usa') # JHU USA database
 cf.map(visu='folium') # deaths, map view with folium visualization output

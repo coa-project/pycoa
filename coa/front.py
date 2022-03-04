@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """Project : PyCoA - Copyright ©pycoa.fr
-Date :    april 2020 - march 2021
+Date :    april 2020 - march 2022
 Authors : Olivier Dadoun, Julien Browaeys, Tristan Beau
 License: See joint LICENSE file
 
@@ -490,7 +490,7 @@ def chartsinput_deco(f):
             if bypop=='pop':
                 bypop='total population'
             else:
-                bypop+=' population'    
+                bypop+=' population'
             if 'tot_' and not what or what=='standard':
                 renamed = which + ' per '+ bypop
             else:

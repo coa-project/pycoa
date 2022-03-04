@@ -133,6 +133,7 @@ def generic_info(namedb, keys):
         }
         for k,v in insee.items():
             insee[k].append('https://www.data.gouv.fr/fr/datasets/fichier-des-personnes-decedees/')
+            insee[k].append('https://www.data.gouv.fr/fr/datasets/fichier-des-personnes-decedees/')
         mydico = insee
     elif namedb == 'opencovid19':
         op19 = {
@@ -346,11 +347,12 @@ def generic_info(namedb, keys):
     elif namedb == 'risklayer':
         url='https://docs.google.com/spreadsheets/d/e/2PACX-1vQ-JLawOH35vPyOk39w0tjn64YQLlahiD2AaNfjd82pgQ37Jr1K8KMHOqJbxoi4k2FZVYBGbZ-nsxhi/pub?output=csv'
         risk = {
-            'tot_positive': ['FILLIT'],\
-            'tot_incidence': ['FILLIT'],\
+            'tot_positive': ['tot_positive ... fill it '],\
+            'tot_incidence': ['tot_incidence ... fill it'],\
             }
         for k,v in risk.items():
             risk[k].append(url)
+            risk[k].append('https://www.risklayer-explorer.com/event/100/detail')
         mydico = risk
     elif namedb == 'europa':
         url='https://raw.githubusercontent.com/ec-jrc/COVID-19/master/data-by-region/jrc-covid-19-all-days-by-regions.csv'

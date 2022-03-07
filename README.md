@@ -31,6 +31,10 @@ _April 2020 / March 2022_
 |------------|-------------|
 |<a href="https://github.com/coa-project/coa-project.github.io/raw/main/fig/pycoa_v2.10_pie.html" target="_blank"><img src="https://github.com/coa-project/coa-project.github.io/raw/main/fig/pycoa_v2.10_pie.png"></a>|<a href="https://github.com/coa-project/coa-project.github.io/raw/main/fig/pycoa_v2.10_histval.html" target="_blank"><img src="https://github.com/coa-project/coa-project.github.io/raw/main/fig/pycoa_v2.10_histval.png"></a>|
 
+|Spiral plot (USA) | Yearly plot (France) |
+|------------|-------------|
+|<a href="https://github.com/coa-project/coa-project.github.io/raw/main/fig/pycoa_v2.20_spiral.html" target="_blank"><img src="https://github.com/coa-project/coa-project.github.io/raw/main/fig/pycoa_v2.20_spiral.png"></a>|<a href="https://github.com/coa-project/coa-project.github.io/raw/main/fig/pycoa_v2.20_yearly.html" target="_blank"><img src="https://github.com/coa-project/coa-project.github.io/raw/main/fig/pycoa_v2.20_yearly.png"></a>|
+
 It is designed to be accessible to non-specialists: teenagers learning Python™, students, science journalists, even scientists who are not familiar in data access methods. A simple analysis can be performed out of the box, as well as a more complex analysis for people familiar with Python™ programming. As an example, after <a href="https://github.com/coa-project/pycoa/wiki/Install" target=_blank>installing pycoa</a> to your framework, the following few lines of code produce the four figures introducing this short documentation.
 
 ```python
@@ -44,6 +48,10 @@ cf.setwhom('owid') # changing database
 cf.hist(which='total_vaccinations') # default is for all countries
 cf.hist(which='cur_icu_patients',typeofhist='pie',where='european union')
 cf.hist(which='total_people_fully_vaccinated_per_hundred',typeofhist='byvalue',where='asia')
+
+cf.plot(where='usa',which='total_people_fully_vaccinated',what='weekly',typeofplot='spiral')
+cf.setwhom('insee')
+cf.plot(typeofplot='yearly',what='daily',when="01/01/2019:31/12/2021",option=['smooth7','sumall'],title='Décès quotidiens totaux en France')
 ```
 
 Since the `v2.0` version, PyCoA manages also local data :

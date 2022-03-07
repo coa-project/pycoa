@@ -31,6 +31,10 @@ _Avril 2020 / Mars 2022_
 |------------|-------------|
 |<a href="https://github.com/coa-project/coa-project.github.io/raw/main/fig/pycoa_v2.10_pie.html" target="_blank"><img src="https://github.com/coa-project/coa-project.github.io/raw/main/fig/pycoa_v2.10_pie.png"></a>|<a href="https://github.com/coa-project/coa-project.github.io/raw/main/fig/pycoa_v2.10_histval.html" target="_blank"><img src="https://github.com/coa-project/coa-project.github.io/raw/main/fig/pycoa_v2.10_histval.png"></a>|
 
+|Spiral plot (USA) | Yearly plot (France) |
+|------------|-------------|
+|<a href="https://github.com/coa-project/coa-project.github.io/raw/main/fig/pycoa_v2.20_spiral.html" target="_blank"><img src="https://github.com/coa-project/coa-project.github.io/raw/main/fig/pycoa_v2.20_spiral.png"></a>|<a href="https://github.com/coa-project/coa-project.github.io/raw/main/fig/pycoa_v2.20_yearly.html" target="_blank"><img src="https://github.com/coa-project/coa-project.github.io/raw/main/fig/pycoa_v2.20_yearly.png"></a>|
+
 Cette analyse est pensée pour être accessible à des non-spécialistes : des lycéen·nes qui apprennent Python™, des étudiant·es, des journalistes scientifiques, voire même des chercheurs et chercheuses qui ne sont pas famillier·es avec l'extraction de données. Des analyses simples peuvent être directement effectuées, et des analyses plus poussées peuvent être produites par les personnes habituées à programmer en Python™. Comme exemple, après avoir <a href="https://github.com/coa-project/pycoa/wiki/FR:Install" target=_blank>installé PyCoA</a>, les quelques lignes suivantes permettent de créer les figures en entête de cette courte documentation.
 
 ```python
@@ -44,6 +48,10 @@ cf.setwhom('owid') # changing database
 cf.hist(which='total_vaccinations') # default is for all countries
 cf.hist(which='cur_icu_patients',typeofhist='pie',where='european union')
 cf.hist(which='total_people_fully_vaccinated_per_hundred',typeofhist='byvalue',where='asia')
+
+cf.plot(where='usa',which='total_people_fully_vaccinated',what='weekly',typeofplot='spiral')
+cf.setwhom('insee')
+cf.plot(typeofplot='yearly',what='daily',when="01/01/2019:31/12/2021",option=['smooth7','sumall'],title='Décès quotidiens totaux en France')
 ```
 Depuis la version `v2.0`, PyCoA accède également à des données locales :
 - [JHU-USA](https://coronavirus.jhu.edu/) ou [CovidTracking](https://covidtracking.com) pour les États-Unis,

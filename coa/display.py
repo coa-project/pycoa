@@ -323,7 +323,7 @@ class CocoDisplay:
             input = input.loc[(input['date'] >=  self.when_beg) & (input['date'] <=  self.when_end)]
 
             title_temporal = ' (' + 'between ' + when_beg.strftime('%d/%m/%Y') + ' and ' + when_end.strftime('%d/%m/%Y') + ')'
-            if func.__name__ != 'pycoa_date_plot' and func.__name__ != 'pycoa_yearly_plot'  and func.__name__ != 'pycoa_plot':
+            if func.__name__ not in ['pycoa_date_plot', 'pycoa_plot', 'pycoa_scrollingmenu', 'pycoa_spiral_plot','pycoa_yearly_plot']:
                 title_temporal = ' (' + when_end.strftime('%d/%m/%Y')  + ')'
             title_option=''
             if option:
@@ -612,9 +612,9 @@ class CocoDisplay:
             input['rolloverdisplay'] = input['clustername']
         borne=300
         kwargs.pop('plot_width')
-        standardfig = self.standardfig(y_axis_type = None, x_axis_type = None,**kwargs
-        ,width=kwargs['plot_height'],
-        x_range=[-borne, borne], y_range=[-borne, borne],match_aspect=True)
+        standardfig = self.standardfig(y_axis_type = None, x_axis_type = None,
+        width=kwargs['plot_height'], x_range=[-borne, borne], y_range=[-borne, borne], match_aspect=True,**kwargs)
+
         if len(input.clustername.unique()) > 1 :
             print('Can only display spiral for ONE location. I took the first one:', input.clustername[0])
             input = input.loc[input.clustername == input.clustername[0]].copy()

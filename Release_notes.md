@@ -6,15 +6,13 @@
 ## v2.20
 - Includes population information for USA and France.
 - Add yearly and spiral plots
-- Includes now insee (FR) and europa db
 - Remove tile 'positron' for maps
 - Normalization by population available for full population
 - Fixing various plot titles issues
 - Can switch between dense and standard geometry for countries allowing it (ESP, FRA, USA)
 - Adding usefull geo function for regions / subregions
 - Fixing text boundaries and size for pies
-- Add Insee, Risklayer, Greece and Cyprus db
-- Add spiral plot
+- Add Insee, Risklayer, Europa, Greece and Cyprus db
 - Map label uniformization using  pycoa_pimpmap method (maplabel: text, spiral and spark)
 - Add geopandas output in the front get method
 - Figure bokeh can be retrieved in the front (this give the opportunity to have a pointer to the axis, colormap ...)

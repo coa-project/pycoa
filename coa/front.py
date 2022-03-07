@@ -821,6 +821,8 @@ def decoplot(func):
 
         title       --  to force the title of the plot
 
+        textcopyright - to force the copyright lower left of the graph
+
         typeofplot  -- 'date' (default), 'menulocation' or 'versus'
                        'date':date plot
                        'spiral': spiral plot if several location only the first one

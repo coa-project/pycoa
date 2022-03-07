@@ -653,7 +653,7 @@ class CocoDisplay:
         cases=input['cases']
         ))
         standardfig.line( x = 'x', y = 'y', source = src, legend_label = input.clustername[0],
-                        line_width = 3, line_color = 'firebrick')
+                        line_width = 3, line_color = 'blue')
         circle = standardfig.circle('x', 'y', size=2, source=src)
 
         cases_custom = CocoDisplay.rollerJS()

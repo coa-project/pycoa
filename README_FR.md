@@ -1,4 +1,4 @@
-#  PyCoA version v2 <img src="https://github.com/coa-project/coa-project.github.io/blob/main/fig/logo-anime.gif" width="140px" align=bottom >
+#  PyCoA version v2 <img src="https://github.com/coa-project/coa-project.github.io/raw/main/fig/logo-anime.gif" width="140px" align=bottom >
 
 [![forthebadge made-with-python](http://ForTheBadge.com/images/badges/made-with-python.svg)](https://www.python.org/)
 [![Made withJupyter](https://img.shields.io/badge/Made%20with-Jupyter-orange?style=for-the-badge&logo=Jupyter)](https://jupyter.org/try)
@@ -73,7 +73,7 @@ Nous pouvons allons obtenir des graphes comme ci-après. D'autres bases ont éga
 
 |Données SPF | Données JHU-USA |
 |------------|-------------|
-|<a href="https://github.com/coa-project/coa-project.github.io/raw/main/fig/pycoa_v2.10_spf.html" target="_blank"><img src="https://github.com/coa-project/coa-project.github.io/raw/main/fig/pycoa_v2.10_spf.png" width=504></a>|<a href="https://github.com/coa-project/coa-project.github.io/raw/main/fig/pycoa_v2.10_jhu-usafolium.html" target="_blank"><img src="https://github.com/coa-project/coa-project.github.io/blob/main/fig/pycoa_v2.0_jhu-usafolium.jpg" width=504></a>|
+|<a href="https://github.com/coa-project/coa-project.github.io/raw/main/fig/pycoa_v2.10_spf.html" target="_blank"><img src="https://github.com/coa-project/coa-project.github.io/raw/main/fig/pycoa_v2.10_spf.png" width=504></a>|<a href="https://github.com/coa-project/coa-project.github.io/raw/main/fig/pycoa_v2.10_jhu-usafolium.html" target="_blank"><img src="https://github.com/coa-project/coa-project.github.io/raw/main/fig/pycoa_v2.0_jhu-usafolium.jpg" width=504></a>|
 ```python
 cf.setwhom('spf') # Santé Publique France database
 cf.map(which='tot_vacc',tile='esri') # Vaccinations, map view optional tile

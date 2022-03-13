@@ -65,7 +65,7 @@ from IPython.core.display import display, HTML
 
 width_height_default = [500, 380]
 
-MAXCOUNTRIESDISPLAYED = 27
+MAXCOUNTRIESDISPLAYED = 24
 class CocoDisplay:
     def __init__(self, db=None, geo = None):
         verb("Init of CocoDisplay() with db=" + str(db))
@@ -932,14 +932,15 @@ class CocoDisplay:
                     geopdwd = pd.merge(geopdwd, self.location_geometry, on='location')
 
                 kwargs['tile'] = tile
-                if self.iso3country in ['USA']:#['FRA','USA']
+                if self.iso3country in ['FRA','USA']:
                     geo = copy.deepcopy(self.geo)
                     d = geo._list_translation
                     if func.__name__ != 'pycoa_mapfolium':
                         if any(i in list(geopdwd.codelocation.unique()) for i in d.keys()) \
                         or any(True for i in d.keys() if ''.join(list(geopdwd.codelocation.unique())).find(i)!=-1):
-                            geo.set_dense_geometry()
-                            kwargs.pop('tile')
+                            if 'condensed' in maplabel:
+                                geo.set_dense_geometry()
+                                kwargs.pop('tile')
                         else:
                             geo.set_main_geometry()
                             d = {}

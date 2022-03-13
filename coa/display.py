@@ -929,8 +929,7 @@ class CocoDisplay:
                     geodic={loc:geom.loc[geom.location==loc]['geometry'].values[0] for loc in geopdwd.location.unique()}
                     geopdwd['geometry'] = geopdwd['location'].map(geodic)
                 else:
-                    geopdwd = pd.merge(geopdwd, self.location_geometry, on='location')
-
+                    geopdwd = pd.merge(geopdwd, self.location_geometry, on='location')  
                 kwargs['tile'] = tile
                 if self.iso3country in ['FRA','USA']:
                     geo = copy.deepcopy(self.geo)

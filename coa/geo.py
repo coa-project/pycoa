@@ -756,6 +756,7 @@ class GeoCountry():
         self._country_data_subregion=None
         self._municipality_region=None
         self._is_dense_geometry=False
+        self._is_exploded_geometry=False
         self._is_main_geometry=False
 
         url=self._country_info_dict[country]
@@ -1069,6 +1070,9 @@ class GeoCountry():
         if self.is_main_geometry():
             raise CoaError("You already set the main geometry. Cannot set the dense geometry now.")
 
+        if self.is_exploded_geometry():
+            raise CoaError("You already set the exploded geometry. Cannot set the dense geometry now.")
+
         if self.get_country() == 'FRA':
             #.drop(['id_geofla','code_reg','nom_reg','x_chf_lieu','y_chf_lieu','x_centroid','y_centroid','Code département','Nom du département','Population municipale'],axis=1,inplace=True) # removing some column without interest
             # moving artificially (if needed) outre-mer area to be near to metropole for map representations
@@ -1084,19 +1088,6 @@ class GeoCountry():
                 g = sa.translate(self._country_data.loc[index, 'geometry'], xoff=x, yoff=y)
                 tmp.append(g)
             self._country_data['geometry']=tmp
-            # Add Ile de France zoom
-            #idf_translation=(-6.5,-5)
-            #idf_scale=5
-            #idf_center=(-4,44)
-            #tmp = []
-            #for index, poi in self._country_data.iterrows():
-            #    g=self._country_data.loc[index, 'geometry']
-            #    if self._country_data.loc[index,'code_subregion'] in ['75','92','93','94']:
-            #        g2=sa.scale(sa.translate(g,xoff=idf_translation[0],yoff=idf_translation[1]),\
-            #                                xfact=idf_scale,yfact=idf_scale,origin=idf_center)
-            #        g=so.unary_union([g,g2])
-            #    tmp.append(g)
-            #self._country_data['geometry']=tmp
 
             # Remove COM with dense geometry true, too many islands to manage
             self._country_data=self._country_data[self._country_data.code_subregion!='980']
@@ -1123,7 +1114,46 @@ class GeoCountry():
         self._country_data_region = None
         self._country_data_subregion = None
         self._is_dense_geometry = True
+        self._is_main_geometry = False
 
+    def set_exploded_geometry(self):
+        """  If used, we're using for the current country a dense geometry forsubregions
+        and regions.
+        Moreover we're exploding internal dense geometry for some countries (currently IdF
+        for France, only).
+
+        It's not possible to go back.
+        """
+
+        if self.is_main_geometry():
+            raise CoaError("You already set the main geometry. Cannot set the exploded geometry now.")
+
+        if self.is_dense_geometry():
+            raise CoaError("You already set the dense geometry. Cannot set the exploded geometry now.")
+
+        if self.is_exploded_geometry():
+            return
+
+        self.set_dense_geometry()
+
+        if self.get_country() == 'FRA':
+            # Add Ile de France zoom
+            idf_translation=(-6.5,-5)
+            idf_scale=3
+            idf_center=(-1.5,43)
+            tmp = []
+            for index, poi in self._country_data.iterrows():
+                g=self._country_data.loc[index, 'geometry']
+                if self._country_data.loc[index,'code_subregion'] in ['75','91','92','93','94','95','77','78']:
+                    g2=sa.scale(sa.translate(g,xoff=idf_translation[0],yoff=idf_translation[1]),\
+                                            xfact=idf_scale,yfact=idf_scale,origin=idf_center)
+                    g=g2 # so.unary_union([g,g2]) # uncomment if you want a copy
+                tmp.append(g)
+            self._country_data['geometry']=tmp
+
+        self._is_dense_geometry = False
+        self._is_main_geometry = False
+        self._is_exploded_geometry = True
 
     def set_main_geometry(self):
         """  If used, we're using only for the current country the main
@@ -1133,8 +1163,8 @@ class GeoCountry():
         if self.is_main_geometry():
             return
 
-        if self.is_dense_geometry():
-            raise CoaError("You already set the dense geometry. Cannot set the main geometry now.")
+        if self.is_dense_geometry() or self.is_exploded_geometry():
+            raise CoaError("You already set the dense or exploded geometry. Cannot set the main geometry now.")
 
         if self.get_country()=='FRA':
             self._country_data = self._country_data[~self._country_data['code_subregion'].isin(self._list_translation.keys())]
@@ -1153,6 +1183,11 @@ class GeoCountry():
         """Return the self._is_dense_geometry variable
         """
         return self._is_dense_geometry
+
+    def is_exploded_geometry(self):
+        """Return the self._is_exploded_geometry variable
+        """
+        return self._is_exploded_geometry
 
     def is_main_geometry(self):
         """Return the self._is_main_geometry variable

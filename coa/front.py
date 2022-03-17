@@ -640,7 +640,7 @@ def decomap(func):
                        = spark, sparkline are displayed directly on the map
                        = spiral, spiral are displayed directly on the map
                        = label%, label are in %
-                       = condensed, when available condensed map geometry (for USA & FRA sor far)
+                       = exploded/dense, when available exploded/dense map geometry (for USA & FRA sor far)
         """
         visu = kwargs.get('visu', listvisu()[0])
         input = kwargs.get('input')
@@ -654,7 +654,7 @@ def decomap(func):
 
         dateslider = kwargs.get('dateslider', None)
         maplabel = kwargs.get('maplabel', None)
-        listmaplabel=['text','spark','spiral','label%','log','unsorted','condensed']
+        listmaplabel=['text','spark','spiral','label%','log','unsorted','exploded','dense']
         if maplabel is not None:
             if not isinstance(maplabel,list):
                 maplabel = [maplabel]
@@ -700,7 +700,7 @@ def map(input,input_field,**kwargs):
         if maplabel:
             if 'spark' in maplabel or 'spiral' in maplabel:
                 fig = _cocoplot.pycoa_pimpmap(input,input_field,**kwargs)
-            elif 'text' or 'condensed' in maplabel:
+            elif 'text' or 'exploded' or 'dense' in maplabel:
                 fig = _cocoplot.pycoa_map(input,input_field,**kwargs)
             else:
                 CoaError("What kind of pimp map you want ?!")

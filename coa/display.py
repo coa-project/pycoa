@@ -1747,9 +1747,7 @@ class CocoDisplay:
                 #print(geopdwd_filtered.loc[geopdwd_filtered.clustername=='Île-de-France'].reset_index(drop=True).explode(index_parts=False))
                 centrosx = sumgeo['geometry'].centroid.x
                 centrosy = sumgeo['geometry'].centroid.y
-                cases = sumgeo['cases']
-                if not all(i == 1 for i in sumgeo['nb']):
-                    cases = sumgeo['cases']/sumgeo['nb']
+                cases = sumgeo['cases']/sumgeo['nb']
                 dfLabel=pd.DataFrame({'clustername':sumgeo.clustername,'centroidx':centrosx,'centroidy':centrosy,'cases':cases,'geometry':sumgeo['geometry']})
 
                 if 'spark' in maplabel:
@@ -1944,7 +1942,9 @@ class CocoDisplay:
                             fill_color = {'field': 'cases', 'transform': color_mapper},
                             line_color = 'black', line_width = 0.25, fill_alpha = 1)
 
-        if 'text' in maplabel :
+        if 'text' in maplabel or 'textinteger':
+            if 'textinteger' in maplabel:
+                sourcemaplabel.data['cases'] = sourcemaplabel.data['cases'].astype(float).astype(int).astype(str)
             labels = LabelSet(
                 x = 'centroidx',
                 y = 'centroidy',

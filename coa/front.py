@@ -654,7 +654,7 @@ def decomap(func):
 
         dateslider = kwargs.get('dateslider', None)
         maplabel = kwargs.get('maplabel', None)
-        listmaplabel=['text','spark','spiral','label%','log','unsorted','exploded','dense']
+        listmaplabel=['text','textinteger','spark','spiral','label%','log','unsorted','exploded','dense']
         if maplabel is not None:
             if not isinstance(maplabel,list):
                 maplabel = [maplabel]
@@ -668,8 +668,10 @@ def decomap(func):
             kwargs['maplabel'] = []
             if 'text' in maplabel:
                 kwargs['maplabel'] = ['text']
+            if 'textinteger' in maplabel:
+                kwargs['maplabel'] = ['textinteger']
             for i in listmaplabel:
-                if i in maplabel and i!='text':
+                if i in maplabel and i not in ['text','textinteger']:
                     kwargs['maplabel'].append(i)
             #if all([ True if i in ['text','spark','label%','log'] else False for i in kwargs['maplabel'] ]) :
             #    CoaKeyError('Waiting for a valide label visualisation: text, spark or label%')

@@ -1942,7 +1942,7 @@ class CocoDisplay:
                             fill_color = {'field': 'cases', 'transform': color_mapper},
                             line_color = 'black', line_width = 0.25, fill_alpha = 1)
 
-        if 'text' in maplabel or 'textinteger':
+        if 'text' in maplabel or 'textinteger' in maplabel:
             if 'textinteger' in maplabel:
                 sourcemaplabel.data['cases'] = sourcemaplabel.data['cases'].astype(float).astype(int).astype(str)
             labels = LabelSet(

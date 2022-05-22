@@ -929,7 +929,7 @@ class CocoDisplay:
                     geodic={loc:geom.loc[geom.location==loc]['geometry'].values[0] for loc in geopdwd.location.unique()}
                     geopdwd['geometry'] = geopdwd['location'].map(geodic)
                 else:
-                    geopdwd = pd.merge(geopdwd, self.location_geometry, on='location')  
+                    geopdwd = pd.merge(geopdwd, self.location_geometry, on='location')
                 kwargs['tile'] = tile
                 if self.iso3country in ['FRA','USA']:
                     geo = copy.deepcopy(self.geo)
@@ -937,9 +937,14 @@ class CocoDisplay:
                     if func.__name__ != 'pycoa_mapfolium':
                         if any(i in list(geopdwd.codelocation.unique()) for i in d.keys()) \
                         or any(True for i in d.keys() if ''.join(list(geopdwd.codelocation.unique())).find(i)!=-1):
-                            if 'condensed' in maplabel:
+                            if 'dense' in maplabel:
                                 geo.set_dense_geometry()
                                 kwargs.pop('tile')
+                            elif 'exploded' in maplabel:
+                                geo.set_exploded_geometry()
+                                kwargs.pop('tile')
+                            else:
+                                print('don\'t know ')
                         else:
                             geo.set_main_geometry()
                             d = {}
@@ -1937,7 +1942,9 @@ class CocoDisplay:
                             fill_color = {'field': 'cases', 'transform': color_mapper},
                             line_color = 'black', line_width = 0.25, fill_alpha = 1)
 
-        if 'text' in maplabel :
+        if 'text' in maplabel or 'textinteger' in maplabel:
+            if 'textinteger' in maplabel:
+                sourcemaplabel.data['cases'] = sourcemaplabel.data['cases'].astype(float).astype(int).astype(str)
             labels = LabelSet(
                 x = 'centroidx',
                 y = 'centroidy',

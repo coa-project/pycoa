@@ -309,10 +309,11 @@ class DataBase(object):
                     # reading csv file now
                     mpoxgh = self.csv2pandas("https://raw.githubusercontent.com/globaldothealth/monkeypox/main/archives/"+filename[0],
                         separator=',',rename_columns=rename_dict)
-                    mpoxgh["tot_confirmed"]=1
-                    mpoxgh=mpoxgh.groupby(['location','date']).sum()[["tot_confirmed"]].reset_index()
+                    mpoxgh["confirmed"]=1
+                    mpoxgh=mpoxgh.groupby(['location','date']).sum()[["confirmed"]].reset_index()
 
-                    display(mpoxgh)
+                    mpoxgh["tot_confirmed"]=mpoxgh.groupby(['location']).cumsum()
+
                     self.return_structured_pandas(mpoxgh,columns_keeped = ['tot_confirmed'])
 
                 elif self.db == 'spf' or self.db == 'spfnational':

@@ -392,6 +392,16 @@ def generic_info(namedb, keys):
             mi[k].append("https://www.data.gov.cy/sites/default/files/CY%20Covid19%20Open%20Data%20-%20Extended%20-%20new_247.csv")
             mi[k].append("https://www.data.gov.cy/node/4617?language=en")
         mydico = mi
+    elif namedb == 'mpoxgh':
+        url='https://github.com/globaldothealth/monkeypox/raw/main/archives/2022-05-20.csv'
+        mpoxgh = {
+            'tot_confirmed': ['total confirmed cases (from Status = confirmed)'],\
+            }
+        for k,v in mpoxgh.items():
+            mpoxgh[k].append(url)
+            mpoxgh[k].append('https://github.com/globaldothealth/monkeypox')
+        mydico = risk
+
     else:
         raise CoaKeyError('Error in the database selected, please check !')
     if keys not in mydico:

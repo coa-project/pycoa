@@ -68,6 +68,7 @@ _db_list_dict = {'jhu': ['WW','nation','World'],
     'govcy':['CYP','nation','Cyprus'],
     'insee':['FRA','subregion','France'],
     'europa':['EUR','subregion','Europe'],
+    'mpoxgh':['WW','nation','World'],
     #'minciencia':['CHL','subregion','Chile']
     }
 

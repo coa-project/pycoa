@@ -286,6 +286,11 @@ class DataBase(object):
                     columns_keeped = list(rename_dict.values())
                     columns_keeped.remove('location') # is already expected
                     self.return_structured_pandas(ctusa, columns_keeped = columns_keeped)
+                elif self.db == 'mpoxgh' :
+                    info('MonkeyPoxGlobalHealth selected...')
+                    mpoxgh = self.csv2pandas("https://raw.githubusercontent.com/globaldothealth/monkeypox/main/archives/2022-05-20.csv")
+                    display(mpoxgh)
+                    self.return_structured_pandas(mpoxgh)
                 elif self.db == 'spf' or self.db == 'spfnational':
                     if self.db == 'spfnational':
                         rename_dict = {

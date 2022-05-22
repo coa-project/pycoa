@@ -288,9 +288,14 @@ class DataBase(object):
                     self.return_structured_pandas(ctusa, columns_keeped = columns_keeped)
                 elif self.db == 'mpoxgh' :
                     info('MonkeyPoxGlobalHealth selected...')
-                    mpoxgh = self.csv2pandas("https://raw.githubusercontent.com/globaldothealth/monkeypox/main/archives/2022-05-20.csv")
+                    rename_dict = {'Date_confirmation':'date','Country ':'location'}
+                    mpoxgh = self.csv2pandas("https://raw.githubusercontent.com/globaldothealth/monkeypox/main/archives/2022-05-20.csv",
+                        separator=',',rename_columns=rename_dict)
+                    mpoxgh["tot_confirmed"]=1
+                    mpoxgh=mpoxgh.groupby(['location','date']).sum()[["tot_confirmed"]].reset_index()
                     display(mpoxgh)
-                    self.return_structured_pandas(mpoxgh)
+                    self.return_structured_pandas(mpoxgh,columns_keeped = ['tot_confirmed'])
+
                 elif self.db == 'spf' or self.db == 'spfnational':
                     if self.db == 'spfnational':
                         rename_dict = {

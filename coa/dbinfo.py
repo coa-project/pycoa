@@ -400,7 +400,7 @@ def generic_info(namedb, keys):
         for k,v in mpoxgh.items():
             mpoxgh[k].append(url)
             mpoxgh[k].append('https://github.com/globaldothealth/monkeypox')
-        mydico = risk
+        mydico = mpoxgh
 
     else:
         raise CoaKeyError('Error in the database selected, please check !')

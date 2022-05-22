@@ -34,6 +34,7 @@ import random
 from functools import reduce
 import collections
 from bs4 import BeautifulSoup
+import re
 import json
 import requests
 import datetime
@@ -288,11 +289,29 @@ class DataBase(object):
                     self.return_structured_pandas(ctusa, columns_keeped = columns_keeped)
                 elif self.db == 'mpoxgh' :
                     info('MonkeyPoxGlobalHealth selected...')
+
+                    # Finding the correct csv filename in the github rep
+                    github_url = 'https://github.com/globaldothealth/monkeypox/tree/main/archives'
+                    result = requests.get(github_url)
+                    soup = BeautifulSoup(result.text, 'html.parser')
+                    csvfiles = soup.find_all(title=re.compile("\.csv$"))
+                    filename = [ ]
+
+                    for i in csvfiles:
+                        filename.append(i.extract().get_text())
+                    if len(filename) > 1:
+                        raise CoaDbError("Too many csv files in the repository. Does not know which one to parse. Contact support@pycoa.fr please.")
+                    if len(filename) < 1:
+                        raise CoaDbError("No csv file in the repository. Contact support@pycoa.fr please.")
+
                     rename_dict = {'Date_confirmation':'date','Country ':'location'}
-                    mpoxgh = self.csv2pandas("https://raw.githubusercontent.com/globaldothealth/monkeypox/main/archives/2022-05-20.csv",
+
+                    # reading csv file now
+                    mpoxgh = self.csv2pandas("https://raw.githubusercontent.com/globaldothealth/monkeypox/main/archives/"+filename[0],
                         separator=',',rename_columns=rename_dict)
                     mpoxgh["tot_confirmed"]=1
                     mpoxgh=mpoxgh.groupby(['location','date']).sum()[["tot_confirmed"]].reset_index()
+
                     display(mpoxgh)
                     self.return_structured_pandas(mpoxgh,columns_keeped = ['tot_confirmed'])
 

@@ -299,16 +299,13 @@ class DataBase(object):
 
                     for i in csvfiles:
                         filename.append(i.extract().get_text())
-                    #if len(filename) > 1:
-                    #    raise CoaDbError("Too many csv files in the repository. Does not know which one to parse. Contact support@pycoa.fr please.")
-                    #if len(filename) < 1:
-                    #    raise CoaDbError("No csv file in the repository. Contact support@pycoa.fr please.")
+                    if len(filename) < 1:
+                        raise CoaDbError("No csv file in the repository. Contact support@pycoa.fr please.")
 
                     rename_dict = {'Date_confirmation':'date','Country ':'location'}
 
-                    # reading csv file now
-                    #"https://raw.githubusercontent.com/globaldothealth/monkeypox/main/archives/"+filename[0],
-                    mpoxgh = self.csv2pandas("https://github.com/globaldothealth/monkeypox/raw/main/archives/2022-05-23T01:00:53Z.csv",
+                    # reading csv file now, using the last one in the list
+                    mpoxgh = self.csv2pandas("https://raw.githubusercontent.com/globaldothealth/monkeypox/main/archives/"+filename[-1],
                         separator=',',rename_columns=rename_dict)
                     mpoxgh["confirmed"]=1
                     mpoxgh=mpoxgh.groupby(['location','date']).sum()[["confirmed"]].reset_index()

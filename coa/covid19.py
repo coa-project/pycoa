@@ -302,7 +302,7 @@ class DataBase(object):
                     if len(filename) < 1:
                         raise CoaDbError("No csv file in the repository. Contact support@pycoa.fr please.")
 
-                    rename_dict = {'Date_confirmation':'date','Country ':'location'}
+                    rename_dict = {'Date_confirmation':'date','Country':'location'}
 
                     # reading csv file now, using the last one in the list
                     mpoxgh = self.csv2pandas("https://raw.githubusercontent.com/globaldothealth/monkeypox/main/archives/"+filename[-1],

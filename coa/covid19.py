@@ -1060,8 +1060,13 @@ class DataBase(object):
             if self.db == 'govcy':
                 db=None
             codename = collections.OrderedDict(zip(uniqloc,self.geo.to_standard(uniqloc,output='list',db=db,interpret_region=True)))
-            self.slocation = list(codename.values())
             location_is_code = True
+            self.slocation = list(codename.values())
+            if self.db == 'mpoxgh':
+                self.geo = coge.GeoManager('iso3')
+                codename = collections.OrderedDict(zip(uniqloc,self.geo.to_standard(uniqloc,output='list',db=db,interpret_region=True)))
+                location_is_code = False
+                self.slocation = list(codename.keys())
         else:
             if self.database_type[self.db][1] == 'region' :
                 if self.db == 'covid19india':
@@ -1074,7 +1079,6 @@ class DataBase(object):
                 if self.db == 'obepine':
                     codename = {v:k for k,v in codename.items()}
                     location_is_code = True
-
             elif self.database_type[self.db][1] == 'subregion':
                 temp = self.geo_all[['code_subregion','name_subregion']]
                 codename=dict(temp.loc[temp.code_subregion.isin(uniqloc)].values)

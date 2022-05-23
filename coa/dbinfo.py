@@ -90,16 +90,16 @@ def generic_info(namedb, keys):
         ['Prc_susp_IND: % de tests avec une détection de variant mais non identifiable',url6,urlmaster6],
         'cur_idx_Prc_susp_ABS' :
         ['Prc_susp_ABS: % de tests avec une absence de détection de variant',url6,urlmaster6],
-        'cur_idx_ti':
-        ['ti : taux d\'incidence hebdomadaire rapporté à la population pour 100 000 habitants , par semaine calendaire (en milieu scolaire)',url7,urlmaster7],
-        'cur_idx_tp':
-        ['tp :Le taux de positivité hebdomadaire rapporté 100 tests réalisés, par semaine calendaire (en milieu scolaire)',url7,urlmaster7],
+        #'cur_idx_ti':
+        #['ti : taux d\'incidence hebdomadaire rapporté à la population pour 100 000 habitants , par semaine calendaire (en milieu scolaire)',url7,urlmaster7],
+        #'cur_idx_tp':
+        #['tp :Le taux de positivité hebdomadaire rapporté 100 tests réalisés, par semaine calendaire (en milieu scolaire)',url7,urlmaster7],
         'nb_crib' : ['Nombre de tests criblés',url8,urlmaster8],
         'nb_pos' : ['Nombre de tests positifs',url8,urlmaster8],
-        'tx_crib' : ['Taux tests criblés',url8,urlmaster8],
-        'cur_idx_tx_A1':['FILL IT',url8,urlmaster8],
-        'cur_idx_tx_B1':['FILL IT',url8,urlmaster8],
-        'cur_idx_tx_C1':['FILL IT',url8,urlmaster8],
+        #'tx_crib' : ['Taux tests criblés',url8,urlmaster8],
+        #'cur_idx_tx_A1':['FILL IT',url8,urlmaster8],
+        #'cur_idx_tx_B1':['FILL IT',url8,urlmaster8],
+        #'cur_idx_tx_C1':['FILL IT',url8,urlmaster8],
         'cur_nb_A0' : ['Nombre des tests positifs pour lesquels la recherche de mutation A est négatif (A = E484K)',url8,urlmaster8],
         'cur_nb_A1' : ['Nombre des tests positifs pour lesquels la recherche de mutation A est positif (A = E484K)',url8,urlmaster8],
         'tx_A1' : ['Taux de présence mutation A (A = E484K)',url8,urlmaster8],

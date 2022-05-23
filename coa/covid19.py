@@ -358,7 +358,7 @@ class DataBase(object):
                         # T       Number of tests performed daily → integrated later
                         # P       Number of positive tests daily → integrated later
                         constraints = {'cl_age90': 0}
-                        spf3 = self.csv2pandas("https://www.data.gouv.fr/fr/datasets/r/406c6a23-e283-4300-9484-54e78c8ae675",
+                        spf3 = self.csv2pandas("https://www.data.gouv.fr/fr/datasets/r/ca490480-09a3-470f-8556-76d6fd291325",
                                       rename_columns = rename, constraints = constraints, cast = cast)
                         # https://www.data.gouv.fr/fr/datasets/donnees-relatives-aux-personnes-vaccinees-contre-la-covid-19-1
                         # Les données issues du système d’information Vaccin Covid permettent de dénombrer en temps quasi réel
@@ -406,9 +406,9 @@ class DataBase(object):
                         spf6 =  self.csv2pandas("https://www.data.gouv.fr/fr/datasets/r/16f4fd03-797f-4616-bca9-78ff212d06e8",
                                      constraints = constraints,rename_columns = rename, separator=';', cast=cast)
 
-                        constraints = {'age_18ans': 0}
-                        spf7 =  self.csv2pandas("https://www.data.gouv.fr/fr/datasets/r/c0f59f00-3ab2-4f31-8a05-d317b43e9055",
-                                    constraints = constraints, rename_columns = rename, separator=';', cast=cast)
+                        #constraints = {'age_18ans': 0}
+                        #spf7 =  self.csv2pandas("https://www.data.gouv.fr/fr/datasets/r/c0f59f00-3ab2-4f31-8a05-d317b43e9055",
+                        #            constraints = constraints, rename_columns = rename, separator=';', cast=cast)
                         #Mutation d'intérêt :
                         #A = E484K
                         #B = E484Q
@@ -420,7 +420,7 @@ class DataBase(object):
                         spf9 = self.csv2pandas("https://www.data.gouv.fr/en/datasets/r/eceb9fb4-3ebc-4da3-828d-f5939712600a",
                         rename_columns = rename, separator=';',cast=cast)
 
-                        list_spf=[spf1, spf2, spf3, spf4, spf5, spf6, spf7,spf8,spf9]
+                        list_spf=[spf1, spf2, spf3, spf4, spf5, spf6, spf8,spf9] #spf7
 
                         #for i in list_spf:
                         #    i['date'] = pd.to_datetime(i['date']).apply(lambda x: x if not pd.isnull(x) else '')
@@ -476,12 +476,12 @@ class DataBase(object):
                             'Prc_susp_501Y_V2_3':'cur_idx_Prc_susp_501Y_V2_3',
                             'Prc_susp_IND':'cur_idx_Prc_susp_IND',
                             'Prc_susp_ABS':'cur_idx_Prc_susp_ABS',
-                            'ti':'cur_idx_ti',
-                            'tp':'cur_idx_tp',
-                            'tx_crib' : 'cur_taux_crib',
-                            'tx_A1':'cur_idx_tx_A1',
-                            'tx_B1':'cur_idx_tx_B1',
-                            'tx_C1':'cur_idx_tx_C1',
+                            #'ti':'cur_idx_ti',
+                            #'tp':'cur_idx_tp',
+                            #'tx_crib' : 'cur_taux_crib',
+                            #'tx_A1':'cur_idx_tx_A1',
+                            #'tx_B1':'cur_idx_tx_B1',
+                            #'tx_C1':'cur_idx_tx_C1',
                             'nbre_pass_corona':'cur_nbre_pass_corona',
                             }
                         spf8keeped = ['nb_A0','nb_A1', 'nb_B0', 'nb_B1', 'nb_C0', 'nb_C1']

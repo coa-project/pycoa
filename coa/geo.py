@@ -297,6 +297,10 @@ class GeoManager():
                     "Faeroe Islands":"FRO",\
                     "Vatican":"VAT"
                 })
+        elif db=='mpoxgh':
+            translation_dict.update({\
+                    "England":"GBR",\
+                })
         return [translation_dict.get(k,k) for k in w]
 
 # ---------------------------------------------------------------------

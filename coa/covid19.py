@@ -1059,14 +1059,15 @@ class DataBase(object):
             db=self.get_db()
             if self.db == 'govcy':
                 db=None
+            if self.db == 'mpoxgh':
+                self.geo = coge.GeoManager('iso3')
+                codename=collections.OrderedDict(zip(uniqloc,self.geo.to_standard(uniqloc,output='list',db=db,interpret_region=True)))
+                mypandas['location'] = mypandas['location'].map(codename)
+                uniqloc = list(mypandas['location'].unique())
+                self.geo = coge.GeoManager('name')
             codename = collections.OrderedDict(zip(uniqloc,self.geo.to_standard(uniqloc,output='list',db=db,interpret_region=True)))
             location_is_code = True
             self.slocation = list(codename.values())
-            if self.db == 'mpoxgh':
-                self.geo = coge.GeoManager('iso3')
-                codename = collections.OrderedDict(zip(uniqloc,self.geo.to_standard(uniqloc,output='list',db=db,interpret_region=True)))
-                location_is_code = False
-                self.slocation = list(codename.keys())
         else:
             if self.database_type[self.db][1] == 'region' :
                 if self.db == 'covid19india':
@@ -1106,7 +1107,6 @@ class DataBase(object):
             location_is_code=False
 
         mypandas = fill_missing_dates(mypandas)
-
         if location_is_code:
             if self.db != 'dgs':
                 mypandas['codelocation'] =  mypandas['location'].astype(str)

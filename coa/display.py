@@ -1484,7 +1484,14 @@ class CocoDisplay:
 
         df['text_size'] = '8pt'
         df['textdisplayed'] = df['permanentdisplay'].str.pad(36, side = "left")
-        locale.setlocale(locale.LC_ALL, 'en_US.utf8') #en_US
+        try:
+            locale.setlocale(locale.LC_ALL, 'en_US.utf8')
+        except Error:
+            try:
+                locale.setlocale(locale.LC_ALL, 'en_US')
+            except Error:
+                raise CoaError("Locale setting problem. Please contact support@pycoa.fr")
+
         df['textdisplayed2'] = [ locale.format("%d", i, grouping=True)\
                 for i in df[column_name]]
         #df['textdisplayed2'] = df[column_name].astype(str) #[i.str for i in df[column_name]]

@@ -1063,7 +1063,6 @@ class DataBase(object):
                 self.geo = coge.GeoManager('iso3')
                 codename=collections.OrderedDict(zip(uniqloc,self.geo.to_standard(uniqloc,output='list',db=db,interpret_region=True)))
                 mypandas['location'] = mypandas['location'].map(codename)
-                mypandas=mypandas.groupby(['location','date']).sum(min_count=1).reset_index()
                 uniqloc = list(mypandas['location'].unique())
                 self.geo = coge.GeoManager('name')
             codename = collections.OrderedDict(zip(uniqloc,self.geo.to_standard(uniqloc,output='list',db=db,interpret_region=True)))

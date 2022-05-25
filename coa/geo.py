@@ -300,6 +300,7 @@ class GeoManager():
         elif db=='mpoxgh':
             translation_dict.update({\
                     "England":"GBR",\
+                    "Scotland":"GBR",\
                 })
         return [translation_dict.get(k,k) for k in w]
 

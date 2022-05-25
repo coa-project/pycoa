@@ -307,6 +307,7 @@ class DataBase(object):
                     # reading csv file now, using the last one in the list
                     mpoxgh = self.csv2pandas("https://raw.githubusercontent.com/globaldothealth/monkeypox/main/archives/"+filename[-1],
                         separator=',',rename_columns=rename_dict)
+                    mpoxgh=mpoxgh.fillna(method='ffill')
                     mpoxgh["confirmed"]=1
                     mpoxgh=mpoxgh.groupby(['location','date']).sum()[["confirmed"]].reset_index()
 

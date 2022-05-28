@@ -363,6 +363,8 @@ class DataBase(object):
                         constraints = {'cl_age90': 0}
                         spf3 = self.csv2pandas("https://www.data.gouv.fr/fr/datasets/r/ca490480-09a3-470f-8556-76d6fd291325",
                                       rename_columns = rename, constraints = constraints, cast = cast)
+                        #spf3 = spf3.stack().str.replace(',','.').unstack()
+                        spf3[['T','P']] = spf3[['T','P']].stack().str.replace(',','.').unstack()
                         # https://www.data.gouv.fr/fr/datasets/donnees-relatives-aux-personnes-vaccinees-contre-la-covid-19-1
                         # Les données issues du système d’information Vaccin Covid permettent de dénombrer en temps quasi réel
                         # (J-1), le nombre de personnes ayant reçu une injection de vaccin anti-covid en tenant compte du nombre
@@ -448,7 +450,6 @@ class DataBase(object):
                                 #result['offset_'+w] = 0
                             if w != 'n_cum':
                                 result['tot_'+w]=result.groupby(['location'])[w].cumsum()#+result['offset_'+w]
-
                         def dontneeeded():
                             for col in result.columns:
                                 if col.startswith('Prc'):
@@ -979,6 +980,7 @@ class DataBase(object):
             pandas_db['semaine'] = [ week_to_date(i) for i in pandas_db['semaine']]
             #pandas_db = pandas_db.drop_duplicates(subset=['semaine'])
             pandas_db = pandas_db.rename(columns={'semaine':'date'})
+
         pandas_db['date'] = pandas.to_datetime(pandas_db['date'],errors='coerce').dt.date
         #self.dates  = pandas_db['date']
         if self.database_type[self.db][1] == 'nation' and  self.database_type[self.db][0] in ['FRA','CYP']:

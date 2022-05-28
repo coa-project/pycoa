@@ -1155,6 +1155,8 @@ class CocoDisplay:
                     geopdwd_filter['right'] = geopdwd_filter['right'].apply(lambda x: 100.*x)
                     geopdwd_filter['horihistotextx'] = geopdwd_filter['right']
                     geopdwd_filter['horihistotext'] = [str(round(i))+'%' for i in geopdwd_filter['right']]
+                if maplabel and 'textinteger' in maplabel:
+                    geopdwd_filter['horihistotext'] = geopdwd_filter['right'].astype(float).astype(int).astype(str)
                 else:
                     geopdwd_filter['horihistotext'] = [ '{:.3g}'.format(float(i)) if float(i)>1.e4 else round(float(i),2) for i in geopdwd_filter['right'] ]
                     geopdwd_filter['horihistotext'] = [str(i) for i in geopdwd_filter['horihistotext']]
@@ -1195,6 +1197,7 @@ class CocoDisplay:
                                 standardfig.x_range = Range1d(0.01, 50 * max_value*100)
                             else:
                                 standardfig.x_range = Range1d(0.01, 50 * max_value)
+
                             srcfiltered.data['left'] = [0.01] * len(srcfiltered.data['right'])
 
                 if func.__name__ == 'pycoa_pie':

@@ -308,7 +308,7 @@ class DataBase(object):
                     mpoxgh = self.csv2pandas("https://raw.githubusercontent.com/globaldothealth/monkeypox/main/archives/"+filename[-1],
                         separator=',',rename_columns=rename_dict)
                     mpoxgh=mpoxgh[mpoxgh.Status=='confirmed']
-                    mpoxgh.loc[mpoxgh.location=='Scotland',"location"]='England' # Sorry for scotish people, that's an issue if not
+                    mpoxgh.loc[mpoxgh.location.isin(['Scotland','Wales','Northern Ireland']),"location"]='England' # Sorry for people outside England but inside UK, that's an issue if not
                     mpoxgh=mpoxgh.fillna(method='ffill') # for confirmation dates, assuming it's almost ordered
                     mpoxgh["confirmed"]=1
                     mpoxgh=mpoxgh.groupby(['location','date']).sum()[["confirmed"]].reset_index()

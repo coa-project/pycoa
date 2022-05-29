@@ -1868,7 +1868,7 @@ class CocoDisplay:
             color_mapper = LogColorMapper(palette=invViridis256, low=min_col_non0, high=max_col, nan_color='#ffffff')
         else:
             color_mapper = LinearColorMapper(palette=invViridis256, low=min_col, high=max_col, nan_color='#ffffff')
-            color_bar = ColorBar(color_mapper=color_mapper, label_standoff=4, width=standardfig.plot_width, bar_line_cap='round',
+        color_bar = ColorBar(color_mapper=color_mapper, label_standoff=4, width=standardfig.plot_width, bar_line_cap='round',
                              border_line_color=None, location=(0, 0), orientation='horizontal', ticker=BasicTicker())
         color_bar.formatter = BasicTickFormatter(use_scientific=True, precision=1, power_limit_low=int(max_col))
 

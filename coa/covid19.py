@@ -290,25 +290,11 @@ class DataBase(object):
                 elif self.db == 'mpoxgh' :
                     info('MonkeyPoxGlobalHealth selected...')
 
-                    # Finding the correct csv filename in the github rep
-                    github_url = 'https://github.com/globaldothealth/monkeypox/tree/main/archives'
-                    result = requests.get(github_url)
-                    soup = BeautifulSoup(result.text, 'html.parser')
-                    csvfiles = soup.find_all(title=re.compile("\.csv$"))
-                    filename = [ ]
-
-                    for i in csvfiles:
-                        filename.append(i.extract().get_text())
-                    if len(filename) < 1:
-                        raise CoaDbError("No csv file in the repository. Contact support@pycoa.fr please.")
-
-                    rename_dict = {'Date_confirmation':'date','Country':'location'}
-
-                    # reading csv file now, using the last one in the list
-                    mpoxgh = self.csv2pandas("https://raw.githubusercontent.com/globaldothealth/monkeypox/main/archives/"+filename[-1],
+                    rename_dict = {'Date_confirmation':'date','Country_ISO3':'location'}
+                    mpoxgh = self.csv2pandas("https://raw.githubusercontent.com/globaldothealth/monkeypox/main/latest.csv",
                         separator=',',rename_columns=rename_dict)
                     mpoxgh=mpoxgh[mpoxgh.Status=='confirmed']
-                    mpoxgh.loc[mpoxgh.location.isin(['Scotland','Wales','Northern Ireland']),"location"]='England' # Sorry for people outside England but inside UK, that's an issue if not
+                    #mpoxgh.loc[mpoxgh.location.isin(['Scotland','Wales','Northern Ireland']),"location"]='England' # Sorry for people outside England but inside UK, that's an issue if not
                     mpoxgh=mpoxgh.fillna(method='ffill') # for confirmation dates, assuming it's almost ordered
                     mpoxgh["confirmed"]=1
                     mpoxgh=mpoxgh.groupby(['location','date']).sum()[["confirmed"]].reset_index()

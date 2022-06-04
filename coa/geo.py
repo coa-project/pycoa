@@ -506,6 +506,7 @@ class GeoInfo():
 
                     # About some countries not properly managed by this database (south and north soudan)
                     self._data_geometry=self._data_geometry.append({'id_tmp':'SSD','geometry':None},ignore_index=True) # adding the SSD row
+                    #self._data_geometry=pd.concat([self._data_geometry,pd.DataFrame({'id_tmp':'SSD','geometry':None})])
                     for newc in ['SSD','SDN']:
                         newgeo=gpd.read_file(get_local_from_url('https://github.com/johan/world.geo.json/raw/master/countries/'+newc+'.geo.json'))
                         poly=newgeo[newgeo.id==newc].geometry.values[0]

@@ -342,7 +342,12 @@ def normbypop(pandy, val2norm,bypop):
         if df.empty:
             df = pandyi
         else:
+<<<<<<< HEAD
             df = pd.concat([df,pandyi])
+=======
+            df = df.append(pandyi)
+            #df = pd.concat([df,pandyi])
+>>>>>>> 8cccd2655677d0001f6dd579b9b44c7978a02d48
     df = df.drop_duplicates(['date','clustername'])
     pandy = df
 

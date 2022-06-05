@@ -885,10 +885,12 @@ class CocoDisplay:
         """
         @wraps(func)
         def inner_hm(self, input = None, input_field = None, **kwargs):
+
             tile = kwargs.get('tile', self.dvisu_default['tile'])
 
             maplabel = kwargs.get('maplabel', None)
-            if not isinstance(maplabel,list):
+            if maplabel :
+                if not isinstance(maplabel,list):
                     maplabel=[maplabel]
             #if maplabel:
             #    maplabel = maplabel
@@ -937,14 +939,15 @@ class CocoDisplay:
                     if func.__name__ != 'pycoa_mapfolium':
                         if any(i in list(geopdwd.codelocation.unique()) for i in d.keys()) \
                         or any(True for i in d.keys() if ''.join(list(geopdwd.codelocation.unique())).find(i)!=-1):
-                            if 'dense' in maplabel:
-                                geo.set_dense_geometry()
-                                kwargs.pop('tile')
-                            elif 'exploded' in maplabel:
-                                geo.set_exploded_geometry()
-                                kwargs.pop('tile')
-                            else:
-                                print('don\'t know ')
+                            if maplabel:
+                                if 'dense' in maplabel:
+                                    geo.set_dense_geometry()
+                                    kwargs.pop('tile')
+                                elif 'exploded' in maplabel:
+                                    geo.set_exploded_geometry()
+                                    kwargs.pop('tile')
+                                else:
+                                    print('don\'t know ')
                         else:
                             geo.set_main_geometry()
                             d = {}
@@ -1409,6 +1412,7 @@ class CocoDisplay:
                         point_policy="snap_to_data"))  # ,PanTool())
                 panel = Panel(child = standardfig, title = axis_type)
                 panels.append(panel)
+
             return func(self, srcfiltered, panels, date_slider)
         return inner_decohistopie
 
@@ -1618,7 +1622,7 @@ class CocoDisplay:
         min_col_non0 = (np.nanmin(geopdwd_filtered.loc[geopdwd_filtered['cases']>0.]['cases']))
 
         invViridis256 = Viridis256[::-1]
-        if 'log' in maplabel:
+        if maplabel and 'log' in maplabel:
             geopdwd_filtered['cases'] = geopdwd_filtered.loc[geopdwd_filtered['cases']>0]['cases']
             color_mapper = LinearColorMapper(palette=invViridis256, low=min_col_non0, high=max_col, nan_color='#d9d9d9')
             colormap =  branca.colormap.LinearColormap(color_mapper.palette).to_step(data=list(geopdwd_filtered['cases']),n=10,method='log')
@@ -1651,7 +1655,7 @@ class CocoDisplay:
         if np.nanmin(geopdwd_filtered[input_field]) == np.nanmax(geopdwd_filtered[input_field]):
             map_dict['FakeCountry'] = 0.
 
-        if 'log' in maplabel:
+        if maplabel and 'log' in maplabel:
             color_scale =  branca.colormap.LinearColormap(color_mapper.palette).to_step(data=list(geopdwd_filtered['cases']),n=10,method='log')
         else:
             color_scale = LinearColormap(color_mapper.palette, vmin=min(map_dict.values()), vmax=max(map_dict.values()))
@@ -1760,22 +1764,23 @@ class CocoDisplay:
                 cases = sumgeo['cases']/sumgeo['nb']
                 dfLabel=pd.DataFrame({'clustername':sumgeo.clustername,'centroidx':centrosx,'centroidy':centrosy,'cases':cases,'geometry':sumgeo['geometry']})
 
-                if 'spark' in maplabel:
-                    sparkos = {i: CocoDisplay.sparkline(geopdwd.loc[ (geopdwd.clustername==i) &
-                                (geopdwd.date >= self.when_beg) &
-                                (geopdwd.date <= self.when_end)].sort_values(by='date')['cases']) for i in locsum }
-                    dfpimp = pd.DataFrame(list(sparkos.items()), columns=['clustername', 'pimpmap'])
-                    dfLabel=pd.merge(dfLabel,dfpimp,on=['clustername'],how="inner")
-                if 'spiral' in maplabel:
-                    sparkos = {i: CocoDisplay.spiral(geopdwd.loc[ (geopdwd.clustername==i) &
-                                (geopdwd.date >= self.when_beg) &
-                                (geopdwd.date <= self.when_end)].sort_values(by='date')[['date','cases','clustername']]) for i in locsum }
-                    dfpimp = pd.DataFrame(list(sparkos.items()), columns=['clustername', 'pimpmap'])
-                    dfLabel=pd.merge(dfLabel,dfpimp,on=['clustername'],how="inner")
+                if maplabel:
+                    if 'spark' in maplabel:
+                        sparkos = {i: CocoDisplay.sparkline(geopdwd.loc[ (geopdwd.clustername==i) &
+                                    (geopdwd.date >= self.when_beg) &
+                                    (geopdwd.date <= self.when_end)].sort_values(by='date')['cases']) for i in locsum }
+                        dfpimp = pd.DataFrame(list(sparkos.items()), columns=['clustername', 'pimpmap'])
+                        dfLabel=pd.merge(dfLabel,dfpimp,on=['clustername'],how="inner")
+                    if 'spiral' in maplabel:
+                        sparkos = {i: CocoDisplay.spiral(geopdwd.loc[ (geopdwd.clustername==i) &
+                                    (geopdwd.date >= self.when_beg) &
+                                    (geopdwd.date <= self.when_end)].sort_values(by='date')[['date','cases','clustername']]) for i in locsum }
+                        dfpimp = pd.DataFrame(list(sparkos.items()), columns=['clustername', 'pimpmap'])
+                        dfLabel=pd.merge(dfLabel,dfpimp,on=['clustername'],how="inner")
 
                 dfLabel['cases'] = dfLabel['cases'].round(2)
                 # Converting links to html tags
-                if 'label%' in maplabel:
+                if maplabel and 'label%' in maplabel:
                     dfLabel['cases'] = [str(round(float(i*100),2))+'%' for i in dfLabel['cases']]
                 else:
                     dfLabel['cases']=[str(i) for i in dfLabel['cases']]
@@ -1857,14 +1862,13 @@ class CocoDisplay:
         maplabel = kwargs.get('maplabel',self.dvisu_default['maplabel'])
         min_col, max_col = CocoDisplay.min_max_range(np.nanmin(geopdwd_filtered['cases']),
                                                      np.nanmax(geopdwd_filtered['cases']))
-
+        #min_col, max_col = np.nanmin(geopdwd_filtered['cases']),np.nanmax(geopdwd_filtered['cases'])
         min_col_non0 = (np.nanmin(geopdwd_filtered.loc[geopdwd_filtered['cases']>0.]['cases']))
-
         json_data = json.dumps(json.loads(geopdwd_filtered.to_json()))
         geopdwd_filtered = GeoJSONDataSource(geojson=json_data)
 
         invViridis256 = Viridis256[::-1]
-        if 'log' in maplabel:
+        if maplabel and 'log' in maplabel:
             color_mapper = LogColorMapper(palette=invViridis256, low=min_col_non0, high=max_col, nan_color='#ffffff')
         else:
             color_mapper = LinearColorMapper(palette=invViridis256, low=min_col, high=max_col, nan_color='#ffffff')
@@ -1872,7 +1876,7 @@ class CocoDisplay:
                              border_line_color=None, location=(0, 0), orientation='horizontal', ticker=BasicTicker())
         color_bar.formatter = BasicTickFormatter(use_scientific=True, precision=1, power_limit_low=int(max_col))
 
-        if 'label%' in maplabel:
+        if maplabel and 'label%' in maplabel:
             color_bar.formatter = BasicTickFormatter(use_scientific=False)
             color_bar.formatter = NumeralTickFormatter(format="0.0%")
 
@@ -1951,16 +1955,16 @@ class CocoDisplay:
         standardfig.patches('xs', 'ys', source = geopdwd_filtered,
                             fill_color = {'field': 'cases', 'transform': color_mapper},
                             line_color = 'black', line_width = 0.25, fill_alpha = 1)
-
-        if 'text' in maplabel or 'textinteger' in maplabel:
-            if 'textinteger' in maplabel:
-                sourcemaplabel.data['cases'] = sourcemaplabel.data['cases'].astype(float).astype(int).astype(str)
-            labels = LabelSet(
-                x = 'centroidx',
-                y = 'centroidy',
-                text = 'cases',
-                source = sourcemaplabel, text_font_size='10px',text_color='white',background_fill_color='grey',background_fill_alpha=0.5)
-            standardfig.add_layout(labels)
+        if maplabel:
+            if 'text' in maplabel or 'textinteger' in maplabel:
+                if 'textinteger' in maplabel:
+                    sourcemaplabel.data['cases'] = sourcemaplabel.data['cases'].astype(float).astype(int).astype(str)
+                labels = LabelSet(
+                    x = 'centroidx',
+                    y = 'centroidy',
+                    text = 'cases',
+                    source = sourcemaplabel, text_font_size='10px',text_color='white',background_fill_color='grey',background_fill_alpha=0.5)
+                standardfig.add_layout(labels)
 
         #cases_custom = CocoDisplay.rollerJS()
         callback = CustomJS(code="""
@@ -1969,8 +1973,10 @@ class CocoDisplay:
         """ )
         tooltips = """
                     <b>location: @rolloverdisplay<br>
-                    cases: @cases{0,0.0}</b>
-                   """
+                    cases: @cases </b>
+                    """
+                    #cases: @cases{0,0.0}
+
         standardfig.add_tools(HoverTool(tooltips = tooltips,
         formatters = {'location': 'printf', 'cases': 'printf',},
         point_policy = "snap_to_data",callback=callback))  # ,PanTool())

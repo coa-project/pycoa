@@ -911,7 +911,7 @@ class DataBase(object):
             colpos=['location', 'date'] + kw + ['codelocation']
             tmp = tmp[colpos]
             result = result.loc[~result.location.isin(['Serbia'])]
-            result = result.append(tmp)
+            result = pd.concat([result,tmp])
 
         result['date'] = pd.to_datetime(result['date'],errors='coerce').dt.date
         result = result.sort_values(by=['location','date'])

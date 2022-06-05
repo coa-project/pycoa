@@ -61,7 +61,7 @@ if 'coa_db' in __builtins__.keys():
 else:
     _whom = _listwhom[0]  # default base
 
-_db, _cocoplot = coco.DataBase.factory(_whom)  # initialization with default
+_db, _cocoplot = coco.DataBase.factory('spf')#_whom)  # initialization with default
 _gi = None
 
 _dict_bypop = {'no':0,'100':100,'1k':1e3,'100k':1e5,'1M':1e6,'pop':1.}
@@ -342,7 +342,7 @@ def normbypop(pandy, val2norm,bypop):
         if df.empty:
             df = pandyi
         else:
-            df = df.append(pandyi)
+            df = pd.concat([df,pandyi])
     df = df.drop_duplicates(['date','clustername'])
     pandy = df
 

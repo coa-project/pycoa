@@ -998,7 +998,7 @@ class DataBase(object):
             cols = tmp.columns.tolist()
             cols = cols[0:1] + cols[-1:] + cols[1:-1]
             tmp = tmp[cols]
-            mypandas = pd.append([mypandas,tmp])
+            mypandas = pd.concat([mypandas,tmp])
         if 'iso_code' in mypandas.columns:
             mypandas['iso_code'] = mypandas['iso_code'].dropna().astype(str)
             mypandasori=mypandas.copy()

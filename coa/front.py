@@ -67,8 +67,8 @@ _gi = None
 _dict_bypop = {'no':0,'100':100,'1k':1e3,'100k':1e5,'1M':1e6,'pop':1.}
 
 _listwhat = [ 'standard', # first one is default, nota:  we must avoid uppercases
-             'daily',
-             'weekly']
+              'daily',
+              'weekly']
 
 _listoutput = ['pandas','geopandas','list', 'dict', 'array']  # first one is default for get
 

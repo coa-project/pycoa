@@ -78,6 +78,7 @@ _listhist = ['bylocation','byvalue','pie']
 
 _listplot = ['date','menulocation','versus','spiral','yearly']
 
+_listmaplabel= ['text','textinter','spark','spiral','label%','exploded','dense']
 # --- Front end functions ----------------------------------------------
 
 # ----------------------------------------------------------------------
@@ -158,7 +159,7 @@ def listhist():
 
 
 # ----------------------------------------------------------------------
-# --- listwhat() -------------------------------------------------------
+# --- listplot() -------------------------------------------------------
 # ----------------------------------------------------------------------
 
 def listplot():
@@ -246,6 +247,14 @@ def listbypop():
     """Get the list of available population normalization
     """
     return list(_dict_bypop.keys())
+# ----------------------------------------------------------------------
+# --- listmaplabel() ------------------------------------------------------
+# ----------------------------------------------------------------------
+
+def listmaplabel():
+    """Get the list of available population normalization
+    """
+    return _listmaplabel
 
 # ----------------------------------------------------------------------
 # --- setwhom() --------------------------------------------------------
@@ -637,7 +646,8 @@ def decomap(func):
         by default visu='bokeh'
         - In the default case (i.e visu='bokeh') available option are :
             - dateslider=True: a date slider is called and displayed on the right part of the map
-            - maplabel = text, value are displayed directly on the map
+            - maplabel = text, values are displayed directly on the map
+                       = textinter, values as an integer are displayed directly on the map
                        = spark, sparkline are displayed directly on the map
                        = spiral, spiral are displayed directly on the map
                        = label%, label are in %

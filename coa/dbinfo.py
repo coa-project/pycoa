@@ -16,65 +16,58 @@ def generic_info(namedb, keys):
     '''
     mydico = {}
     if namedb == 'spf':
-        urlmaster1='https://www.data.gouv.fr/fr/datasets/donnees-hospitalieres-relatives-a-lepidemie-de-covid-19/'
-        urlmaster2='https://www.data.gouv.fr/fr/datasets/synthese-des-indicateurs-de-suivi-de-lepidemie-covid-19/'
-        urlmaster3='https://www.data.gouv.fr/fr/datasets/donnees-relatives-aux-resultats-des-tests-virologiques-covid-19/'
+        urlmaster3='https://www.data.gouv.fr/fr/datasets/donnees-de-laboratoires-pour-le-depistage-a-compter-du-18-05-2022-si-dep/'
         urlmaster5='https://www.data.gouv.fr/fr/datasets/donnees-relatives-aux-personnes-vaccinees-contre-la-covid-19-1'
         urlmaster4='https://www.data.gouv.fr/fr/datasets/indicateurs-de-suivi-de-lepidemie-de-covid-19/'
         urlmaster6='https://www.data.gouv.fr/fr/datasets/donnees-de-laboratoires-pour-le-depistage-indicateurs-sur-les-variants/'
         urlmaster7='https://www.data.gouv.fr/fr/datasets/donnees-de-laboratoires-pour-le-depistage-focus-par-niveau-scolaire/'
         urlmaster8='https://www.data.gouv.fr/fr/datasets/donnees-de-laboratoires-pour-le-depistage-indicateurs-sur-les-mutations/'
         urlmaster9='https://www.data.gouv.fr/en/datasets/donnees-des-urgences-hospitalieres-et-de-sos-medecins-relatives-a-lepidemie-de-covid-19/'
-        url1='https://www.data.gouv.fr/fr/datasets/r/63352e38-d353-4b54-bfd1-f1b3ee1cabd7'
-        url2='https://www.data.gouv.fr/fr/datasets/r/6fadff46-9efd-4c53-942a-54aca783c30c'
         url3='https://www.data.gouv.fr/fr/datasets/r/ca490480-09a3-470f-8556-76d6fd291325'
         url4='https://www.data.gouv.fr/fr/datasets/r/4acad602-d8b1-4516-bc71-7d5574d5f33e'
         url5='https://www.data.gouv.fr/fr/datasets/r/32a16487-3dd3-4326-9d2b-317e5a3b2daf'
         url6='https://www.data.gouv.fr/fr/datasets/r/16f4fd03-797f-4616-bca9-78ff212d06e8'
-        url7='https://www.data.gouv.fr/fr/datasets/r/c0f59f00-3ab2-4f31-8a05-d317b43e9055'
         url8='https://www.data.gouv.fr/fr/datasets/r/4d3e5a8b-9649-4c41-86ec-5420eb6b530c'
         url9='https://www.data.gouv.fr/en/datasets/r/eceb9fb4-3ebc-4da3-828d-f5939712600a'
         spfdic = {
-        'tot_dc':
-        ['tot_dc:FILLIT',url1,urlmaster1],
+        'tot_dchosp':
+        ['tot_dc:FILLIT',url3,urlmaster3],
         'cur_hosp':
-        ['cur_hosp:FILLIT',url1,urlmaster1],
+        ['cur_hosp:FILLIT',url3,urlmaster3],
         'tot_rad':
-        ['tot_rad:FILLIT',url1,urlmaster1],
+        ['tot_rad:FILLIT',url3,urlmaster3],
         'cur_rea':
-        ['cur_rea:FILLIT',url1,urlmaster1],
+        ['cur_rea:FILLIT',url3,urlmaster3],
         'cur_idx_tx_incid':
         ['cur_idx_tx_incid: Taux d\'incidence (activité épidémique : Le taux d\'incidence correspond au nombre de personnes testées\
         positives (RT-PCR et test antigénique) pour la première fois depuis plus de 60 jours rapporté à la taille de la population. \
-        Il est exprimé pour 100 000 habitants)',url2,urlmaster2],
+        Il est exprimé pour 100 000 habitants)',url3,urlmaster3],
         'cur_idx_R':
         ['cur_idx_R:FILLIT',url4,urlmaster4],
         'cur_taux_crib':
-        ['cur_taux_crib:FILLIT',url4,urlmaster2],
+        ['cur_taux_crib:FILLIT',url4,urlmaster3],
         'cur_idx_taux_occupation_sae':
         ['cur_idx_taux_occupation_sae:FILLIT',url4,urlmaster4],
         'cur_taux_pos':
         ['cur_taux_pos: Taux de positivité des tests virologiques (Le taux de positivité correspond au nombre de personnes testées positives\
          (RT-PCR et test antigénique) pour la première fois depuis plus de 60 jours rapporté au nombre total de personnes testées positives ou \
-         négatives sur une période donnée ; et qui n‘ont jamais été testées positive dans les 60 jours précédents.)',url4,urlmaster2],
+         négatives sur une période donnée ; et qui n‘ont jamais été testées positive dans les 60 jours précédents.)',url4,urlmaster3],
         'tot_vacc1':
-        ['tot_vacc1: (nom initial n_cum_dose1)',url5,urlmaster5],
-        'tot_vacc2':
-        ['tot_vacc2: (nom initial n_cum_dose2)',url5,urlmaster5],
-        'tot_vacc3':
-        ['tot_vacc3: (nom initial n_cum_dose3)',url5,urlmaster5],
-        'tot_vacc4':
-        ['tot_vacc4: (nom initial n_cum_dose4)',url5,urlmaster5],
-        'tot_rappel_vacc':
-        ['tot_rappel_vacc: (nom initial n_rappel)',url5,urlmaster5],
+        ['tot_vacc1:(nom initial  n_cum_dose1)',url5,urlmaster5],
+        'tot_vacc_complet':
+        ['tot_vacc_complet:(nom initial n_cum_complet)',url5,urlmaster5],
+        'tot_vacc_rappel':
+        ['tot_vacc_rappel: (nom initial  n_cum_rappel)',url5,urlmaster5],
+        'tot_vacc2_rappel':
+        ['tot_vacc2_rappel:(nom initial  n_cum_2_rappel)',url5,urlmaster5],
         'tot_incid_hosp':
-        ['tot_incid_hosp: Nombre total de personnes hospitalisées',url2,urlmaster2],
+        ['tot_incid_hosp: Nombre total de personnes hospitalisées',url3,urlmaster3],
         'tot_incid_rea':
-        ['tot_incid_rea: Nombre total d\'admissions en réanimation',url2,urlmaster2],
+        ['tot_incid_rea: Nombre total d\'admissions en réanimation',url3,urlmaster3],
         'tot_incid_rad':
-        ['tot_incid_rad: Nombre total de  retours à domicile',url2,urlmaster2],
-        'tot_incid_dc':
-        ['tot_incid_dc: Nombre total de personnes  décédées',url2,urlmaster2],
+        ['tot_incid_rad: Nombre total de  retours à domicile',url3,urlmaster3],
+        'tot_incid_dchosp':
+        ['tot_incid_dchosp: Nombre total de personnes  décédées',url3,urlmaster3],
         'tot_P':
         ['tot_P: Nombre total de tests positifs',url3,urlmaster3],
         'tot_T':

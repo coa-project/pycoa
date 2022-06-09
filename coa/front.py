@@ -67,8 +67,8 @@ _gi = None
 _dict_bypop = {'no':0,'100':100,'1k':1e3,'100k':1e5,'1M':1e6,'pop':1.}
 
 _listwhat = [ 'standard', # first one is default, nota:  we must avoid uppercases
-             'daily',
-             'weekly']
+              'daily',
+              'weekly']
 
 _listoutput = ['pandas','geopandas','list', 'dict', 'array']  # first one is default for get
 
@@ -78,6 +78,7 @@ _listhist = ['bylocation','byvalue','pie']
 
 _listplot = ['date','menulocation','versus','spiral','yearly']
 
+_listmaplabel= ['text','textinter','spark','spiral','label%','exploded','dense']
 # --- Front end functions ----------------------------------------------
 
 # ----------------------------------------------------------------------
@@ -158,7 +159,7 @@ def listhist():
 
 
 # ----------------------------------------------------------------------
-# --- listwhat() -------------------------------------------------------
+# --- listplot() -------------------------------------------------------
 # ----------------------------------------------------------------------
 
 def listplot():
@@ -246,6 +247,14 @@ def listbypop():
     """Get the list of available population normalization
     """
     return list(_dict_bypop.keys())
+# ----------------------------------------------------------------------
+# --- listmaplabel() ------------------------------------------------------
+# ----------------------------------------------------------------------
+
+def listmaplabel():
+    """Get the list of available population normalization
+    """
+    return _listmaplabel
 
 # ----------------------------------------------------------------------
 # --- setwhom() --------------------------------------------------------
@@ -342,8 +351,8 @@ def normbypop(pandy, val2norm,bypop):
         if df.empty:
             df = pandyi
         else:
-            df = df.append(pandyi)
-            #df = pd.concat([df,pandyi])
+            df = pd.concat([df,pandyi])
+
     df = df.drop_duplicates(['date','clustername'])
     pandy = df
 
@@ -637,7 +646,8 @@ def decomap(func):
         by default visu='bokeh'
         - In the default case (i.e visu='bokeh') available option are :
             - dateslider=True: a date slider is called and displayed on the right part of the map
-            - maplabel = text, value are displayed directly on the map
+            - maplabel = text, values are displayed directly on the map
+                       = textinter, values as an integer are displayed directly on the map
                        = spark, sparkline are displayed directly on the map
                        = spiral, spiral are displayed directly on the map
                        = label%, label are in %
@@ -687,7 +697,7 @@ def figuremap(input,input_field,**kwargs):
     dateslider = kwargs.get('dateslider', None)
     maplabel = kwargs.get('maplabel', None)
     if visu == 'bokeh':
-        if maplabel and 'spark' in maplabel:
+        if maplabel and 'spark' in maplabel or 'spiral' in maplabel:
             return _cocoplot.pycoa_pimpmap(input,input_field,**kwargs)
         else:
 
@@ -702,6 +712,7 @@ def map(input,input_field,**kwargs):
     if visu == 'bokeh':
         if maplabel:
             if 'spark' in maplabel or 'spiral' in maplabel:
+                print(kwargs)
                 fig = _cocoplot.pycoa_pimpmap(input,input_field,**kwargs)
             elif 'text' or 'exploded' or 'dense' in maplabel:
                 fig = _cocoplot.pycoa_map(input,input_field,**kwargs)

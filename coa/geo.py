@@ -599,6 +599,7 @@ class GeoRegion():
         # --- get the UnitedNation GeoScheme and organize the data
         p_gs=pd.read_html(get_local_from_url(self._source_dict["GeoScheme"],0))[0]
         p_gs.columns=['country','capital','iso2','iso3','num','m49']
+        p_gs=p_gs.append({'country':'Taiwan','iso2':'TW','iso3':'TWN','num':'158','m49':'030 < 0142 < 001'},ignore_index=True)
 
         idx=[]
         reg=[]

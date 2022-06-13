@@ -712,7 +712,6 @@ def map(input,input_field,**kwargs):
     if visu == 'bokeh':
         if maplabel:
             if 'spark' in maplabel or 'spiral' in maplabel:
-                print(kwargs)
                 fig = _cocoplot.pycoa_pimpmap(input,input_field,**kwargs)
             elif 'text' or 'exploded' or 'dense' in maplabel:
                 fig = _cocoplot.pycoa_map(input,input_field,**kwargs)

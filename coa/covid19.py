@@ -1287,6 +1287,7 @@ class DataBase(object):
                 owid_name = [c for c in origclist if c.startswith('owid_')]
                 clist = [c for c in origclist if not c.startswith('owid_')]
                 location_exploded = self.geo.to_standard(listloc,output='list',interpret_region=True)
+
                 if len(owid_name) !=0 :
                     location_exploded += owid_name
         else:
@@ -1331,6 +1332,7 @@ class DataBase(object):
                 listloc = explosion(listloc,self.database_type[self.db][1])
                 listloc = DataBase.flat_list(listloc)
                 location_exploded = listloc
+
         def sticky(lname):
             if len(lname)>0:
                 tmp=''

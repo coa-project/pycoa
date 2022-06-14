@@ -78,7 +78,7 @@ _listhist = ['bylocation','byvalue','pie']
 
 _listplot = ['date','menulocation','versus','spiral','yearly']
 
-_listmaplabel= ['text','textinter','spark','spiral','label%','exploded','dense']
+_listmaplabel= ['text','textinteger','spark','spiral','label%','log','unsorted','exploded','dense']
 # --- Front end functions ----------------------------------------------
 
 # ----------------------------------------------------------------------
@@ -580,6 +580,13 @@ def get(**kwargs):
     pandy = kwargs.get('input')
     pandy = pandy.drop(columns='standard')
     if output == 'pandas':
+        def color_df(val):
+            if val.columns=='date':
+                return 'blue'
+            elif val.columns=='where':
+                return 'red'
+            else:
+                return black
         #if 'option' in kwargs:
         #    raise CoaKeyError("Cannot use option with input pandas data. "
         #                      "Use option within the get() function instead.")
@@ -665,7 +672,7 @@ def decomap(func):
 
         dateslider = kwargs.get('dateslider', None)
         maplabel = kwargs.get('maplabel', None)
-        listmaplabel=['text','textinteger','spark','spiral','label%','log','unsorted','exploded','dense']
+        listmaplabel=_listmaplabel
         if maplabel is not None:
             if not isinstance(maplabel,list):
                 maplabel = [maplabel]

@@ -389,7 +389,7 @@ class DataBase(object):
                         #A = E484K
                         #B = E484Q
                         #C = L452R
-                        spf8 = self.csv2pandas("https://www.data.gouv.fr/fr/datasets/r/4d3e5a8b-9649-4c41-86ec-5420eb6b530c",
+                        spf8 = self.csv2pandas("https://www.data.gouv.fr/fr/datasets/r/bc318bc7-fb90-4e76-a6cb-5cdc0a4e5432",
                         rename_columns = rename, separator=';',cast=cast)
 
                         rename = {'date_de_passage':'date','dep':'location'}
@@ -445,8 +445,10 @@ class DataBase(object):
                             'Prc_susp_IND':'cur_idx_Prc_susp_IND',
                             'Prc_susp_ABS':'cur_idx_Prc_susp_ABS',
                             'nbre_pass_corona':'cur_nbre_pass_corona',
+                            'tx_A1':'cur_tx_A1',
+                            'tx_C1':'cur_tx_C1'
                             }
-                        spf8keeped = ['nb_A0','nb_A1', 'nb_B0', 'nb_B1', 'nb_C0', 'nb_C1']
+                        spf8keeped = ['nb_A0','nb_A1','nb_C0','nb_C1']
                         rename_dict.update({i:'cur_'+i for i in spf8keeped})
                         result = result.rename(columns=rename_dict)
                         columns_keeped  = list(rename_dict.values()) + ['tot_'+i for i in incidences] + ['tot_P', 'tot_T']

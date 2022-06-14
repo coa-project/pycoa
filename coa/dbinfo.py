@@ -27,7 +27,7 @@ def generic_info(namedb, keys):
         url4='https://www.data.gouv.fr/fr/datasets/r/4acad602-d8b1-4516-bc71-7d5574d5f33e'
         url5='https://www.data.gouv.fr/fr/datasets/r/32a16487-3dd3-4326-9d2b-317e5a3b2daf'
         url6='https://www.data.gouv.fr/fr/datasets/r/16f4fd03-797f-4616-bca9-78ff212d06e8'
-        url8='https://www.data.gouv.fr/fr/datasets/r/4d3e5a8b-9649-4c41-86ec-5420eb6b530c'
+        url8='https://www.data.gouv.fr/fr/datasets/r/bc318bc7-fb90-4e76-a6cb-5cdc0a4e5432'
         url9='https://www.data.gouv.fr/en/datasets/r/eceb9fb4-3ebc-4da3-828d-f5939712600a'
         spfdic = {
         'tot_dchosp':
@@ -73,7 +73,7 @@ def generic_info(namedb, keys):
         'tot_T':
         ['tot_T: Nombre total de tests réalisés',url3,urlmaster3],
         'cur_idx_Prc_tests_PCR_TA_crible' :
-        ['Prc_tests_PCR_TA_crible: % de tests PCR criblés parmi les PCR positives.',url6,urlmaster6],
+        ['cur_idx_Prc_tests_PCR_TA_crible: % de tests PCR criblés parmi les PCR positives.',url6,urlmaster6],
         'cur_idx_Prc_susp_501Y_V1' :
         ['Prc_susp_501Y_V1: % de tests avec suspicion de variant 20I/501Y.V1 (UK).\n Royaume-Uni (UK): code Nexstrain= 20I/501Y.V1.',url6,urlmaster6],
         'cur_idx_Prc_susp_501Y_V2_3' :
@@ -87,22 +87,26 @@ def generic_info(namedb, keys):
         #['ti : taux d\'incidence hebdomadaire rapporté à la population pour 100 000 habitants , par semaine calendaire (en milieu scolaire)',url7,urlmaster7],
         #'cur_idx_tp':
         #['tp :Le taux de positivité hebdomadaire rapporté 100 tests réalisés, par semaine calendaire (en milieu scolaire)',url7,urlmaster7],
-        'nb_crib' : ['Nombre de tests criblés',url8,urlmaster8],
-        'nb_pos' : ['Nombre de tests positifs',url8,urlmaster8],
+        #'nb_crib' : ['Nombre de tests criblés',url8,urlmaster8],
+        #'nb_pos' : ['Nombre de tests positifs',url8,urlmaster8],
         #'tx_crib' : ['Taux tests criblés',url8,urlmaster8],
         #'cur_idx_tx_A1':['FILL IT',url8,urlmaster8],
         #'cur_idx_tx_B1':['FILL IT',url8,urlmaster8],
         #'cur_idx_tx_C1':['FILL IT',url8,urlmaster8],
-        'cur_nb_A0' : ['Nombre des tests positifs pour lesquels la recherche de mutation A est négatif (A = E484K)',url8,urlmaster8],
-        'cur_nb_A1' : ['Nombre des tests positifs pour lesquels la recherche de mutation A est positif (A = E484K)',url8,urlmaster8],
-        'tx_A1' : ['Taux de présence mutation A (A = E484K)',url8,urlmaster8],
-        'cur_nb_B0' : ['Nombre des tests positifs pour lesquels la recherche de mutation B est négatif (B = E484Q)',url8,urlmaster8],
-        'cur_nb_B1' : ['Nombre des tests positifs pour lesquels la recherche de mutation B est positif (B = E484Q)',url8,urlmaster8],
-        'tx_B1' : ['Taux de présence mutation B (B = E484Q)',url8,urlmaster8],
-        'cur_nb_C0' : ['Nombre des tests positifs pour lesquels la recherche de mutation C est négatif (C = L452R)',url8,urlmaster8],
-        'cur_nb_C1' : ['Nombre des tests positifs pour lesquels la recherche de mutation C est positif (C = L452R)',url8,urlmaster8],
-        'tx_C1' : ['Taux de présence mutation C (C = L452R)',url8,urlmaster8],
-        'cur_nbre_pass_corona' : ['  Nombre de passages aux urgences pour suspicion de COVID-19 (nbre_pass_corona)',url9,urlmaster9],
+        'cur_nb_A0' :
+        ['cur_nb_A0:Nombre des tests positifs pour lesquels la recherche de mutation A est négatif (A = E484K)',url8,urlmaster8],
+        'cur_nb_A1' :
+        ['cur_nb_A1:Nombre des tests positifs pour lesquels la recherche de mutation A est positif (A = E484K)',url8,urlmaster8],
+        'cur_tx_A1' :
+        ['cur_tx_A1:Taux de présence mutation A (A = E484K)',url8,urlmaster8],
+        'cur_nb_C0' :
+        ['cur_nb_C0:Nombre des tests positifs pour lesquels la recherche de mutation C est négatif (C = L452R)',url8,urlmaster8],
+        'cur_nb_C1' :
+        ['cur_nb_C1:Nombre des tests positifs pour lesquels la recherche de mutation C est positif (C = L452R)',url8,urlmaster8],
+        'cur_tx_C1' :
+        ['cur_tx_C1:Taux de présence mutation C (C = L452R)',url8,urlmaster8],
+        'cur_nbre_pass_corona' :
+        ['Nombre de passages aux urgences pour suspicion de COVID-19 (nbre_pass_corona)',url9,urlmaster9],
         }
         mydico = spfdic
     elif namedb == 'spfnational':

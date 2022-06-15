@@ -44,12 +44,12 @@ def generic_info(namedb, keys):
         Il est exprimé pour 100 000 habitants)',url3,urlmaster3],
         'cur_idx_R':
         ['cur_idx_R:FILLIT',url4,urlmaster4],
-        'cur_taux_crib':
-        ['cur_taux_crib:FILLIT',url4,urlmaster3],
-        'cur_idx_taux_occupation_sae':
-        ['cur_idx_taux_occupation_sae:FILLIT',url4,urlmaster4],
-        'cur_taux_pos':
-        ['cur_taux_pos: Taux de positivité des tests virologiques (Le taux de positivité correspond au nombre de personnes testées positives\
+        'cur_tx_crib':
+        ['cur_tx_crib:FILLIT',url4,urlmaster3],
+        'cur_idx_tx_occupation_sae':
+        ['cur_idx_tx_occupation_sae:FILLIT',url4,urlmaster4],
+        'cur_tx_pos':
+        ['cur_tx_pos: Taux de positivité des tests virologiques (Le taux de positivité correspond au nombre de personnes testées positives\
          (RT-PCR et test antigénique) pour la première fois depuis plus de 60 jours rapporté au nombre total de personnes testées positives ou \
          négatives sur une période donnée ; et qui n‘ont jamais été testées positive dans les 60 jours précédents.)',url4,urlmaster3],
         'tot_vacc1':

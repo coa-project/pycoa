@@ -437,8 +437,8 @@ class DataBase(object):
                             'n_cum_2_rappel':'tot_vacc2_rappel',
                             'tx_incid': 'cur_idx_tx_incid',
                             'R': 'cur_idx_R',
-                            'taux_occupation_sae': 'cur_idx_taux_occupation_sae',
-                            'tx_pos': 'cur_taux_pos',
+                            'taux_occupation_sae': 'cur_idx_tx_occupation_sae',
+                            'tx_pos': 'cur_tx_pos',
                             'Prc_tests_PCR_TA_crible':'cur_idx_Prc_tests_PCR_TA_crible',
                             'Prc_susp_501Y_V1':'cur_idx_Prc_susp_501Y_V1',
                             'Prc_susp_501Y_V2_3':'cur_idx_Prc_susp_501Y_V2_3',
@@ -446,7 +446,7 @@ class DataBase(object):
                             'Prc_susp_ABS':'cur_idx_Prc_susp_ABS',
                             'nbre_pass_corona':'cur_nbre_pass_corona',
                             'tx_A1':'cur_tx_A1',
-                            'tx_C1':'cur_tx_C1'
+                            'tx_C1':'cur_tx_C1',
                             }
                         spf8keeped = ['nb_A0','nb_A1','nb_C0','nb_C1']
                         rename_dict.update({i:'cur_'+i for i in spf8keeped})
@@ -711,7 +711,7 @@ class DataBase(object):
                     'positive_rate','total_vaccinations']
         For more information please have a look to https://github.com/owid/covid-19-data/tree/master/public/data/
         - 'spf' : ['hosp', 'rea', 'rad', 'dc', 'incid_hosp', 'incid_rea', 'incid_dc',
-                    'incid_rad', 'P', 'T', 'tx_incid', 'R', 'taux_occupation_sae', 'tx_pos']
+                    'incid_rad', 'P', 'T', 'tx_incid', 'R', 'tx_occupation_sae', 'tx_pos']
             No translation have been done for french keywords data
         For more information please have a look to  https://www.data.gouv.fr/fr/organizations/sante-publique-france/
         - 'opencovid19' :['cas_confirmes', 'deces',
@@ -1458,7 +1458,7 @@ class DataBase(object):
         if sumall:
             if origlistlistloc != None:
                uniqcluster = pdfiltered.clustername.unique()
-               if kwargs['which'].startswith('cur_idx_'):
+               if kwargs['which'].startswith('cur_idx_') or kwargs['which'].startswith('cur_tx_'):
                   tmp = pdfiltered.groupby(['clustername','date']).mean().reset_index()
                else:
                   tmp = pdfiltered.groupby(['clustername','date']).sum().reset_index()#.loc[pdfiltered.clustername.isin(uniqcluster)].\

@@ -1457,7 +1457,9 @@ class GeoCountry():
                         pr_outremer['name_region']='Ilhas portuguesas'
                         pr_outremer['flag_region']=''
 
-                        pr=pr.append(pr_metropole,ignore_index=True).append(pr_outremer,ignore_index=True)
+                        pr=pd.concat([pr,pr_metropole],ignore_index=True)
+                        pr=pd.concat([pr,pr_outremer],ignore_index=True)
+                        #pr=pr.append(pr_metropole,ignore_index=True).append(pr_outremer,ignore_index=True)
 
                     elif self.get_country()=='USA':
                         usa_col=pr.columns.tolist()

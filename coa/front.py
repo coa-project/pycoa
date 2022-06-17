@@ -704,11 +704,15 @@ def figuremap(input,input_field,**kwargs):
     dateslider = kwargs.get('dateslider', None)
     maplabel = kwargs.get('maplabel', None)
     if visu == 'bokeh':
-        if maplabel and 'spark' in maplabel or 'spiral' in maplabel:
-            return _cocoplot.pycoa_pimpmap(input,input_field,**kwargs)
+        if maplabel:
+            if 'spark' in maplabel or 'spiral' in maplabel:
+                return _cocoplot.pycoa_pimpmap(input,input_field,**kwargs)
+            elif 'text' or 'exploded' or 'dense' in maplabel:
+                return _cocoplot.pycoa_map(input,input_field,**kwargs)
+            else:
+                CoaError("What kind of pimp map you want ?!")
         else:
-
-            return _cocoplot.pycoa_map(input,input_field,**kwargs)
+            return  _cocoplot.pycoa_map(input,input_field,**kwargs)
 
 @chartsinput_deco
 @decomap

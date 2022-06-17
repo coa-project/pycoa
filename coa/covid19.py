@@ -1357,7 +1357,7 @@ class DataBase(object):
                 if pdcluster.empty:
                     pdcluster = tmp
                 else:
-                    pdcluster = pdcluster.append(tmp)
+                    pdcluster = pd.concat([pdcluster,tmp])
                 j+=1
             pdfiltered = pdcluster[['location','date','codelocation',kwargs['which'],'clustername']]
         else:

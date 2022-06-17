@@ -505,7 +505,8 @@ class GeoInfo():
                     self._data_geometry.columns=["id_tmp","geometry"]
 
                     # About some countries not properly managed by this database (south and north soudan)
-                    self._data_geometry=self._data_geometry.append({'id_tmp':'SSD','geometry':None},ignore_index=True) # adding the SSD row
+                    self._data_geometry=pd.concat([self._data_geometry,pd.DataFrame({'id_tmp':'SSD','geometry':None},index=[0])],ignore_index=True)
+                    #self._data_geometry=self._data_geometry.append({'id_tmp':'SSD','geometry':None},ignore_index=True) # adding the SSD row
                     #self._data_geometry=pd.concat([self._data_geometry,pd.DataFrame({'id_tmp':'SSD','geometry':None})])
                     for newc in ['SSD','SDN']:
                         newgeo=gpd.read_file(get_local_from_url('https://github.com/johan/world.geo.json/raw/master/countries/'+newc+'.geo.json'))
@@ -599,7 +600,8 @@ class GeoRegion():
         # --- get the UnitedNation GeoScheme and organize the data
         p_gs=pd.read_html(get_local_from_url(self._source_dict["GeoScheme"],0))[0]
         p_gs.columns=['country','capital','iso2','iso3','num','m49']
-        p_gs=p_gs.append({'country':'Taiwan','iso2':'TW','iso3':'TWN','num':'158','m49':'030 < 0142 < 001'},ignore_index=True)
+        p_gs=pd.concat([p_gs,pd.DataFrame({'country':'Taiwan','iso2':'TW','iso3':'TWN','num':'158','m49':'030 < 0142 < 001'},index=[0])],ignore_index=True)
+        #p_gs=p_gs.append({'country':'Taiwan','iso2':'TW','iso3':'TWN','num':'158','m49':'030 < 0142 < 001'},ignore_index=True)
 
         idx=[]
         reg=[]
@@ -813,15 +815,22 @@ class GeoCountry():
             # En l'absence de Mayotte dans ce document, car le recensement n'a pas eu lieu en phase, ajout à la main
             # En référence à la page pour Mayotte : https://www.insee.fr/fr/statistiques/3291775?sommaire=2120838
             mayotte_df=pd.DataFrame([{'Code département':'976','population_subregion':256518}])
-            pop_fra=pop_fra.append(mayotte_df)
+            pop_fra=pd.concat([pop_fra,mayotte_df])
+            #pop_fra=pop_fra.append(mayotte_df)
             # Pour les collectivités d'Outremer : https://www.insee.fr/fr/statistiques/4989739?sommaire=4989761
             com_df=pd.DataFrame([{'Code département':'980','population_subregion':(5985+10124+34065+281674+12067)}])
-            pop_fra=pop_fra.append(com_df).reset_index()
+            pop_fra=pd.concat([pop_fra,com_df]).reset_index()
+            #pop_fra=pop_fra.append(com_df).reset_index()
             geo_com=self._country_data[self._country_data.code_subregion.isin(['975','977','978','986','987'])][['geometry']]
             geo_com['smthing']=0
             geo_com=geo_com.dissolve(by='smthing')['geometry']
-            self._country_data=self._country_data.append(
-                pd.DataFrame([{'code_subregion':'980','name_subregion':'Collectivités d\'outre-mer','code_region':'09','name_region':'Collectivités d\'outre-mer','geometry':geo_com.values[0]}])).reset_index()
+            self._country_data=pd.concat([self._country_data,\
+            pd.DataFrame({'code_subregion':'980','name_subregion':'Collectivités d\'outre-mer','code_region':'09','name_region':'Collectivités d\'outre-mer','geometry':geo_com.values[0]})],ignore_index=True)
+            #self._country_data=self._country_data.append(
+            #    pd.DataFrame([{'code_subregion':'980','name_subregion':'Collectivités d\'outre-mer','code_region':'09','name_region':'Collectivités d\'outre-mer','geometry':geo_com.values[0]}])).reset_index()
+            # Merging
+            #self._country_data=self._country_data.append(
+            #    pd.DataFrame([{'code_subregion':'980','name_subregion':'Collectivités d\'outre-mer','code_region':'09','name_region':'Collectivités d\'outre-mer','geometry':geo_com.values[0]}])).reset_index()
             # Merging
             self._country_data=self._country_data.merge(pop_fra,left_on='code_subregion',right_on='Code département')
             self._country_data=self._country_data[['geometry','code_subregion','name_subregion','flag_subregion','code_region','name_region','population_subregion']]
@@ -1418,7 +1427,9 @@ class GeoCountry():
                         pr_outremer['name_region']='Outre-mer'
                         pr_outremer['flag_region']=''
 
-                        pr=pr.append(pr_metropole,ignore_index=True).append(pr_outremer,ignore_index=True)
+                        pr=pd.concat([pr,pr_metropole],ignore_index=True)
+                        pr=pd.concat([pr,pr_outremer],ignore_index=True)
+                        #pr=pr.append(pr_metropole,ignore_index=True).append(pr_outremer,ignore_index=True)
 
                     elif self.get_country()=='ESP' : # manage pseudo 'ESP' regions within and outside continent
                         islands_cut=pr.code_region.isin(['05'])

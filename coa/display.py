@@ -1405,17 +1405,18 @@ class CocoDisplay:
                     tooltips=[('Location', '@rolloverdisplay'), (input_field, '@cases'), ]
                 else:
                     tooltips=[('Location', '@rolloverdisplay'), (input_field, '@cases{0,0.0}'), ],
-
+                if isinstance(tooltips,tuple):
+                    tooltips = tooltips[0]
                 if func.__name__ == 'pycoa_pie' :
                     standardfig.add_tools(HoverTool(
-                        tooltips=tooltips.append([('%','@percentage')]), #[('Location', '@rolloverdisplay'), (input_field, '@cases{0,0.0}'), ('%','@percentage'), ],
-                        formatters={'location': 'printf', '@{' + 'cases' + '}': cases_custom, '%':'printf'},
-                        point_policy="snap_to_data"))  # ,PanTool())
+                        tooltips = tooltips,
+                        formatters = {'location': 'printf', '@{' + 'cases' + '}': cases_custom, '%':'printf'},
+                        point_policy = "snap_to_data"))  # ,PanTool())
                 else:
                     standardfig.add_tools(HoverTool(
-                        tooltips=tooltips,#[('Location', '@rolloverdisplay'), (input_field, '@cases{0,0.0}'), ],
-                        formatters={'location': 'printf', '@{' + 'cases' + '}': cases_custom, },
-                        point_policy="snap_to_data"))  # ,PanTool())
+                        tooltips = tooltips,
+                        formatters = {'location': 'printf', '@{' + 'cases' + '}': cases_custom, },
+                        point_policy = "snap_to_data"))  # ,PanTool())
                 panel = Panel(child = standardfig, title = axis_type)
                 panels.append(panel)
 

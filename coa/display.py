@@ -969,7 +969,7 @@ class CocoDisplay:
                         if new.empty:
                             new = perloc
                         else:
-                            new = new.append(perloc)
+                            new = pd.concat([new,perloc])
                         n += 1
                 geopdwd = new.reset_index(drop=True)
             if cursor_date:

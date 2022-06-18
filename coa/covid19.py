@@ -1079,7 +1079,7 @@ class DataBase(object):
             mypandas['codelocation'] =  mypandas['location'].map(codename).astype(str)
         if self.db == 'owid':
             onlyowid['codelocation'] = onlyowid['location']
-            mypandas = mypandas.append(onlyowid)
+            mypandas = pd.concat([mypandas,onlyowid])
         self.mainpandas  = mypandas
         self.dates  = self.mainpandas['date']
 

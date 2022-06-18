@@ -1138,7 +1138,7 @@ class CocoDisplay:
                     geopdwd_filter_other['colors'] = '#FFFFFF'
 
                     geopdwd_filter = geopdwd_filter_first
-                    geopdwd_filter = geopdwd_filter.append(geopdwd_filter_other)
+                    geopdwd_filter = pd.concat([geopdwd_filter,geopdwd_filter_other])
             if func.__name__ == 'pycoa_horizonhisto' :
                 #geopdwd_filter['bottom'] = geopdwd_filter.index
                 geopdwd_filter['left'] = geopdwd_filter['cases']
@@ -1161,7 +1161,7 @@ class CocoDisplay:
                 if maplabel and 'textinteger' in maplabel:
                     geopdwd_filter['horihistotext'] = geopdwd_filter['right'].astype(float).astype(int).astype(str)
                 else:
-                    geopdwd_filter['horihistotext'] = [ '{:.3g}'.format(float(i)) if float(i)>1.e4 else round(float(i),2) for i in geopdwd_filter['right'] ]
+                    geopdwd_filter['horihistotext'] = [ '{:.3g}'.format(float(i)) if float(i)>1.e4 or float(i)<0.01 else round(float(i),2) for i in geopdwd_filter['right'] ]
                     geopdwd_filter['horihistotext'] = [str(i) for i in geopdwd_filter['horihistotext']]
             if func.__name__ == 'pycoa_pie' :
                 geopdwd_filter = self.add_columns_for_pie_chart(geopdwd_filter,input_field)
@@ -1187,7 +1187,7 @@ class CocoDisplay:
                     standardfig.xaxis.formatter = BasicTickFormatter(use_scientific=False)
                 else:
                     standardfig.xaxis[0].formatter = PrintfTickFormatter(format="%4.2e")
-                    standardfig.x_range = Range1d(0.01, 1.2 * max_value)
+                    standardfig.x_range = Range1d(max_value/100., 1.2 * max_value)
                 if not input_filter[input_filter[input_field] < 0.].empty:
                     standardfig.x_range = Range1d(1.2 * min_value, 1.2 * max_value)
 
@@ -1199,9 +1199,9 @@ class CocoDisplay:
                             if maplabel and 'label%' in maplabel:
                                 standardfig.x_range = Range1d(0.01, 50 * max_value*100)
                             else:
-                                standardfig.x_range = Range1d(0.01, 50 * max_value)
+                                standardfig.x_range = Range1d(max_value/100., 50 * max_value)
 
-                            srcfiltered.data['left'] = [0.01] * len(srcfiltered.data['right'])
+                            srcfiltered.data['left'] = [min(srcfiltered.data['right'])/100.] * len(srcfiltered.data['right'])
 
                 if func.__name__ == 'pycoa_pie':
                     if not input_filter[input_filter[input_field] < 0.].empty:
@@ -1400,14 +1400,20 @@ class CocoDisplay:
                         """)
                     date_slider.js_on_change('value', callback)
                 cases_custom = CocoDisplay.rollerJS()
+
+                if min(srcfiltered.data['cases'])<0.01:
+                    tooltips=[('Location', '@rolloverdisplay'), (input_field, '@cases'), ]
+                else:
+                    tooltips=[('Location', '@rolloverdisplay'), (input_field, '@cases{0,0.0}'), ],
+
                 if func.__name__ == 'pycoa_pie' :
                     standardfig.add_tools(HoverTool(
-                        tooltips=[('Location', '@rolloverdisplay'), (input_field, '@cases{0,0.0}'), ('%','@percentage'), ],
+                        tooltips=tooltips.append([('%','@percentage')]), #[('Location', '@rolloverdisplay'), (input_field, '@cases{0,0.0}'), ('%','@percentage'), ],
                         formatters={'location': 'printf', '@{' + 'cases' + '}': cases_custom, '%':'printf'},
                         point_policy="snap_to_data"))  # ,PanTool())
                 else:
                     standardfig.add_tools(HoverTool(
-                        tooltips=[('Location', '@rolloverdisplay'), (input_field, '@cases{0,0.0}'), ],
+                        tooltips=tooltips,#[('Location', '@rolloverdisplay'), (input_field, '@cases{0,0.0}'), ],
                         formatters={'location': 'printf', '@{' + 'cases' + '}': cases_custom, },
                         point_policy="snap_to_data"))  # ,PanTool())
                 panel = Panel(child = standardfig, title = axis_type)

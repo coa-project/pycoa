@@ -195,6 +195,8 @@ def generic_info(namedb, keys):
         'cur_weekly_hosp_admissions':['cur_weekly_hosp_admissions (original name weekly_hosp_admissions): Number of COVID-19 patients in hospital on a given week'],
         'cur_idx_positive_rate':['cur_idx_positive_rate (original name positive_rate): The share of COVID-19 tests that are positive, given as a rolling 7-day average (this is the inverse of tests_per_case)'],
         'total_gdp_per_capita':['Gross domestic product at purchasing power parity (constant 2011 international dollars), most recent year available'],
+        'cur_excess_mortality':['cur_excess_mortality: original name excess_mortality. Percentage difference between the reported number of weekly or monthly deaths in 2020–2021 and the projected number of deaths for the same period based on previous years'],
+        'cur_excess_mortality_cumulative_per_million':['cur_excess_mortality_cumulative_per_million:original name excess_mortality_cumulative_per_million.Cumulative difference between the reported number of deaths since 1 January 2020 and the projected number of deaths for the same period based on previous years, per million people. '],
         }
         for k,v in owid.items():
             owid[k].append("https://raw.githubusercontent.com/owid/covid-19-data/master/public/data/owid-covid-data.csv")

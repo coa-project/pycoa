@@ -503,7 +503,9 @@ class DataBase(object):
                     separator=',',drop_field=drop_field)
                     # renaming some columns
                     col_to_rename1=['reproduction_rate','icu_patients','hosp_patients','weekly_hosp_admissions','positive_rate']
+                    col_to_rename1+=['excess_mortality','excess_mortality_cumulative_per_million']
                     renamed_cols1=['cur_'+c if c != 'positive_rate' else 'cur_idx_'+c for c in col_to_rename1]
+
                     col_to_rename2=['people_vaccinated','people_fully_vaccinated','people_fully_vaccinated_per_hundred',\
                     'people_vaccinated_per_hundred','population','gdp_per_capita']
                     renamed_cols2=['total_'+i for i in col_to_rename2]
@@ -520,7 +522,6 @@ class DataBase(object):
                     owid_new_test     = owid_test[owid_test['total_tests'].isnull()]
                     owid_total_test   = owid_test[~owid_test['total_tests'].isnull()]
                     owid_new_test     = owid_new_test.drop(columns='total_tests')
-
                     owid_new_test.loc[:,'total_tests'] = owid_new_test.groupby(['location'])['new_tests'].cumsum()
                     owid = pd.concat([owid[mask],owid_new_test,owid_total_test])
                     self.return_structured_pandas(owid.rename(columns=dict(zip(col_to_rename,renamed_cols))),columns_keeped=columns_keeped+renamed_cols)
@@ -1418,7 +1419,7 @@ class DataBase(object):
                     if reconstructed.empty:
                         reconstructed = sub
                     else:
-                        reconstructed=reconstructed.append(sub)
+                        reconstructed=pd.concat([reconstructed,sub])
                     pdfiltered = reconstructed
             elif o == 'nofillnan':
                 pdfiltered_nofillnan = pdfiltered.copy().reset_index(drop=True)
@@ -1505,12 +1506,14 @@ class DataBase(object):
                 pdfiltered.groupby('clustername')['cumul'].apply(lambda x: x.ffill())
 
         pdfiltered['daily'] = pdfiltered.groupby('clustername')['cumul'].diff()
-        inx = pdfiltered.groupby('clustername').head(1).index
         pdfiltered['weekly'] = pdfiltered.groupby('clustername')['cumul'].diff(7)
+        inx = pdfiltered.groupby('clustername').head(1).index
         inx7=pdfiltered.groupby('clustername').head(7).index
         #First value of diff is always NaN
         pdfiltered.loc[inx, 'daily'] = pdfiltered['daily'].fillna(method="bfill")
         pdfiltered.loc[inx7, 'weekly'] = pdfiltered['weekly'].fillna(method="bfill")
+
+
 
         unifiedposition=['location', 'date', kwargs['which'], 'daily', 'cumul', 'weekly', 'codelocation','clustername']
         pdfiltered = pdfiltered[unifiedposition]

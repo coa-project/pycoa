@@ -492,7 +492,7 @@ class CocoDisplay:
                 point_policy="snap_to_data"))  # ,PanTool())
 
             for loc in input.clustername.unique():
-                pandaloc = input.loc[input.clustername == loc].sort_values(by='date', ascending='True')
+                pandaloc = input.loc[input.clustername == loc].sort_values(by='date', ascending=True)
                 pandaloc.rename(columns={input_field[0]: 'casesx', input_field[1]: 'casesy'}, inplace=True)
                 standardfig.line(x='casesx', y='casesy',
                                  source=ColumnDataSource(pandaloc), legend_label=pandaloc.clustername.iloc[0],

@@ -549,6 +549,7 @@ class CocoDisplay:
             maxou=-1000
             lcolors = iter(self.lcolors)
             line_style = ['solid', 'dashed', 'dotted', 'dotdash','dashdot']
+            maxou,minou=0,0
             for val in input_field:
                 for loc in list(input.clustername.unique()):
                     input_filter = input.loc[input.clustername == loc].reset_index(drop = True)
@@ -568,10 +569,18 @@ class CocoDisplay:
                                      hover_line_width = 4, name = val, line_dash=line_style[i%4])
                     r_list.append(r)
                     maxou=max(maxou,np.nanmax(input_filter[val].values))
+                    minou=max(minou,np.nanmin(input_filter[val].values))
                 i += 1
+            if minou <0.01:
+                tooltips=[('Location', '@rolloverdisplay'), ('date', '@date{%F}'), (r.name, '@$name')]
+            else:
+                tooltips=[('Location', '@rolloverdisplay'), ('date', '@date{%F}'), (r.name, '@$name{0,0.0}')],
+            if isinstance(tooltips,tuple):
+                tooltips = tooltips[0]
+
             for r in r_list:
                 label = r.name
-                tooltips = [('Location', '@rolloverdisplay'), ('date', '@date{%F}'), (r.name, '@$name{0,0.0}')]
+                tooltips = tooltips
                 formatters = {'location': 'printf', '@date': 'datetime', '@name': 'printf'}
                 hover=HoverTool(tooltips = tooltips, formatters = formatters, point_policy = "snap_to_data", mode = kwargs['mode'], renderers=[r])  # ,PanTool())
                 standardfig.add_tools(hover)

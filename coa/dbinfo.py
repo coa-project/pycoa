@@ -111,18 +111,14 @@ def generic_info(namedb, keys):
         mydico = spfdic
     elif namedb == 'spfnational':
         spfn = {
-        'cur_reanimation': ['(nom d\'origine patients_reanimation) en current réa '],\
-        'cur_hospitalises':  ['(nom d\'origine patients_hospitalises) en current patients hospitalises '],\
-        'total_cas_confirmes':   ['total_cas_confirmes: total cumulé du nombre de décès'],\
-        'total_deces_hopital':  ['total_deces_hopital: total deces hopital '],\
-        'total_patients_gueris':  ['total_patients_gueris: total patients gueris'],\
-        'total_deces_ehpad':  ['total cumulé deces ehpad'],\
-        'total_cas_confirmes_ehpad':  ['total cumulé confirmes ehpad'],\
-        'total_cas_possibles_ehpad':  ['total cumulé possibles ehpad'],\
+        'cur_reanimation':['(nom d\'origine incid_rea) Nombre de nouveaux patients admis en réanimation au cours des dernières 24h.'],\
+        'cur_hospitalises':['(nom d\'origine incid_hosp) Nombre de nouveaux patients hospitalisés au cours des dernières 24h.'],\
+        'cur_cas':['(nom d\'origine,conf_j1) Nombre de nouveaux cas confirmés (J-1 date de résultats)'],
+        'tot_deces':['(nom d\'origine dc_tot) :Cumul des décès (cumul des décès constatés à l\'hôpital et en EMS)'],\
         }
         for k,v in spfn.items():
-              spfn[k].append('https://www.data.gouv.fr/fr/datasets/r/d3a98a30-893f-47f7-96c5-2f4bcaaa0d71')
-              spfn[k].append('https://www.data.gouv.fr/en/datasets/donnees-relatives-a-lepidemie-de-covid-19-en-france-vue-densemble/')
+              spfn[k].append('https://www.data.gouv.fr/fr/datasets/r/f335f9ea-86e3-4ffa-9684-93c009d5e617')
+              spfn[k].append('https://www.data.gouv.fr/fr/datasets/synthese-des-indicateurs-de-suivi-de-lepidemie-covid-19/')
         mydico = spfn
     elif namedb == 'insee':
         insee = {

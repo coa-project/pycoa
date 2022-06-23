@@ -306,14 +306,15 @@ class DataBase(object):
                 elif self.db == 'spf' or self.db == 'spfnational':
                     if self.db == 'spfnational':
                         rename_dict = {
-                        'patients_reanimation':'cur_reanimation',
-                        'patients_hospitalises':'cur_hospitalises'
+                        'incid_rea':'cur_reanimation',
+                        'incid_hosp':'cur_hospitalises',
+                        'conf_j1':'cur_cas',
+                        'dc_tot':'tot_deces'
                         }
-                        columns_keeped = ['total_deces_hopital','cur_reanimation','cur_hospitalises',
-                        'total_cas_confirmes','total_patients_gueris',
-                        'total_deces_ehpad','total_cas_confirmes_ehpad','total_cas_possibles_ehpad']
+                        columns_keeped = list(rename_dict.values())
 
-                        spfnat = self.csv2pandas("https://www.data.gouv.fr/fr/datasets/r/d3a98a30-893f-47f7-96c5-2f4bcaaa0d71",
+
+                        spfnat = self.csv2pandas("https://www.data.gouv.fr/fr/datasets/r/f335f9ea-86e3-4ffa-9684-93c009d5e617",
                         rename_columns = rename_dict, separator = ',')
                         colcast=[i for i in columns_keeped]
 

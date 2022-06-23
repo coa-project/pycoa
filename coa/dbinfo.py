@@ -170,7 +170,7 @@ def generic_info(namedb, keys):
         obe = {
          'idx_obepine':['tot_deces: total cumulé du nombre de décès']}
         for k,v in obe.items():
-              obe[k].append('https://www.data.gouv.fr/fr/datasets/r/89196725-56cf-4a83-bab0-170ad1e8ef85')
+              obe[k].append('https://www.data.gouv.fr/fr/datasets/r/25fb690a-af7f-4e69-bf40-7ca7698e2748')
               obe[k].append('https://www.data.gouv.fr/en/datasets/surveillance-du-sars-cov-2-dans-les-eaux-usees-1')
         mydico = obe
     elif namedb == 'owid':

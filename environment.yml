@@ -20,7 +20,7 @@ dependencies:
     - datetime
     - folium
     - lxml
-    - pandas=1.4.2
+    - pandas==1.4.2
     - geopandas
     - matplotlib
     - numpy

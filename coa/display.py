@@ -1767,7 +1767,7 @@ class CocoDisplay:
             uniqloc = list(geopdwd_filtered.clustername.unique())
             dfLabel = pd.DataFrame()
             sourcemaplabel = ColumnDataSource(dfLabel)
-            if maplabel or func.__name__ == 'pycoa_pimpmap':
+            if maplabel or func.__name__ in ['pycoa_pimpmap','pycoa_map','pycoa_mapfolium']:
                 locsum = geopdwd_filtered.clustername.unique()
                 numberpercluster = geopdwd_filtered['clustername'].value_counts().to_dict()
                 sumgeo = geopdwd_filtered.copy()

@@ -595,7 +595,7 @@ class GeoRegion():
 
         # --- filling cw information
         p_cw=pd.read_html(get_local_from_url('https://en.wikipedia.org/wiki/Member_states_of_the_Commonwealth_of_Nations'))
-        self._cw=[w.split('[')[0] for w in p_cw[0]['Country'].to_list()]   # removing wikipedia notes
+        self._cw=[w.split('[')[0] for w in p_cw[1]['Country'].to_list()]   # removing wikipedia notes
 
         # --- get the UnitedNation GeoScheme and organize the data
         p_gs=pd.read_html(get_local_from_url(self._source_dict["GeoScheme"],0))[0]

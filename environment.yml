@@ -13,7 +13,7 @@ dependencies:
     - nbgitpuller
     - sphinx-gallery
     - matplotlib
-    - bokeh
+    - bokeh==2.4.0
     - branca
     - bs4
     - datascroller

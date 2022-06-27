@@ -13,22 +13,22 @@ dependencies:
     - nbgitpuller
     - sphinx-gallery
     - matplotlib
-    - bokeh==2.4.0
+    - bokeh==2.3.3
     - branca
     - bs4
     - datascroller
     - datetime
     - folium
     - lxml
-    - pandas
-    - geopandas
+    - pandas==1.3.5
+    - geopandas==0.10.2
     - matplotlib
     - numpy
     - pycountry
     - pycountry_convert
     - requests
     - scipy
-    - shapely
+    - shapely==1.8.2
     - pytest
     - unidecode
     - openpyxl 

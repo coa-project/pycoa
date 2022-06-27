@@ -4,7 +4,7 @@ channels:
   - conda-forge
 dependencies:
   - firefox
-  - python
+  - python==3.9.6
   - numpy
   - selenium 
   - geckodriver 
@@ -21,7 +21,7 @@ dependencies:
     - folium
     - lxml
     - pandas
-    - geopandas==1.7.1
+    - geopandas
     - matplotlib
     - numpy
     - pycountry
@@ -32,4 +32,3 @@ dependencies:
     - pytest
     - unidecode
     - openpyxl 
-shapely

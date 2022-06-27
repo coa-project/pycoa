@@ -4,7 +4,7 @@ channels:
   - conda-forge
 dependencies:
   - firefox
-  - python==3.9.6
+  - python=3.9
   - numpy
   - selenium 
   - geckodriver 

@@ -1880,7 +1880,7 @@ class CocoDisplay:
                                                      np.nanmax(geopdwd_filtered['cases']))
         #min_col, max_col = np.nanmin(geopdwd_filtered['cases']),np.nanmax(geopdwd_filtered['cases'])
         min_col_non0 = (np.nanmin(geopdwd_filtered.loc[geopdwd_filtered['cases']>0.]['cases']))
-        json_data = json.dumps(json.loads(geopdwd_filtered.to_json(default_handler = str)))
+        json_data = json.dumps(json.loads(geopdwd_filtered.to_json()))
         geopdwd_filtered = GeoJSONDataSource(geojson=json_data)
 
         invViridis256 = Viridis256[::-1]
@@ -2038,7 +2038,7 @@ class CocoDisplay:
         min_col, max_col = CocoDisplay.min_max_range(np.nanmin(geopdwd_filtered['cases']),
                                                      np.nanmax(geopdwd_filtered['cases']))
 
-        json_data = json.dumps(json.loads(geopdwd_filtered.to_json(default_handler = str)))
+        json_data = json.dumps(json.loads(geopdwd_filtered.to_json()))
         geopdwd_filtered = GeoJSONDataSource(geojson=json_data)
 
         invViridis256 = Viridis256[::-1]

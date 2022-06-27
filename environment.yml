@@ -20,8 +20,8 @@ dependencies:
     - datetime
     - folium
     - lxml
-    - pandas==1.3.5
-    - geopandas
+    - pandas
+    - geopandas==1.7.1
     - matplotlib
     - numpy
     - pycountry
@@ -32,4 +32,4 @@ dependencies:
     - pytest
     - unidecode
     - openpyxl 
-
+shapely

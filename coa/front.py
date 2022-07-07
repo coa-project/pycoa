@@ -387,9 +387,9 @@ def chartsinput_deco(f):
     # no dateslider currently
 
         if '_db' not in globals():
-            #global _db, _cocoplot
-            #_db, _cocoplot = coco.DataBase.factory(_whom)
-            raise CoaKeyError('No database has been selected. You MUST define one using \"setwhom()\" ')
+            global _db, _cocoplot
+            _db, _cocoplot = coco.DataBase.factory(_whom)
+            #raise CoaKeyError('No database has been selected. You MUST define one using \"setwhom()\" ')
 
         where = kwargs.get('where', None)
         which = kwargs.get('which', None)

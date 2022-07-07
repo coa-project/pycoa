@@ -61,7 +61,8 @@ if 'coa_db' in __builtins__.keys():
 else:
     _whom = _listwhom[0]  # default base
 
-_db, _cocoplot = coco.DataBase.factory(_whom)  # initialization with default
+#_db, _cocoplot = coco.DataBase.factory(_whom)  # initialization with default
+
 _gi = None
 
 _dict_bypop = {'no':0,'100':100,'1k':1e3,'100k':1e5,'1M':1e6,'pop':1.}
@@ -267,16 +268,15 @@ def setwhom(base):
     By default, the listbase()[0] is the default base used in other
     functions.
     """
-    global _whom, _db, _cocoplot
-    if base not in listwhom():
-        raise CoaDbError(base + ' is not a supported database. '
-                                'See pycoa.listbase() for the full list.')
-    if True:  # force the init #_whom != base:
+    if '_db' not in globals():
+        global _db, _cocoplot
+        _db, _cocoplot = coco.DataBase.factory(base)
+    else:
+        if base not in listwhom():
+            raise CoaDbError(base + ' is not a supported database. '
+                                    'See pycoa.listbase() for the full list.')
         _db, _cocoplot = coco.DataBase.factory(base)
         _whom = base
-
-    pass
-    #return listwhich()
 
 
 # ----------------------------------------------------------------------
@@ -385,7 +385,11 @@ def chartsinput_deco(f):
                     'Bad args used in the pycoa function.')
 
     # no dateslider currently
-        global _db, _whom, _gi
+
+        if '_db' not in globals():
+            global _db, _cocoplot
+            info('No database has been selected. By default JHU is then selected.')
+            _db, _cocoplot = coco.DataBase.factory(_whom)
         where = kwargs.get('where', None)
         which = kwargs.get('which', None)
         what = kwargs.get('what', _listwhat[0])

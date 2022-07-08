@@ -269,14 +269,13 @@ def setwhom(base):
     functions.
     """
     if '_db' not in globals():
-        global _db, _cocoplot
-        _db, _cocoplot = coco.DataBase.factory(base)
+        global _db, _cocoplot, _whom
     else:
         if base not in listwhom():
             raise CoaDbError(base + ' is not a supported database. '
                                     'See pycoa.listbase() for the full list.')
-        _db, _cocoplot = coco.DataBase.factory(base)
-        _whom = base
+    _db, _cocoplot = coco.DataBase.factory(base)
+    _whom = base
 
 
 # ----------------------------------------------------------------------
@@ -387,7 +386,7 @@ def chartsinput_deco(f):
     # no dateslider currently
 
         if '_db' not in globals():
-            global _db, _cocoplot
+            global _db, _cocoplot, _whom
             _db, _cocoplot = coco.DataBase.factory(_whom)
             #raise CoaKeyError('No database has been selected. You MUST define one using \"setwhom()\" ')
 

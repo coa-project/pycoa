@@ -199,7 +199,11 @@ def listwhich():
     By default, the listwhich()[0] is the default which field in other
     functions.
     """
-    return _db.get_available_keys_words()
+    if  '_db' not in globals():
+        raise CoaKeyError('setwhom MUST be defined first !')
+    else:
+        return _db.get_available_keys_words()
+
 
 
 # ----------------------------------------------------------------------
@@ -208,37 +212,41 @@ def listwhich():
 def listwhere(clustered = False):
     """Get the list of available regions/subregions managed by the current database
     """
-    def clust():
-        if get_db_list_dict()[_whom][1] == 'nation' and get_db_list_dict()[_whom][2] != 'World':
-            return  _db.geo.to_standard(get_db_list_dict()[_whom][0])
-        else:
-            r = _db.geo.get_region_list()
-            if isinstance(r, list):
-                return r
-            else:
-                return sorted(r['name_region'].to_list())
-
-    if get_db_list_dict()[_whom][1] == 'nation' and get_db_list_dict()[_whom][2] != 'World':
-        return [ get_db_list_dict()[_whom][2] ]
-
-    if clustered:
-        return clust()
+    if  '_db' not in globals():
+        raise CoaKeyError('setwhom MUST be defined first !')
     else:
-        if _db.db_world == True:
+        def clust():
             if get_db_list_dict()[_whom][1] == 'nation' and get_db_list_dict()[_whom][2] != 'World':
-                r =  _db.geo.to_standard(get_db_list_dict()[_whom][0])
+                return  _db.geo.to_standard(get_db_list_dict()[_whom][0])
             else:
-                r = _db.geo.get_GeoRegion().get_countries_from_region('world')
-                r = [_db.geo.to_standard(c)[0] for c in r]
+                r = _db.geo.get_region_list()
+                if isinstance(r, list):
+                    return r
+                else:
+                    return sorted(r['name_region'].to_list())
+
+        if get_db_list_dict()[_whom][1] == 'nation' and get_db_list_dict()[_whom][2] != 'World':
+            return [ get_db_list_dict()[_whom][2] ]
+
+        if clustered:
+            return clust()
         else:
-            if get_db_list_dict()[_whom][1] == 'subregion':
-                pan = _db.geo.get_subregion_list()
-                r = list(pan.name_subregion.unique())
-            elif get_db_list_dict()[_whom][1] == 'region':
-                r = clust()
+            if _db.db_world == True:
+                if get_db_list_dict()[_whom][1] == 'nation' and get_db_list_dict()[_whom][2] != 'World':
+                    r =  _db.geo.to_standard(get_db_list_dict()[_whom][0])
+                else:
+                    r = _db.geo.get_GeoRegion().get_countries_from_region('world')
+                    r = [_db.geo.to_standard(c)[0] for c in r]
             else:
-                raise CoaKeyError('What is the granularity of your DB ?')
-        return r
+                if get_db_list_dict()[_whom][1] == 'subregion':
+                    pan = _db.geo.get_subregion_list()
+                    r = list(pan.name_subregion.unique())
+                elif get_db_list_dict()[_whom][1] == 'region':
+                    r = clust()
+                else:
+                    raise CoaKeyError('What is the granularity of your DB ?')
+            return r
+
 
 # ----------------------------------------------------------------------
 # --- listbypop() ------------------------------------------------------
@@ -284,7 +292,10 @@ def setwhom(base):
 def getwhom():
     """Return the current base which is used
     """
-    return _whom
+    if  '_db' not in globals():
+        raise CoaKeyError('setwhom MUST be defined first !')
+    else:
+        return _whom
 
 
 # ----------------------------------------------------------------------
@@ -301,7 +312,10 @@ def getinfo(which):
     #elif which not in listwhich():
     #    raise CoaKeyError('Which option ' + which + ' not supported. '
     #                                                'See listwhich() for list.')
-    print(_db.get_keyword_definition(which),'\nurl:', _db.get_keyword_url(which)[0],'\n(more info ',_db.get_keyword_url(which)[1],')')
+    if  '_db' not in globals():
+        raise CoaKeyError('setwhom MUST be defined first !')
+    else:
+        print(_db.get_keyword_definition(which),'\nurl:', _db.get_keyword_url(which)[0],'\n(more info ',_db.get_keyword_url(which)[1],')')
 
 # ----------------------------------------------------------------------
 # --- Normalisation by pop input pandas return pandas whith by pop new column

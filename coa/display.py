@@ -1184,7 +1184,7 @@ class CocoDisplay:
             srcfiltered = ColumnDataSource(data = input_filter)
             max_value = max(input_filter['cases'])
             min_value = min(input_filter['cases'])
-            min_value_gt0 = min(input_filter[input_filter['cases'] > 0]['cases'])
+            min_value_gt0 = min(input_filter[input_filter['cases'] >= 0]['cases'])
             panels = []
             for axis_type in self.ax_type:
                 plot_width = kwargs['plot_width']

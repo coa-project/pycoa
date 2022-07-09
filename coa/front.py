@@ -500,7 +500,15 @@ def chartsinput_deco(f):
 
         when_beg, when_end = extract_dates(when)
         if pandy[[which,'date']].isnull().values.all():
-            raise CoaKeyError('All values for '+ which + ' is nan nor empty')
+            info('--------------------------------------------')
+            info('All values for '+ which + ' is nan nor empty')
+            info('--------------------------------------------')
+            pandy['date']=_db.get_dates()
+            pandy['where']=where
+            pandy['clustername']=where
+            pandy['codelocation']='000'
+            pandy=pandy.fillna(0)
+            #raise CoaKeyError('All values for '+ which + ' is nan nor empty')
 
         if when_end > pandy[[which,'date']].date.max():
             when_end = pandy[[which,'date']].date.max()

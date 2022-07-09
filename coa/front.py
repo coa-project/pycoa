@@ -80,6 +80,8 @@ _listhist = ['bylocation','byvalue','pie']
 _listplot = ['date','menulocation','versus','spiral','yearly']
 
 _listmaplabel= ['text','textinteger','spark','spiral','label%','log','unsorted','exploded','dense']
+
+_listoption = ['nonneg', 'nofillnan', 'smooth7', 'sumall','sumallandsmooth7','sumallandsmooth7']
 # --- Front end functions ----------------------------------------------
 
 # ----------------------------------------------------------------------
@@ -177,7 +179,7 @@ def listoption():
     """Return the list of currently avalailable option apply to data.
      Default is no option.
     """
-    return _db.get_available_options()
+    return _listoption
 
 # ----------------------------------------------------------------------
 # --- listtile() -------------------------------------------------------

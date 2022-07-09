@@ -695,13 +695,6 @@ class DataBase(object):
         '''
         return self.database_name
 
-   def get_available_options(self):
-        '''
-        Return available options for the get_stats method
-        '''
-        o=self.available_options
-        return o
-
    def get_available_keys_words(self):
         '''
         Return all the available keyswords for the database selected
@@ -1335,6 +1328,8 @@ class DataBase(object):
                         dicooriglist[self.database_type[self.db][0]]=explosion(DataBase.flat_list(self.slocation))
                     else:
                         dicooriglist[','.join(i)]=explosion(i,self.database_type[self.db][1])
+
+                        #print(list(map(lambda x: x.replace(i, ', '.join(DataBase.flat_list(self.slocation))), origlistlistloc)))
                 #dicooriglist={','.join(i):explosion(i,self.database_type[self.db][1]) for i in origlistlistloc}
                 #origlistlistloc = DataBase.flat_list(list(dicooriglist.values()))
                 #location_exploded = origlistlistloc
@@ -1460,7 +1455,7 @@ class DataBase(object):
                 sumall = True
                 sumallandsmooth7 = True
             elif o != None and o != '' and o != 'sumallandsmooth7':
-                raise CoaKeyError('The option '+o+' is not recognized in get_stats. See get_available_options() for list.')
+                raise CoaKeyError('The option '+o+' is not recognized in get_stats. See listoptions() for list.')
         pdfiltered = pdfiltered.reset_index(drop=True)
 
         # if sumall set, return only integrate val

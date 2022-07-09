@@ -222,10 +222,10 @@ def listwhere(clustered = False):
                 return  _db.geo.to_standard(get_db_list_dict()[_whom][0])
             else:
                 r = _db.geo.get_region_list()
-                if isinstance(r, list):
-                    return r
-                else:
-                    return sorted(r['name_region'].to_list())
+                if not isinstance(r, list):
+                    r=sorted(r['name_region'].to_list())
+                r.append(get_db_list_dict()[_whom][2])
+                return r
 
         if get_db_list_dict()[_whom][1] == 'nation' and get_db_list_dict()[_whom][2] != 'World':
             return [ get_db_list_dict()[_whom][2] ]
@@ -245,6 +245,7 @@ def listwhere(clustered = False):
                     r = list(pan.name_subregion.unique())
                 elif get_db_list_dict()[_whom][1] == 'region':
                     r = clust()
+                    r.append(get_db_list_dict()[_whom][2])
                 else:
                     raise CoaKeyError('What is the granularity of your DB ?')
             return r

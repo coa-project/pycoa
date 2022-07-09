@@ -1329,10 +1329,20 @@ class DataBase(object):
                 return DataBase.flat_list(exploded)
 
             if origlistlistloc != None:
+                new_list=[]
+                for i in origlistlistloc:
+                    if i[0].upper() in [self.database_type[self.db][0].upper(),self.database_type[self.db][2].upper()]:
+                        new_list.append(DataBase.flat_list(self.slocation))
+                    else:
+                        new_list.append(i)
+                origlistlistloc = new_list         
+                        #print(list(map(lambda x: x.replace(i, ', '.join(DataBase.flat_list(self.slocation))), origlistlistloc)))
                 dicooriglist={','.join(i):explosion(i,self.database_type[self.db][1]) for i in origlistlistloc}
                 #origlistlistloc = DataBase.flat_list(list(dicooriglist.values()))
                 #location_exploded = origlistlistloc
             else:
+                if listloc[0].upper() in [self.database_type[self.db][0].upper(),self.database_type[self.db][2].upper()]:
+                    listloc=self.slocation
                 listloc = explosion(listloc,self.database_type[self.db][1])
                 listloc = DataBase.flat_list(listloc)
                 location_exploded = listloc

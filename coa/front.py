@@ -133,7 +133,7 @@ def listwhom(detailed=False):
             df = df.rename(columns={'index':'Database',0: "WW/iso3",1:'Granularité',2:'WW/Name'})
             return df
         else:
-            return _db.get_available_database()
+            return list(get_db_list_dict().keys())
     except:
         raise CoaKeyError('Waiting for a boolean !')
 

@@ -1876,10 +1876,14 @@ class CocoDisplay:
 
         date_slider = kwargs['date_slider']
         maplabel = kwargs.get('maplabel',self.dvisu_default['maplabel'])
-        min_col, max_col = CocoDisplay.min_max_range(np.nanmin(geopdwd_filtered['cases']),
+        min_col, max_col, min_col_non0 = 3*[0.]
+        try:
+            min_col, max_col = CocoDisplay.min_max_range(np.nanmin(geopdwd_filtered['cases']),
                                                      np.nanmax(geopdwd_filtered['cases']))
+            min_col_non0 = (np.nanmin(geopdwd_filtered.loc[geopdwd_filtered['cases']>0.]['cases']))
+        except ValueError:  #raised if `geopdwd_filtered` is empty.
+            pass
         #min_col, max_col = np.nanmin(geopdwd_filtered['cases']),np.nanmax(geopdwd_filtered['cases'])
-        min_col_non0 = (np.nanmin(geopdwd_filtered.loc[geopdwd_filtered['cases']>0.]['cases']))
         json_data = json.dumps(json.loads(geopdwd_filtered.to_json()))
         geopdwd_filtered = GeoJSONDataSource(geojson=json_data)
 

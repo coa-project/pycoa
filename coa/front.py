@@ -491,6 +491,7 @@ def chartsinput_deco(f):
                 pandy['clustername']=where
                 pandy['codelocation']='000'
                 pandy=pandy.fillna(0)
+                bypop = 'no'
             if bypop != 'no':
                 if what:
                     val = what

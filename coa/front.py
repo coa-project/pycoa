@@ -482,6 +482,15 @@ def chartsinput_deco(f):
             pandy = _db.get_stats(which=which, location=where, option=option).rename(columns={'location': 'where'})
             pandy['standard'] = pandy[which]
             input_field = what
+            if pandy[[which,'date']].isnull().values.all():
+                info('--------------------------------------------')
+                info('All values for '+ which + ' is nan nor empty')
+                info('--------------------------------------------')
+                pandy['date']=_db.get_dates()
+                pandy['where']=where
+                pandy['clustername']=where
+                pandy['codelocation']='000'
+                pandy=pandy.fillna(0)
             if bypop != 'no':
                 if what:
                     val = what

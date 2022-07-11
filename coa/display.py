@@ -306,7 +306,8 @@ class CocoDisplay:
 
             for i in input_field:
                 if input[i].isnull().all():
-                    raise CoaTypeError("Sorry all data are NaN for " + i)
+                    #raise CoaTypeError("Sorry all data are NaN for " + i)
+                    print("Sorry all data are NaN for " + i)
                 else:
                     when_end_change = min(when_end_change,CocoDisplay.changeto_nonull_date(input, when_end, i))
 
@@ -1884,6 +1885,8 @@ class CocoDisplay:
         except ValueError:  #raised if `geopdwd_filtered` is empty.
             pass
         #min_col, max_col = np.nanmin(geopdwd_filtered['cases']),np.nanmax(geopdwd_filtered['cases'])
+
+
         json_data = json.dumps(json.loads(geopdwd_filtered.to_json()))
         geopdwd_filtered = GeoJSONDataSource(geojson=json_data)
 

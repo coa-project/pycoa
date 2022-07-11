@@ -512,7 +512,7 @@ class DataBase(object):
                     renamed_cols2=['total_'+i for i in col_to_rename2]
                     col_to_rename = col_to_rename1+col_to_rename2
                     renamed_cols = renamed_cols1 +renamed_cols2
-                    columns_keeped=['iso_code','total_deaths','total_cases','total_vaccinations','total_tests']
+                    columns_keeped=['iso_code','total_deaths','total_cases','total_vaccinations','total_tests','total_tests_per_thousand']
                     columns_keeped+=['total_cases_per_million','total_deaths_per_million','total_vaccinations_per_hundred','total_boosters']
                     #owid['total_tests_with_new_tests'] = owid.groupby(['location'])['new_tests'].cumsum()
                     uniq=list(owid.location.unique())

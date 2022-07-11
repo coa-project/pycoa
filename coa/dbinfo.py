@@ -174,6 +174,7 @@ def generic_info(namedb, keys):
         'total_deaths':['total_deaths: Total deaths attributed to COVID-19'],
         'total_cases':['total_cases: Total confirmed cases of COVID-19'],
         'total_tests':['total_tests: Total tests for COVID-19'],
+        'total_tests_per_thousand':['tal_tests_per_thousand: Total tests for COVID-19 per thousand'],
         'cur_new_tests':['cur_new_tests (original name new_tests): New tests for COVID-19 (only calculated for consecutive days)'],
         'total_vaccinations':['total_vaccinations: Total number of COVID-19 vaccination doses administered'],
         'total_population':['total_population: total population of a given country'],

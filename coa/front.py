@@ -320,6 +320,12 @@ def getinfo(which):
     else:
         print(_db.get_keyword_definition(which),'\nurl:', _db.get_keyword_url(which)[0],'\n(more info ',_db.get_keyword_url(which)[1],')')
 
+def get_mainpandas(**kwargs):
+    """
+        Return the main pandas i.e with all the which values loaded from the database selected
+    """
+    return _db.get_mainpandas(**kwargs)
+
 # ----------------------------------------------------------------------
 # --- Normalisation by pop input pandas return pandas whith by pop new column
 # ---------------------------------------------------------------------

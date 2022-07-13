@@ -639,6 +639,9 @@ def get(**kwargs):
         #pandy = pandy.drop(columns=['cumul'])
         #pandy['cumul'] = pandy[which]
         casted_data = pandy
+        col=list(casted_data.columns)
+        mem='{:,}'.format(casted_data[col].memory_usage(deep=True).sum())
+        info('Memory usage of all columns: ' + mem + ' bytes')
     # print(pandy)
     # casted_data = pd.pivot_table(pandy, index='date',columns='where',values=col_name).to_dict('series')
     # print(pandy)

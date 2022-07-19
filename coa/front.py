@@ -324,6 +324,9 @@ def get_mainpandas(**kwargs):
     """
         Return the main pandas i.e with all the which values loaded from the database selected
     """
+
+    mem='{:,}'.format(casted_data[col].memory_usage(deep=True).sum())
+    info('Memory usage of all columns: ' + mem + ' bytes')
     return _db.get_mainpandas(**kwargs)
 
 # ----------------------------------------------------------------------

@@ -115,6 +115,7 @@ def generic_info(namedb, keys):
         'cur_hospitalises':['(nom d\'origine incid_hosp) Nombre de nouveaux patients hospitalisés au cours des dernières 24h.'],\
         'cur_cas':['(nom d\'origine,conf_j1) Nombre de nouveaux cas confirmés (J-1 date de résultats)'],
         'tot_deces':['(nom d\'origine dc_tot) :Cumul des décès (cumul des décès constatés à l\'hôpital et en EMS)'],\
+        'tot_esms_dc':['tot_esms_dc:Décès en ESMS'],
         }
         for k,v in spfn.items():
               spfn[k].append('https://www.data.gouv.fr/fr/datasets/r/f335f9ea-86e3-4ffa-9684-93c009d5e617')

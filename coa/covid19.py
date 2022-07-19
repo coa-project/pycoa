@@ -309,7 +309,8 @@ class DataBase(object):
                         'incid_rea':'cur_reanimation',
                         'incid_hosp':'cur_hospitalises',
                         'conf_j1':'cur_cas',
-                        'dc_tot':'tot_deces'
+                        'dc_tot':'tot_deces',
+                        'esms_dc':'tot_esms_dc',
                         }
                         columns_keeped = list(rename_dict.values())
 

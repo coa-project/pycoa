@@ -1511,6 +1511,9 @@ class DataBase(object):
                 pdfiltered.groupby('clustername')['cumul'].apply(lambda x: x.ffill())
 
         pdfiltered['daily'] = pdfiltered.groupby('clustername')['cumul'].diff()
+        if self.db == 'spf' and kwargs['which'] in ['tot_P','tot_T']:
+            pdfiltered['daily'] = pdfiltered.groupby(['clustername'])[kwargs['which']].rolling(7,min_periods=7).mean()\
+                                  .reset_index(level=0,drop=True).diff()    
         pdfiltered['weekly'] = pdfiltered.groupby('clustername')['cumul'].diff(7)
         inx = pdfiltered.groupby('clustername').head(1).index
         inx7=pdfiltered.groupby('clustername').head(7).index

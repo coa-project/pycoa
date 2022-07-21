@@ -37,7 +37,7 @@ from bokeh.models import ColumnDataSource, TableColumn, DataTable, ColorBar, Log
     HoverTool, CrosshairTool, BasicTicker, GeoJSONDataSource, LinearColorMapper, LogColorMapper,Label, \
     PrintfTickFormatter, BasicTickFormatter, NumeralTickFormatter, CustomJS, CustomJSHover, Select, \
     Range1d, DatetimeTickFormatter, Legend, LegendItem, Text
-from bokeh.models.widgets import Tabs, Panel
+from bokeh.models.widgets import Tabs, Panel, Button, TableColumn, Toggle
 from bokeh.plotting import figure
 from bokeh.layouts import row, column, gridplot
 from bokeh.palettes import Category10, Category20, Viridis256
@@ -931,7 +931,7 @@ class CocoDisplay:
             ended = geopdwd.date.max()
             if cursor_date:
                 date_slider = DateSlider(title = "Date: ", start = started, end = ended,
-                                     value = ended, step=24 * 60 * 60 * 1000, orientation = orientation)
+                                     value = started, step=24 * 60 * 60 * 1000, orientation = orientation)
                 #wanted_date = date_slider.value_as_datetime.date()
 
             #if func.__name__ == 'pycoa_mapfolium' or func.__name__ == 'pycoa_map' or func.__name__ == 'innerdecomap' or func.__name__ == 'innerdecopycoageo':
@@ -1879,9 +1879,14 @@ class CocoDisplay:
         maplabel = kwargs.get('maplabel',self.dvisu_default['maplabel'])
         min_col, max_col, min_col_non0 = 3*[0.]
         try:
-            min_col, max_col = CocoDisplay.min_max_range(np.nanmin(geopdwd_filtered['cases']),
-                                                     np.nanmax(geopdwd_filtered['cases']))
-            min_col_non0 = (np.nanmin(geopdwd_filtered.loc[geopdwd_filtered['cases']>0.]['cases']))
+            if date_slider:
+                min_col, max_col = CocoDisplay.min_max_range(np.nanmin(geopdwd['cases']),
+                                                         np.nanmax(geopdwd['cases']))
+                min_col_non0 = (np.nanmin(geopdwd.loc[geopdwd['cases']>0.]['cases']))
+            else:
+                min_col, max_col = CocoDisplay.min_max_range(np.nanmin(geopdwd_filtered['cases']),
+                                                         np.nanmax(geopdwd_filtered['cases']))
+                min_col_non0 = (np.nanmin(geopdwd_filtered.loc[geopdwd_filtered['cases']>0.]['cases']))
         except ValueError:  #raised if `geopdwd_filtered` is empty.
             pass
         #min_col, max_col = np.nanmin(geopdwd_filtered['cases']),np.nanmax(geopdwd_filtered['cases'])
@@ -1895,7 +1900,7 @@ class CocoDisplay:
             color_mapper = LogColorMapper(palette=invViridis256, low=min_col_non0, high=max_col, nan_color='#ffffff')
         else:
             color_mapper = LinearColorMapper(palette=invViridis256, low=min_col, high=max_col, nan_color='#ffffff')
-        color_bar = ColorBar(color_mapper=color_mapper, label_standoff=4, width=standardfig.plot_width, bar_line_cap='round',
+        color_bar = ColorBar(color_mapper=color_mapper, label_standoff=4, bar_line_cap='round',
                              border_line_color=None, location=(0, 0), orientation='horizontal', ticker=BasicTicker())
         color_bar.formatter = BasicTickFormatter(use_scientific=True, precision=1, power_limit_low=int(max_col))
 
@@ -1969,6 +1974,43 @@ class CocoDisplay:
                         source_filter.change.emit();
                     """)
             date_slider.js_on_change('value', callback)
+            # Set up Play/Pause button/toggle JS
+            date_list = pd.date_range(geopdwd.date.min(),geopdwd.date.max()-dt.timedelta(days=1),freq='d').to_list()
+            indexCDS = ColumnDataSource(dict(date=date_list))
+            toggl_js = CustomJS(args=dict(date_slider=date_slider,indexCDS=indexCDS),code="""
+            // A little lengthy but it works for me, for this problem, in this version.
+                var check_and_iterate = function(date){
+                    var slider_val = date_slider.value;
+                    var toggle_val = cb_obj.active;
+                    if(toggle_val == false) {
+                        cb_obj.label = '► Play';
+                        clearInterval(looop);
+                        }
+                    else if(slider_val == date[date.length - 1]) {
+                        cb_obj.label = '► Play';
+                        //date_slider.value = date[0];
+                        cb_obj.active = false;
+                        clearInterval(looop);
+                        }
+                    else if(slider_val !== date[date.length - 1]){
+                        date_slider.value = date.filter((item) => item > slider_val)[0];
+                        }
+                    else {
+                    clearInterval(looop);
+                        }
+                }
+                if(cb_obj.active == false){
+                    cb_obj.label = '► Play';
+                    clearInterval(looop);
+                }
+                else {
+                    cb_obj.label = '❚❚ Pause';
+                    var looop = setInterval(check_and_iterate, 10, indexCDS.data['date']);
+                };
+            """)
+
+            toggl = Toggle(label='► Play',active=False, button_type="success",height=30,width=10)
+            toggl.js_on_change('active',toggl_js)
 
 
         standardfig.xaxis.visible = False
@@ -2004,7 +2046,7 @@ class CocoDisplay:
         formatters = {'location': 'printf', 'cases': 'printf',},
         point_policy = "snap_to_data",callback=callback))  # ,PanTool())
         if date_slider:
-            standardfig = column(date_slider, standardfig)
+            standardfig = column(date_slider, standardfig,toggl)
         return standardfig
 
     ''' PIMPMAP BOKEH '''

@@ -1131,7 +1131,7 @@ class CocoDisplay:
             locunique = geopdwd_filter.clustername.unique()#geopdwd_filtered.location.unique()
             geopdwd_filter = geopdwd_filter.copy()
             nmaxdisplayed = MAXCOUNTRIESDISPLAYED
-
+            toggl = None
 
             if len(locunique) >= nmaxdisplayed :#and func.__name__ != 'pycoa_pie' :
                 if func.__name__ != 'pycoa_pie' :
@@ -1238,6 +1238,7 @@ class CocoDisplay:
                             var subregion = source.data['name_subregion'];
                             var codeloc = source.data['codelocation'];
                             var colors = source.data['colors'];
+                            var colors = source.data['colors'];
 
                             var newval = [];
                             var newloc = [];
@@ -1337,7 +1338,7 @@ class CocoDisplay:
 
                             source_filter.data['clustername'] = orderloc;
                             source_filter.data['codelocation'] = ordercodeloc;
-                            //source_filter.data['colors'] = ordercolors;
+                            source_filter.data['colors'] = ordercolors;
 
                             if(typeof subregion !== 'undefined')
                                 source_filter.data['rolloverdisplay'] = ordername_subregion;
@@ -1369,7 +1370,7 @@ class CocoDisplay:
                                 top.push(parseInt(ymax*(n-i)/n+d/2));
                                 bottom.push(parseInt(ymax*(n-i)/n-d/2));
                                 mid.push(parseInt(ymax*(n-i)/n));
-                                labeldic[parseInt(ymax*(n-i)/n)] = ordercodeloc[i];
+                                labeldic[parseInt(ymax*(n-i)/n)] = orderloc[i];//ordercodeloc[i];
 
                                 ht.push(right_quad[i].toFixed(2).toString());
                                 var a=new Intl.NumberFormat().format(right_quad[i])
@@ -1383,14 +1384,13 @@ class CocoDisplay:
                             source_filter.data['horihistotextxy'] =  mid;
                             source_filter.data['horihistotextx'] =  right_quad;
                             source_filter.data['horihistotext'] =  ht;
-                            source_filter.data['permanentdisplay'] = ordercodeloc;
+                            source_filter.data['permanentdisplay'] = orderloc;//ordercodeloc;
                             source_filter.data['textdisplayed'] = textdisplayed;
                             source_filter.data['textdisplayed2'] = textdisplayed2;
                             var maxx = Math.max.apply(Math, right_quad);
                             var minx = Math.min.apply(Math, left_quad);
 
                             ylabel.major_label_overrides = labeldic;
-                            console.log(labeldic);
                             x_range.end =  1.2 * maxx;
                             x_range.start =  1.05 * minx;
                             if(minx >= 0){
@@ -1409,6 +1409,44 @@ class CocoDisplay:
                             source_filter.change.emit();
                         """)
                     date_slider.js_on_change('value', callback)
+                    # Set up Play/Pause button/toggle JS
+                    date_list = pd.date_range(geopdwd.date.min(),geopdwd.date.max()-dt.timedelta(days=1),freq='d').to_list()
+                    indexCDS = ColumnDataSource(dict(date=date_list))
+                    toggl_js = CustomJS(args=dict(date_slider=date_slider,indexCDS=indexCDS),code="""
+                    // A little lengthy but it works for me, for this problem, in this version.
+                        var check_and_iterate = function(date){
+                            var slider_val = date_slider.value;
+                            var toggle_val = cb_obj.active;
+                            if(toggle_val == false) {
+                                cb_obj.label = '► Play';
+                                clearInterval(looop);
+                                }
+                            else if(slider_val == date[date.length - 1]) {
+                                cb_obj.label = '► Play';
+                                //date_slider.value = date[0];
+                                cb_obj.active = false;
+                                clearInterval(looop);
+                                }
+                            else if(slider_val !== date[date.length - 1]){
+                                date_slider.value = date.filter((item) => item > slider_val)[0];
+                                }
+                            else {
+                            clearInterval(looop);
+                                }
+                        }
+                        if(cb_obj.active == false){
+                            cb_obj.label = '► Play';
+                            clearInterval(looop);
+                        }
+                        else {
+                            cb_obj.label = '❚❚ Pause';
+                            var looop = setInterval(check_and_iterate, 10, indexCDS.data['date']);
+                        };
+                    """)
+
+                    toggl = Toggle(label='► Play',active=False, button_type="success",height=30,width=10)
+                    toggl.js_on_change('active',toggl_js)
+
                 cases_custom = CocoDisplay.rollerJS()
 
                 if min(srcfiltered.data['cases'])<0.01:
@@ -1430,14 +1468,14 @@ class CocoDisplay:
                 panel = Panel(child = standardfig, title = axis_type)
                 panels.append(panel)
 
-            return func(self, srcfiltered, panels, date_slider)
+            return func(self, srcfiltered, panels, date_slider, toggl)
         return inner_decohistopie
 
     ''' VERTICAL HISTO '''
     @decowrapper
     @decohistomap
     @decohistopie
-    def pycoa_horizonhisto(self, srcfiltered, panels, date_slider):
+    def pycoa_horizonhisto(self, srcfiltered, panels, date_slider,toggl):
         '''
             -----------------
             Create 1D histogramme by location according to arguments.
@@ -1489,7 +1527,7 @@ class CocoDisplay:
             new_panels.append(panel)
         tabs = Tabs(tabs = new_panels)
         if date_slider:
-                tabs = column(date_slider,tabs)
+                tabs = column(date_slider,tabs,toggl)
         return tabs
 
     ''' PIE '''
@@ -1529,7 +1567,7 @@ class CocoDisplay:
     @decowrapper
     @decohistomap
     @decohistopie
-    def pycoa_pie(self, srcfiltered, panels, date_slider):
+    def pycoa_pie(self, srcfiltered, panels, date_slider,toggl):
         '''
             -----------------
             Create a pie chart according to arguments.
@@ -1934,7 +1972,6 @@ class CocoDisplay:
                                 value =  Number.parseFloat(value).toExponential(2);
                              else
                                  value = Number.parseFloat(value).toFixed(2);
-                            console.log(value);
                             return value;
                          }
                         for (var i = 0; i < source.get_length(); i++)

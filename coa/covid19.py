@@ -313,6 +313,7 @@ class DataBase(object):
                         'conf_j1':'cur_cas',
                         'dchosp':'tot_dc_hosp',
                         'esms_dc':'tot_dc_esms',
+                        'dc_tot':'tot_dc',
                         }
                         columns_keeped = list(rename_dict.values())
 

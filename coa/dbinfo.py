@@ -114,8 +114,8 @@ def generic_info(namedb, keys):
         'cur_reanimation':['(nom d\'origine incid_rea) Nombre de nouveaux patients admis en réanimation au cours des dernières 24h.'],\
         'cur_hospitalises':['(nom d\'origine incid_hosp) Nombre de nouveaux patients hospitalisés au cours des dernières 24h.'],\
         'cur_cas':['(nom d\'origine,conf_j1) Nombre de nouveaux cas confirmés (J-1 date de résultats)'],
-        'tot_deces':['(nom d\'origine dc_tot) :Cumul des décès (cumul des décès constatés à l\'hôpital et en EMS)'],\
-        'tot_esms_dc':['tot_esms_dc:Décès en ESMS'],
+        'tot_dc_hosp':['(nom d\'origine dc_tot) :Cumul des décès (cumul des décès constatés à l\'hôpital et en EMS)'],\
+        'tot_dc_esms':['tot_dc_esms:Décès en ESMS'],
         }
         for k,v in spfn.items():
               spfn[k].append('https://www.data.gouv.fr/fr/datasets/r/f335f9ea-86e3-4ffa-9684-93c009d5e617')
@@ -230,6 +230,7 @@ def generic_info(namedb, keys):
         'daily_full':['daily_full: daily_full'],\
         'icu_covid':['icu_covid: icu_covid'],\
         'beds_icu_covid':['beds_icu_covid: beds_icu_covid'],\
+        'tot_deaths':['tot_deaths'],\
         }
         for k,v in moh.items():
             moh[k].append("https://raw.githubusercontent.com/MoH-Malaysia/covid19-public/main/epidemic/cases_state.csv")

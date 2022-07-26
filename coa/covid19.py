@@ -222,10 +222,12 @@ class DataBase(object):
                     moh2 = self.csv2pandas("https://raw.githubusercontent.com/MoH-Malaysia/covid19-public/main/epidemic/hospital.csv",rename_columns=rename_dict,separator=',')
                     moh3 = self.csv2pandas("https://raw.githubusercontent.com/MoH-Malaysia/covid19-public/main/epidemic/icu.csv",rename_columns=rename_dict,separator=',')
                     moh4 = self.csv2pandas("https://raw.githubusercontent.com/CITF-Malaysia/citf-public/main/vaccination/vax_state.csv",rename_columns=rename_dict,separator=',')
+                    moh5 = self.csv2pandas("https://raw.githubusercontent.com/MoH-Malaysia/covid19-public/main/epidemic/deaths_state.csv",rename_columns=rename_dict,separator=',')
+                    moh5['tot_deaths']=moh5.groupby(['location'])['deaths_new'].cumsum()
+                    list_moh = [moh1,moh2,moh3,moh4,moh5]
 
-                    list_moh = [moh1,moh2,moh3,moh4]
                     result = reduce(lambda left, right: left.merge(right, how = 'outer', on=['location','date']), list_moh)
-                    columns_keeped = ['tot_cases','hosp_covid','daily_partial','daily_full','icu_covid','beds_icu_covid']
+                    columns_keeped = ['tot_deaths','tot_cases','hosp_covid','daily_partial','daily_full','icu_covid','beds_icu_covid']
                     self.return_structured_pandas(result, columns_keeped = columns_keeped)
                 elif self.db == 'minciencia': # CHL
                     info('Chile Ministerio de Ciencia, Tecnología, Conocimiento, e Innovación database selected ...')
@@ -309,8 +311,8 @@ class DataBase(object):
                         'incid_rea':'cur_reanimation',
                         'incid_hosp':'cur_hospitalises',
                         'conf_j1':'cur_cas',
-                        'dc_tot':'tot_deces',
-                        'esms_dc':'tot_esms_dc',
+                        'dchosp':'tot_dc_hosp',
+                        'esms_dc':'tot_dc_esms',
                         }
                         columns_keeped = list(rename_dict.values())
 

@@ -1404,7 +1404,7 @@ class CocoDisplay:
                             var mm = String(dateconverted.getMonth() + 1).padStart(2, '0'); //January is 0!
                             var yyyy = dateconverted.getFullYear();
                             var dmy = dd + '/' + mm + '/' + yyyy;
-                            title.text = tmp + dmy+")";
+                            //title.text = tmp + dmy+")";
 
                             source_filter.change.emit();
                         """)

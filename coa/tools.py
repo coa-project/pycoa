@@ -159,7 +159,7 @@ def fill_missing_dates(p, date_field='date', loc_field='location', d1=None, d2=N
         pp=p.loc[p[loc_field]==l]
         pp2=pp.set_index([date_field])
         pp2.index = pd.DatetimeIndex(pp2.index)
-        pp3 = pp2.reindex(idx,fill_value=numpy.nan)#pandas.NA)
+        pp3 = pp2.reindex(idx,fill_value=pd.NA)#numpy.nan)#
         pp3[loc_field] = pp3[loc_field].fillna(l)  #pp3['location'].fillna(method='bfill')
         #pp3['codelocation'] = pp3['codelocation'].fillna(method='bfill')
         #pp3['codelocation'] = pp3['codelocation'].fillna(method='ffill')

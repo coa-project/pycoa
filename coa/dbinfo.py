@@ -116,7 +116,8 @@ def generic_info(namedb, keys):
         'cur_cas':['(nom d\'origine,conf_j1) Nombre de nouveaux cas confirmés (J-1 date de résultats)'],
         'tot_dc_hosp':['(nom d\'origine dchosp) :Cumul des décès (cumul des décès constatés à l\'hôpital et en EMS)'],\
         'tot_dc_esms':['(nom d\'origine esms_dc)tot_dc_esms: Décès en ESMS'],
-        'tot_dc':['(nom d\'origine dc_tot): tot dc']
+        'tot_dc':['(nom d\'origine dc_tot): tot dc'],
+        'cur_tx_pos': ['(nom d\'origine tx_pos): Taux de positivité des tests virologiques'],
         }
         for k,v in spfn.items():
               spfn[k].append('https://www.data.gouv.fr/fr/datasets/r/f335f9ea-86e3-4ffa-9684-93c009d5e617')

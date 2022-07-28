@@ -314,6 +314,7 @@ class DataBase(object):
                         'dchosp':'tot_dc_hosp',
                         'esms_dc':'tot_dc_esms',
                         'dc_tot':'tot_dc',
+                        'tx_pos': 'cur_tx_pos',
                         }
                         columns_keeped = list(rename_dict.values())
 

@@ -1269,6 +1269,7 @@ class DataBase(object):
                 else:
                     raise CoaWhereError("In the case of sumall all locations must have the same types i.e\
                     list or string but both is not accepted, could be confusing")
+
         owid_name=''
         if self.db_world:
             self.geo.set_standard('name')
@@ -1339,7 +1340,7 @@ class DataBase(object):
                 #origlistlistloc = DataBase.flat_list(list(dicooriglist.values()))
                 #location_exploded = origlistlistloc
             else:
-                if listloc[0].upper() in [self.database_type[self.db][0].upper(),self.database_type[self.db][2].upper()]:
+                if any([i.upper() in [self.database_type[self.db][0].upper(),self.database_type[self.db][2].upper()] for i in listloc]):
                     listloc=self.slocation
                 listloc = explosion(listloc,self.database_type[self.db][1])
                 listloc = DataBase.flat_list(listloc)

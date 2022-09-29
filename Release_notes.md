@@ -1,8 +1,9 @@
 # PyCoa - Release_notes
 
-## dev
-- Add new option to maplabel:'condensed', when avaliable (so far for USA and FRA) condense the 
-geometry. byt default the geo is unconsended  
+## v2.21 
+- Add new option to maplabel:'condensed', when avaliable (so far for USA and FRA) condense the geometry. by default the geo is unconsended  
+- Remove some bugs (remote database structure modification)
+- Tagged for FdS2022
 
 ## v2.20
 - Includes population information for USA and France.

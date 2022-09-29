@@ -37,7 +37,7 @@ from bokeh.models import ColumnDataSource, TableColumn, DataTable, ColorBar, Log
     HoverTool, CrosshairTool, BasicTicker, GeoJSONDataSource, LinearColorMapper, LogColorMapper,Label, \
     PrintfTickFormatter, BasicTickFormatter, NumeralTickFormatter, CustomJS, CustomJSHover, Select, \
     Range1d, DatetimeTickFormatter, Legend, LegendItem, Text
-from bokeh.models.widgets import Tabs, Panel
+from bokeh.models.widgets import Tabs, Panel, Button, TableColumn, Toggle
 from bokeh.plotting import figure
 from bokeh.layouts import row, column, gridplot
 from bokeh.palettes import Category10, Category20, Viridis256
@@ -65,7 +65,7 @@ from IPython.core.display import display, HTML
 
 width_height_default = [500, 380]
 
-MAXCOUNTRIESDISPLAYED = 27
+MAXCOUNTRIESDISPLAYED = 24
 class CocoDisplay:
     def __init__(self, db=None, geo = None):
         verb("Init of CocoDisplay() with db=" + str(db))
@@ -306,7 +306,8 @@ class CocoDisplay:
 
             for i in input_field:
                 if input[i].isnull().all():
-                    raise CoaTypeError("Sorry all data are NaN for " + i)
+                    #raise CoaTypeError("Sorry all data are NaN for " + i)
+                    print("Sorry all data are NaN for " + i)
                 else:
                     when_end_change = min(when_end_change,CocoDisplay.changeto_nonull_date(input, when_end, i))
 
@@ -492,7 +493,7 @@ class CocoDisplay:
                 point_policy="snap_to_data"))  # ,PanTool())
 
             for loc in input.clustername.unique():
-                pandaloc = input.loc[input.clustername == loc].sort_values(by='date', ascending='True')
+                pandaloc = input.loc[input.clustername == loc].sort_values(by='date', ascending=True)
                 pandaloc.rename(columns={input_field[0]: 'casesx', input_field[1]: 'casesy'}, inplace=True)
                 standardfig.line(x='casesx', y='casesy',
                                  source=ColumnDataSource(pandaloc), legend_label=pandaloc.clustername.iloc[0],
@@ -549,6 +550,7 @@ class CocoDisplay:
             maxou=-1000
             lcolors = iter(self.lcolors)
             line_style = ['solid', 'dashed', 'dotted', 'dotdash','dashdot']
+            maxou,minou=0,0
             for val in input_field:
                 for loc in list(input.clustername.unique()):
                     input_filter = input.loc[input.clustername == loc].reset_index(drop = True)
@@ -568,10 +570,18 @@ class CocoDisplay:
                                      hover_line_width = 4, name = val, line_dash=line_style[i%4])
                     r_list.append(r)
                     maxou=max(maxou,np.nanmax(input_filter[val].values))
+                    minou=max(minou,np.nanmin(input_filter[val].values))
                 i += 1
+            if minou <0.01:
+                tooltips=[('Location', '@rolloverdisplay'), ('date', '@date{%F}'), (r.name, '@$name')]
+            else:
+                tooltips=[('Location', '@rolloverdisplay'), ('date', '@date{%F}'), (r.name, '@$name{0,0.0}')],
+            if isinstance(tooltips,tuple):
+                tooltips = tooltips[0]
+
             for r in r_list:
                 label = r.name
-                tooltips = [('Location', '@rolloverdisplay'), ('date', '@date{%F}'), (r.name, '@$name{0,0.0}')]
+                tooltips = tooltips
                 formatters = {'location': 'printf', '@date': 'datetime', '@name': 'printf'}
                 hover=HoverTool(tooltips = tooltips, formatters = formatters, point_policy = "snap_to_data", mode = kwargs['mode'], renderers=[r])  # ,PanTool())
                 standardfig.add_tools(hover)
@@ -885,10 +895,12 @@ class CocoDisplay:
         """
         @wraps(func)
         def inner_hm(self, input = None, input_field = None, **kwargs):
+
             tile = kwargs.get('tile', self.dvisu_default['tile'])
 
             maplabel = kwargs.get('maplabel', None)
-            if not isinstance(maplabel,list):
+            if maplabel :
+                if not isinstance(maplabel,list):
                     maplabel=[maplabel]
             #if maplabel:
             #    maplabel = maplabel
@@ -919,7 +931,7 @@ class CocoDisplay:
             ended = geopdwd.date.max()
             if cursor_date:
                 date_slider = DateSlider(title = "Date: ", start = started, end = ended,
-                                     value = ended, step=24 * 60 * 60 * 1000, orientation = orientation)
+                                     value = started, step=24 * 60 * 60 * 1000, orientation = orientation)
                 #wanted_date = date_slider.value_as_datetime.date()
 
             #if func.__name__ == 'pycoa_mapfolium' or func.__name__ == 'pycoa_map' or func.__name__ == 'innerdecomap' or func.__name__ == 'innerdecopycoageo':
@@ -930,16 +942,22 @@ class CocoDisplay:
                     geopdwd['geometry'] = geopdwd['location'].map(geodic)
                 else:
                     geopdwd = pd.merge(geopdwd, self.location_geometry, on='location')
-
                 kwargs['tile'] = tile
-                if self.iso3country in ['USA']:#['FRA','USA']
+                if self.iso3country in ['FRA','USA']:
                     geo = copy.deepcopy(self.geo)
                     d = geo._list_translation
                     if func.__name__ != 'pycoa_mapfolium':
                         if any(i in list(geopdwd.codelocation.unique()) for i in d.keys()) \
                         or any(True for i in d.keys() if ''.join(list(geopdwd.codelocation.unique())).find(i)!=-1):
-                            geo.set_dense_geometry()
-                            kwargs.pop('tile')
+                            if maplabel:
+                                if 'dense' in maplabel:
+                                    geo.set_dense_geometry()
+                                    kwargs.pop('tile')
+                                elif 'exploded' in maplabel:
+                                    geo.set_exploded_geometry()
+                                    kwargs.pop('tile')
+                                else:
+                                    print('don\'t know ')
                         else:
                             geo.set_main_geometry()
                             d = {}
@@ -961,7 +979,7 @@ class CocoDisplay:
                         if new.empty:
                             new = perloc
                         else:
-                            new = new.append(perloc)
+                            new = pd.concat([new,perloc])
                         n += 1
                 geopdwd = new.reset_index(drop=True)
             if cursor_date:
@@ -1113,7 +1131,7 @@ class CocoDisplay:
             locunique = geopdwd_filter.clustername.unique()#geopdwd_filtered.location.unique()
             geopdwd_filter = geopdwd_filter.copy()
             nmaxdisplayed = MAXCOUNTRIESDISPLAYED
-
+            toggl = None
 
             if len(locunique) >= nmaxdisplayed :#and func.__name__ != 'pycoa_pie' :
                 if func.__name__ != 'pycoa_pie' :
@@ -1130,7 +1148,7 @@ class CocoDisplay:
                     geopdwd_filter_other['colors'] = '#FFFFFF'
 
                     geopdwd_filter = geopdwd_filter_first
-                    geopdwd_filter = geopdwd_filter.append(geopdwd_filter_other)
+                    geopdwd_filter = pd.concat([geopdwd_filter,geopdwd_filter_other])
             if func.__name__ == 'pycoa_horizonhisto' :
                 #geopdwd_filter['bottom'] = geopdwd_filter.index
                 geopdwd_filter['left'] = geopdwd_filter['cases']
@@ -1150,8 +1168,10 @@ class CocoDisplay:
                     geopdwd_filter['right'] = geopdwd_filter['right'].apply(lambda x: 100.*x)
                     geopdwd_filter['horihistotextx'] = geopdwd_filter['right']
                     geopdwd_filter['horihistotext'] = [str(round(i))+'%' for i in geopdwd_filter['right']]
+                if maplabel and 'textinteger' in maplabel:
+                    geopdwd_filter['horihistotext'] = geopdwd_filter['right'].astype(float).astype(int).astype(str)
                 else:
-                    geopdwd_filter['horihistotext'] = [ '{:.3g}'.format(float(i)) if float(i)>1.e4 else round(float(i),2) for i in geopdwd_filter['right'] ]
+                    geopdwd_filter['horihistotext'] = [ '{:.3g}'.format(float(i)) if float(i)>1.e4 or float(i)<0.01 else round(float(i),2) for i in geopdwd_filter['right'] ]
                     geopdwd_filter['horihistotext'] = [str(i) for i in geopdwd_filter['horihistotext']]
             if func.__name__ == 'pycoa_pie' :
                 geopdwd_filter = self.add_columns_for_pie_chart(geopdwd_filter,input_field)
@@ -1165,7 +1185,7 @@ class CocoDisplay:
             srcfiltered = ColumnDataSource(data = input_filter)
             max_value = max(input_filter['cases'])
             min_value = min(input_filter['cases'])
-            min_value_gt0 = min(input_filter[input_filter['cases'] > 0]['cases'])
+            min_value_gt0 = min(input_filter[input_filter['cases'] >= 0]['cases'])
             panels = []
             for axis_type in self.ax_type:
                 plot_width = kwargs['plot_width']
@@ -1177,7 +1197,7 @@ class CocoDisplay:
                     standardfig.xaxis.formatter = BasicTickFormatter(use_scientific=False)
                 else:
                     standardfig.xaxis[0].formatter = PrintfTickFormatter(format="%4.2e")
-                    standardfig.x_range = Range1d(0.01, 1.2 * max_value)
+                    standardfig.x_range = Range1d(max_value/100., 1.2 * max_value)
                 if not input_filter[input_filter[input_field] < 0.].empty:
                     standardfig.x_range = Range1d(1.2 * min_value, 1.2 * max_value)
 
@@ -1189,8 +1209,9 @@ class CocoDisplay:
                             if maplabel and 'label%' in maplabel:
                                 standardfig.x_range = Range1d(0.01, 50 * max_value*100)
                             else:
-                                standardfig.x_range = Range1d(0.01, 50 * max_value)
-                            srcfiltered.data['left'] = [0.01] * len(srcfiltered.data['right'])
+                                standardfig.x_range = Range1d(max_value/100., 50 * max_value)
+
+                            srcfiltered.data['left'] = [min(srcfiltered.data['right'])/100.] * len(srcfiltered.data['right'])
 
                 if func.__name__ == 'pycoa_pie':
                     if not input_filter[input_filter[input_field] < 0.].empty:
@@ -1216,6 +1237,7 @@ class CocoDisplay:
                             //var loc = source.data['location'];
                             var subregion = source.data['name_subregion'];
                             var codeloc = source.data['codelocation'];
+                            var colors = source.data['colors'];
                             var colors = source.data['colors'];
 
                             var newval = [];
@@ -1316,7 +1338,7 @@ class CocoDisplay:
 
                             source_filter.data['clustername'] = orderloc;
                             source_filter.data['codelocation'] = ordercodeloc;
-                            //source_filter.data['colors'] = ordercolors;
+                            source_filter.data['colors'] = ordercolors;
 
                             if(typeof subregion !== 'undefined')
                                 source_filter.data['rolloverdisplay'] = ordername_subregion;
@@ -1348,7 +1370,7 @@ class CocoDisplay:
                                 top.push(parseInt(ymax*(n-i)/n+d/2));
                                 bottom.push(parseInt(ymax*(n-i)/n-d/2));
                                 mid.push(parseInt(ymax*(n-i)/n));
-                                labeldic[parseInt(ymax*(n-i)/n)] = ordercodeloc[i];
+                                labeldic[parseInt(ymax*(n-i)/n)] = orderloc[i];//ordercodeloc[i];
 
                                 ht.push(right_quad[i].toFixed(2).toString());
                                 var a=new Intl.NumberFormat().format(right_quad[i])
@@ -1362,14 +1384,13 @@ class CocoDisplay:
                             source_filter.data['horihistotextxy'] =  mid;
                             source_filter.data['horihistotextx'] =  right_quad;
                             source_filter.data['horihistotext'] =  ht;
-                            source_filter.data['permanentdisplay'] = ordercodeloc;
+                            source_filter.data['permanentdisplay'] = orderloc;//ordercodeloc;
                             source_filter.data['textdisplayed'] = textdisplayed;
                             source_filter.data['textdisplayed2'] = textdisplayed2;
                             var maxx = Math.max.apply(Math, right_quad);
                             var minx = Math.min.apply(Math, left_quad);
 
                             ylabel.major_label_overrides = labeldic;
-                            console.log(labeldic);
                             x_range.end =  1.2 * maxx;
                             x_range.start =  1.05 * minx;
                             if(minx >= 0){
@@ -1383,32 +1404,78 @@ class CocoDisplay:
                             var mm = String(dateconverted.getMonth() + 1).padStart(2, '0'); //January is 0!
                             var yyyy = dateconverted.getFullYear();
                             var dmy = dd + '/' + mm + '/' + yyyy;
-                            title.text = tmp + dmy+")";
+                            //title.text = tmp + dmy+")";
 
                             source_filter.change.emit();
                         """)
                     date_slider.js_on_change('value', callback)
+                    # Set up Play/Pause button/toggle JS
+                    date_list = pd.date_range(geopdwd.date.min(),geopdwd.date.max()-dt.timedelta(days=1),freq='d').to_list()
+                    indexCDS = ColumnDataSource(dict(date=date_list))
+                    toggl_js = CustomJS(args=dict(date_slider=date_slider,indexCDS=indexCDS),code="""
+                    // A little lengthy but it works for me, for this problem, in this version.
+                        var check_and_iterate = function(date){
+                            var slider_val = date_slider.value;
+                            var toggle_val = cb_obj.active;
+                            if(toggle_val == false) {
+                                cb_obj.label = '► Play';
+                                clearInterval(looop);
+                                }
+                            else if(slider_val == date[date.length - 1]) {
+                                cb_obj.label = '► Play';
+                                //date_slider.value = date[0];
+                                cb_obj.active = false;
+                                clearInterval(looop);
+                                }
+                            else if(slider_val !== date[date.length - 1]){
+                                date_slider.value = date.filter((item) => item > slider_val)[0];
+                                }
+                            else {
+                            clearInterval(looop);
+                                }
+                        }
+                        if(cb_obj.active == false){
+                            cb_obj.label = '► Play';
+                            clearInterval(looop);
+                        }
+                        else {
+                            cb_obj.label = '❚❚ Pause';
+                            var looop = setInterval(check_and_iterate, 10, indexCDS.data['date']);
+                        };
+                    """)
+
+                    toggl = Toggle(label='► Play',active=False, button_type="success",height=30,width=10)
+                    toggl.js_on_change('active',toggl_js)
+
                 cases_custom = CocoDisplay.rollerJS()
+
+                if min(srcfiltered.data['cases'])<0.01:
+                    tooltips=[('Location', '@rolloverdisplay'), (input_field, '@cases'), ]
+                else:
+                    tooltips=[('Location', '@rolloverdisplay'), (input_field, '@cases{0,0.0}'), ],
+                if isinstance(tooltips,tuple):
+                    tooltips = tooltips[0]
                 if func.__name__ == 'pycoa_pie' :
                     standardfig.add_tools(HoverTool(
-                        tooltips=[('Location', '@rolloverdisplay'), (input_field, '@cases{0,0.0}'), ('%','@percentage'), ],
-                        formatters={'location': 'printf', '@{' + 'cases' + '}': cases_custom, '%':'printf'},
-                        point_policy="snap_to_data"))  # ,PanTool())
+                        tooltips = tooltips,
+                        formatters = {'location': 'printf', '@{' + 'cases' + '}': cases_custom, '%':'printf'},
+                        point_policy = "snap_to_data"))  # ,PanTool())
                 else:
                     standardfig.add_tools(HoverTool(
-                        tooltips=[('Location', '@rolloverdisplay'), (input_field, '@cases{0,0.0}'), ],
-                        formatters={'location': 'printf', '@{' + 'cases' + '}': cases_custom, },
-                        point_policy="snap_to_data"))  # ,PanTool())
+                        tooltips = tooltips,
+                        formatters = {'location': 'printf', '@{' + 'cases' + '}': cases_custom, },
+                        point_policy = "snap_to_data"))  # ,PanTool())
                 panel = Panel(child = standardfig, title = axis_type)
                 panels.append(panel)
-            return func(self, srcfiltered, panels, date_slider)
+
+            return func(self, srcfiltered, panels, date_slider, toggl)
         return inner_decohistopie
 
     ''' VERTICAL HISTO '''
     @decowrapper
     @decohistomap
     @decohistopie
-    def pycoa_horizonhisto(self, srcfiltered, panels, date_slider):
+    def pycoa_horizonhisto(self, srcfiltered, panels, date_slider,toggl):
         '''
             -----------------
             Create 1D histogramme by location according to arguments.
@@ -1460,7 +1527,7 @@ class CocoDisplay:
             new_panels.append(panel)
         tabs = Tabs(tabs = new_panels)
         if date_slider:
-                tabs = column(date_slider,tabs)
+                tabs = column(date_slider,tabs,toggl)
         return tabs
 
     ''' PIE '''
@@ -1479,7 +1546,14 @@ class CocoDisplay:
 
         df['text_size'] = '8pt'
         df['textdisplayed'] = df['permanentdisplay'].str.pad(36, side = "left")
-        locale.setlocale(locale.LC_ALL, 'en_US')
+        try:
+            locale.setlocale(locale.LC_ALL, 'en_US')
+        except:
+            try:
+                locale.setlocale(locale.LC_ALL, 'en_US.utf8')
+            except:
+                raise CoaError("Locale setting problem. Please contact support@pycoa.fr")
+
         df['textdisplayed2'] = [ locale.format("%d", i, grouping=True)\
                 for i in df[column_name]]
         #df['textdisplayed2'] = df[column_name].astype(str) #[i.str for i in df[column_name]]
@@ -1493,7 +1567,7 @@ class CocoDisplay:
     @decowrapper
     @decohistomap
     @decohistopie
-    def pycoa_pie(self, srcfiltered, panels, date_slider):
+    def pycoa_pie(self, srcfiltered, panels, date_slider,toggl):
         '''
             -----------------
             Create a pie chart according to arguments.
@@ -1603,7 +1677,7 @@ class CocoDisplay:
         min_col_non0 = (np.nanmin(geopdwd_filtered.loc[geopdwd_filtered['cases']>0.]['cases']))
 
         invViridis256 = Viridis256[::-1]
-        if 'log' in maplabel:
+        if maplabel and 'log' in maplabel:
             geopdwd_filtered['cases'] = geopdwd_filtered.loc[geopdwd_filtered['cases']>0]['cases']
             color_mapper = LinearColorMapper(palette=invViridis256, low=min_col_non0, high=max_col, nan_color='#d9d9d9')
             colormap =  branca.colormap.LinearColormap(color_mapper.palette).to_step(data=list(geopdwd_filtered['cases']),n=10,method='log')
@@ -1636,7 +1710,7 @@ class CocoDisplay:
         if np.nanmin(geopdwd_filtered[input_field]) == np.nanmax(geopdwd_filtered[input_field]):
             map_dict['FakeCountry'] = 0.
 
-        if 'log' in maplabel:
+        if maplabel and 'log' in maplabel:
             color_scale =  branca.colormap.LinearColormap(color_mapper.palette).to_step(data=list(geopdwd_filtered['cases']),n=10,method='log')
         else:
             color_scale = LinearColormap(color_mapper.palette, vmin=min(map_dict.values()), vmax=max(map_dict.values()))
@@ -1732,7 +1806,7 @@ class CocoDisplay:
             uniqloc = list(geopdwd_filtered.clustername.unique())
             dfLabel = pd.DataFrame()
             sourcemaplabel = ColumnDataSource(dfLabel)
-            if maplabel or func.__name__ == 'pycoa_pimpmap':
+            if maplabel or func.__name__ in ['pycoa_pimpmap','pycoa_map','pycoa_mapfolium']:
                 locsum = geopdwd_filtered.clustername.unique()
                 numberpercluster = geopdwd_filtered['clustername'].value_counts().to_dict()
                 sumgeo = geopdwd_filtered.copy()
@@ -1745,22 +1819,23 @@ class CocoDisplay:
                 cases = sumgeo['cases']/sumgeo['nb']
                 dfLabel=pd.DataFrame({'clustername':sumgeo.clustername,'centroidx':centrosx,'centroidy':centrosy,'cases':cases,'geometry':sumgeo['geometry']})
 
-                if 'spark' in maplabel:
-                    sparkos = {i: CocoDisplay.sparkline(geopdwd.loc[ (geopdwd.clustername==i) &
-                                (geopdwd.date >= self.when_beg) &
-                                (geopdwd.date <= self.when_end)].sort_values(by='date')['cases']) for i in locsum }
-                    dfpimp = pd.DataFrame(list(sparkos.items()), columns=['clustername', 'pimpmap'])
-                    dfLabel=pd.merge(dfLabel,dfpimp,on=['clustername'],how="inner")
-                if 'spiral' in maplabel:
-                    sparkos = {i: CocoDisplay.spiral(geopdwd.loc[ (geopdwd.clustername==i) &
-                                (geopdwd.date >= self.when_beg) &
-                                (geopdwd.date <= self.when_end)].sort_values(by='date')[['date','cases','clustername']]) for i in locsum }
-                    dfpimp = pd.DataFrame(list(sparkos.items()), columns=['clustername', 'pimpmap'])
-                    dfLabel=pd.merge(dfLabel,dfpimp,on=['clustername'],how="inner")
+                if maplabel:
+                    if 'spark' in maplabel:
+                        sparkos = {i: CocoDisplay.sparkline(geopdwd.loc[ (geopdwd.clustername==i) &
+                                    (geopdwd.date >= self.when_beg) &
+                                    (geopdwd.date <= self.when_end)].sort_values(by='date')['cases']) for i in locsum }
+                        dfpimp = pd.DataFrame(list(sparkos.items()), columns=['clustername', 'pimpmap'])
+                        dfLabel=pd.merge(dfLabel,dfpimp,on=['clustername'],how="inner")
+                    if 'spiral' in maplabel:
+                        sparkos = {i: CocoDisplay.spiral(geopdwd.loc[ (geopdwd.clustername==i) &
+                                    (geopdwd.date >= self.when_beg) &
+                                    (geopdwd.date <= self.when_end)].sort_values(by='date')[['date','cases','clustername']]) for i in locsum }
+                        dfpimp = pd.DataFrame(list(sparkos.items()), columns=['clustername', 'pimpmap'])
+                        dfLabel=pd.merge(dfLabel,dfpimp,on=['clustername'],how="inner")
 
                 dfLabel['cases'] = dfLabel['cases'].round(2)
                 # Converting links to html tags
-                if 'label%' in maplabel:
+                if maplabel and 'label%' in maplabel:
                     dfLabel['cases'] = [str(round(float(i*100),2))+'%' for i in dfLabel['cases']]
                 else:
                     dfLabel['cases']=[str(i) for i in dfLabel['cases']]
@@ -1840,24 +1915,34 @@ class CocoDisplay:
 
         date_slider = kwargs['date_slider']
         maplabel = kwargs.get('maplabel',self.dvisu_default['maplabel'])
-        min_col, max_col = CocoDisplay.min_max_range(np.nanmin(geopdwd_filtered['cases']),
-                                                     np.nanmax(geopdwd_filtered['cases']))
+        min_col, max_col, min_col_non0 = 3*[0.]
+        try:
+            if date_slider:
+                min_col, max_col = CocoDisplay.min_max_range(np.nanmin(geopdwd['cases']),
+                                                         np.nanmax(geopdwd['cases']))
+                min_col_non0 = (np.nanmin(geopdwd.loc[geopdwd['cases']>0.]['cases']))
+            else:
+                min_col, max_col = CocoDisplay.min_max_range(np.nanmin(geopdwd_filtered['cases']),
+                                                         np.nanmax(geopdwd_filtered['cases']))
+                min_col_non0 = (np.nanmin(geopdwd_filtered.loc[geopdwd_filtered['cases']>0.]['cases']))
+        except ValueError:  #raised if `geopdwd_filtered` is empty.
+            pass
+        #min_col, max_col = np.nanmin(geopdwd_filtered['cases']),np.nanmax(geopdwd_filtered['cases'])
 
-        min_col_non0 = (np.nanmin(geopdwd_filtered.loc[geopdwd_filtered['cases']>0.]['cases']))
 
         json_data = json.dumps(json.loads(geopdwd_filtered.to_json()))
         geopdwd_filtered = GeoJSONDataSource(geojson=json_data)
 
         invViridis256 = Viridis256[::-1]
-        if 'log' in maplabel:
+        if maplabel and 'log' in maplabel:
             color_mapper = LogColorMapper(palette=invViridis256, low=min_col_non0, high=max_col, nan_color='#ffffff')
         else:
             color_mapper = LinearColorMapper(palette=invViridis256, low=min_col, high=max_col, nan_color='#ffffff')
-            color_bar = ColorBar(color_mapper=color_mapper, label_standoff=4, width=standardfig.plot_width, bar_line_cap='round',
+        color_bar = ColorBar(color_mapper=color_mapper, label_standoff=4, bar_line_cap='round',
                              border_line_color=None, location=(0, 0), orientation='horizontal', ticker=BasicTicker())
         color_bar.formatter = BasicTickFormatter(use_scientific=True, precision=1, power_limit_low=int(max_col))
 
-        if 'label%' in maplabel:
+        if maplabel and 'label%' in maplabel:
             color_bar.formatter = BasicTickFormatter(use_scientific=False)
             color_bar.formatter = NumeralTickFormatter(format="0.0%")
 
@@ -1887,7 +1972,6 @@ class CocoDisplay:
                                 value =  Number.parseFloat(value).toExponential(2);
                              else
                                  value = Number.parseFloat(value).toFixed(2);
-                            console.log(value);
                             return value;
                          }
                         for (var i = 0; i < source.get_length(); i++)
@@ -1927,6 +2011,43 @@ class CocoDisplay:
                         source_filter.change.emit();
                     """)
             date_slider.js_on_change('value', callback)
+            # Set up Play/Pause button/toggle JS
+            date_list = pd.date_range(geopdwd.date.min(),geopdwd.date.max()-dt.timedelta(days=1),freq='d').to_list()
+            indexCDS = ColumnDataSource(dict(date=date_list))
+            toggl_js = CustomJS(args=dict(date_slider=date_slider,indexCDS=indexCDS),code="""
+            // A little lengthy but it works for me, for this problem, in this version.
+                var check_and_iterate = function(date){
+                    var slider_val = date_slider.value;
+                    var toggle_val = cb_obj.active;
+                    if(toggle_val == false) {
+                        cb_obj.label = '► Play';
+                        clearInterval(looop);
+                        }
+                    else if(slider_val == date[date.length - 1]) {
+                        cb_obj.label = '► Play';
+                        //date_slider.value = date[0];
+                        cb_obj.active = false;
+                        clearInterval(looop);
+                        }
+                    else if(slider_val !== date[date.length - 1]){
+                        date_slider.value = date.filter((item) => item > slider_val)[0];
+                        }
+                    else {
+                    clearInterval(looop);
+                        }
+                }
+                if(cb_obj.active == false){
+                    cb_obj.label = '► Play';
+                    clearInterval(looop);
+                }
+                else {
+                    cb_obj.label = '❚❚ Pause';
+                    var looop = setInterval(check_and_iterate, 10, indexCDS.data['date']);
+                };
+            """)
+
+            toggl = Toggle(label='► Play',active=False, button_type="success",height=30,width=10)
+            toggl.js_on_change('active',toggl_js)
 
 
         standardfig.xaxis.visible = False
@@ -1936,14 +2057,16 @@ class CocoDisplay:
         standardfig.patches('xs', 'ys', source = geopdwd_filtered,
                             fill_color = {'field': 'cases', 'transform': color_mapper},
                             line_color = 'black', line_width = 0.25, fill_alpha = 1)
-
-        if 'text' in maplabel :
-            labels = LabelSet(
-                x = 'centroidx',
-                y = 'centroidy',
-                text = 'cases',
-                source = sourcemaplabel, text_font_size='10px',text_color='white',background_fill_color='grey',background_fill_alpha=0.5)
-            standardfig.add_layout(labels)
+        if maplabel:
+            if 'text' in maplabel or 'textinteger' in maplabel:
+                if 'textinteger' in maplabel:
+                    sourcemaplabel.data['cases'] = sourcemaplabel.data['cases'].astype(float).astype(int).astype(str)
+                labels = LabelSet(
+                    x = 'centroidx',
+                    y = 'centroidy',
+                    text = 'cases',
+                    source = sourcemaplabel, text_font_size='10px',text_color='white',background_fill_color='grey',background_fill_alpha=0.5)
+                standardfig.add_layout(labels)
 
         #cases_custom = CocoDisplay.rollerJS()
         callback = CustomJS(code="""
@@ -1952,13 +2075,15 @@ class CocoDisplay:
         """ )
         tooltips = """
                     <b>location: @rolloverdisplay<br>
-                    cases: @cases{0,0.0}</b>
-                   """
+                    cases: @cases </b>
+                    """
+                    #cases: @cases{0,0.0}
+
         standardfig.add_tools(HoverTool(tooltips = tooltips,
         formatters = {'location': 'printf', 'cases': 'printf',},
         point_policy = "snap_to_data",callback=callback))  # ,PanTool())
         if date_slider:
-            standardfig = column(date_slider, standardfig)
+            standardfig = column(date_slider, standardfig,toggl)
         return standardfig
 
     ''' PIMPMAP BOKEH '''

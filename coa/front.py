@@ -61,14 +61,15 @@ if 'coa_db' in __builtins__.keys():
 else:
     _whom = _listwhom[0]  # default base
 
-_db, _cocoplot = coco.DataBase.factory(_whom)  # initialization with default
+#_db, _cocoplot = coco.DataBase.factory(_whom)  # initialization with default
+
 _gi = None
 
 _dict_bypop = {'no':0,'100':100,'1k':1e3,'100k':1e5,'1M':1e6,'pop':1.}
 
 _listwhat = [ 'standard', # first one is default, nota:  we must avoid uppercases
-             'daily',
-             'weekly']
+              'daily',
+              'weekly']
 
 _listoutput = ['pandas','geopandas','list', 'dict', 'array']  # first one is default for get
 
@@ -78,6 +79,9 @@ _listhist = ['bylocation','byvalue','pie']
 
 _listplot = ['date','menulocation','versus','spiral','yearly']
 
+_listmaplabel= ['text','textinteger','spark','spiral','label%','log','unsorted','exploded','dense']
+
+_listoption = ['nonneg', 'nofillnan', 'smooth7', 'sumall','sumallandsmooth7','sumallandsmooth7']
 # --- Front end functions ----------------------------------------------
 
 # ----------------------------------------------------------------------
@@ -131,7 +135,7 @@ def listwhom(detailed=False):
             df = df.rename(columns={'index':'Database',0: "WW/iso3",1:'Granularité',2:'WW/Name'})
             return df
         else:
-            return _db.get_available_database()
+            return list(get_db_list_dict().keys())
     except:
         raise CoaKeyError('Waiting for a boolean !')
 
@@ -158,7 +162,7 @@ def listhist():
 
 
 # ----------------------------------------------------------------------
-# --- listwhat() -------------------------------------------------------
+# --- listplot() -------------------------------------------------------
 # ----------------------------------------------------------------------
 
 def listplot():
@@ -175,7 +179,7 @@ def listoption():
     """Return the list of currently avalailable option apply to data.
      Default is no option.
     """
-    return _db.get_available_options()
+    return _listoption
 
 # ----------------------------------------------------------------------
 # --- listtile() -------------------------------------------------------
@@ -197,7 +201,11 @@ def listwhich():
     By default, the listwhich()[0] is the default which field in other
     functions.
     """
-    return _db.get_available_keys_words()
+    if  '_db' not in globals():
+        raise CoaKeyError('setwhom MUST be defined first !')
+    else:
+        return _db.get_available_keys_words()
+
 
 
 # ----------------------------------------------------------------------
@@ -206,37 +214,42 @@ def listwhich():
 def listwhere(clustered = False):
     """Get the list of available regions/subregions managed by the current database
     """
-    def clust():
-        if get_db_list_dict()[_whom][1] == 'nation' and get_db_list_dict()[_whom][2] != 'World':
-            return  _db.geo.to_standard(get_db_list_dict()[_whom][0])
-        else:
-            r = _db.geo.get_region_list()
-            if isinstance(r, list):
-                return r
-            else:
-                return sorted(r['name_region'].to_list())
-
-    if get_db_list_dict()[_whom][1] == 'nation' and get_db_list_dict()[_whom][2] != 'World':
-        return [ get_db_list_dict()[_whom][2] ]
-
-    if clustered:
-        return clust()
+    if  '_db' not in globals():
+        raise CoaKeyError('setwhom MUST be defined first !')
     else:
-        if _db.db_world == True:
+        def clust():
             if get_db_list_dict()[_whom][1] == 'nation' and get_db_list_dict()[_whom][2] != 'World':
-                r =  _db.geo.to_standard(get_db_list_dict()[_whom][0])
+                return  _db.geo.to_standard(get_db_list_dict()[_whom][0])
             else:
-                r = _db.geo.get_GeoRegion().get_countries_from_region('world')
-                r = [_db.geo.to_standard(c)[0] for c in r]
+                r = _db.geo.get_region_list()
+                if not isinstance(r, list):
+                    r=sorted(r['name_region'].to_list())
+                r.append(get_db_list_dict()[_whom][2])
+                return r
+
+        if get_db_list_dict()[_whom][1] == 'nation' and get_db_list_dict()[_whom][2] != 'World':
+            return [ get_db_list_dict()[_whom][2] ]
+
+        if clustered:
+            return clust()
         else:
-            if get_db_list_dict()[_whom][1] == 'subregion':
-                pan = _db.geo.get_subregion_list()
-                r = list(pan.name_subregion.unique())
-            elif get_db_list_dict()[_whom][1] == 'region':
-                r = clust()
+            if _db.db_world == True:
+                if get_db_list_dict()[_whom][1] == 'nation' and get_db_list_dict()[_whom][2] != 'World':
+                    r =  _db.geo.to_standard(get_db_list_dict()[_whom][0])
+                else:
+                    r = _db.geo.get_GeoRegion().get_countries_from_region('world')
+                    r = [_db.geo.to_standard(c)[0] for c in r]
             else:
-                raise CoaKeyError('What is the granularity of your DB ?')
-        return r
+                if get_db_list_dict()[_whom][1] == 'subregion':
+                    pan = _db.geo.get_subregion_list()
+                    r = list(pan.name_subregion.unique())
+                elif get_db_list_dict()[_whom][1] == 'region':
+                    r = clust()
+                    r.append(get_db_list_dict()[_whom][2])
+                else:
+                    raise CoaKeyError('What is the granularity of your DB ?')
+            return r
+
 
 # ----------------------------------------------------------------------
 # --- listbypop() ------------------------------------------------------
@@ -246,6 +259,14 @@ def listbypop():
     """Get the list of available population normalization
     """
     return list(_dict_bypop.keys())
+# ----------------------------------------------------------------------
+# --- listmaplabel() ------------------------------------------------------
+# ----------------------------------------------------------------------
+
+def listmaplabel():
+    """Get the list of available population normalization
+    """
+    return _listmaplabel
 
 # ----------------------------------------------------------------------
 # --- setwhom() --------------------------------------------------------
@@ -258,16 +279,14 @@ def setwhom(base):
     By default, the listbase()[0] is the default base used in other
     functions.
     """
-    global _whom, _db, _cocoplot
-    if base not in listwhom():
-        raise CoaDbError(base + ' is not a supported database. '
-                                'See pycoa.listbase() for the full list.')
-    if True:  # force the init #_whom != base:
-        _db, _cocoplot = coco.DataBase.factory(base)
-        _whom = base
-
-    pass
-    #return listwhich()
+    if '_db' not in globals():
+        global _db, _cocoplot, _whom
+    else:
+        if base not in listwhom():
+            raise CoaDbError(base + ' is not a supported database. '
+                                    'See pycoa.listbase() for the full list.')
+    _db, _cocoplot = coco.DataBase.factory(base)
+    _whom = base
 
 
 # ----------------------------------------------------------------------
@@ -276,7 +295,10 @@ def setwhom(base):
 def getwhom():
     """Return the current base which is used
     """
-    return _whom
+    if  '_db' not in globals():
+        raise CoaKeyError('setwhom MUST be defined first !')
+    else:
+        return _whom
 
 
 # ----------------------------------------------------------------------
@@ -293,7 +315,19 @@ def getinfo(which):
     #elif which not in listwhich():
     #    raise CoaKeyError('Which option ' + which + ' not supported. '
     #                                                'See listwhich() for list.')
-    print(_db.get_keyword_definition(which),'\nurl:', _db.get_keyword_url(which)[0],'\n(more info ',_db.get_keyword_url(which)[1],')')
+    if  '_db' not in globals():
+        raise CoaKeyError('setwhom MUST be defined first !')
+    else:
+        print(_db.get_keyword_definition(which),'\nurl:', _db.get_keyword_url(which)[0],'\n(more info ',_db.get_keyword_url(which)[1],')')
+
+def get_mainpandas(**kwargs):
+    """
+        Return the main pandas i.e with all the which values loaded from the database selected
+    """
+    col = list(_db.get_mainpandas().columns)
+    mem='{:,}'.format(_db.get_mainpandas()[col].memory_usage(deep=True).sum())
+    info('Memory usage of all columns: ' + mem + ' bytes')
+    return _db.get_mainpandas(**kwargs)
 
 # ----------------------------------------------------------------------
 # --- Normalisation by pop input pandas return pandas whith by pop new column
@@ -342,7 +376,8 @@ def normbypop(pandy, val2norm,bypop):
         if df.empty:
             df = pandyi
         else:
-            df = df.append(pandyi)
+            df = pd.concat([df,pandyi])
+
     df = df.drop_duplicates(['date','clustername'])
     pandy = df
 
@@ -375,7 +410,12 @@ def chartsinput_deco(f):
                     'Bad args used in the pycoa function.')
 
     # no dateslider currently
-        global _db, _whom, _gi
+
+        if '_db' not in globals():
+            global _db, _cocoplot, _whom
+            _db, _cocoplot = coco.DataBase.factory(_whom)
+            #raise CoaKeyError('No database has been selected. You MUST define one using \"setwhom()\" ')
+
         where = kwargs.get('where', None)
         which = kwargs.get('which', None)
         what = kwargs.get('what', _listwhat[0])
@@ -451,6 +491,16 @@ def chartsinput_deco(f):
             pandy = _db.get_stats(which=which, location=where, option=option).rename(columns={'location': 'where'})
             pandy['standard'] = pandy[which]
             input_field = what
+            if pandy[[which,'date']].isnull().values.all():
+                info('--------------------------------------------')
+                info('All values for '+ which + ' is nan nor empty')
+                info('--------------------------------------------')
+                pandy['date']=_db.get_dates()
+                pandy['where']=where
+                pandy['clustername']=where
+                pandy['codelocation']='000'
+                pandy=pandy.fillna(0)
+                bypop = 'no'
             if bypop != 'no':
                 if what:
                     val = what
@@ -469,7 +519,15 @@ def chartsinput_deco(f):
 
         when_beg, when_end = extract_dates(when)
         if pandy[[which,'date']].isnull().values.all():
-            raise CoaKeyError('All values for '+ which + ' is nan nor empty')
+            info('--------------------------------------------')
+            info('All values for '+ which + ' is nan nor empty')
+            info('--------------------------------------------')
+            pandy['date']=_db.get_dates()
+            pandy['where']=where
+            pandy['clustername']=where
+            pandy['codelocation']='000'
+            pandy=pandy.fillna(0)
+            #raise CoaKeyError('All values for '+ which + ' is nan nor empty')
 
         if when_end > pandy[[which,'date']].date.max():
             when_end = pandy[[which,'date']].date.max()
@@ -570,6 +628,13 @@ def get(**kwargs):
     pandy = kwargs.get('input')
     pandy = pandy.drop(columns='standard')
     if output == 'pandas':
+        def color_df(val):
+            if val.columns=='date':
+                return 'blue'
+            elif val.columns=='where':
+                return 'red'
+            else:
+                return black
         #if 'option' in kwargs:
         #    raise CoaKeyError("Cannot use option with input pandas data. "
         #                      "Use option within the get() function instead.")
@@ -577,6 +642,9 @@ def get(**kwargs):
         #pandy = pandy.drop(columns=['cumul'])
         #pandy['cumul'] = pandy[which]
         casted_data = pandy
+        col=list(casted_data.columns)
+        mem='{:,}'.format(casted_data[col].memory_usage(deep=True).sum())
+        info('Memory usage of all columns: ' + mem + ' bytes')
     # print(pandy)
     # casted_data = pd.pivot_table(pandy, index='date',columns='where',values=col_name).to_dict('series')
     # print(pandy)
@@ -636,10 +704,12 @@ def decomap(func):
         by default visu='bokeh'
         - In the default case (i.e visu='bokeh') available option are :
             - dateslider=True: a date slider is called and displayed on the right part of the map
-            - maplabel = text, value are displayed directly on the map
+            - maplabel = text, values are displayed directly on the map
+                       = textinter, values as an integer are displayed directly on the map
                        = spark, sparkline are displayed directly on the map
                        = spiral, spiral are displayed directly on the map
                        = label%, label are in %
+                       = exploded/dense, when available exploded/dense map geometry (for USA & FRA sor far)
         """
         visu = kwargs.get('visu', listvisu()[0])
         input = kwargs.get('input')
@@ -653,7 +723,7 @@ def decomap(func):
 
         dateslider = kwargs.get('dateslider', None)
         maplabel = kwargs.get('maplabel', None)
-        listmaplabel=['text','spark','spiral','label%','log','unsorted']
+        listmaplabel=_listmaplabel
         if maplabel is not None:
             if not isinstance(maplabel,list):
                 maplabel = [maplabel]
@@ -667,8 +737,10 @@ def decomap(func):
             kwargs['maplabel'] = []
             if 'text' in maplabel:
                 kwargs['maplabel'] = ['text']
-            for i in listmaplabel[1:]:
-                if i in maplabel:
+            if 'textinteger' in maplabel:
+                kwargs['maplabel'] = ['textinteger']
+            for i in listmaplabel:
+                if i in maplabel and i not in ['text','textinteger']:
                     kwargs['maplabel'].append(i)
             #if all([ True if i in ['text','spark','label%','log'] else False for i in kwargs['maplabel'] ]) :
             #    CoaKeyError('Waiting for a valide label visualisation: text, spark or label%')
@@ -683,11 +755,15 @@ def figuremap(input,input_field,**kwargs):
     dateslider = kwargs.get('dateslider', None)
     maplabel = kwargs.get('maplabel', None)
     if visu == 'bokeh':
-        if maplabel and 'spark' in maplabel:
-            return _cocoplot.pycoa_pimpmap(input,input_field,**kwargs)
+        if maplabel:
+            if 'spark' in maplabel or 'spiral' in maplabel:
+                return _cocoplot.pycoa_pimpmap(input,input_field,**kwargs)
+            elif 'text' or 'exploded' or 'dense' in maplabel:
+                return _cocoplot.pycoa_map(input,input_field,**kwargs)
+            else:
+                CoaError("What kind of pimp map you want ?!")
         else:
-
-            return _cocoplot.pycoa_map(input,input_field,**kwargs)
+            return  _cocoplot.pycoa_map(input,input_field,**kwargs)
 
 @chartsinput_deco
 @decomap
@@ -699,7 +775,7 @@ def map(input,input_field,**kwargs):
         if maplabel:
             if 'spark' in maplabel or 'spiral' in maplabel:
                 fig = _cocoplot.pycoa_pimpmap(input,input_field,**kwargs)
-            elif 'text' in maplabel:
+            elif 'text' or 'exploded' or 'dense' in maplabel:
                 fig = _cocoplot.pycoa_map(input,input_field,**kwargs)
             else:
                 CoaError("What kind of pimp map you want ?!")

@@ -61,13 +61,14 @@ _db_list_dict = {'jhu': ['WW','nation','World'],
     'phe':['GBR','subregion','United Kingdom'],
     'sciensano':['BEL','region','Belgium'],
     'dgs':['PRT','region','Portugal'],
-    'obepine':['FRA','region','France'],
+    #'obepine':['FRA','region','France'],
     'moh':['MYS','subregion','Malaysia'],
     'risklayer':['EUR','subregion','Europe'],
     'imed':['GRC','region','Greece'],
     'govcy':['CYP','nation','Cyprus'],
     'insee':['FRA','subregion','France'],
     'europa':['EUR','subregion','Europe'],
+    'mpoxgh':['WW','nation','World'],
     #'minciencia':['CHL','subregion','Chile']
     }
 
@@ -158,7 +159,7 @@ def fill_missing_dates(p, date_field='date', loc_field='location', d1=None, d2=N
         pp=p.loc[p[loc_field]==l]
         pp2=pp.set_index([date_field])
         pp2.index = pd.DatetimeIndex(pp2.index)
-        pp3 = pp2.reindex(idx,fill_value=numpy.nan)#pandas.NA)
+        pp3 = pp2.reindex(idx,fill_value=pd.NA)#numpy.nan)#
         pp3[loc_field] = pp3[loc_field].fillna(l)  #pp3['location'].fillna(method='bfill')
         #pp3['codelocation'] = pp3['codelocation'].fillna(method='bfill')
         #pp3['codelocation'] = pp3['codelocation'].fillna(method='ffill')
@@ -248,7 +249,7 @@ def week_to_date(whenstr):
         firstday = datetime.date(int(whenstr.split('-')[0]),int(whenstr.split('-')[1]),int(whenstr.split('-')[2]))
         convertion = firstday+datetime.timedelta(days=3)
     else:
-        convertion = datetime.datetime.strptime(whenstr  + '-1' , "%G-S%V-%u")
+        convertion = datetime.datetime.strptime(whenstr  + '-1' , "%G-S%V-%u")+datetime.timedelta(days = 7)
     return convertion
 
 def get_local_from_url(url,expiration_time=0,suffix=''):

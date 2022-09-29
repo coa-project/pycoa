@@ -16,71 +16,64 @@ def generic_info(namedb, keys):
     '''
     mydico = {}
     if namedb == 'spf':
-        urlmaster1='https://www.data.gouv.fr/fr/datasets/donnees-hospitalieres-relatives-a-lepidemie-de-covid-19/'
-        urlmaster2='https://www.data.gouv.fr/fr/datasets/synthese-des-indicateurs-de-suivi-de-lepidemie-covid-19/'
-        urlmaster3='https://www.data.gouv.fr/fr/datasets/donnees-relatives-aux-resultats-des-tests-virologiques-covid-19/'
+        urlmaster3='https://www.data.gouv.fr/fr/datasets/donnees-de-laboratoires-pour-le-depistage-a-compter-du-18-05-2022-si-dep/'
         urlmaster5='https://www.data.gouv.fr/fr/datasets/donnees-relatives-aux-personnes-vaccinees-contre-la-covid-19-1'
         urlmaster4='https://www.data.gouv.fr/fr/datasets/indicateurs-de-suivi-de-lepidemie-de-covid-19/'
         urlmaster6='https://www.data.gouv.fr/fr/datasets/donnees-de-laboratoires-pour-le-depistage-indicateurs-sur-les-variants/'
         urlmaster7='https://www.data.gouv.fr/fr/datasets/donnees-de-laboratoires-pour-le-depistage-focus-par-niveau-scolaire/'
         urlmaster8='https://www.data.gouv.fr/fr/datasets/donnees-de-laboratoires-pour-le-depistage-indicateurs-sur-les-mutations/'
         urlmaster9='https://www.data.gouv.fr/en/datasets/donnees-des-urgences-hospitalieres-et-de-sos-medecins-relatives-a-lepidemie-de-covid-19/'
-        url1='https://www.data.gouv.fr/fr/datasets/r/63352e38-d353-4b54-bfd1-f1b3ee1cabd7'
-        url2='https://www.data.gouv.fr/fr/datasets/r/6fadff46-9efd-4c53-942a-54aca783c30c'
-        url3='https://www.data.gouv.fr/fr/datasets/r/406c6a23-e283-4300-9484-54e78c8ae675'
+        url3='https://www.data.gouv.fr/fr/datasets/r/ca490480-09a3-470f-8556-76d6fd291325'
         url4='https://www.data.gouv.fr/fr/datasets/r/4acad602-d8b1-4516-bc71-7d5574d5f33e'
         url5='https://www.data.gouv.fr/fr/datasets/r/32a16487-3dd3-4326-9d2b-317e5a3b2daf'
         url6='https://www.data.gouv.fr/fr/datasets/r/16f4fd03-797f-4616-bca9-78ff212d06e8'
-        url7='https://www.data.gouv.fr/fr/datasets/r/c0f59f00-3ab2-4f31-8a05-d317b43e9055'
-        url8='https://www.data.gouv.fr/fr/datasets/r/4d3e5a8b-9649-4c41-86ec-5420eb6b530c'
+        url8='https://www.data.gouv.fr/fr/datasets/r/bc318bc7-fb90-4e76-a6cb-5cdc0a4e5432'
         url9='https://www.data.gouv.fr/en/datasets/r/eceb9fb4-3ebc-4da3-828d-f5939712600a'
         spfdic = {
-        'tot_dc':
-        ['tot_dc:FILLIT',url1,urlmaster1],
+        'tot_dchosp':
+        ['tot_dc:FILLIT',url3,urlmaster3],
         'cur_hosp':
-        ['cur_hosp:FILLIT',url1,urlmaster1],
+        ['cur_hosp:FILLIT',url3,urlmaster3],
         'tot_rad':
-        ['tot_rad:FILLIT',url1,urlmaster1],
+        ['tot_rad:FILLIT',url3,urlmaster3],
         'cur_rea':
-        ['cur_rea:FILLIT',url1,urlmaster1],
+        ['cur_rea:FILLIT',url3,urlmaster3],
         'cur_idx_tx_incid':
         ['cur_idx_tx_incid: Taux d\'incidence (activité épidémique : Le taux d\'incidence correspond au nombre de personnes testées\
         positives (RT-PCR et test antigénique) pour la première fois depuis plus de 60 jours rapporté à la taille de la population. \
-        Il est exprimé pour 100 000 habitants)',url2,urlmaster2],
+        Il est exprimé pour 100 000 habitants)',url3,urlmaster3],
         'cur_idx_R':
         ['cur_idx_R:FILLIT',url4,urlmaster4],
-        'cur_taux_crib':
-        ['cur_taux_crib:FILLIT',url4,urlmaster2],
-        'cur_idx_taux_occupation_sae':
-        ['cur_idx_taux_occupation_sae:FILLIT',url4,urlmaster4],
-        'cur_taux_pos':
-        ['cur_taux_pos: Taux de positivité des tests virologiques (Le taux de positivité correspond au nombre de personnes testées positives\
+        'cur_tx_crib':
+        ['cur_tx_crib:FILLIT',url4,urlmaster3],
+        'cur_idx_tx_occupation_sae':
+        ['cur_idx_tx_occupation_sae:FILLIT',url4,urlmaster4],
+        'cur_tx_pos':
+        ['cur_tx_pos: Taux de positivité des tests virologiques (Le taux de positivité correspond au nombre de personnes testées positives\
          (RT-PCR et test antigénique) pour la première fois depuis plus de 60 jours rapporté au nombre total de personnes testées positives ou \
-         négatives sur une période donnée ; et qui n‘ont jamais été testées positive dans les 60 jours précédents.)',url4,urlmaster2],
+         négatives sur une période donnée ; et qui n‘ont jamais été testées positive dans les 60 jours précédents.)',url4,urlmaster3],
         'tot_vacc1':
-        ['tot_vacc1: (nom initial n_cum_dose1)',url5,urlmaster5],
-        'tot_vacc2':
-        ['tot_vacc2: (nom initial n_cum_dose2)',url5,urlmaster5],
-        'tot_vacc3':
-        ['tot_vacc3: (nom initial n_cum_dose3)',url5,urlmaster5],
-        'tot_vacc4':
-        ['tot_vacc4: (nom initial n_cum_dose4)',url5,urlmaster5],
-        'tot_rappel_vacc':
-        ['tot_rappel_vacc: (nom initial n_rappel)',url5,urlmaster5],
+        ['tot_vacc1:(nom initial  n_cum_dose1)',url5,urlmaster5],
+        'tot_vacc_complet':
+        ['tot_vacc_complet:(nom initial n_cum_complet)',url5,urlmaster5],
+        'tot_vacc_rappel':
+        ['tot_vacc_rappel: (nom initial  n_cum_rappel)',url5,urlmaster5],
+        'tot_vacc2_rappel':
+        ['tot_vacc2_rappel:(nom initial  n_cum_2_rappel)',url5,urlmaster5],
         'tot_incid_hosp':
-        ['tot_incid_hosp: Nombre total de personnes hospitalisées',url2,urlmaster2],
+        ['tot_incid_hosp: Nombre total de personnes hospitalisées',url3,urlmaster3],
         'tot_incid_rea':
-        ['tot_incid_rea: Nombre total d\'admissions en réanimation',url2,urlmaster2],
+        ['tot_incid_rea: Nombre total d\'admissions en réanimation',url3,urlmaster3],
         'tot_incid_rad':
-        ['tot_incid_rad: Nombre total de  retours à domicile',url2,urlmaster2],
-        'tot_incid_dc':
-        ['tot_incid_dc: Nombre total de personnes  décédées',url2,urlmaster2],
+        ['tot_incid_rad: Nombre total de  retours à domicile',url3,urlmaster3],
+        'tot_incid_dchosp':
+        ['tot_incid_dchosp: Nombre total de personnes  décédées',url3,urlmaster3],
         'tot_P':
         ['tot_P: Nombre total de tests positifs',url3,urlmaster3],
         'tot_T':
         ['tot_T: Nombre total de tests réalisés',url3,urlmaster3],
         'cur_idx_Prc_tests_PCR_TA_crible' :
-        ['Prc_tests_PCR_TA_crible: % de tests PCR criblés parmi les PCR positives.',url6,urlmaster6],
+        ['cur_idx_Prc_tests_PCR_TA_crible: % de tests PCR criblés parmi les PCR positives.',url6,urlmaster6],
         'cur_idx_Prc_susp_501Y_V1' :
         ['Prc_susp_501Y_V1: % de tests avec suspicion de variant 20I/501Y.V1 (UK).\n Royaume-Uni (UK): code Nexstrain= 20I/501Y.V1.',url6,urlmaster6],
         'cur_idx_Prc_susp_501Y_V2_3' :
@@ -90,42 +83,45 @@ def generic_info(namedb, keys):
         ['Prc_susp_IND: % de tests avec une détection de variant mais non identifiable',url6,urlmaster6],
         'cur_idx_Prc_susp_ABS' :
         ['Prc_susp_ABS: % de tests avec une absence de détection de variant',url6,urlmaster6],
-        'cur_idx_ti':
-        ['ti : taux d\'incidence hebdomadaire rapporté à la population pour 100 000 habitants , par semaine calendaire (en milieu scolaire)',url7,urlmaster7],
-        'cur_idx_tp':
-        ['tp :Le taux de positivité hebdomadaire rapporté 100 tests réalisés, par semaine calendaire (en milieu scolaire)',url7,urlmaster7],
-        'nb_crib' : ['Nombre de tests criblés',url8,urlmaster8],
-        'nb_pos' : ['Nombre de tests positifs',url8,urlmaster8],
-        'tx_crib' : ['Taux tests criblés',url8,urlmaster8],
-        'cur_idx_tx_A1':['FILL IT',url8,urlmaster8],
-        'cur_idx_tx_B1':['FILL IT',url8,urlmaster8],
-        'cur_idx_tx_C1':['FILL IT',url8,urlmaster8],
-        'cur_nb_A0' : ['Nombre des tests positifs pour lesquels la recherche de mutation A est négatif (A = E484K)',url8,urlmaster8],
-        'cur_nb_A1' : ['Nombre des tests positifs pour lesquels la recherche de mutation A est positif (A = E484K)',url8,urlmaster8],
-        'tx_A1' : ['Taux de présence mutation A (A = E484K)',url8,urlmaster8],
-        'cur_nb_B0' : ['Nombre des tests positifs pour lesquels la recherche de mutation B est négatif (B = E484Q)',url8,urlmaster8],
-        'cur_nb_B1' : ['Nombre des tests positifs pour lesquels la recherche de mutation B est positif (B = E484Q)',url8,urlmaster8],
-        'tx_B1' : ['Taux de présence mutation B (B = E484Q)',url8,urlmaster8],
-        'cur_nb_C0' : ['Nombre des tests positifs pour lesquels la recherche de mutation C est négatif (C = L452R)',url8,urlmaster8],
-        'cur_nb_C1' : ['Nombre des tests positifs pour lesquels la recherche de mutation C est positif (C = L452R)',url8,urlmaster8],
-        'tx_C1' : ['Taux de présence mutation C (C = L452R)',url8,urlmaster8],
-        'cur_nbre_pass_corona' : ['  Nombre de passages aux urgences pour suspicion de COVID-19 (nbre_pass_corona)',url9,urlmaster9],
+        #'cur_idx_ti':
+        #['ti : taux d\'incidence hebdomadaire rapporté à la population pour 100 000 habitants , par semaine calendaire (en milieu scolaire)',url7,urlmaster7],
+        #'cur_idx_tp':
+        #['tp :Le taux de positivité hebdomadaire rapporté 100 tests réalisés, par semaine calendaire (en milieu scolaire)',url7,urlmaster7],
+        #'nb_crib' : ['Nombre de tests criblés',url8,urlmaster8],
+        #'nb_pos' : ['Nombre de tests positifs',url8,urlmaster8],
+        #'tx_crib' : ['Taux tests criblés',url8,urlmaster8],
+        #'cur_idx_tx_A1':['FILL IT',url8,urlmaster8],
+        #'cur_idx_tx_B1':['FILL IT',url8,urlmaster8],
+        #'cur_idx_tx_C1':['FILL IT',url8,urlmaster8],
+        'cur_nb_A0' :
+        ['cur_nb_A0:Nombre des tests positifs pour lesquels la recherche de mutation A est négatif (A = E484K)',url8,urlmaster8],
+        'cur_nb_A1' :
+        ['cur_nb_A1:Nombre des tests positifs pour lesquels la recherche de mutation A est positif (A = E484K)',url8,urlmaster8],
+        'cur_tx_A1' :
+        ['cur_tx_A1:Taux de présence mutation A (A = E484K)',url8,urlmaster8],
+        'cur_nb_C0' :
+        ['cur_nb_C0:Nombre des tests positifs pour lesquels la recherche de mutation C est négatif (C = L452R)',url8,urlmaster8],
+        'cur_nb_C1' :
+        ['cur_nb_C1:Nombre des tests positifs pour lesquels la recherche de mutation C est positif (C = L452R)',url8,urlmaster8],
+        'cur_tx_C1' :
+        ['cur_tx_C1:Taux de présence mutation C (C = L452R)',url8,urlmaster8],
+        'cur_nbre_pass_corona' :
+        ['Nombre de passages aux urgences pour suspicion de COVID-19 (nbre_pass_corona)',url9,urlmaster9],
         }
         mydico = spfdic
     elif namedb == 'spfnational':
         spfn = {
-        'cur_reanimation': ['(nom d\'origine patients_reanimation) en current réa '],\
-        'cur_hospitalises':  ['(nom d\'origine patients_hospitalises) en current patients hospitalises '],\
-        'total_cas_confirmes':   ['total_cas_confirmes: total cumulé du nombre de décès'],\
-        'total_deces_hopital':  ['total_deces_hopital: total deces hopital '],\
-        'total_patients_gueris':  ['total_patients_gueris: total patients gueris'],\
-        'total_deces_ehpad':  ['total cumulé deces ehpad'],\
-        'total_cas_confirmes_ehpad':  ['total cumulé confirmes ehpad'],\
-        'total_cas_possibles_ehpad':  ['total cumulé possibles ehpad'],\
+        'cur_reanimation':['(nom d\'origine incid_rea) Nombre de nouveaux patients admis en réanimation au cours des dernières 24h.'],\
+        'cur_hospitalises':['(nom d\'origine incid_hosp) Nombre de nouveaux patients hospitalisés au cours des dernières 24h.'],\
+        'cur_cas':['(nom d\'origine,conf_j1) Nombre de nouveaux cas confirmés (J-1 date de résultats)'],
+        'tot_dc_hosp':['(nom d\'origine dchosp) :Cumul des décès (cumul des décès constatés à l\'hôpital et en EMS)'],\
+        'tot_dc_esms':['(nom d\'origine esms_dc)tot_dc_esms: Décès en ESMS'],
+        'tot_dc':['(nom d\'origine dc_tot): tot dc'],
+        'cur_tx_pos': ['(nom d\'origine tx_pos): Taux de positivité des tests virologiques'],
         }
         for k,v in spfn.items():
-              spfn[k].append('https://www.data.gouv.fr/fr/datasets/r/d3a98a30-893f-47f7-96c5-2f4bcaaa0d71')
-              spfn[k].append('https://www.data.gouv.fr/en/datasets/donnees-relatives-a-lepidemie-de-covid-19-en-france-vue-densemble/')
+              spfn[k].append('https://www.data.gouv.fr/fr/datasets/r/f335f9ea-86e3-4ffa-9684-93c009d5e617')
+              spfn[k].append('https://www.data.gouv.fr/fr/datasets/synthese-des-indicateurs-de-suivi-de-lepidemie-covid-19/')
         mydico = spfn
     elif namedb == 'insee':
         insee = {
@@ -173,7 +169,7 @@ def generic_info(namedb, keys):
         obe = {
          'idx_obepine':['tot_deces: total cumulé du nombre de décès']}
         for k,v in obe.items():
-              obe[k].append('https://www.data.gouv.fr/fr/datasets/r/89196725-56cf-4a83-bab0-170ad1e8ef85')
+              obe[k].append('https://www.data.gouv.fr/fr/datasets/r/25fb690a-af7f-4e69-bf40-7ca7698e2748')
               obe[k].append('https://www.data.gouv.fr/en/datasets/surveillance-du-sars-cov-2-dans-les-eaux-usees-1')
         mydico = obe
     elif namedb == 'owid':
@@ -181,6 +177,7 @@ def generic_info(namedb, keys):
         'total_deaths':['total_deaths: Total deaths attributed to COVID-19'],
         'total_cases':['total_cases: Total confirmed cases of COVID-19'],
         'total_tests':['total_tests: Total tests for COVID-19'],
+        'total_tests_per_thousand':['tal_tests_per_thousand: Total tests for COVID-19 per thousand'],
         'cur_new_tests':['cur_new_tests (original name new_tests): New tests for COVID-19 (only calculated for consecutive days)'],
         'total_vaccinations':['total_vaccinations: Total number of COVID-19 vaccination doses administered'],
         'total_population':['total_population: total population of a given country'],
@@ -198,6 +195,8 @@ def generic_info(namedb, keys):
         'cur_weekly_hosp_admissions':['cur_weekly_hosp_admissions (original name weekly_hosp_admissions): Number of COVID-19 patients in hospital on a given week'],
         'cur_idx_positive_rate':['cur_idx_positive_rate (original name positive_rate): The share of COVID-19 tests that are positive, given as a rolling 7-day average (this is the inverse of tests_per_case)'],
         'total_gdp_per_capita':['Gross domestic product at purchasing power parity (constant 2011 international dollars), most recent year available'],
+        'cur_excess_mortality':['cur_excess_mortality: original name excess_mortality. Percentage difference between the reported number of weekly or monthly deaths in 2020–2021 and the projected number of deaths for the same period based on previous years'],
+        'cur_excess_mortality_cumulative_per_million':['cur_excess_mortality_cumulative_per_million:original name excess_mortality_cumulative_per_million.Cumulative difference between the reported number of deaths since 1 January 2020 and the projected number of deaths for the same period based on previous years, per million people. '],
         }
         for k,v in owid.items():
             owid[k].append("https://raw.githubusercontent.com/owid/covid-19-data/master/public/data/owid-covid-data.csv")
@@ -233,6 +232,7 @@ def generic_info(namedb, keys):
         'daily_full':['daily_full: daily_full'],\
         'icu_covid':['icu_covid: icu_covid'],\
         'beds_icu_covid':['beds_icu_covid: beds_icu_covid'],\
+        'tot_deaths':['tot_deaths'],\
         }
         for k,v in moh.items():
             moh[k].append("https://raw.githubusercontent.com/MoH-Malaysia/covid19-public/main/epidemic/cases_state.csv")
@@ -392,6 +392,16 @@ def generic_info(namedb, keys):
             mi[k].append("https://www.data.gov.cy/sites/default/files/CY%20Covid19%20Open%20Data%20-%20Extended%20-%20new_247.csv")
             mi[k].append("https://www.data.gov.cy/node/4617?language=en")
         mydico = mi
+    elif namedb == 'mpoxgh':
+        url='https://github.com/globaldothealth/monkeypox/raw/main/archives/2022-05-20.csv'
+        mpoxgh = {
+            'tot_confirmed': ['total confirmed cases (from Status = confirmed)'],\
+            }
+        for k,v in mpoxgh.items():
+            mpoxgh[k].append(url)
+            mpoxgh[k].append('https://github.com/globaldothealth/monkeypox')
+        mydico = mpoxgh
+
     else:
         raise CoaKeyError('Error in the database selected, please check !')
     if keys not in mydico:

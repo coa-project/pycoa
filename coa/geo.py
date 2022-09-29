@@ -56,7 +56,7 @@ class GeoManager():
             'name',           # Standard name ( != Official, caution )
             'num']            # Numeric standard
 
-    _list_db=[None,'jhu','worldometers','owid','opencovid19national','spfnational'] # first is default
+    _list_db=[None,'jhu','worldometers','owid','opencovid19national','spfnational','mpoxgh'] # first is default
     _list_output=['list','dict','pandas'] # first is default
 
     _standard = None # currently used normalisation standard
@@ -258,6 +258,7 @@ class GeoManager():
                 "Micronesia":"FSM",\
                 "Winter Olympics 2022":"",\
                 "Antarctica":"",\
+                "Korea, North":"PRK",\
                     })  # last two are names of boats
         elif db=='worldometers':
             translation_dict.update({\
@@ -504,7 +505,9 @@ class GeoInfo():
                     self._data_geometry.columns=["id_tmp","geometry"]
 
                     # About some countries not properly managed by this database (south and north soudan)
-                    self._data_geometry=self._data_geometry.append({'id_tmp':'SSD','geometry':None},ignore_index=True) # adding the SSD row
+                    self._data_geometry=pd.concat([self._data_geometry,pd.DataFrame({'id_tmp':'SSD','geometry':None},index=[0])],ignore_index=True)
+                    #self._data_geometry=self._data_geometry.append({'id_tmp':'SSD','geometry':None},ignore_index=True) # adding the SSD row
+                    #self._data_geometry=pd.concat([self._data_geometry,pd.DataFrame({'id_tmp':'SSD','geometry':None})])
                     for newc in ['SSD','SDN']:
                         newgeo=gpd.read_file(get_local_from_url('https://github.com/johan/world.geo.json/raw/master/countries/'+newc+'.geo.json'))
                         poly=newgeo[newgeo.id==newc].geometry.values[0]
@@ -591,12 +594,13 @@ class GeoRegion():
                                     })  # add UE for other analysis
 
         # --- filling cw information
-        p_cw=pd.read_html(get_local_from_url('https://en.wikipedia.org/wiki/Member_states_of_the_Commonwealth_of_Nations'))
+        p_cw=pd.read_html(get_local_from_url('https://en.wikipedia.org/w/index.php?title=Member_states_of_the_Commonwealth_of_Nations&oldid=1090420488'))
         self._cw=[w.split('[')[0] for w in p_cw[0]['Country'].to_list()]   # removing wikipedia notes
-
         # --- get the UnitedNation GeoScheme and organize the data
         p_gs=pd.read_html(get_local_from_url(self._source_dict["GeoScheme"],0))[0]
         p_gs.columns=['country','capital','iso2','iso3','num','m49']
+        p_gs=pd.concat([p_gs,pd.DataFrame({'country':'Taiwan','iso2':'TW','iso3':'TWN','num':'158','m49':'030 < 0142 < 001'},index=[0])],ignore_index=True)
+        #p_gs=p_gs.append({'country':'Taiwan','iso2':'TW','iso3':'TWN','num':'158','m49':'030 < 0142 < 001'},ignore_index=True)
 
         idx=[]
         reg=[]
@@ -756,6 +760,7 @@ class GeoCountry():
         self._country_data_subregion=None
         self._municipality_region=None
         self._is_dense_geometry=False
+        self._is_exploded_geometry=False
         self._is_main_geometry=False
 
         url=self._country_info_dict[country]
@@ -809,15 +814,22 @@ class GeoCountry():
             # En l'absence de Mayotte dans ce document, car le recensement n'a pas eu lieu en phase, ajout à la main
             # En référence à la page pour Mayotte : https://www.insee.fr/fr/statistiques/3291775?sommaire=2120838
             mayotte_df=pd.DataFrame([{'Code département':'976','population_subregion':256518}])
-            pop_fra=pop_fra.append(mayotte_df)
+            pop_fra=pd.concat([pop_fra,mayotte_df])
+            #pop_fra=pop_fra.append(mayotte_df)
             # Pour les collectivités d'Outremer : https://www.insee.fr/fr/statistiques/4989739?sommaire=4989761
             com_df=pd.DataFrame([{'Code département':'980','population_subregion':(5985+10124+34065+281674+12067)}])
-            pop_fra=pop_fra.append(com_df).reset_index()
+            pop_fra=pd.concat([pop_fra,com_df]).reset_index()
+            #pop_fra=pop_fra.append(com_df).reset_index()
             geo_com=self._country_data[self._country_data.code_subregion.isin(['975','977','978','986','987'])][['geometry']]
             geo_com['smthing']=0
             geo_com=geo_com.dissolve(by='smthing')['geometry']
-            self._country_data=self._country_data.append(
-                pd.DataFrame([{'code_subregion':'980','name_subregion':'Collectivités d\'outre-mer','code_region':'09','name_region':'Collectivités d\'outre-mer','geometry':geo_com.values[0]}])).reset_index()
+            self._country_data=pd.concat([self._country_data,\
+            pd.DataFrame({'code_subregion':'980','name_subregion':'Collectivités d\'outre-mer','code_region':'09','name_region':'Collectivités d\'outre-mer','geometry':geo_com.values[0]})],ignore_index=True)
+            #self._country_data=self._country_data.append(
+            #    pd.DataFrame([{'code_subregion':'980','name_subregion':'Collectivités d\'outre-mer','code_region':'09','name_region':'Collectivités d\'outre-mer','geometry':geo_com.values[0]}])).reset_index()
+            # Merging
+            #self._country_data=self._country_data.append(
+            #    pd.DataFrame([{'code_subregion':'980','name_subregion':'Collectivités d\'outre-mer','code_region':'09','name_region':'Collectivités d\'outre-mer','geometry':geo_com.values[0]}])).reset_index()
             # Merging
             self._country_data=self._country_data.merge(pop_fra,left_on='code_subregion',right_on='Code département')
             self._country_data=self._country_data[['geometry','code_subregion','name_subregion','flag_subregion','code_region','name_region','population_subregion']]
@@ -1069,6 +1081,9 @@ class GeoCountry():
         if self.is_main_geometry():
             raise CoaError("You already set the main geometry. Cannot set the dense geometry now.")
 
+        if self.is_exploded_geometry():
+            raise CoaError("You already set the exploded geometry. Cannot set the dense geometry now.")
+
         if self.get_country() == 'FRA':
             #.drop(['id_geofla','code_reg','nom_reg','x_chf_lieu','y_chf_lieu','x_centroid','y_centroid','Code département','Nom du département','Population municipale'],axis=1,inplace=True) # removing some column without interest
             # moving artificially (if needed) outre-mer area to be near to metropole for map representations
@@ -1084,19 +1099,6 @@ class GeoCountry():
                 g = sa.translate(self._country_data.loc[index, 'geometry'], xoff=x, yoff=y)
                 tmp.append(g)
             self._country_data['geometry']=tmp
-            # Add Ile de France zoom
-            #idf_translation=(-6.5,-5)
-            #idf_scale=5
-            #idf_center=(-4,44)
-            #tmp = []
-            #for index, poi in self._country_data.iterrows():
-            #    g=self._country_data.loc[index, 'geometry']
-            #    if self._country_data.loc[index,'code_subregion'] in ['75','92','93','94']:
-            #        g2=sa.scale(sa.translate(g,xoff=idf_translation[0],yoff=idf_translation[1]),\
-            #                                xfact=idf_scale,yfact=idf_scale,origin=idf_center)
-            #        g=so.unary_union([g,g2])
-            #    tmp.append(g)
-            #self._country_data['geometry']=tmp
 
             # Remove COM with dense geometry true, too many islands to manage
             self._country_data=self._country_data[self._country_data.code_subregion!='980']
@@ -1123,7 +1125,46 @@ class GeoCountry():
         self._country_data_region = None
         self._country_data_subregion = None
         self._is_dense_geometry = True
+        self._is_main_geometry = False
 
+    def set_exploded_geometry(self):
+        """  If used, we're using for the current country a dense geometry forsubregions
+        and regions.
+        Moreover we're exploding internal dense geometry for some countries (currently IdF
+        for France, only).
+
+        It's not possible to go back.
+        """
+
+        if self.is_main_geometry():
+            raise CoaError("You already set the main geometry. Cannot set the exploded geometry now.")
+
+        if self.is_dense_geometry():
+            raise CoaError("You already set the dense geometry. Cannot set the exploded geometry now.")
+
+        if self.is_exploded_geometry():
+            return
+
+        self.set_dense_geometry()
+
+        if self.get_country() == 'FRA':
+            # Add Ile de France zoom
+            idf_translation=(-6.5,-5)
+            idf_scale=3
+            idf_center=(-1.5,43)
+            tmp = []
+            for index, poi in self._country_data.iterrows():
+                g=self._country_data.loc[index, 'geometry']
+                if self._country_data.loc[index,'code_subregion'] in ['75','91','92','93','94','95','77','78']:
+                    g2=sa.scale(sa.translate(g,xoff=idf_translation[0],yoff=idf_translation[1]),\
+                                            xfact=idf_scale,yfact=idf_scale,origin=idf_center)
+                    g=g2 # so.unary_union([g,g2]) # uncomment if you want a copy
+                tmp.append(g)
+            self._country_data['geometry']=tmp
+
+        self._is_dense_geometry = False
+        self._is_main_geometry = False
+        self._is_exploded_geometry = True
 
     def set_main_geometry(self):
         """  If used, we're using only for the current country the main
@@ -1133,8 +1174,8 @@ class GeoCountry():
         if self.is_main_geometry():
             return
 
-        if self.is_dense_geometry():
-            raise CoaError("You already set the dense geometry. Cannot set the main geometry now.")
+        if self.is_dense_geometry() or self.is_exploded_geometry():
+            raise CoaError("You already set the dense or exploded geometry. Cannot set the main geometry now.")
 
         if self.get_country()=='FRA':
             self._country_data = self._country_data[~self._country_data['code_subregion'].isin(self._list_translation.keys())]
@@ -1153,6 +1194,11 @@ class GeoCountry():
         """Return the self._is_dense_geometry variable
         """
         return self._is_dense_geometry
+
+    def is_exploded_geometry(self):
+        """Return the self._is_exploded_geometry variable
+        """
+        return self._is_exploded_geometry
 
     def is_main_geometry(self):
         """Return the self._is_main_geometry variable
@@ -1380,7 +1426,9 @@ class GeoCountry():
                         pr_outremer['name_region']='Outre-mer'
                         pr_outremer['flag_region']=''
 
-                        pr=pr.append(pr_metropole,ignore_index=True).append(pr_outremer,ignore_index=True)
+                        pr=pd.concat([pr,pr_metropole],ignore_index=True)
+                        pr=pd.concat([pr,pr_outremer],ignore_index=True)
+                        #pr=pr.append(pr_metropole,ignore_index=True).append(pr_outremer,ignore_index=True)
 
                     elif self.get_country()=='ESP' : # manage pseudo 'ESP' regions within and outside continent
                         islands_cut=pr.code_region.isin(['05'])
@@ -1408,7 +1456,9 @@ class GeoCountry():
                         pr_outremer['name_region']='Ilhas portuguesas'
                         pr_outremer['flag_region']=''
 
-                        pr=pr.append(pr_metropole,ignore_index=True).append(pr_outremer,ignore_index=True)
+                        pr=pd.concat([pr,pr_metropole],ignore_index=True)
+                        pr=pd.concat([pr,pr_outremer],ignore_index=True)
+                        #pr=pr.append(pr_metropole,ignore_index=True).append(pr_outremer,ignore_index=True)
 
                     elif self.get_country()=='USA':
                         usa_col=pr.columns.tolist()

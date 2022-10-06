@@ -393,9 +393,10 @@ def generic_info(namedb, keys):
             mi[k].append("https://www.data.gov.cy/node/4617?language=en")
         mydico = mi
     elif namedb == 'mpoxgh':
-        url='https://github.com/globaldothealth/monkeypox/raw/main/archives/2022-05-20.csv'
+        url='https://raw.githubusercontent.com/owid/monkeypox/main/owid-monkeypox-data.csv'
         mpoxgh = {
-            'tot_confirmed': ['total confirmed cases (from Status = confirmed)'],\
+            'total_cases': ['total confirmed cases'],\
+            'total_deaths': ['total death cases'],\
             }
         for k,v in mpoxgh.items():
             mpoxgh[k].append(url)

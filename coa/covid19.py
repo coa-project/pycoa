@@ -292,18 +292,16 @@ class DataBase(object):
                 elif self.db == 'mpoxgh' :
                     info('MonkeyPoxGlobalHealth selected...')
 
-                    rename_dict = {'Date_confirmation':'date','Country_ISO3':'location'}
-                    mpoxgh = self.csv2pandas("https://raw.githubusercontent.com/globaldothealth/monkeypox/main/latest.csv",
+                    rename_dict = {'Date_confirmation':'date','location':'notused','iso_code':'location'}
+                    mpoxgh = self.csv2pandas("https://raw.githubusercontent.com/owid/monkeypox/main/owid-monkeypox-data.csv",
                         separator=',',rename_columns=rename_dict)
-                    mpoxgh=mpoxgh[mpoxgh.Status=='confirmed']
-                    #mpoxgh.loc[mpoxgh.location.isin(['Scotland','Wales','Northern Ireland']),"location"]='England' # Sorry for people outside England but inside UK, that's an issue if not
-                    mpoxgh=mpoxgh.fillna(method='ffill') # for confirmation dates, assuming it's almost ordered
-                    mpoxgh["confirmed"]=1
-                    mpoxgh=mpoxgh.groupby(['location','date']).sum()[["confirmed"]].reset_index()
 
-                    mpoxgh["tot_confirmed"]=mpoxgh.groupby(['location']).cumsum()
+                    #mpoxgh=mpoxgh.fillna(method='ffill') # for confirmation dates, assuming it's almost ordered
+                    #mpoxgh["confirmed"]=1
+                    #mpoxgh=mpoxgh.groupby(['location','date']).sum()[["confirmed"]].reset_index()
+                    #mpoxgh["tot_confirmed"]=mpoxgh.groupby(['location']).cumsum()
 
-                    self.return_structured_pandas(mpoxgh,columns_keeped = ['tot_confirmed'])
+                    self.return_structured_pandas(mpoxgh,columns_keeped = ['total_cases','total_deaths'])
 
                 elif self.db == 'spf' or self.db == 'spfnational':
                     if self.db == 'spfnational':
@@ -1019,12 +1017,12 @@ class DataBase(object):
             db=self.get_db()
             if self.db == 'govcy':
                 db=None
-            if self.db == 'mpoxgh':
-                self.geo = coge.GeoManager('iso3')
-                codename=collections.OrderedDict(zip(uniqloc,self.geo.to_standard(uniqloc,output='list',db=db,interpret_region=True)))
-                mypandas['location'] = mypandas['location'].map(codename)
-                uniqloc = list(mypandas['location'].unique())
-                self.geo = coge.GeoManager('name')
+            #if self.db == 'mpoxgh':
+            #    self.geo = coge.GeoManager('iso3')
+            #    codename=collections.OrderedDict(zip(uniqloc,self.geo.to_standard(uniqloc,output='list',db=db,interpret_region=True)))
+            #    mypandas['location'] = mypandas['location'].map(codename)
+            #    uniqloc = list(mypandas['location'].unique())
+            #    self.geo = coge.GeoManager('name')
             codename = collections.OrderedDict(zip(uniqloc,self.geo.to_standard(uniqloc,output='list',db=db,interpret_region=True)))
             location_is_code = True
             self.slocation = list(codename.values())

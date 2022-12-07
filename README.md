@@ -1,4 +1,4 @@
-#  PyCoA release v2 <img src="https://github.com/coa-project/coa-project.github.io/raw/main/fig/logo-anime.gif" width="140px" align=bottom >
+# PyCoA release v2 <img src="https://github.com/coa-project/coa-project.github.io/raw/main/fig/logo-anime.gif" width="140px" align=bottom >
 
 [![forthebadge made-with-python](http://ForTheBadge.com/images/badges/made-with-python.svg)](https://www.python.org/)
 [![Made withJupyter](https://img.shields.io/badge/Made%20with-Jupyter-orange?style=for-the-badge&logo=Jupyter)](https://jupyter.org/try)

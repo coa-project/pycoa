@@ -127,15 +127,16 @@ def listwhom(detailed=False):
 
      If detailed=True, gives information location of each given database.
     """
+    df = pd.DataFrame(get_db_list_dict())
+    df = df.T.reset_index()
+    df.index = df.index+1
+    df = df.rename(columns={'index':'Database',0: "WW/iso3",1:'Granularité',2:'WW/Name'})
+    df = df.sort_values(by='Database').reset_index(drop=True)
     try:
         if int(detailed):
-            df = pd.DataFrame(get_db_list_dict())
-            df = df.T.reset_index()
-            df.index = df.index+1
-            df = df.rename(columns={'index':'Database',0: "WW/iso3",1:'Granularité',2:'WW/Name'})
             return df
         else:
-            return list(get_db_list_dict().keys())
+            return df.Database.tolist()
     except:
         raise CoaKeyError('Waiting for a boolean !')
 

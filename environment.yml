@@ -31,5 +31,9 @@ dependencies:
     - shapely==1.8.2
     - pytest
     - unidecode
+<<<<<<< HEAD
     - openpyxl 
+=======
+    - openpyxl
+>>>>>>> 675bf9e3d6636d9bfc0e5e84d7f06d433b636b78
     - GDAL==3.1

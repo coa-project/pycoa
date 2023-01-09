@@ -32,4 +32,3 @@ dependencies:
     - pytest
     - unidecode
     - openpyxl 
-    - pygdal==3.3.0.10

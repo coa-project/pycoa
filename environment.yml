@@ -8,7 +8,6 @@ dependencies:
   - numpy
   - selenium 
   - geckodriver
-  - libgdal-dev 
   - pip
   - pip:
     - nbgitpuller
@@ -33,3 +32,4 @@ dependencies:
     - pytest
     - unidecode
     - openpyxl 
+    - pygdal==3.3

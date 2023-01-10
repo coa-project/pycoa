@@ -7,7 +7,7 @@ dependencies:
   - python=3.9
   - numpy
   - selenium 
-  - geckodriver
+  - geckodriver 
   - pip
   - pip:
     - nbgitpuller
@@ -32,4 +32,3 @@ dependencies:
     - pytest
     - unidecode
     - openpyxl 
-    - pygdal 

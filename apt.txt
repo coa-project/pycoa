@@ -1,2 +1,2 @@
 #this is for binder
-libgdal-dev
+libgdal-dev=3.6.1

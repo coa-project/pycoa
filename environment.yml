@@ -32,3 +32,4 @@ dependencies:
     - pytest
     - unidecode
     - openpyxl 
+    - fiona

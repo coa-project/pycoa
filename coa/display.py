@@ -1792,7 +1792,7 @@ class CocoDisplay:
     @decohistomap
     @decopycoageo
     def pycoageo(self, geopdwd, geopdwd_filtered, **kwargs):
-        return geopdwd_filtered
+        return geopdwd
 
     def decomap(func):
         @wraps(func)

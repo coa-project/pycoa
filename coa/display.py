@@ -16,7 +16,7 @@ An interface module to easily plot pycoa data with bokeh
 
 """
 
-from coa.tools import kwargs_test, extract_dates, verb, get_db_list_dict
+from coa.tools import kwargs_test, extract_dates, verb, get_db_list_dict,fill_missing_dates
 from coa.error import *
 
 import math
@@ -922,51 +922,52 @@ class CocoDisplay:
             uniqloc = input.clustername.unique()
 
             geopdwd = input
-            if maplabel and 'unsorted' in maplabel:
-                pass
-            else:
-                geopdwd = geopdwd.sort_values(by=input_field, ascending = False).reset_index(drop=True)
-
-            started = geopdwd.date.min()
-            ended = geopdwd.date.max()
-            if cursor_date:
-                date_slider = DateSlider(title = "Date: ", start = started, end = ended,
-                                     value = started, step=24 * 60 * 60 * 1000, orientation = orientation)
-                #wanted_date = date_slider.value_as_datetime.date()
-
-            #if func.__name__ == 'pycoa_mapfolium' or func.__name__ == 'pycoa_map' or func.__name__ == 'innerdecomap' or func.__name__ == 'innerdecopycoageo':
-            if func.__name__ in ['pycoa_mapfolium','pycoa_map','pycoageo' ,'pycoa_pimpmap']:
-                if isinstance(input.location.to_list()[0],list):
-                    geom = self.location_geometry
-                    geodic={loc:geom.loc[geom.location==loc]['geometry'].values[0] for loc in geopdwd.location.unique()}
-                    geopdwd['geometry'] = geopdwd['location'].map(geodic)
+            if type(geopdwd) != gpd.geodataframe.GeoDataFrame:
+                if maplabel and 'unsorted' in maplabel:
+                    pass
                 else:
-                    geopdwd = pd.merge(geopdwd, self.location_geometry, on='location')
-                kwargs['tile'] = tile
-                if self.iso3country in ['FRA','USA']:
-                    geo = copy.deepcopy(self.geo)
-                    d = geo._list_translation
-                    if func.__name__ != 'pycoa_mapfolium':
-                        if any(i in list(geopdwd.codelocation.unique()) for i in d.keys()) \
-                        or any(True for i in d.keys() if ''.join(list(geopdwd.codelocation.unique())).find(i)!=-1):
-                            if maplabel:
-                                if 'dense' in maplabel:
-                                    geo.set_dense_geometry()
-                                    kwargs.pop('tile')
-                                elif 'exploded' in maplabel:
-                                    geo.set_exploded_geometry()
-                                    kwargs.pop('tile')
-                                else:
-                                    print('don\'t know ')
-                        else:
-                            geo.set_main_geometry()
-                            d = {}
-                        new_geo = geo.get_data()[['name_'+self.granularity,'geometry']]
-                        new_geo = new_geo.rename(columns={'name_'+self.granularity:'location'})
-                        new_geo = new_geo.set_index('location')['geometry'].to_dict()
+                    geopdwd = geopdwd.sort_values(by=input_field, ascending = False).reset_index(drop=True)
 
-                        geopdwd['geometry'] = geopdwd['location'].map(new_geo)
-                geopdwd = gpd.GeoDataFrame(geopdwd, geometry=geopdwd.geometry, crs="EPSG:4326")
+                started = geopdwd.date.min()
+                ended = geopdwd.date.max()
+                if cursor_date:
+                    date_slider = DateSlider(title = "Date: ", start = started, end = ended,
+                                         value = started, step=24 * 60 * 60 * 1000, orientation = orientation)
+                    #wanted_date = date_slider.value_as_datetime.date()
+
+                #if func.__name__ == 'pycoa_mapfolium' or func.__name__ == 'pycoa_map' or func.__name__ == 'innerdecomap' or func.__name__ == 'innerdecopycoageo':
+                if func.__name__ in ['pycoa_mapfolium','pycoa_map','pycoageo' ,'pycoa_pimpmap']:
+                    if isinstance(input.location.to_list()[0],list):
+                        geom = self.location_geometry
+                        geodic={loc:geom.loc[geom.location==loc]['geometry'].values[0] for loc in geopdwd.location.unique()}
+                        geopdwd['geometry'] = geopdwd['location'].map(geodic)
+                    else:
+                        geopdwd = pd.merge(geopdwd, self.location_geometry, on='location')
+                    kwargs['tile'] = tile
+                    if self.iso3country in ['FRA','USA']:
+                        geo = copy.deepcopy(self.geo)
+                        d = geo._list_translation
+                        if func.__name__ != 'pycoa_mapfolium':
+                            if any(i in list(geopdwd.codelocation.unique()) for i in d.keys()) \
+                            or any(True for i in d.keys() if ''.join(list(geopdwd.codelocation.unique())).find(i)!=-1):
+                                if maplabel:
+                                    if 'dense' in maplabel:
+                                        geo.set_dense_geometry()
+                                        kwargs.pop('tile')
+                                    elif 'exploded' in maplabel:
+                                        geo.set_exploded_geometry()
+                                        kwargs.pop('tile')
+                                    else:
+                                        print('don\'t know ')
+                            else:
+                                geo.set_main_geometry()
+                                d = {}
+                            new_geo = geo.get_data()[['name_'+self.granularity,'geometry']]
+                            new_geo = new_geo.rename(columns={'name_'+self.granularity:'location'})
+                            new_geo = new_geo.set_index('location')['geometry'].to_dict()
+
+                            geopdwd['geometry'] = geopdwd['location'].map(new_geo)
+                    geopdwd = gpd.GeoDataFrame(geopdwd, geometry=geopdwd.geometry, crs="EPSG:4326")
 
             if func.__name__ == 'pycoa_histo':
                 pos = {}
@@ -1750,40 +1751,54 @@ class CocoDisplay:
         @wraps(func)
         def innerdecopycoageo(self, geopdwd, input_field, **kwargs):
             geopdwd['cases'] = geopdwd[input_field]
-            geopdwd_filtered = geopdwd.loc[geopdwd.date == self.when_end]
-            geopdwd_filtered = geopdwd_filtered.reset_index(drop = True)
-            geopdwd_filtered = gpd.GeoDataFrame(geopdwd_filtered, geometry=geopdwd_filtered.geometry, crs="EPSG:4326")
-            geopdwd = geopdwd.sort_values(by=['clustername', 'date'], ascending = [True, False])
-            geopdwd_filtered = geopdwd_filtered.sort_values(by=['clustername', 'date'], ascending = [True, False]).drop(columns=['date', 'colors'])
-            new_poly = []
-            geolistmodified = dict()
 
-            for index, row in geopdwd_filtered.iterrows():
-                split_poly = []
+            if type(geopdwd) == gpd.geodataframe.GeoDataFrame:
+                loc=geopdwd.location.unique()
+                locgeo=geopdwd.loc[geopdwd.location.isin(loc)].drop_duplicates('location').set_index('location')['geometry']
+                geopdwd=fill_missing_dates(geopdwd)
+                geopdwd_filtered = geopdwd.loc[geopdwd.date == self.when_end]
+                geopdwd_filtered['geometry']=geopdwd_filtered['location'].map(locgeo)
+                geopdwd_filtered['geometry']=geopdwd_filtered['geometry'].to_crs(crs=3857)
+                geopdwd_filtered['clustername']=geopdwd_filtered['location']
+
+            elif type(geopdwd) != gpd.geodataframe.GeoDataFrame:
+                geopdwd_filtered = geopdwd.loc[geopdwd.date == self.when_end]
+                geopdwd_filtered = geopdwd_filtered.reset_index(drop = True)
+                geopdwd_filtered = gpd.GeoDataFrame(geopdwd_filtered, geometry=geopdwd_filtered.geometry, crs="EPSG:4326")
+                geopdwd = geopdwd.sort_values(by=['clustername', 'date'], ascending = [True, False])
+                geopdwd_filtered = geopdwd_filtered.sort_values(by=['clustername', 'date'], ascending = [True, False]).drop(columns=['date', 'colors'])
                 new_poly = []
-                if row['geometry']:
-                    for pt in self.get_polycoords(row):
-                        if type(pt) == tuple:
-                            new_poly.append(CocoDisplay.wgs84_to_web_mercator(pt))
-                        elif type(pt) == list:
-                            shifted = []
-                            for p in pt:
-                                shifted.append(CocoDisplay.wgs84_to_web_mercator(p))
-                            new_poly.append(sg.Polygon(shifted))
-                        else:
-                            raise CoaTypeError("Neither tuple or list don't know what to do with \
-                                your geometry description")
+                geolistmodified = dict()
 
-                    if type(new_poly[0]) == tuple:
-                        geolistmodified[row['location']] = sg.Polygon(new_poly)
-                    else:
-                        geolistmodified[row['location']] = sg.MultiPolygon(new_poly)
-            ng = pd.DataFrame(geolistmodified.items(), columns=['location', 'geometry'])
-            geolistmodified = gpd.GeoDataFrame({'location': ng['location'], 'geometry': gpd.GeoSeries(ng['geometry'])}, crs="epsg:3857")
-            geopdwd_filtered = geopdwd_filtered.drop(columns='geometry')
-            geopdwd_filtered = pd.merge(geolistmodified, geopdwd_filtered, on='location')
-            #if kwargs['wanted_dates']:
-            #    kwargs.pop('wanted_dates')
+                for index, row in geopdwd_filtered.iterrows():
+                    split_poly = []
+                    new_poly = []
+                    if row['geometry']:
+                        for pt in self.get_polycoords(row):
+                            if type(pt) == tuple:
+                                new_poly.append(CocoDisplay.wgs84_to_web_mercator(pt))
+                            elif type(pt) == list:
+                                shifted = []
+                                for p in pt:
+                                    shifted.append(CocoDisplay.wgs84_to_web_mercator(p))
+                                new_poly.append(sg.Polygon(shifted))
+                            else:
+                                raise CoaTypeError("Neither tuple or list don't know what to do with \
+                                    your geometry description")
+
+                        if type(new_poly[0]) == tuple:
+                            geolistmodified[row['location']] = sg.Polygon(new_poly)
+                        else:
+                            geolistmodified[row['location']] = sg.MultiPolygon(new_poly)
+                ng = pd.DataFrame(geolistmodified.items(), columns=['location', 'geometry'])
+                geolistmodified = gpd.GeoDataFrame({'location': ng['location'], 'geometry': gpd.GeoSeries(ng['geometry'])}, crs="epsg:3857")
+                geopdwd_filtered = geopdwd_filtered.drop(columns='geometry')
+                geopdwd_filtered = pd.merge(geolistmodified, geopdwd_filtered, on='location')
+                #if kwargs['wanted_dates']:
+                #    kwargs.pop('wanted_dates')
+
+            else:
+                CoaError("What kind of (Geo)DataFrame it is ?!")
             return func(self, geopdwd, geopdwd_filtered, **kwargs)
         return innerdecopycoageo
 
@@ -1802,7 +1817,6 @@ class CocoDisplay:
             tile =  kwargs.get('tile', None)
             if tile:
                 tile = CocoDisplay.convert_tile(tile, 'bokeh')
-
             uniqloc = list(geopdwd_filtered.clustername.unique())
             dfLabel = pd.DataFrame()
             sourcemaplabel = ColumnDataSource(dfLabel)
@@ -1813,7 +1827,6 @@ class CocoDisplay:
                 sumgeo['geometry'] = sumgeo['geometry'].buffer(0.001) #needed with geopandas 0.10.2
                 sumgeo = sumgeo.dissolve(by='clustername', aggfunc='sum').reset_index()
                 sumgeo['nb'] = sumgeo['clustername'].map(numberpercluster)
-                #print(geopdwd_filtered.loc[geopdwd_filtered.clustername=='Île-de-France'].reset_index(drop=True).explode(index_parts=False))
                 centrosx = sumgeo['geometry'].centroid.x
                 centrosy = sumgeo['geometry'].centroid.y
                 cases = sumgeo['cases']/sumgeo['nb']
@@ -1912,7 +1925,6 @@ class CocoDisplay:
             - tile : tile
             - maplabel: False
         '''
-
         date_slider = kwargs['date_slider']
         maplabel = kwargs.get('maplabel',self.dvisu_default['maplabel'])
         min_col, max_col, min_col_non0 = 3*[0.]
@@ -1928,7 +1940,6 @@ class CocoDisplay:
         except ValueError:  #raised if `geopdwd_filtered` is empty.
             pass
         #min_col, max_col = np.nanmin(geopdwd_filtered['cases']),np.nanmax(geopdwd_filtered['cases'])
-
 
         json_data = json.dumps(json.loads(geopdwd_filtered.to_json()))
         geopdwd_filtered = GeoJSONDataSource(geojson=json_data)

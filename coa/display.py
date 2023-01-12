@@ -1751,16 +1751,16 @@ class CocoDisplay:
         @wraps(func)
         def innerdecopycoageo(self, geopdwd, input_field, **kwargs):
             geopdwd['cases'] = geopdwd[input_field]
-
             if type(geopdwd) == gpd.geodataframe.GeoDataFrame:
                 loc=geopdwd.location.unique()
                 locgeo=geopdwd.loc[geopdwd.location.isin(loc)].drop_duplicates('location').set_index('location')['geometry']
                 geopdwd=fill_missing_dates(geopdwd)
                 geopdwd_filtered = geopdwd.loc[geopdwd.date == self.when_end]
-                geopdwd_filtered['geometry']=geopdwd_filtered['location'].map(locgeo)
-                geopdwd_filtered['geometry']=geopdwd_filtered['geometry'].to_crs(crs=3857)
-                geopdwd_filtered['clustername']=geopdwd_filtered['location']
-
+                geopdwd_filtered_cp = geopdwd_filtered.copy()
+                geopdwd_filtered_cp.loc[:,'geometry']=geopdwd_filtered_cp['location'].map(locgeo)
+                geopdwd_filtered_cp.loc[:,'geometry']=geopdwd_filtered_cp['geometry'].to_crs(crs=3857)
+                geopdwd_filtered_cp.loc[:,'clustername']=geopdwd_filtered_cp['location']
+                geopdwd_filtered = geopdwd_filtered_cp
             elif type(geopdwd) != gpd.geodataframe.GeoDataFrame:
                 geopdwd_filtered = geopdwd.loc[geopdwd.date == self.when_end]
                 geopdwd_filtered = geopdwd_filtered.reset_index(drop = True)
@@ -1796,7 +1796,6 @@ class CocoDisplay:
                 geopdwd_filtered = pd.merge(geolistmodified, geopdwd_filtered, on='location')
                 #if kwargs['wanted_dates']:
                 #    kwargs.pop('wanted_dates')
-
             else:
                 CoaError("What kind of (Geo)DataFrame it is ?!")
             return func(self, geopdwd, geopdwd_filtered, **kwargs)

@@ -987,7 +987,7 @@ class DataBase(object):
             tmp['location']='Trentino-Alto Adige'
             mypandas = mypandas.loc[~mypandas.location.isin(A)]
             tmp = tmp.reset_index()
-            mypandas = mypandas.append(tmp)
+            mypandas = pd.concat([mypandas,tmp])
             uniqloc = list(mypandas['location'].unique())
             sub2reg = dict(gd.values)
             #collections.OrderedDict(zip(uniqloc,list(gd.loc[gd.name_region.isin(uniqloc)]['code_region'])))

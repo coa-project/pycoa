@@ -228,7 +228,7 @@ class GeoManager():
         elif output=='dict':
             return dict(zip(w0, n))
         elif output=='pandas':
-            return pd.DataFrame({'inputname':w0,self._standard:n})
+            return pd.DataFrame([{'inputname':w0,self._standard:n}])
         else:
             return None # should not be here
 
@@ -612,7 +612,7 @@ class GeoRegion():
                     idx.append(row.iso3)
                     reg.append(int(r))
                     cap.append(row.capital)
-        self._p_gs=pd.DataFrame({'iso3':idx,'capital':cap,'region':reg})
+        self._p_gs=pd.DataFrame([{'iso3':idx,'capital':cap,'region':reg}])
         self._p_gs=self._p_gs.merge(p_m49,how='left',left_on='region',\
                             right_on='code').drop(["code"],axis=1)
 
@@ -824,7 +824,7 @@ class GeoCountry():
             geo_com['smthing']=0
             geo_com=geo_com.dissolve(by='smthing')['geometry']
             self._country_data=pd.concat([self._country_data,\
-            pd.DataFrame({'code_subregion':'980','name_subregion':'Collectivités d\'outre-mer','code_region':'09','name_region':'Collectivités d\'outre-mer','geometry':geo_com.values[0]})],ignore_index=True)
+            pd.DataFrame([{'code_subregion':'980','name_subregion':'Collectivités d\'outre-mer','code_region':'09','name_region':'Collectivités d\'outre-mer','geometry':geo_com.values[0]}])],ignore_index=True)
             #self._country_data=self._country_data.append(
             #    pd.DataFrame([{'code_subregion':'980','name_subregion':'Collectivités d\'outre-mer','code_region':'09','name_region':'Collectivités d\'outre-mer','geometry':geo_com.values[0]}])).reset_index()
             # Merging

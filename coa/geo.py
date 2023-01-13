@@ -950,7 +950,7 @@ class GeoCountry():
                 'E07000246':('E12000009','South West'), # Somerset West and Taunton in South West
             }
             for k,v in reg_adding_dict.items():
-                reg_england=reg_england.append({'LAD18CD':k,'RGN18CD':v[0],'RGN18NM':v[1]},ignore_index=True)
+                reg_england=pd.concat([reg_england,pd.DataFrame.from_records([{'LAD18CD':k,'RGN18CD':v[0],'RGN18NM':v[1]}])],ignore_index=True)
 
             self._country_data=self._country_data.merge(reg_england,how='left',left_on='lad19cd',right_on='LAD18CD')
             self._country_data.rename(columns={\
@@ -1442,7 +1442,7 @@ class GeoCountry():
                         pr_outremer['name_region']='Islas españolas'
                         pr_outremer['flag_region']=''
 
-                        pr=pr.append(pr_metropole,ignore_index=True).append(pr_outremer,ignore_index=True)
+                        pr=pd.concat([pr,pr_metropole,pr_outremer],ignore_index=True)
 
                     elif self.get_country()=='PRT' : # manage pseudo 'PRT' regions within and outside continent
                         islands_cut=pr.code_region.isin(['PT.AC','PT.MA'])

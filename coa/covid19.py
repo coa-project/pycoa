@@ -257,7 +257,7 @@ class DataBase(object):
                         cols = cols[0:1] + cols[-1:] + cols[1:-1]
                         tmp = tmp[cols]
                         pan = pan.loc[~pan.location.isin([new, old])]
-                        pan = pan.append(tmp)
+                        pan = pd.concat([pan, tmp])
                         return pan
 
                     indi=fusion(indi, 'Telangana', 'Andhra Pradesh')
@@ -648,7 +648,7 @@ class DataBase(object):
                         #p=p[['location','death_date']].reset_index(drop=True)
                         #p['death_date']=pd.to_datetime(p['death_date']).dt.date
                         #p['location']=p['location'].astype(str)
-                        insee_pd=insee_pd.append(p)
+                        insee_pd=pd.concat([insee_pd,p])
                         #pdict.update({i:p})
                     insee_pd = insee_pd[['location','death_date']].reset_index(drop=True)
                     insee_pd = insee_pd.rename(columns={'death_date':'date'})

@@ -34,7 +34,7 @@ setup(
         'datetime==4.3',\
         'folium==0.12.1',\
         'geopandas==0.10.2',\
-        'matplotlibi 3.6.2 ',\
+        'matplotlib==3.6.2 ',\
         'numpy==1.22.3',\
         'pandas==1.4.2',\
         'pycountry==20.7.3',\

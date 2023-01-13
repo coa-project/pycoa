@@ -27,13 +27,13 @@ setup(
     packages=['coa'],
     # Needed for dependencies
     install_requires=[ \
-        'bokeh',\
+         'bokeh',\
         'branca',\
         'bs4',\
         'datascroller',\
         'datetime',\
-        'folium',\
-        'geopandas',\
+        'folium ~=0.12.1',\
+        'geopandas ==0.10.2',\
         'matplotlib',\
         'numpy',\
         'pandas',\
@@ -42,7 +42,7 @@ setup(
         'requests',\
         'scipy',\
         'shapely',\
-        'pytest',\
+        'pytest >=5.0',\
         'pandas-flavor',\
         'openpyxl',\
         'unidecode',\

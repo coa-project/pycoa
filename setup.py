@@ -27,26 +27,26 @@ setup(
     packages=['coa'],
     # Needed for dependencies
     install_requires=[ \
-        'bokeh == 2.4.0',\
-        'branca == 0.4.2',\
-        'bs4 == 0.0.1',\
-        'datascroller == 1.4.1',\
-        'datetime == 4.3',\
-        'folium == 0.12.1',\
-        'geopandas == 0.10.2',\
+        'bokeh==2.4.0',\
+        'branca==0.4.2',\
+        'bs4==0.0.1',\
+        'datascroller==1.4.1',\
+        'datetime==4.3',\
+        'folium==0.12.1',\
+        'geopandas==0.10.2',\
         'matplotlibi 3.6.2 ',\
-        'numpy == 1.22.3',\
-        'pandas == 1.4.2',\
-        'pycountry == 20.7.3',\
-        'pycountry_convert == 0.7.2',\
-        'requests == 2.25.1',\
-        'scipy == 1.7.0',\
-        'shapely == 1.7.1',\
-        'pytest == 6.2.4',\
-        'pandas-flavor == 0.3.0',\
-        'openpyxl == 3.0.9',\
-        'unidecode == 1.3.2',\
-        'openpyxl == 3.0.9',\
+        'numpy==1.22.3',\
+        'pandas==1.4.2',\
+        'pycountry==20.7.3',\
+        'pycountry_convert==0.7.2',\
+        'requests==2.25.1',\
+        'scipy==1.7.0',\
+        'shapely==1.7.1',\
+        'pytest==6.2.4',\
+        'pandas-flavor==0.3.0',\
+        'openpyxl==3.0.9',\
+        'unidecode==1.3.2',\
+        'openpyxl==3.0.9',\
         ],
     dependency_links=['git+https://github.com/Toblerity/Fiona.git'],
     # The license can be anything you like

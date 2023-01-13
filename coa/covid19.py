@@ -934,7 +934,7 @@ class DataBase(object):
             #pandas_db = pandas_db.drop_duplicates(subset=['semaine'])
             pandas_db = pandas_db.rename(columns={'semaine':'date'})
 
-        pandas_db['date'] = pandas.to_datetime(pandas_db['date'],errors='coerce').dt.date
+        pandas_db['date'] = pandas.to_datetime(pandas_db['date'],errors='coerce',infer_datetime_format=True).dt.date
         #self.dates  = pandas_db['date']
         if self.database_type[self.db][1] == 'nation' and  self.database_type[self.db][0] in ['FRA','CYP']:
             pandas_db['location'] = self.database_type[self.db][2]

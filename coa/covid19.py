@@ -316,12 +316,12 @@ class DataBase(object):
                         }
                         columns_keeped = list(rename_dict.values())
 
-
                         spfnat = self.csv2pandas("https://www.data.gouv.fr/fr/datasets/r/f335f9ea-86e3-4ffa-9684-93c009d5e617",
                         rename_columns = rename_dict, separator = ',')
                         colcast=[i for i in columns_keeped]
 
                         spfnat[colcast]=pd.to_numeric(spfnat[colcast].stack(),errors = 'coerce').unstack()
+
                         self.return_structured_pandas(spfnat, columns_keeped=columns_keeped) # with 'tot_dc' first
                     else:
                         info('SPF aka Sante Publique France database selected (France departement granularity) ...')
@@ -910,7 +910,6 @@ class DataBase(object):
               quoting=3
         pandas_db = pandas.read_csv(get_local_from_url(url,7200),sep=separator,dtype=dico_cast, encoding = encoding,
             keep_default_na=False,na_values='',header=0,quoting=quoting) # cached for 2 hours
-
         #pandas_db = pandas.read_csv(self.database_url,sep=separator,dtype=dico_cast, encoding = encoding )
         constraints = kwargs.get('constraints', None)
         rename_columns = kwargs.get('rename_columns', None)
@@ -933,10 +932,9 @@ class DataBase(object):
             pandas_db['semaine'] = [ week_to_date(i) for i in pandas_db['semaine']]
             #pandas_db = pandas_db.drop_duplicates(subset=['semaine'])
             pandas_db = pandas_db.rename(columns={'semaine':'date'})
-
         pandas_db['date'] = pandas.to_datetime(pandas_db['date'],errors='coerce',infer_datetime_format=True).dt.date
-        #self.dates  = pandas_db['date']
-        if self.database_type[self.db][1] == 'nation' and  self.database_type[self.db][0] in ['FRA','CYP']:
+        if self.database_type[self.db][1] == 'nation' and self.database_type[self.db][0] in ['FRA','CYP'] or \
+            self.db=="spfnational":
             pandas_db['location'] = self.database_type[self.db][2]
         pandas_db = pandas_db.sort_values(['location','date'])
         return pandas_db

@@ -612,8 +612,7 @@ class GeoRegion():
                     idx.append(row.iso3)
                     reg.append(int(r))
                     cap.append(row.capital)
-        #self._p_gs=pd.DataFrame([{'iso3':idx,'capital':cap,'region':reg}])
-        self._p_gs=pd.DataFrame(list(zip(idx,cap,reg)),columns =['iso3', 'capital','region'])
+        self._p_gs=pd.DataFrame({'iso3':idx,'capital':cap,'region':reg})
         self._p_gs=self._p_gs.merge(p_m49,how='left',left_on='region',\
                             right_on='code').drop(["code"],axis=1)
 

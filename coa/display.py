@@ -73,6 +73,7 @@ class CocoDisplay:
         self.dbld = get_db_list_dict()
         self.lcolors = Category20[20]
         self.scolors = Category10[5]
+        self.pycoageopandas = False
         self.ax_type = ['linear', 'log']
         self.geom = []
         self.geopan = gpd.GeoDataFrame()
@@ -206,6 +207,9 @@ class CocoDisplay:
                 test = input_field
             if input[[test,'date']].isnull().values.all():
                 raise CoaKeyError('All values for '+ which + ' is nan nor empty')
+
+            if type(input)==gpd.geodataframe.GeoDataFrame:
+               self.pycoageopandas = True
 
             option = kwargs.get('option', None)
             bins = kwargs.get('bins', 10)
@@ -1751,17 +1755,17 @@ class CocoDisplay:
         @wraps(func)
         def innerdecopycoageo(self, geopdwd, input_field, **kwargs):
             geopdwd['cases'] = geopdwd[input_field]
-            if type(geopdwd) == gpd.geodataframe.GeoDataFrame:
+            if self.pycoageopandas:
                 loc=geopdwd.location.unique()
                 locgeo=geopdwd.loc[geopdwd.location.isin(loc)].drop_duplicates('location').set_index('location')['geometry']
                 geopdwd=fill_missing_dates(geopdwd)
                 geopdwd_filtered = geopdwd.loc[geopdwd.date == self.when_end]
                 geopdwd_filtered_cp = geopdwd_filtered.copy()
                 geopdwd_filtered_cp.loc[:,'geometry']=geopdwd_filtered_cp['location'].map(locgeo)
-                geopdwd_filtered_cp.loc[:,'geometry']=geopdwd_filtered_cp['geometry'].to_crs(crs=3857)
+                geopdwd_filtered_cp.loc[:,'geometry']=geopdwd_filtered_cp['geometry'].to_crs(crs="EPSG:4326")
                 geopdwd_filtered_cp.loc[:,'clustername']=geopdwd_filtered_cp['location']
                 geopdwd_filtered = geopdwd_filtered_cp
-            elif type(geopdwd) != gpd.geodataframe.GeoDataFrame:
+            else:
                 geopdwd_filtered = geopdwd.loc[geopdwd.date == self.when_end]
                 geopdwd_filtered = geopdwd_filtered.reset_index(drop = True)
                 geopdwd_filtered = gpd.GeoDataFrame(geopdwd_filtered, geometry=geopdwd_filtered.geometry, crs="EPSG:4326")
@@ -1796,8 +1800,6 @@ class CocoDisplay:
                 geopdwd_filtered = pd.merge(geolistmodified, geopdwd_filtered, on='location')
                 #if kwargs['wanted_dates']:
                 #    kwargs.pop('wanted_dates')
-            else:
-                CoaError("What kind of (Geo)DataFrame it is ?!")
             return func(self, geopdwd, geopdwd_filtered, **kwargs)
         return innerdecopycoageo
 
@@ -2094,6 +2096,7 @@ class CocoDisplay:
         point_policy = "snap_to_data",callback=callback))  # ,PanTool())
         if date_slider:
             standardfig = column(date_slider, standardfig,toggl)
+        self.pycoageopandas = False
         return standardfig
 
     ''' PIMPMAP BOKEH '''

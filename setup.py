@@ -48,7 +48,6 @@ setup(
         'unidecode',\
         'openpyxl',\
         'lxml',\
-        'jupyter-resource-usage',\
         ],
     dependency_links=['git+https://github.com/Toblerity/Fiona.git'],
     # The license can be anything you like 

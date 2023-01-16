@@ -401,35 +401,9 @@ class DataBase(object):
                         rename_columns = rename, separator=';',cast=cast)
 
                         list_spf=[spf3, spf4, spf5, spf6, spf7, spf8, spf9]
-                        result = reduce(lambda left, right: left.merge(right, how = 'outer', on=['location','date']), list_spf)
-
-                        result = result.loc[~result['location'].isin(['00'])]
-                        result = result.sort_values(by=['location','date'])
-                        result.loc[result['location'].isin(['975','977','978','986','987']),'location']='980'
-                        result = result.drop_duplicates(subset=['location', 'date'], keep='last')
 
                         incidences = ['incid_hosp', 'incid_rea', 'incid_rad','incid_dchosp']
-                        for w in  incidences + ['P', 'T'] + ['n_cum_dose1','n_cum_complet','n_cum_rappel','n_cum_2_rappel']:
-                            result[w]=pd.to_numeric(result[w], errors = 'coerce')
-                            if w.startswith('incid_'):
-                                ww = w[6:]
-                                result[ww] = result.groupby('location')[ww].fillna(method = 'bfill')
-                                result['incid_'+ww] = result.groupby('location')['incid_'+ww].fillna(method = 'bfill')
-                            else:
-                                pass
-                            if w != 'n_cum':
-                                result['tot_'+w]=result.groupby(['location'])[w].cumsum()#+result['offset_'+w]
-                        def dontneeeded():
-                            for col in result.columns:
-                                if col.startswith('Prc'):
-                                    result[col] /= 100.
-                            for col in result.columns:
-                                if col.startswith('ti'):
-                                    result[col] /= 7. #par
-                            for col in result.columns:
-                                if col.startswith('tp'):
-                                    result[col] /= 7. #par
-
+                        var_epi = incidences + ['P', 'T','n_cum_dose1','n_cum_complet','n_cum_rappel','n_cum_2_rappel']
                         rename_dict={
                             'dchosp': 'tot_dchosp',
                             'hosp': 'cur_hosp',
@@ -452,8 +426,35 @@ class DataBase(object):
                             'tx_A1':'cur_tx_A1',
                             'tx_C1':'cur_tx_C1',
                             }
+
                         spf8keeped = ['nb_A0','nb_A1','nb_C0','nb_C1']
                         rename_dict.update({i:'cur_'+i for i in spf8keeped})
+                        list_spf=[spf3, spf4, spf5, spf6, spf7, spf8, spf9]
+
+                        result=pd.DataFrame()
+                        for i in list_spf:
+                            l= [ii for ii in i.columns if ii in list(rename_dict.keys())+['location','date']+var_epi]
+                            i=i[l]
+                            if result.empty:
+                                result=i
+                            else:
+                                result=result.merge(i, how = 'outer', on=['location','date'])
+                            del i
+                        del list_spf
+                        result = result.loc[~result['location'].isin(['00'])]
+                        result = result.sort_values(by=['location','date'])
+                        result.loc[result['location'].isin(['975','977','978','986','987']),'location']='980'
+                        result = result.drop_duplicates(subset=['location', 'date'], keep='last')
+                        for w in var_epi:
+                            result[w]=pd.to_numeric(result[w], errors = 'coerce')
+                            if w.startswith('incid_'):
+                                ww = w[6:]
+                                result[ww] = result.groupby('location')[ww].fillna(method = 'bfill')
+                                result['incid_'+ww] = result.groupby('location')['incid_'+ww].fillna(method = 'bfill')
+                            else:
+                                pass
+                            if w != 'n_cum':
+                                result['tot_'+w]=result.groupby(['location'])[w].cumsum()#+result['offset_'+w]
                         result = result.rename(columns=rename_dict)
                         columns_keeped  = list(rename_dict.values()) + ['tot_'+i for i in incidences] + ['tot_P', 'tot_T']
                         self.return_structured_pandas(result,columns_keeped=columns_keeped) # with 'tot_dc' first

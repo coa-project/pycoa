@@ -1,0 +1,3 @@
+#!/bin/bash
+export PATH=${PATH}:/srv/conda/envs/notebook/bin/
+exec "$@"

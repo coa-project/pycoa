@@ -1825,11 +1825,15 @@ class CocoDisplay:
                 locsum = geopdwd_filtered.clustername.unique()
                 numberpercluster = geopdwd_filtered['clustername'].value_counts().to_dict()
                 sumgeo = geopdwd_filtered.copy()
-                sumgeo['geometry'] = sumgeo['geometry'].buffer(0.001) #needed with geopandas 0.10.2
-                sumgeo = sumgeo.dissolve(by='clustername', aggfunc='sum').reset_index()
-                sumgeo['nb'] = sumgeo['clustername'].map(numberpercluster)
+                if self.pycoageopandas == True:
+                    sumgeo = sumgeo.to_crs(3035)
+                else:
+                    sumgeo['geometry'] = sumgeo['geometry'].buffer(0.001) #needed with geopandas 0.10.2
                 centrosx = sumgeo['geometry'].centroid.x
                 centrosy = sumgeo['geometry'].centroid.y
+
+                sumgeo = sumgeo.dissolve(by='clustername', aggfunc='sum').reset_index()
+                sumgeo['nb'] = sumgeo['clustername'].map(numberpercluster)
                 cases = sumgeo['cases']/sumgeo['nb']
                 dfLabel=pd.DataFrame({'clustername':sumgeo.clustername,'centroidx':centrosx,'centroidy':centrosy,'cases':cases,'geometry':sumgeo['geometry']})
 

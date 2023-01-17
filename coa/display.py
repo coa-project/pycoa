@@ -578,13 +578,13 @@ class CocoDisplay:
                     r_list.append(r)
                     maxou=max(maxou,np.nanmax(input_filter[val].values))
                     minou=max(minou,np.nanmin(input_filter[val].values))
-                i += 1
-                if minou <0.01:
-                    tooltips.append([('Location', '@rolloverdisplay'), ('date', '@date{%F}'), (r.name, '@$name')])
-                else:
-                    tooltips.append([('Location', '@rolloverdisplay'), ('date', '@date{%F}'), (r.name, '@$name{0,0.0}')])
-                if isinstance(tooltips,tuple):
-                    tooltips = tooltips[0]
+                    i += 1
+                    if minou <0.01:
+                        tooltips.append([('Location', '@rolloverdisplay'), ('date', '@date{%F}'), (r.name, '@$name')])
+                    else:
+                        tooltips.append([('Location', '@rolloverdisplay'), ('date', '@date{%F}'), (r.name, '@$name{0,0.0}')])
+                    if isinstance(tooltips,tuple):
+                        tooltips = tooltips[0]
 
             for i,r in enumerate(r_list):
                 label = r.name

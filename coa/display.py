@@ -963,6 +963,10 @@ class CocoDisplay:
                                         kwargs.pop('tile')
                                     else:
                                         print('don\'t know ')
+                                else:
+                                    if any([len(i)==3 for i in geopdwd.codelocation.unique()]):
+                                        geo.set_dense_geometry()
+                                        kwargs.pop('tile')
                             else:
                                 geo.set_main_geometry()
                                 d = {}

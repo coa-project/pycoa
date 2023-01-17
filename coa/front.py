@@ -944,7 +944,7 @@ def decoplot(func):
                 fig = _cocoplot.pycoa_scrollingmenu(input,input_field,**kwargs)
         elif typeofplot == 'yearly':
 
-            if input.date.max()-input.date.min() < dt.timedelta(days=365):
+            if input.date.max()-input.date.min() <= dt.timedelta(days=365):
                 print("Yearly will not be used since the time covered is less than 1 year")
                 fig = _cocoplot.pycoa_date_plot(input,input_field,**kwargs)
             else:

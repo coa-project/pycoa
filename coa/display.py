@@ -192,6 +192,8 @@ class CocoDisplay:
             kwargs_test(kwargs, self.alloptions, 'Bad args used in the display function.')
             when = kwargs.get('when', None)
             which = kwargs.get('which', input.columns[2])
+            if isinstance(which,list):
+                which = input.columns[2]
             if input_field and 'cur_' in input_field:
                 what =  which
             else:
@@ -555,6 +557,7 @@ class CocoDisplay:
             lcolors = iter(self.lcolors)
             line_style = ['solid', 'dashed', 'dotted', 'dotdash','dashdot']
             maxou,minou=0,0
+            tooltips=[]
             for val in input_field:
                 for loc in list(input.clustername.unique()):
                     input_filter = input.loc[input.clustername == loc].reset_index(drop = True)
@@ -576,18 +579,18 @@ class CocoDisplay:
                     maxou=max(maxou,np.nanmax(input_filter[val].values))
                     minou=max(minou,np.nanmin(input_filter[val].values))
                 i += 1
-            if minou <0.01:
-                tooltips=[('Location', '@rolloverdisplay'), ('date', '@date{%F}'), (r.name, '@$name')]
-            else:
-                tooltips=[('Location', '@rolloverdisplay'), ('date', '@date{%F}'), (r.name, '@$name{0,0.0}')],
-            if isinstance(tooltips,tuple):
-                tooltips = tooltips[0]
+                if minou <0.01:
+                    tooltips.append([('Location', '@rolloverdisplay'), ('date', '@date{%F}'), (r.name, '@$name')])
+                else:
+                    tooltips.append([('Location', '@rolloverdisplay'), ('date', '@date{%F}'), (r.name, '@$name{0,0.0}')])
+                if isinstance(tooltips,tuple):
+                    tooltips = tooltips[0]
 
-            for r in r_list:
+            for i,r in enumerate(r_list):
                 label = r.name
-                tooltips = tooltips
+                tt = tooltips[i]
                 formatters = {'location': 'printf', '@date': 'datetime', '@name': 'printf'}
-                hover=HoverTool(tooltips = tooltips, formatters = formatters, point_policy = "snap_to_data", mode = kwargs['mode'], renderers=[r])  # ,PanTool())
+                hover=HoverTool(tooltips = tt, formatters = formatters, point_policy = "snap_to_data", mode = kwargs['mode'], renderers=[r])  # ,PanTool())
                 standardfig.add_tools(hover)
                 if guideline:
                     cross= CrosshairTool()

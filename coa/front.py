@@ -42,7 +42,7 @@ import numpy as np
 from bokeh.io import show, output_notebook
 import types
 import datetime as dt
-from coa.tools import kwargs_test, extract_dates, get_db_list_dict, info
+from coa.tools import kwargs_test, extract_dates, get_db_list_dict, info, testsublist
 import coa.covid19 as coco
 from coa.error import *
 import coa._version
@@ -458,15 +458,35 @@ def chartsinput_deco(f):
 
         #if 'cur_' in  which and what == listwhat()[0]:
         #        what = which
-
-        if which not in listwhich():
-            raise CoaKeyError('Which option ' + which + ' not supported. '
-                                                        'See listwhich() for list.')
+        whichproblem=False
+        if not isinstance(which, list):
+            if which not in listwhich():
+                whichproblem=True
+        else:
+            if not testsublist(which,listwhich()):
+                whichproblem=True
+        if whichproblem:
+            raise CoaKeyError('Which option ' + str(which) + ' not supported. '
+                                                            'See listwhich() for list.')
         if bypop not in listbypop():
             raise CoaKeyError('The bypop arg should be selected in '+str(listbypop)+' only.')
 
-        if isinstance(input_arg, pd.DataFrame):
-            pandy = input_arg #_db.get_stats(which=which, location=where, option=option).rename(columns={'location': 'where'})
+        if isinstance(input_arg, pd.DataFrame) or isinstance(which, list):
+            if input_arg is not None and not input_arg.empty:
+                pandy = input_arg
+            else:
+                pandy=pd.DataFrame()
+                for k,i in enumerate(which):
+                    if pandy.empty:
+                        pandy = _db.get_stats(which=i, location=where, option=option).rename(columns={'location': 'where'})
+                    else:
+                        on='location'
+                        tmp = _db.get_stats(which=i, location=where, option=option).rename(columns={'location': 'where'}).\
+                        drop(columns=['daily','weekly','codelocation','clustername'])
+                        pandy = pd.merge(pandy, tmp, on=['date','where'])
+                input_field = which
+                input_arg = pandy
+                which=None
             if bypop != 'no':
                 input_arg = normbypop(pandy,input_field,bypop)
                 if bypop=='pop':
@@ -488,7 +508,7 @@ def chartsinput_deco(f):
             #if input_field not in input_arg.columns:
             #    raise CoaKeyError("Cannot find " + str(input_field) + " field in the pandas data. "
             #                                                          "Set a proper input_field key.")
-        elif input_arg == None:
+        elif input_arg == None :
             pandy = _db.get_stats(which=which, location=where, option=option).rename(columns={'location': 'where'})
             pandy['standard'] = pandy[which]
             input_field = what
@@ -943,7 +963,6 @@ def decoplot(func):
                     print('typeofplot is menulocation but dim(input_field)>1, menulocation has not effect ...')
                 fig = _cocoplot.pycoa_scrollingmenu(input,input_field,**kwargs)
         elif typeofplot == 'yearly':
-
             if input.date.max()-input.date.min() <= dt.timedelta(days=365):
                 print("Yearly will not be used since the time covered is less than 1 year")
                 fig = _cocoplot.pycoa_date_plot(input,input_field,**kwargs)

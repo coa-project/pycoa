@@ -311,6 +311,16 @@ def get_local_from_url(url,expiration_time=0,suffix=''):
 
     return local_filename
 
+def testsublist(lst1, lst2):
+    '''
+       test if lst1 is in lst2 list
+    '''
+    test=False
+    extract = [el for el in lst1 if el in lst2]
+    if len(extract)==len(lst1):
+        test=True
+    return test
+
 class dotdict(dict):
     """dot.notation access to dictionary attributes"""
     __getattr__ = dict.get

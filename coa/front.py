@@ -41,7 +41,7 @@ from functools import wraps
 import numpy as np
 from bokeh.io import show, output_notebook
 import types
-
+import datetime as dt
 from coa.tools import kwargs_test, extract_dates, get_db_list_dict, info
 import coa.covid19 as coco
 from coa.error import *
@@ -943,7 +943,12 @@ def decoplot(func):
                     print('typeofplot is menulocation but dim(input_field)>1, menulocation has not effect ...')
                 fig = _cocoplot.pycoa_scrollingmenu(input,input_field,**kwargs)
         elif typeofplot == 'yearly':
-            fig = _cocoplot.pycoa_yearly_plot(input,input_field,**kwargs)
+
+            if input.date.max()-input.date.min() < dt.timedelta(days=365):
+                print("Yearly will not be used since the time covered is less than 1 year")
+                fig = _cocoplot.pycoa_date_plot(input,input_field,**kwargs)
+            else:
+                fig = _cocoplot.pycoa_yearly_plot(input,input_field,**kwargs)
         else:
             raise CoaKeyError('Unknown typeofplot value. Should be date, versus, menulocation or spiral.')
         return func(fig)

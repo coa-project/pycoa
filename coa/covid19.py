@@ -640,9 +640,12 @@ class DataBase(object):
                             deathlocationcode=l[162:167]
                             deathlocationshortcode=l[162:164]
                             deathid=l[167:176]
-                            data.append([first_name,last_name,sex,birthdate,birthlocationcode,birthlocationname,deathdate,deathlocationcode,deathlocationshortcode,deathid,deathdatebis,1])
+                            data.append([deathlocationshortcode,deathdate])
+                            #data.append([first_name,last_name,sex,birthdate,birthlocationcode,birthlocationname,deathdate,deathlocationcode,deathlocationshortcode,deathid,deathdatebis,1])
                         p=pd.DataFrame(data)
-                        p.columns=['first_name','last_name','sex','birth_date','birth_location_code','birth_location_name','death_date','death_location_code','location','death_id','death_date_bis','i']
+                        p.columns=['location','death_date']
+
+                        #p.columns=['first_name','last_name','sex','birth_date','birth_location_code','birth_location_name','death_date','death_location_code','location','death_id','death_date_bis','i']
                         #p["age"]=[k.days/365 for k in p["death_date"]-p["birth_date"]]
                         #p["age_class"]=[math.floor(k/20) for k in p["age"]]
 

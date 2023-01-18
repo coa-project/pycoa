@@ -474,6 +474,7 @@ def chartsinput_deco(f):
         if isinstance(input_arg, pd.DataFrame) or isinstance(which, list):
             if input_arg is not None and not input_arg.empty:
                 pandy = input_arg
+                pandy = _db.get_stats_pdinput(pandy, which=which, location=where, option=option)
             else:
                 pandy=pd.DataFrame()
                 for k,i in enumerate(which):
@@ -485,15 +486,15 @@ def chartsinput_deco(f):
                         drop(columns=['daily','weekly','codelocation','clustername'])
                         pandy = pd.merge(pandy, tmp, on=['date','where'])
                 input_field = which
-                input_arg = pandy
-                which=None
+                input_arg = pandy 
             if bypop != 'no':
                 input_arg = normbypop(pandy,input_field,bypop)
                 if bypop=='pop':
                     input_field = input_field+' per total population'
                 else:
                     input_field = input_field+' per '+ bypop + ' population'
-            pandy = input_arg
+                pandy = input_arg
+
             if isinstance(input_field,list):
                 which = input_field[0]
             else:
@@ -537,7 +538,6 @@ def chartsinput_deco(f):
         else:
             raise CoaTypeError('Waiting input as valid pycoa pandas '
                                'dataframe. See help.')
-
         when_beg, when_end = extract_dates(when)
         if pandy[[which,'date']].isnull().values.all():
             info('--------------------------------------------')
@@ -549,7 +549,6 @@ def chartsinput_deco(f):
             pandy['codelocation']='000'
             pandy=pandy.fillna(0)
             #raise CoaKeyError('All values for '+ which + ' is nan nor empty')
-
         if when_end > pandy[[which,'date']].date.max():
             when_end = pandy[[which,'date']].date.max()
 
@@ -582,7 +581,6 @@ def chartsinput_deco(f):
                 kwargs['input_field'] = pandy.columns[2]
         kwargs['input'] = pandy
         return f(**kwargs)
-
     return wrapper
 # ----------------------------------------------------------------------
 # --- get(**kwargs) ----------------------------------------------------

@@ -1192,353 +1192,368 @@ class DataBase(object):
          df = df.loc[df.date >= watchdate - dt.timedelta(days=j - 1)]
          return df
 
-   def get_stats(self, **kwargs):
-        '''
-        Return the pandas pandas_datase
-         - index: only an incremental value
-         - location: list of location used in the database selected (using geo standardization)
-         - 'which' :  return the keyword values selected from the avalailable keywords keepted seems
-            self.get_available_keys_words()
+   def decostats(func):
+         def inner_stats(self, mypycoapd = None , **kwargs):
+            '''
+            Return the pandas pandas_datase
+             - index: only an incremental value
+             - location: list of location used in the database selected (using geo standardization)
+             - 'which' :  return the keyword values selected from the avalailable keywords keepted seems
+                self.get_available_keys_words()
 
-         - 'option' :default none
-            * 'nonneg' In some cases negatives values can appeared due to a database updated, nonneg option
-                will smooth the curve during all the period considered
-            * 'nofillnan' if you do not want that NaN values are filled, which is the default behaviour
-            * 'smooth7' moving average, window of 7 days
-            * 'sumall' sum data over all locations
+             - 'option' :default none
+                * 'nonneg' In some cases negatives values can appeared due to a database updated, nonneg option
+                    will smooth the curve during all the period considered
+                * 'nofillnan' if you do not want that NaN values are filled, which is the default behaviour
+                * 'smooth7' moving average, window of 7 days
+                * 'sumall' sum data over all locations
 
-        keys are keyswords from the selected database
-                location        | date      | keywords          |  daily            |  weekly
-                -----------------------------------------------------------------------
-                location1       |    1      |  val1-1           |  daily1-1          |  diff1-1
-                location1       |    2      |  val1-2           |  daily1-2          |  diff1-2
-                location1       |    3      |  val1-3           |  daily1-3          |  diff1-3
-                    ...             ...                     ...
-                location1       | last-date |  val1-lastdate    |  cumul1-lastdate   |   diff1-lastdate
-                    ...
-                location-i      |    1      |  vali-1           |  dailyi-1          |  diffi-1
-                location-i      |    2      |  vali-1           |  daily1i-2         |  diffi-2
-                location-i      |    3      |  vali-1           |  daily1i-3         |  diffi-3
-                    ...
+            keys are keyswords from the selected database
+                    location        | date      | keywords          |  daily            |  weekly
+                    -----------------------------------------------------------------------
+                    location1       |    1      |  val1-1           |  daily1-1          |  diff1-1
+                    location1       |    2      |  val1-2           |  daily1-2          |  diff1-2
+                    location1       |    3      |  val1-3           |  daily1-3          |  diff1-3
+                        ...             ...                     ...
+                    location1       | last-date |  val1-lastdate    |  cumul1-lastdate   |   diff1-lastdate
+                        ...
+                    location-i      |    1      |  vali-1           |  dailyi-1          |  diffi-1
+                    location-i      |    2      |  vali-1           |  daily1i-2         |  diffi-2
+                    location-i      |    3      |  vali-1           |  daily1i-3         |  diffi-3
+                        ...
 
-        '''
-        kwargs_test(kwargs,['location','which','option'],
-            'Bad args used in the get_stats() function.')
-        wallname = None
-        if not 'location' in kwargs or kwargs['location'] is None.__class__ or kwargs['location'] == None:
-            if get_db_list_dict()[self.db][0] == 'WW':
-                kwargs['location'] = 'world'
-            else:
-                kwargs['location'] = self.slocation #self.geo_all['code_subregion'].to_list()
-            wallname = get_db_list_dict()[self.db][2]
-        else:
-            kwargs['location'] = kwargs['location']
-
-        option = kwargs.get('option', 'fillnan')
-        fillnan = True # default
-        sumall = False # default
-        sumallandsmooth7 = False
-        if kwargs['which'] not in self.get_available_keys_words():
-            raise CoaKeyError(kwargs['which']+' is not a available for ' + self.db + ' database name. '
-            'See get_available_keys_words() for the full list.')
-
-        #while for last date all values are nan previous date
-        mainpandas = self.return_nonan_dates_pandas(self.get_mainpandas(),kwargs['which'])
-        devorigclist = None
-        origclistlist = None
-        origlistlistloc = None
-        if option and 'sumall' in option:
-            if not isinstance(kwargs['location'], list):
-                kwargs['location'] = [[kwargs['location']]]
-            else:
-                if isinstance(kwargs['location'][0], list):
+            '''
+            option = None
+            sumall = None
+            wallname = None
+            if mypycoapd is None:
+                kwargs_test(kwargs,['location','which','option'],
+                    'Bad args used in the get_stats() function.')
+                wallname = None
+                if not 'location' in kwargs or kwargs['location'] is None.__class__ or kwargs['location'] == None:
+                    if get_db_list_dict()[self.db][0] == 'WW':
+                        kwargs['location'] = 'world'
+                    else:
+                        kwargs['location'] = self.slocation #self.geo_all['code_subregion'].to_list()
+                    wallname = get_db_list_dict()[self.db][2]
+                else:
                     kwargs['location'] = kwargs['location']
-                else:
-                    kwargs['location'] = [kwargs['location']]
-        if not isinstance(kwargs['location'], list):
-            listloc = ([kwargs['location']]).copy()
-            if not all(isinstance(c, str) for c in listloc):
-                raise CoaWhereError("Location via the where keyword should be given as strings. ")
-            origclist = listloc
-        else:
-            listloc = (kwargs['location']).copy()
-            origclist = listloc
-            if any(isinstance(c, list) for c in listloc):
-                if all(isinstance(c, list) for c in listloc):
-                    origlistlistloc = listloc
-                else:
-                    raise CoaWhereError("In the case of sumall all locations must have the same types i.e\
-                    list or string but both is not accepted, could be confusing")
 
-        owid_name=''
-        if self.db_world:
-            self.geo.set_standard('name')
-            if origlistlistloc != None:
-                #fulllist = [ i if isinstance(i, list) else [i] for i in origclist ]
-                fulllist = []
-                for deploy in origlistlistloc:
-                    d=[]
-                    for i in deploy:
-                        if not self.geo.get_GeoRegion().is_region(i):
-                            d.append(self.geo.to_standard(i,output='list',interpret_region=True)[0])
-                        else:
-                            d.append(self.geo.get_GeoRegion().is_region(i))
-                    fulllist.append(d)
-                dicooriglist = { ','.join(i):self.geo.to_standard(i,output='list',interpret_region=True) for i in fulllist}
-                location_exploded = list(dicooriglist.values())
+                option = kwargs.get('option', 'fillnan')
+                fillnan = True # default
+                sumall = False # default
+                sumallandsmooth7 = False
+                if kwargs['which'] not in self.get_available_keys_words():
+                    raise CoaKeyError(kwargs['which']+' is not a available for ' + self.db + ' database name. '
+                    'See get_available_keys_words() for the full list.')
+                mypycoapd = self.get_mainpandas()
+                #while for last date all values are nan previous date
             else:
-                owid_name = [c for c in origclist if c.startswith('owid_')]
-                clist = [c for c in origclist if not c.startswith('owid_')]
-                location_exploded = self.geo.to_standard(listloc,output='list',interpret_region=True)
+                mypycoapd=mypycoapd.rename(columns={'where':'location'})
+            mainpandas = self.return_nonan_dates_pandas(mypycoapd,kwargs['which'])
 
-                if len(owid_name) !=0 :
-                    location_exploded += owid_name
-        else:
-            def explosion(listloc,typeloc='subregion'):
-                exploded = []
-                a=self.geo.get_data()
-                for i in listloc:
-                    if typeloc == 'subregion':
-                        if self.geo.is_region(i):
-                            i = [self.geo.is_region(i)]
-                            tmp = self.geo.get_subregions_from_list_of_region_names(i,output='name')
-                        elif self.geo.is_subregion(i):
-                           tmp = self.geo.is_subregion(i)
-                        else:
-                            raise CoaTypeError(i + ': not subregion nor region ... what is it ?')
-                    elif typeloc == 'region':
-                        tmp = self.geo.get_region_list()
-                        if i.isdigit():
-                            tmp = list(tmp.loc[tmp.code_region==i]['name_region'])
-                        elif self.geo.is_region(i):
-                            tmp = self.geo.get_regions_from_macroregion(name=i,output='name')
-                            if get_db_list_dict()[self.db][0] in ['USA, FRA, ESP, PRT']:
-                                tmp = tmp[:-1]
-                        else:
-                            if self.geo.is_subregion(i):
-                                raise CoaTypeError(i+ ' is a subregion ... not compatible with a region DB granularity?')
+            devorigclist = None
+            origclistlist = None
+            origlistlistloc = None
+            if option and 'sumall' in option:
+                if not isinstance(kwargs['location'], list):
+                    kwargs['location'] = [[kwargs['location']]]
+                else:
+                    if isinstance(kwargs['location'][0], list):
+                        kwargs['location'] = kwargs['location']
+                    else:
+                        kwargs['location'] = [kwargs['location']]
+            if not isinstance(kwargs['location'], list):
+                listloc = ([kwargs['location']]).copy()
+                if not all(isinstance(c, str) for c in listloc):
+                    raise CoaWhereError("Location via the where keyword should be given as strings. ")
+                origclist = listloc
+            else:
+                listloc = (kwargs['location']).copy()
+                origclist = listloc
+                if any(isinstance(c, list) for c in listloc):
+                    if all(isinstance(c, list) for c in listloc):
+                        origlistlistloc = listloc
+                    else:
+                        raise CoaWhereError("In the case of sumall all locations must have the same types i.e\
+                        list or string but both is not accepted, could be confusing")
+
+            owid_name=''
+            if self.db_world:
+                self.geo.set_standard('name')
+                if origlistlistloc != None:
+                    #fulllist = [ i if isinstance(i, list) else [i] for i in origclist ]
+                    fulllist = []
+                    for deploy in origlistlistloc:
+                        d=[]
+                        for i in deploy:
+                            if not self.geo.get_GeoRegion().is_region(i):
+                                d.append(self.geo.to_standard(i,output='list',interpret_region=True)[0])
+                            else:
+                                d.append(self.geo.get_GeoRegion().is_region(i))
+                        fulllist.append(d)
+                    dicooriglist = { ','.join(i):self.geo.to_standard(i,output='list',interpret_region=True) for i in fulllist}
+                    location_exploded = list(dicooriglist.values())
+                else:
+                    owid_name = [c for c in origclist if c.startswith('owid_')]
+                    clist = [c for c in origclist if not c.startswith('owid_')]
+                    location_exploded = self.geo.to_standard(listloc,output='list',interpret_region=True)
+
+                    if len(owid_name) !=0 :
+                        location_exploded += owid_name
+            else:
+                def explosion(listloc,typeloc='subregion'):
+                    exploded = []
+                    a=self.geo.get_data()
+                    for i in listloc:
+                        if typeloc == 'subregion':
+                            if self.geo.is_region(i):
+                                i = [self.geo.is_region(i)]
+                                tmp = self.geo.get_subregions_from_list_of_region_names(i,output='name')
+                            elif self.geo.is_subregion(i):
+                               tmp = self.geo.is_subregion(i)
                             else:
                                 raise CoaTypeError(i + ': not subregion nor region ... what is it ?')
-                    else:
-                        raise CoaTypeError('Not subregion nor region requested, don\'t know what to do ?')
-                    if exploded:
-                        exploded.append(tmp)
-                    else:
-                        exploded=[tmp]
-                return DataBase.flat_list(exploded)
+                        elif typeloc == 'region':
+                            tmp = self.geo.get_region_list()
+                            if i.isdigit():
+                                tmp = list(tmp.loc[tmp.code_region==i]['name_region'])
+                            elif self.geo.is_region(i):
+                                tmp = self.geo.get_regions_from_macroregion(name=i,output='name')
+                                if get_db_list_dict()[self.db][0] in ['USA, FRA, ESP, PRT']:
+                                    tmp = tmp[:-1]
+                            else:
+                                if self.geo.is_subregion(i):
+                                    raise CoaTypeError(i+ ' is a subregion ... not compatible with a region DB granularity?')
+                                else:
+                                    raise CoaTypeError(i + ': not subregion nor region ... what is it ?')
+                        else:
+                            raise CoaTypeError('Not subregion nor region requested, don\'t know what to do ?')
+                        if exploded:
+                            exploded.append(tmp)
+                        else:
+                            exploded=[tmp]
+                    return DataBase.flat_list(exploded)
+
+                if origlistlistloc != None:
+                    dicooriglist={}
+                    for i in origlistlistloc:
+                        if i[0].upper() in [self.database_type[self.db][0].upper(),self.database_type[self.db][2].upper()]:
+                            dicooriglist[self.database_type[self.db][0]]=explosion(DataBase.flat_list(self.slocation))
+                        else:
+                            dicooriglist[','.join(i)]=explosion(i,self.database_type[self.db][1])
+
+                            #print(list(map(lambda x: x.replace(i, ', '.join(DataBase.flat_list(self.slocation))), origlistlistloc)))
+                    #dicooriglist={','.join(i):explosion(i,self.database_type[self.db][1]) for i in origlistlistloc}
+                    #origlistlistloc = DataBase.flat_list(list(dicooriglist.values()))
+                    #location_exploded = origlistlistloc
+                else:
+                    if any([i.upper() in [self.database_type[self.db][0].upper(),self.database_type[self.db][2].upper()] for i in listloc]):
+                        listloc=self.slocation
+                    listloc = explosion(listloc,self.database_type[self.db][1])
+                    listloc = DataBase.flat_list(listloc)
+                    location_exploded = listloc
+
+            def sticky(lname):
+                if len(lname)>0:
+                    tmp=''
+                    for i in lname:
+                        tmp += i+', '
+                    lname=tmp[:-2]
+                return [lname]
+
+            pdcluster = pd.DataFrame()
+            j=0
 
             if origlistlistloc != None:
-                dicooriglist={}
-                for i in origlistlistloc:
-                    if i[0].upper() in [self.database_type[self.db][0].upper(),self.database_type[self.db][2].upper()]:
-                        dicooriglist[self.database_type[self.db][0]]=explosion(DataBase.flat_list(self.slocation))
+                for k,v in dicooriglist.items():
+                    tmp  = mainpandas.copy()
+                    if any(isinstance(c, list) for c in v):
+                        v=v[0]
+                    tmp = tmp.loc[tmp.location.isin(v)]
+                    code = tmp.codelocation.unique()
+                    tmp['clustername'] = [k]*len(tmp)
+                    if pdcluster.empty:
+                        pdcluster = tmp
                     else:
-                        dicooriglist[','.join(i)]=explosion(i,self.database_type[self.db][1])
-
-                        #print(list(map(lambda x: x.replace(i, ', '.join(DataBase.flat_list(self.slocation))), origlistlistloc)))
-                #dicooriglist={','.join(i):explosion(i,self.database_type[self.db][1]) for i in origlistlistloc}
-                #origlistlistloc = DataBase.flat_list(list(dicooriglist.values()))
-                #location_exploded = origlistlistloc
+                        pdcluster = pd.concat([pdcluster,tmp])
+                    j+=1
+                pdfiltered = pdcluster[['location','date','codelocation',kwargs['which'],'clustername']]
             else:
-                if any([i.upper() in [self.database_type[self.db][0].upper(),self.database_type[self.db][2].upper()] for i in listloc]):
-                    listloc=self.slocation
-                listloc = explosion(listloc,self.database_type[self.db][1])
-                listloc = DataBase.flat_list(listloc)
-                location_exploded = listloc
+                pdfiltered = mainpandas.loc[mainpandas.location.isin(location_exploded)]
+                pdfiltered = pdfiltered[['location','date','codelocation',kwargs['which']]]
+                pdfiltered['clustername'] = pdfiltered['location'].copy()
+            if not isinstance(option,list):
+                option=[option]
+            if 'fillnan' not in option and 'nofillnan' not in option:
+                option.insert(0, 'fillnan')
+            if 'nonneg' in option:
+                option.remove('nonneg')
+                option.insert(0, 'nonneg')
+            if 'smooth7' in  option and 'sumall' in  option:
+                option.remove('sumall')
+                option.remove('smooth7')
+                option+=['sumallandsmooth7']
+            for o in option:
+                if o == 'nonneg':
+                    if kwargs['which'].startswith('cur_'):
+                        raise CoaKeyError('The option nonneg cannot be used with instantaneous data, such as cur_ which variables.')
+                    cluster=list(pdfiltered.clustername.unique())
+                    separated = [ pdfiltered.loc[pdfiltered.clustername==i] for i in cluster]
+                    reconstructed = pd.DataFrame()
+                    for sub in separated:
+                        location = list(sub.location.unique())
+                        for loca in location:
+                            pdloc = sub.loc[sub.location == loca][kwargs['which']]
+                            try:
+                                y0=pdloc.values[0] # integrated offset at t=0
+                            except:
+                                y0=0
+                            if np.isnan(y0):
+                                y0=0
+                            pa = pdloc.diff()
+                            yy = pa.values
+                            ind = list(pa.index)
+                            where_nan = np.isnan(yy)
+                            yy[where_nan] = 0.
+                            indices=np.where(yy < 0)[0]
+                            for kk in np.where(yy < 0)[0]:
+                                k = int(kk)
+                                val_to_repart = -yy[k]
+                                if k < np.size(yy)-1:
+                                    yy[k] = (yy[k+1]+yy[k-1])/2
+                                else:
+                                    yy[k] = yy[k-1]
+                                val_to_repart = val_to_repart + yy[k]
+                                s = np.nansum(yy[0:k])
+                                if not any([i !=0 for i in yy[0:k]]) == True and s == 0:
+                                    yy[0:k] = 0.
+                                elif s == 0:
+                                    yy[0:k] = np.nan*np.ones(k)
+                                else:
+                                    yy[0:k] = yy[0:k]*(1-float(val_to_repart)/s)
+                            sub=sub.copy()
+                            sub.loc[ind,kwargs['which']]=np.cumsum(yy)+y0 # do not forget the offset
+                        if reconstructed.empty:
+                            reconstructed = sub
+                        else:
+                            reconstructed=pd.concat([reconstructed,sub])
+                        pdfiltered = reconstructed
+                elif o == 'nofillnan':
+                    pdfiltered_nofillnan = pdfiltered.copy().reset_index(drop=True)
+                    fillnan=False
+                elif o == 'fillnan':
+                    fillnan=True
+                    # fill with previous value
+                    pdfiltered = pdfiltered.reset_index(drop=True)
+                    pdfiltered_nofillnan = pdfiltered.copy()
 
-        def sticky(lname):
-            if len(lname)>0:
-                tmp=''
-                for i in lname:
-                    tmp += i+', '
-                lname=tmp[:-2]
-            return [lname]
+                    pdfiltered.loc[:,kwargs['which']] =\
+                    pdfiltered.groupby(['location','clustername'])[kwargs['which']].apply(lambda x: x.bfill())
+                    #if kwargs['which'].startswith('total_') or kwargs['which'].startswith('tot_'):
+                    #    pdfiltered.loc[:,kwargs['which']] = pdfiltered.groupby(['clustername'])[kwargs['which']].apply(lambda x: x.ffill())
+                    if pdfiltered.loc[pdfiltered.date == pdfiltered.date.max()][kwargs['which']].isnull().values.any():
+                        print(kwargs['which'], "has been selected. Some missing data has been interpolated from previous data.")
+                        print("This warning appear right now due to some missing values at the latest date ", pdfiltered.date.max(),".")
+                        print("Use the option='nofillnan' if you want to only display the original data")
+                        pdfiltered.loc[:,kwargs['which']] = pdfiltered.groupby(['location','clustername'])[kwargs['which']].apply(lambda x: x.ffill())
+                        pdfiltered = pdfiltered[pdfiltered[kwargs['which']].notna()]
+                elif o == 'smooth7':
+                    pdfiltered[kwargs['which']] = pdfiltered.groupby(['location'])[kwargs['which']].rolling(7,min_periods=7).mean().reset_index(level=0,drop=True)
+                    inx7=pdfiltered.groupby('location').head(7).index
+                    pdfiltered.loc[inx7, kwargs['which']] = pdfiltered[kwargs['which']].fillna(method="bfill")
+                    fillnan=True
+                elif o == 'sumall':
+                    sumall = True
+                elif o == 'sumallandsmooth7':
+                    sumall = True
+                    sumallandsmooth7 = True
+                elif o != None and o != '' and o != 'sumallandsmooth7':
+                    raise CoaKeyError('The option '+o+' is not recognized in get_stats. See listoptions() for list.')
+            pdfiltered = pdfiltered.reset_index(drop=True)
 
-        pdcluster = pd.DataFrame()
-        j=0
+            # if sumall set, return only integrate val
+            tmppandas=pd.DataFrame()
+            if sumall:
+                if origlistlistloc != None:
+                   uniqcluster = pdfiltered.clustername.unique()
+                   if kwargs['which'].startswith('cur_idx_') or kwargs['which'].startswith('cur_tx_'):
+                      tmp = pdfiltered.groupby(['clustername','date']).mean().reset_index()
+                   else:
+                      tmp = pdfiltered.groupby(['clustername','date']).sum().reset_index()#.loc[pdfiltered.clustername.isin(uniqcluster)].\
 
-        if origlistlistloc != None:
-            for k,v in dicooriglist.items():
-                tmp  = mainpandas.copy()
-                if any(isinstance(c, list) for c in v):
-                    v=v[0]
-                tmp = tmp.loc[tmp.location.isin(v)]
-                code = tmp.codelocation.unique()
-                tmp['clustername'] = [k]*len(tmp)
-                if pdcluster.empty:
-                    pdcluster = tmp
+                   codescluster = {i:list(pdfiltered.loc[pdfiltered.clustername==i]['codelocation'].unique()) for i in uniqcluster}
+                   namescluster = {i:list(pdfiltered.loc[pdfiltered.clustername==i]['location'].unique()) for i in uniqcluster}
+                   tmp['codelocation'] = tmp['clustername'].map(codescluster)
+                   tmp['location'] = tmp['clustername'].map(namescluster)
+
+                   pdfiltered = tmp
+                   pdfiltered = pdfiltered.drop_duplicates(['date','clustername'])
+                   if sumallandsmooth7:
+                       pdfiltered[kwargs['which']] = pdfiltered.groupby(['clustername'])[kwargs['which']].rolling(7,min_periods=7).mean().reset_index(level=0,drop=True)
+                       pdfiltered.loc[:,kwargs['which']] =\
+                       pdfiltered.groupby(['clustername'])[kwargs['which']].apply(lambda x: x.bfill())
+                # computing daily, cumul and weekly
                 else:
-                    pdcluster = pd.concat([pdcluster,tmp])
-                j+=1
-            pdfiltered = pdcluster[['location','date','codelocation',kwargs['which'],'clustername']]
-        else:
-            pdfiltered = mainpandas.loc[mainpandas.location.isin(location_exploded)]
-            pdfiltered = pdfiltered[['location','date','codelocation',kwargs['which']]]
-            pdfiltered['clustername'] = pdfiltered['location'].copy()
-        if not isinstance(option,list):
-            option=[option]
-        if 'fillnan' not in option and 'nofillnan' not in option:
-            option.insert(0, 'fillnan')
-        if 'nonneg' in option:
-            option.remove('nonneg')
-            option.insert(0, 'nonneg')
-        if 'smooth7' in  option and 'sumall' in  option:
-            option.remove('sumall')
-            option.remove('smooth7')
-            option+=['sumallandsmooth7']
-        for o in option:
-            if o == 'nonneg':
-                if kwargs['which'].startswith('cur_'):
-                    raise CoaKeyError('The option nonneg cannot be used with instantaneous data, such as cur_ which variables.')
-                cluster=list(pdfiltered.clustername.unique())
-                separated = [ pdfiltered.loc[pdfiltered.clustername==i] for i in cluster]
-                reconstructed = pd.DataFrame()
-                for sub in separated:
-                    location = list(sub.location.unique())
-                    for loca in location:
-                        pdloc = sub.loc[sub.location == loca][kwargs['which']]
-                        try:
-                            y0=pdloc.values[0] # integrated offset at t=0
-                        except:
-                            y0=0
-                        if np.isnan(y0):
-                            y0=0
-                        pa = pdloc.diff()
-                        yy = pa.values
-                        ind = list(pa.index)
-                        where_nan = np.isnan(yy)
-                        yy[where_nan] = 0.
-                        indices=np.where(yy < 0)[0]
-                        for kk in np.where(yy < 0)[0]:
-                            k = int(kk)
-                            val_to_repart = -yy[k]
-                            if k < np.size(yy)-1:
-                                yy[k] = (yy[k+1]+yy[k-1])/2
-                            else:
-                                yy[k] = yy[k-1]
-                            val_to_repart = val_to_repart + yy[k]
-                            s = np.nansum(yy[0:k])
-                            if not any([i !=0 for i in yy[0:k]]) == True and s == 0:
-                                yy[0:k] = 0.
-                            elif s == 0:
-                                yy[0:k] = np.nan*np.ones(k)
-                            else:
-                                yy[0:k] = yy[0:k]*(1-float(val_to_repart)/s)
-                        sub=sub.copy()
-                        sub.loc[ind,kwargs['which']]=np.cumsum(yy)+y0 # do not forget the offset
-                    if reconstructed.empty:
-                        reconstructed = sub
+                    if kwargs['which'].startswith('cur_idx_'):
+                        tmp = pdfiltered.groupby(['date']).mean().reset_index()
                     else:
-                        reconstructed=pd.concat([reconstructed,sub])
-                    pdfiltered = reconstructed
-            elif o == 'nofillnan':
-                pdfiltered_nofillnan = pdfiltered.copy().reset_index(drop=True)
-                fillnan=False
-            elif o == 'fillnan':
-                fillnan=True
-                # fill with previous value
-                pdfiltered = pdfiltered.reset_index(drop=True)
-                pdfiltered_nofillnan = pdfiltered.copy()
-
-                pdfiltered.loc[:,kwargs['which']] =\
-                pdfiltered.groupby(['location','clustername'])[kwargs['which']].apply(lambda x: x.bfill())
-                #if kwargs['which'].startswith('total_') or kwargs['which'].startswith('tot_'):
-                #    pdfiltered.loc[:,kwargs['which']] = pdfiltered.groupby(['clustername'])[kwargs['which']].apply(lambda x: x.ffill())
-                if pdfiltered.loc[pdfiltered.date == pdfiltered.date.max()][kwargs['which']].isnull().values.any():
-                    print(kwargs['which'], "has been selected. Some missing data has been interpolated from previous data.")
-                    print("This warning appear right now due to some missing values at the latest date ", pdfiltered.date.max(),".")
-                    print("Use the option='nofillnan' if you want to only display the original data")
-                    pdfiltered.loc[:,kwargs['which']] = pdfiltered.groupby(['location','clustername'])[kwargs['which']].apply(lambda x: x.ffill())
-                    pdfiltered = pdfiltered[pdfiltered[kwargs['which']].notna()]
-            elif o == 'smooth7':
-                pdfiltered[kwargs['which']] = pdfiltered.groupby(['location'])[kwargs['which']].rolling(7,min_periods=7).mean().reset_index(level=0,drop=True)
-                inx7=pdfiltered.groupby('location').head(7).index
-                pdfiltered.loc[inx7, kwargs['which']] = pdfiltered[kwargs['which']].fillna(method="bfill")
-                fillnan=True
-            elif o == 'sumall':
-                sumall = True
-            elif o == 'sumallandsmooth7':
-                sumall = True
-                sumallandsmooth7 = True
-            elif o != None and o != '' and o != 'sumallandsmooth7':
-                raise CoaKeyError('The option '+o+' is not recognized in get_stats. See listoptions() for list.')
-        pdfiltered = pdfiltered.reset_index(drop=True)
-
-        # if sumall set, return only integrate val
-        tmppandas=pd.DataFrame()
-        if sumall:
-            if origlistlistloc != None:
-               uniqcluster = pdfiltered.clustername.unique()
-               if kwargs['which'].startswith('cur_idx_') or kwargs['which'].startswith('cur_tx_'):
-                  tmp = pdfiltered.groupby(['clustername','date']).mean().reset_index()
-               else:
-                  tmp = pdfiltered.groupby(['clustername','date']).sum().reset_index()#.loc[pdfiltered.clustername.isin(uniqcluster)].\
-
-               codescluster = {i:list(pdfiltered.loc[pdfiltered.clustername==i]['codelocation'].unique()) for i in uniqcluster}
-               namescluster = {i:list(pdfiltered.loc[pdfiltered.clustername==i]['location'].unique()) for i in uniqcluster}
-               tmp['codelocation'] = tmp['clustername'].map(codescluster)
-               tmp['location'] = tmp['clustername'].map(namescluster)
-
-               pdfiltered = tmp
-               pdfiltered = pdfiltered.drop_duplicates(['date','clustername'])
-               if sumallandsmooth7:
-                   pdfiltered[kwargs['which']] = pdfiltered.groupby(['clustername'])[kwargs['which']].rolling(7,min_periods=7).mean().reset_index(level=0,drop=True)
-                   pdfiltered.loc[:,kwargs['which']] =\
-                   pdfiltered.groupby(['clustername'])[kwargs['which']].apply(lambda x: x.bfill())
-            # computing daily, cumul and weekly
+                        tmp = pdfiltered.groupby(['date']).sum().reset_index()
+                    uniqloc = list(pdfiltered.location.unique())
+                    uniqcodeloc = list(pdfiltered.codelocation.unique())
+                    tmp.loc[:,'location'] = ['dummy']*len(tmp)
+                    tmp.loc[:,'codelocation'] = ['dummy']*len(tmp)
+                    tmp.loc[:,'clustername'] = ['dummy']*len(tmp)
+                    for i in range(len(tmp)):
+                        tmp.at[i,'location'] = uniqloc #sticky(uniqloc)
+                        tmp.at[i,'codelocation'] = uniqcodeloc #sticky(uniqcodeloc)
+                        tmp.at[i,'clustername'] =  sticky(uniqloc)[0]
+                    pdfiltered = tmp
             else:
-                if kwargs['which'].startswith('cur_idx_'):
-                    tmp = pdfiltered.groupby(['date']).mean().reset_index()
+                if self.db_world :
+                    pdfiltered['clustername'] = pdfiltered['location'].apply(lambda x: self.geo.to_standard(x)[0] if not x.startswith("owid_") else x)
                 else:
-                    tmp = pdfiltered.groupby(['date']).sum().reset_index()
-                uniqloc = list(pdfiltered.location.unique())
-                uniqcodeloc = list(pdfiltered.codelocation.unique())
-                tmp.loc[:,'location'] = ['dummy']*len(tmp)
-                tmp.loc[:,'codelocation'] = ['dummy']*len(tmp)
-                tmp.loc[:,'clustername'] = ['dummy']*len(tmp)
-                for i in range(len(tmp)):
-                    tmp.at[i,'location'] = uniqloc #sticky(uniqloc)
-                    tmp.at[i,'codelocation'] = uniqcodeloc #sticky(uniqcodeloc)
-                    tmp.at[i,'clustername'] =  sticky(uniqloc)[0]
-                pdfiltered = tmp
-        else:
-            if self.db_world :
-                pdfiltered['clustername'] = pdfiltered['location'].apply(lambda x: self.geo.to_standard(x)[0] if not x.startswith("owid_") else x)
+                    pdfiltered['clustername'] = pdfiltered['location']
+
+            if 'cur_' in kwargs['which'] or 'total_' in kwargs['which'] or 'tot_' in kwargs['which']:
+                pdfiltered['cumul'] = pdfiltered[kwargs['which']]
             else:
-                pdfiltered['clustername'] = pdfiltered['location']
+                pdfiltered['cumul'] = pdfiltered_nofillnan.groupby('clustername')[kwargs['which']].cumsum()
+                if fillnan:
+                    pdfiltered.loc[:,'cumul'] =\
+                    pdfiltered.groupby('clustername')['cumul'].apply(lambda x: x.ffill())
 
-        if 'cur_' in kwargs['which'] or 'total_' in kwargs['which'] or 'tot_' in kwargs['which']:
-            pdfiltered['cumul'] = pdfiltered[kwargs['which']]
-        else:
-            pdfiltered['cumul'] = pdfiltered_nofillnan.groupby('clustername')[kwargs['which']].cumsum()
-            if fillnan:
-                pdfiltered.loc[:,'cumul'] =\
-                pdfiltered.groupby('clustername')['cumul'].apply(lambda x: x.ffill())
-
-        pdfiltered['daily'] = pdfiltered.groupby('clustername')['cumul'].diff()
-        pdfiltered['weekly'] = pdfiltered.groupby('clustername')['cumul'].diff(7)
-        inx = pdfiltered.groupby('clustername').head(1).index
-        inx7=pdfiltered.groupby('clustername').head(7).index
-        #First value of diff is always NaN
-        pdfiltered.loc[inx, 'daily'] = pdfiltered['daily'].fillna(method="bfill")
-        pdfiltered.loc[inx7, 'weekly'] = pdfiltered['weekly'].fillna(method="bfill")
-        if self.db == 'spf' and kwargs['which'] in ['tot_P','tot_T']:
-            pdfiltered['daily'] = pdfiltered.groupby(['clustername'])[kwargs['which']].rolling(7,min_periods=7).mean()\
-                                  .reset_index(level=0,drop=True).diff()
-            inx=pdfiltered.groupby('clustername').head(7).index
+            pdfiltered['daily'] = pdfiltered.groupby('clustername')['cumul'].diff()
+            pdfiltered['weekly'] = pdfiltered.groupby('clustername')['cumul'].diff(7)
+            inx = pdfiltered.groupby('clustername').head(1).index
+            inx7=pdfiltered.groupby('clustername').head(7).index
+            #First value of diff is always NaN
             pdfiltered.loc[inx, 'daily'] = pdfiltered['daily'].fillna(method="bfill")
+            pdfiltered.loc[inx7, 'weekly'] = pdfiltered['weekly'].fillna(method="bfill")
+            if self.db == 'spf' and kwargs['which'] in ['tot_P','tot_T']:
+                pdfiltered['daily'] = pdfiltered.groupby(['clustername'])[kwargs['which']].rolling(7,min_periods=7).mean()\
+                                      .reset_index(level=0,drop=True).diff()
+                inx=pdfiltered.groupby('clustername').head(7).index
+                pdfiltered.loc[inx, 'daily'] = pdfiltered['daily'].fillna(method="bfill")
 
+            unifiedposition=['location', 'date', kwargs['which'], 'daily', 'cumul', 'weekly', 'codelocation','clustername']
+            pdfiltered = pdfiltered[unifiedposition]
 
+            if wallname != None and sumall == True:
+                   pdfiltered.loc[:,'clustername'] = wallname
 
-        unifiedposition=['location', 'date', kwargs['which'], 'daily', 'cumul', 'weekly', 'codelocation','clustername']
-        pdfiltered = pdfiltered[unifiedposition]
+            pdfiltered = pdfiltered.drop(columns='cumul')
+            verb("Here the information I\'ve got on ", kwargs['which']," : ", self.get_keyword_definition(kwargs['which']))
+            return pdfiltered
+         return inner_stats
 
-        if wallname != None and sumall == True:
-               pdfiltered.loc[:,'clustername'] = wallname
+   @decostats
+   def get_stats(mypycoapd = None, **kwargs):
+       return
 
-        pdfiltered = pdfiltered.drop(columns='cumul')
-        verb("Here the information I\'ve got on ", kwargs['which']," : ", self.get_keyword_definition(kwargs['which']))
-        return pdfiltered
+   @decostats
+   def get_stats_pdinput(mypycoapd = None, **kwargs):
+       return
 
    def merger(self,**kwargs):
         '''

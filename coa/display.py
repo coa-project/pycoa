@@ -627,7 +627,7 @@ class CocoDisplay:
         listfigs = []
         if isinstance(input['rolloverdisplay'][0],list):
             input['rolloverdisplay'] = input['clustername']
-        borne=300
+        borne = 300
         kwargs.pop('plot_width')
         standardfig = self.standardfig(y_axis_type = None, x_axis_type = None,
         width=kwargs['plot_height'], x_range=[-borne, borne], y_range=[-borne, borne], match_aspect=True,**kwargs)

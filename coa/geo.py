@@ -653,17 +653,17 @@ class GeoRegion():
                         'LTU','LUX','LVA','MLT','NLD','POL','PRT','ROU',\
                         'SWE','SVN','SVK']
         elif region=='G7':
-            clist=['DEU','CAN','USA','FRA','ITA','JAP','GBR']
+            clist=['DEU','CAN','USA','FRA','ITA','JPN','GBR']
         elif region=='G8':
-            clist=['DEU','CAN','USA','FRA','ITA','JAP','GBR','RUS']
+            clist=['DEU','CAN','USA','FRA','ITA','JPN','GBR','RUS']
         elif region=='G20':
             clist=['ZAF','SAU','ARG','AUS','BRA','CAN','CHN','KOR','USA',\
-                'IND','IDN','JAP','MEX','GBR','DEU','FRA','ITA','TUR',\
+                'IND','IDN','JPN','MEX','GBR','DEU','FRA','ITA','TUR',\
                 'MEX','RUS']
         elif region=='Oecd': # OCDE in french
             clist=['DEU','AUS','AUT','BEL','CAN','CHL','COL','KOR','DNK',\
                 'ESP','EST','USA','FIN','FRA','GRC','HUN','IRL','ISL','ISR',\
-                'ITA','JAP','LVA','LTU','LUX','MEX','NOR','NZL','NLD','POL',\
+                'ITA','JPN','LVA','LTU','LUX','MEX','NOR','NZL','NLD','POL',\
                 'PRT','SVK','SVN','SWE','CHE','GBR','CZE','TUR']
         elif region=='G77':
             clist=['AFG','DZA','AGO','ATG','ARG','AZE','BHS','BHR','BGD','BRB','BLZ',
@@ -719,6 +719,7 @@ class GeoCountry():
                     'CHL':'http://geonode.meteochile.gob.cl/geoserver/wfs?format_options=charset%3AUTF-8&typename=geonode%3Adivision_comunal_geo_ide_1&outputFormat=SHAPE-ZIP&version=1.0.0&service=WFS&request=GetFeature',\
                     'EUR':'https://github.com/coa-project/coadata/raw/main/coastore/WHO_EUROsmall2.json',\
                     'GRC':'https://geodata.gov.gr/dataset/6deb6a12-1a54-41b4-b53b-6b36068b8348/resource/3e571f7f-42a4-4b49-8db0-311695d72fa3/download/nomoiokxe.zip',\
+                    'JPN':'https://raw.githubusercontent.com/piuccio/open-data-jp-prefectures-geojson/master/output/prefectures.geojson',\
                     }
 
     _source_dict = {'FRA':{'Basics':_country_info_dict['FRA'],\
@@ -741,6 +742,7 @@ class GeoCountry():
                     'CHL':{'Basics':_country_info_dict['CHL']},\
                     'EUR':{'Basics':_country_info_dict['EUR']},\
                     'GRC':{'Basics':_country_info_dict['GRC']},\
+                    'JPN':{'Basics':_country_info_dict['JPN']},\
                     }
 
     def __init__(self,country=None):
@@ -1061,6 +1063,93 @@ class GeoCountry():
             changename={'Ο ΟΡΟΣ':'ΑΓΙΟ ΟΡΟΣ','ΑΘΗΝΩΝ':'ΑΤΤΙΚΗΣ'}
             self._country_data['name_subregion'].replace(changename, inplace=True)
             self._country_data['name_region'].replace(changename, inplace=True)
+
+        #--- 'JPN' case ----------------------------------------------------------------------------------------
+        elif self._country == 'JPN':
+            self._country_data = gpd.read_file(get_local_from_url(url,0))
+            np_name_subregion_jpn = np.array(['Hokkaido', 'Aomori', 'Iwate', 'Miyagi', 'Akita',\
+                                              'Yamagata', 'Fukushima', 'Ibaraki', 'Tochigi',\
+                                              'Gunma', 'Saitama','Chiba', 'Tokyo', 'Kanagawa',\
+                                              'Niigata', 'Toyama', 'Ishikawa', 'Fukui','Yamanashi',\
+                                              'Nagano', 'Gifu', 'Shizuoka', 'Aichi', 'Mie', 'Shiga',\
+                                              'Kyoto', 'Osaka', 'Hyogo', 'Nara', 'Wakayama', 'Tottori',\
+                                              'Shimane','Okayama', 'Hiroshima', 'Yamaguchi', 'Tokushima',\
+                                              'Kagawa', 'Ehime','Kochi', 'Fukuoka', 'Saga', 'Nagasaki',\
+                                              'Kumamoto', 'Oita', 'Miyazaki','Kagoshima', 'Okinawa'])
+            np_town_subregion_jpn = np.array(['Sapporo','Aomori','Morioka','Sendai','Akita',\
+                                              'Yamagata','Fukushima','Mito','Utsunomiya','Maebashi',\
+                                              'Saitama','Chiba','Shinjuku','Yokohama','Niigata','Toyama',\
+                                              'Kanazawa','Fukui','Kofu','Nagano','Gifu','Shizuoka',\
+                                              'Nagoya','Tsu','Otsu','Kyoto','Osaka','Kobe','Nara','Wakayama','Tottori',\
+                                              'Matsue','Okayama','Hiroshima','Yamaguchi','Tokushima','Takamatsu',\
+                                              'Matsuyama','Kochi','Fukuoka','Saga','Nagasaki','Kumamoto','Oita',\
+                                              'Miyazaki','Kagoshima','Naha'])
+            np_name_region_jpn = np.array(['Hokkaido']+ 6*['Tohoku'] + 7*['Kanto'] + 9*['Chubu'] + 5*['Chugoku'] + 4*['Shikoku'] + 7*['Kansai'] + 8*['Kyushu']) 
+            np_code_region_jpn = np.array(['Hokkaido']+ 6*['Tohoku'] + 7*['Kanto'] + 9*['Chubu'] + 5*['Chugoku'] + 4*['Shikoku'] + 7*['Kansai'] + 8*['Kyushu'])
+            np_code_subregion_jpn =np.arange(1,48)
+            np_population_subregion_jpn = np.array([5224614,1237984,1210534,2301996,959502, 1068027,
+                                        1833152,2867009,1933146,1939110,7344765,6284480,14047594,
+                                        9237337,2201272,1034814,1132852,766863,809974,2048011, 1978742,3633202,7542415,1770254,1413610,2578087,
+                                        8837685, 5465002, 1324473, 922584, 553407, 671126, 1888432, 2799702, 1342059,719559, 950244, 1344841, 691527, 5135214,
+                                        811442, 1312317, 1738301, 1123852, 1069576, 1588256, 1467480])
+            np_area_subregion_jpn =np.array([83457.00,9644.55,15278.89,7285.77, 11636.28, 9323.46, 13782.76,  6095.72,
+                                 6408.28,6362.33, 3798.08, 5156.61, 2188.67, 2415.86, 12583.83, 4247.61,4185.67, 4189.88,
+                                 4465.37,  13562.23, 10621.17, 7780.50,  5165.12, 5777.31, 4017.36, 4613.21, 1899.28, 8396.16, 3691.09, 4726.29, 3507.28, 6707.96, 7113.23, 8479.70
+                                 ,6114.09, 4146.74, 1876.55, 5678.33, 7105.16, 4978.51, 2439.65, 4105.47, 7404.79, 6339.74, 7735.99, 9188.82, 2276.49])
+            np_flag_subregion_jpn = np.array(
+                            ['https://upload.wikimedia.org/wikipedia/commons/2/22/Flag_of_Hokkaido_Prefecture.svg',
+                             'https://upload.wikimedia.org/wikipedia/commons/3/30/Flag_of_Aomori_Prefecture.svg',
+                             'https://upload.wikimedia.org/wikipedia/commons/a/a9/Flag_of_Iwate_Prefecture.svg',
+                             'https://upload.wikimedia.org/wikipedia/commons/c/c7/Flag_of_Miyagi_Prefecture.svg',
+                             'https://upload.wikimedia.org/wikipedia/commons/8/84/Flag_of_Akita_Prefecture.svg',
+                             'https://upload.wikimedia.org/wikipedia/commons/a/a1/Flag_of_Yamagata_Prefecture.svg',
+                             'https://upload.wikimedia.org/wikipedia/commons/4/4b/Flag_of_Fukushima_Prefecture.svg',
+                             'https://upload.wikimedia.org/wikipedia/commons/a/a8/Flag_of_Ibaraki_Prefecture.svg',
+                             'https://upload.wikimedia.org/wikipedia/commons/d/d5/Flag_of_Tochigi_Prefecture.svg',
+                             'https://upload.wikimedia.org/wikipedia/commons/b/ba/Flag_of_Gunma_Prefecture.svg',
+                             'https://upload.wikimedia.org/wikipedia/commons/c/cd/Flag_of_Saitama_Prefecture.svg',
+                             'https://upload.wikimedia.org/wikipedia/commons/0/0a/Flag_of_Chiba_Prefecture.svg',
+                             'https://upload.wikimedia.org/wikipedia/commons/1/15/Flag_of_Tokyo_Metropolis.svg',
+                             'https://upload.wikimedia.org/wikipedia/commons/a/a7/Flag_of_Kanagawa_Prefecture.svg',
+                             'https://upload.wikimedia.org/wikipedia/commons/c/cb/Flag_of_Niigata_Prefecture.svg',
+                             'https://upload.wikimedia.org/wikipedia/commons/1/1d/Flag_of_Toyama_Prefecture.svg',
+                             'https://upload.wikimedia.org/wikipedia/commons/6/6a/Flag_of_Ishikawa_Prefecture.svg',
+                             'https://upload.wikimedia.org/wikipedia/commons/5/56/Flag_of_Fukui_Prefecture.svg',
+                             'https://upload.wikimedia.org/wikipedia/commons/0/00/Flag_of_Yamanashi_Prefecture.svg',
+                             'https://upload.wikimedia.org/wikipedia/commons/f/f0/Flag_of_Nagano_Prefecture.svg',
+                             'https://upload.wikimedia.org/wikipedia/commons/3/3e/Flag_of_Gifu_Prefecture.svg',
+                             'https://upload.wikimedia.org/wikipedia/commons/9/92/Flag_of_Shizuoka_Prefecture.svg',
+                             'https://upload.wikimedia.org/wikipedia/commons/0/02/Flag_of_Aichi_Prefecture.svg',
+                             'https://upload.wikimedia.org/wikipedia/commons/8/8c/Flag_of_Mie_Prefecture.svg', 
+                             'https://upload.wikimedia.org/wikipedia/commons/9/99/Flag_of_Shiga_Prefecture.svg',
+                             'https://upload.wikimedia.org/wikipedia/commons/0/06/Flag_of_Kyoto_Prefecture.svg',
+                             'https://upload.wikimedia.org/wikipedia/commons/5/5a/Flag_of_Osaka_Prefecture.svg',
+                             'https://upload.wikimedia.org/wikipedia/commons/7/74/Flag_of_Hyogo_Prefecture.svg',
+                             'https://upload.wikimedia.org/wikipedia/commons/0/00/Flag_of_Nara_Prefecture.svg', 
+                             'https://upload.wikimedia.org/wikipedia/commons/6/6e/Flag_of_Wakayama_Prefecture.svg',
+                             'https://upload.wikimedia.org/wikipedia/commons/1/1c/Flag_of_Tottori_Prefecture.svg',
+                             'https://upload.wikimedia.org/wikipedia/commons/e/e8/Flag_of_Shimane_Prefecture.svg',
+                             'https://upload.wikimedia.org/wikipedia/commons/3/33/Flag_of_Okayama_Prefecture.svg',
+                             'https://upload.wikimedia.org/wikipedia/commons/e/ed/Flag_of_Hiroshima_Prefecture.svg',
+                             'https://upload.wikimedia.org/wikipedia/commons/b/b9/Flag_of_Yamaguchi_Prefecture.svg', 
+                             'https://upload.wikimedia.org/wikipedia/commons/a/ac/Flag_of_Tokushima_Prefecture.svg',
+                             'https://upload.wikimedia.org/wikipedia/commons/2/29/Flag_of_Kagawa_Prefecture.svg',
+                             'https://upload.wikimedia.org/wikipedia/commons/2/2d/Flag_of_Ehime_Prefecture.svg',
+                             'https://upload.wikimedia.org/wikipedia/commons/5/50/Flag_of_Kochi_Prefecture.svg',
+                             'https://upload.wikimedia.org/wikipedia/commons/7/71/Flag_of_Fukuoka_Prefecture.svg',
+                             'https://upload.wikimedia.org/wikipedia/commons/1/18/Flag_of_Saga_Prefecture.svg',
+                             'https://upload.wikimedia.org/wikipedia/commons/6/65/Flag_of_Nagasaki_Prefecture.svg',
+                             'https://upload.wikimedia.org/wikipedia/commons/f/f7/Flag_of_Kumamoto_Prefecture.svg',
+                             'https://upload.wikimedia.org/wikipedia/commons/c/c8/Flag_of_Oita_Prefecture.svg',
+                             'https://upload.wikimedia.org/wikipedia/commons/0/0b/Flag_of_Miyazaki_Prefecture.svg',
+                             'https://upload.wikimedia.org/wikipedia/commons/c/c5/Flag_of_Kagoshima_Prefecture.svg',
+                             'https://upload.wikimedia.org/wikipedia/commons/2/2f/Flag_of_Okinawa_Prefecture.svg'], dtype = object)
+            dic_japan = {'name_subregion' : np_name_subregion_jpn,'code_region' : np_name_region_jpn, 'name_region': np_name_region_jpn,\
+                         'code_subregion' : np_code_subregion_jpn, 'flag_subregion' : np_flag_subregion_jpn, 'town_subregion' : np_town_subregion_jpn,\
+                         'population_subregrion' : np_population_subregion_jpn, 'area_subregion' : np_area_subregion_jpn }
+            df_japan = pd.DataFrame(data = dic_japan)
+            df_japan.index = np.arange(1,48)
+            self._country_data = gpd.GeoDataFrame(df_japan.join(self._country_data))
 
     # def get_region_from_municipality(self,lname):
     #     """  Return region list from a municipality list

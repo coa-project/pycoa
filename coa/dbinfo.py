@@ -398,11 +398,19 @@ def generic_info(namedb, keys):
             'total_cases': ['total confirmed cases'],\
             'total_deaths': ['total death cases'],\
             }
-        for k,v in mpoxgh.items():
-            mpoxgh[k].append(url)
-            mpoxgh[k].append('https://github.com/globaldothealth/monkeypox')
-        mydico = mpoxgh
-
+    elif namedb ==  'jpnmhlw':
+        url = 'https://covid19.mhlw.go.jp/public/opendata/'
+        jpnmhlw = {'cur_cases' : ['newly_confirmed_cases_daily'],\
+                    'cur_cases_per_100_thousand': ['newly_confirmed_cases_per_100_thousand_population_daily'],\
+                    'tot_cases' : ['confirmed_cases_cumulative_daily'],\
+                    'cur_severe_cases': ['severe_cases_daily'],\
+                    'cur_deaths':   ['number_of_deaths_daily'],\
+                    'tot_deaths':    ['deaths_cumulative_daily'],\
+                  }
+        for k,v in jpnmhlw.items():
+            jpnmhlw[k].append("https://covid19.mhlw.go.jp/public/opendata/"+ v[0] + ".csv")
+            jpnmhlw[k].append(url)
+        mydico = jpnmhlw
     else:
         raise CoaKeyError('Error in the database selected, please check !')
     if keys not in mydico:

@@ -126,6 +126,37 @@ class DataBase(object):
                     obepine_data=self.csv2pandas(url,cast=cast,separator=';',rename_columns=rename_dict)
                     obepine_data['idx_obepine']=obepine_data['idx_obepine'].astype(float)
                     self.return_structured_pandas(obepine_data,columns_keeped=['idx_obepine'])
+                elif self.db == 'jpnmhlw' : #JAP
+                    info('JAP, Ministry of wealth, labor and welfare')
+                    url = 'https://www.mhlw.go.jp/english/'
+                    rename_dict = {'newly_confirmed_cases_daily':'cur_cases',\
+                                'newly_confirmed_cases_per_100_thousand_population_daily':'cur_cases_per_100_thousand',\
+                                'confirmed_cases_cumulative_daily' : 'tot_cases',\
+                                'severe_cases_daily': 'cur_severe_cases',\
+                                'number_of_deaths_daily' : 'cur_deaths',\
+                                'deaths_cumulative_daily' : 'tot_deaths',\
+                                }
+                    def df_import_and_reshape_jpn(name_var,new_name_var):
+                        df_var = pd.read_csv("https://covid19.mhlw.go.jp/public/opendata/"+ name_var + ".csv")
+                        df_var = df_var.drop(['ALL'], axis=1)
+                        df_var = pd.melt(frame = df_var,id_vars = "Date")
+                        df_var = df_var.rename(columns = {'variable' : 'location','value': new_name_var, 'Date' : 'date'})
+                        return df_var
+
+                    def df_merge_jpn(dict_var):
+                        c = 0
+                        df_var = None
+                        for name_var,new_name_var in dict_var.items():
+                            if c == 0 :
+                              df_var = df_import_and_reshape_jpn(name_var,new_name_var)
+                            else :
+                              df_var = pd.merge(df_var,df_import_and_reshape_jpn(name_var,new_name_var), on = ['date','location'])
+                            c+=1
+                        return (df_var)
+                    df_japan = df_merge_jpn(rename_dict) # use a function to obtain the df
+                    columns_keeped = ['cur_cases','cur_cases_per_100_thousand','tot_cases','cur_severe_cases','cur_deaths','tot_deaths']
+                    df_japan['date']=pd.to_datetime(df_japan['date'])
+                    self.return_structured_pandas(df_japan, columns_keeped = columns_keeped)
                 elif self.db == 'escovid19data': # ESP
                     info('ESP, EsCovid19Data ...')
                     rename_dict = {'ine_code': 'location',\
@@ -1013,7 +1044,6 @@ class DataBase(object):
         codename = None
         location_is_code = False
         uniqloc = list(mypandas['location'].unique()) # if possible location from csv are codelocation
-
         if self.db_world:
             uniqloc = [s for s in uniqloc if 'OWID_' not in s]
             db=self.get_db()
@@ -1043,6 +1073,8 @@ class DataBase(object):
             elif self.database_type[self.db][1] == 'subregion':
                 temp = self.geo_all[['code_subregion','name_subregion']]
                 codename=dict(temp.loc[temp.code_subregion.isin(uniqloc)].values)
+                if self.db == 'jpnmhlw':
+                    codename=dict(temp.loc[temp.name_subregion.isin(uniqloc)].values)
                 if self.db in ['phe','covidtracking','spf','escovid19data','opencovid19','minciencia','moh','risklayer','insee']:
                     #codename={i:list(temp.loc[temp.code_subregion.isin([i])]['name_subregion'])[0] for i in uniqloc if not temp.loc[temp.code_subregion.isin([i])]['name_subregion'].empty }
                     #codename = collections.OrderedDict(zip(uniqloc,list(temp.loc[temp.code_subregion.isin(uniqloc)]['name_subregion'])))
@@ -1054,6 +1086,7 @@ class DataBase(object):
                     #codename = collections.OrderedDict(zip(uniqloc,list(temp.loc[temp.name_subregion.isin(uniqloc)]['code_subregion'])))
                     #print(codename)
                     self.slocation = uniqloc
+
             else:
                 CoaDbError('Granularity problem , neither region nor sub_region ...')
 
@@ -1063,7 +1096,7 @@ class DataBase(object):
         if self.db != 'spfnational':
             mypandas = mypandas.groupby(['location','date']).sum(min_count=1).reset_index() # summing in case of multiple dates (e.g. in opencovid19 data). But keep nan if any
 
-        if self.db == 'govcy':
+        if self.db == 'govcy' or self.db == 'jpnmhlw':
             location_is_code=False
 
         mypandas = fill_missing_dates(mypandas)
@@ -1076,7 +1109,12 @@ class DataBase(object):
                 self.slocation = list(mypandas.codelocation.unique())
             mypandas = mypandas.loc[~mypandas.location.isnull()]
         else:
-            mypandas['codelocation'] =  mypandas['location'].map(codename).astype(str)
+            if self.db == 'jpnmhlw':
+                reverse={j:i for i,j in codename.items()}
+                mypandas['codelocation'] =  mypandas['location'].map(reverse).astype(str)
+            else:
+                mypandas['codelocation'] =  mypandas['location'].map(codename).astype(str)
+
         if self.db == 'owid':
             onlyowid['codelocation'] = onlyowid['location']
             mypandas = pd.concat([mypandas,onlyowid])

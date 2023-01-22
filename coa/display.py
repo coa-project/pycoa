@@ -544,7 +544,7 @@ class CocoDisplay:
         panels = []
         listfigs = []
         cases_custom = CocoDisplay.rollerJS()
-        if isinstance(kwargs['which'],list):
+        if 'which' in kwargs and isinstance(kwargs['which'],list):
             input_field=kwargs['which']
         if isinstance(input['rolloverdisplay'][0],list):
             input['rolloverdisplay'] = input['clustername']

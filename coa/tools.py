@@ -129,7 +129,7 @@ def tostdstring(s):
     """
     return unidecode.unidecode(' '.join(s.replace('-',' ').split())).upper()
 
-def fill_missing_dates(p, date_field='date', loc_field='location', d1=None, d2=None):
+def fill_missing_dates(p, date_field='date', loc_field='where', d1=None, d2=None):
     """Filling the input pandas dataframe p with missing dates
     """
     if not isinstance(p, pd.DataFrame):

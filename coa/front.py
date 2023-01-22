@@ -310,12 +310,6 @@ def getinfo(which):
     """
         Return keyword_definition for the db selected
     """
-    #if not which:
-        #which = listwhich()[0]
-    #    print('Load default which:',which)
-    #elif which not in listwhich():
-    #    raise CoaKeyError('Which option ' + which + ' not supported. '
-    #                                                'See listwhich() for list.')
     if  '_db' not in globals():
         raise CoaKeyError('setwhom MUST be defined first !')
     else:
@@ -419,7 +413,7 @@ def chartsinput_deco(f):
 
         where = kwargs.get('where', None)
         which = kwargs.get('which', None)
-        what = kwargs.get('what', _listwhat[0])
+        what = kwargs.get('what', None)
 
         whom = kwargs.get('whom', None)
         option = kwargs.get('option', None)
@@ -427,17 +421,26 @@ def chartsinput_deco(f):
         input_arg = kwargs.get('input', None)
         input_field = kwargs.get('input_field',None)
 
-        kwargs['input_field'] = None
-        if which:
-            kwargs['input_field'] = which
+        if (option != None or what != None) and (isinstance(input_field,list) or isinstance(which,list)):
+            raise CoaKeyError('option/what not compatible when input_fied/which  is a list')
+
+        if 'input_field' not in kwargs:
+            #if which:
+            #    kwargs['input_field'] = which
+            #else:
+            which = input_field
+                #kwargs['which']=which
         else:
-            which = listwhich()[0]
+            which = kwargs['input_field']
 
         if what:
-            kwargs['input_field'] = what
-
-        #if 'mode' in kwargs:
-        #    kwargs.pop('mode')
+            if what not in listwhat():
+                raise CoaKeyError('What option ' + what + ' not supported. '
+                                                          'See listwhat() for full list.')
+            if 'what'=='sandard':
+                what = which
+        else:
+            what = _listwhat[0]
 
         option = kwargs.get('option', None)
         bypop = kwargs.get('bypop','no')
@@ -446,47 +449,49 @@ def chartsinput_deco(f):
 
         if kwargs['output'] not in listoutput():
             raise CoaKeyError('Output option ' + kwargs['output'] + ' not supported. See help().')
-
         if whom is None:
             whom = _whom
         if whom != _whom:
             setwhom(whom)
 
-        if not bool([s for s in listwhat() if what.startswith(s)]):
-            raise CoaKeyError('What option ' + what + ' not supported. '
-                                                      'See listwhat() for full list.')
-
-        #if 'cur_' in  which and what == listwhat()[0]:
-        #        what = which
+        '''
         whichproblem=False
-        if not isinstance(which, list):
-            if which not in listwhich():
-                whichproblem=True
+        if input_arg is not None and not input_arg.empty:
+            if not isinstance(input_field, list):
+                if input_field not in input_arg.columns:
+                    whichproblem=True
+            else:
+                if not testsublist(input_field,input_arg.columns):
+                    whichproblem=True
         else:
-            if not testsublist(which,listwhich()):
-                whichproblem=True
+            if not isinstance(which, list):
+                if which not in listwhich():
+                    whichproblem=True
+            else:
+                if not testsublist(which,listwhich()):
+                    whichproblem=True
+
         if whichproblem:
-            raise CoaKeyError('Which option ' + str(which) + ' not supported. '
+            raise CoaKeyError('which option ' + str(which) + ' not supported. '
                                                             'See listwhich() for list.')
+        '''
         if bypop not in listbypop():
             raise CoaKeyError('The bypop arg should be selected in '+str(listbypop)+' only.')
-
         if isinstance(input_arg, pd.DataFrame) or isinstance(which, list):
             if input_arg is not None and not input_arg.empty:
                 pandy = input_arg
-                pandy = _db.get_stats_pdinput(pandy, which=which, location=where, option=option)
+                pandy = _db.get_stats(**kwargs)
             else:
                 pandy=pd.DataFrame()
-                for k,i in enumerate(which):
-                    if pandy.empty:
-                        pandy = _db.get_stats(which=i, location=where, option=option).rename(columns={'location': 'where'})
-                    else:
-                        on='location'
-                        tmp = _db.get_stats(which=i, location=where, option=option).rename(columns={'location': 'where'}).\
-                        drop(columns=['daily','weekly','codelocation','clustername'])
-                        pandy = pd.merge(pandy, tmp, on=['date','where'])
                 input_field = which
-                input_arg = pandy 
+                for k,i in enumerate(which):
+                    tmp = _db.get_stats(input_field=input_field, which=i, where=where, option=option)
+                    if pandy.empty:
+                        pandy = tmp
+                    else:
+                        tmp = tmp.drop(columns=['daily','weekly','codelocation','clustername'])
+                    pandy = pd.merge(pandy, tmp, on=['date','where'])
+                input_arg = pandy
             if bypop != 'no':
                 input_arg = normbypop(pandy,input_field,bypop)
                 if bypop=='pop':
@@ -497,21 +502,24 @@ def chartsinput_deco(f):
 
             if isinstance(input_field,list):
                 which = input_field[0]
-            else:
-                which = input_field
-            if which is None:
-                which = pandy.columns[2]
+            #else:
+            #    which = input_field
+            #if which is None:
+            #    which = pandy.columns[2]
+
             pandy.loc[:,'standard'] = pandy[which]
-            kwargs['input_field'] = input_field
-            if option:
-                print('option has no effect here, please try do it when you construct your input pandas ')
-            #input_field = kwargs.get('input_field', listwhich()[0])
-            #if input_field not in input_arg.columns:
-            #    raise CoaKeyError("Cannot find " + str(input_field) + " field in the pandas data. "
-            #                                                          "Set a proper input_field key.")
+            if 'input_field' not in kwargs:
+                kwargs['input_field'] = input_field
+            #if option:
+            #    print('option has no effect here, please try do it when you construct your input pandas ')
         elif input_arg == None :
-            pandy = _db.get_stats(which=which, location=where, option=option).rename(columns={'location': 'where'})
-            pandy['standard'] = pandy[which]
+            #kwargs.pop('input_field')
+            pandy = _db.get_stats(**kwargs)
+            if which != None:
+                pandy['standard'] = pandy[which]
+            else:
+                pandy['standard'] = pandy.columns[2]
+                which = list(pandy.columns)[2]
             input_field = what
             if pandy[[which,'date']].isnull().values.all():
                 info('--------------------------------------------')
@@ -657,16 +665,14 @@ def get(**kwargs):
         #if 'option' in kwargs:
         #    raise CoaKeyError("Cannot use option with input pandas data. "
         #                      "Use option within the get() function instead.")
-        pandy = pandy.drop_duplicates(['date','clustername'])
+        #pandy = pandy.drop_duplicates(['date','clustername'])
         #pandy = pandy.drop(columns=['cumul'])
         #pandy['cumul'] = pandy[which]
         casted_data = pandy
         col=list(casted_data.columns)
         mem='{:,}'.format(casted_data[col].memory_usage(deep=True).sum())
         info('Memory usage of all columns: ' + mem + ' bytes')
-    # print(pandy)
-    # casted_data = pd.pivot_table(pandy, index='date',columns='where',values=col_name).to_dict('series')
-    # print(pandy)
+
     elif output == 'geopandas':
         casted_data = _cocoplot.pycoageo(pandy)
     elif output == 'dict':
@@ -929,6 +935,7 @@ def decoplot(func):
                         'spiral' : plot variable as a spiral angular plot, angle being the date
                         'yearly' : same as date but modulo 1 year
         """
+
         input = kwargs.get('input')
         input_field = kwargs.get('input_field')
         if not input.empty:
@@ -941,7 +948,6 @@ def decoplot(func):
 
         if 'typeofplot' in kwargs:
             typeofplot = kwargs.pop('typeofplot')
-
         if typeofplot == 'date':
             fig = _cocoplot.pycoa_date_plot(input,input_field,**kwargs)
         elif typeofplot == 'spiral':

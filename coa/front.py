@@ -935,7 +935,6 @@ def decoplot(func):
                         'spiral' : plot variable as a spiral angular plot, angle being the date
                         'yearly' : same as date but modulo 1 year
         """
-
         input = kwargs.get('input')
         input_field = kwargs.get('input_field')
         if not input.empty:

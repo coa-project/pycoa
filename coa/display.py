@@ -544,6 +544,8 @@ class CocoDisplay:
         panels = []
         listfigs = []
         cases_custom = CocoDisplay.rollerJS()
+        if isinstance(kwargs['which'],list):
+            input_field=kwargs['which']
         if isinstance(input['rolloverdisplay'][0],list):
             input['rolloverdisplay'] = input['clustername']
         for axis_type in self.ax_type:
@@ -558,7 +560,6 @@ class CocoDisplay:
             for val in input_field:
                 for loc in list(input.clustername.unique()):
                     input_filter = input.loc[input.clustername == loc].reset_index(drop = True)
-
                     src = ColumnDataSource(input_filter)
                     leg = input_filter.clustername[0]
                     #leg = input_filter.permanentdisplay[0]
@@ -575,14 +576,14 @@ class CocoDisplay:
                     r_list.append(r)
                     maxou=max(maxou,np.nanmax(input_filter[val].values))
                     minou=max(minou,np.nanmin(input_filter[val].values))
-                    i += 1
+
                     if minou <0.01:
                         tooltips.append([('where', '@rolloverdisplay'), ('date', '@date{%F}'), (r.name, '@$name')])
                     else:
                         tooltips.append([('where', '@rolloverdisplay'), ('date', '@date{%F}'), (r.name, '@$name{0,0.0}')])
                     if isinstance(tooltips,tuple):
                         tooltips = tooltips[0]
-
+                i += 1
             for i,r in enumerate(r_list):
                 label = r.name
                 tt = tooltips[i]

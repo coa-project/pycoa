@@ -72,13 +72,6 @@ def generic_info(namedb, keys):
         ['tot_P: Nombre total de tests positifs',url3,urlmaster3],
         'tot_T':
         ['tot_T: Nombre total de tests réalisés',url3,urlmaster3],
-        'cur_idx_Prc_tests_PCR_TA_crible' :
-        ['cur_idx_Prc_tests_PCR_TA_crible: % de tests PCR criblés parmi les PCR positives.',url6,urlmaster6],
-        'cur_idx_Prc_susp_501Y_V1' :
-        ['Prc_susp_501Y_V1: % de tests avec suspicion de variant 20I/501Y.V1 (UK).\n Royaume-Uni (UK): code Nexstrain= 20I/501Y.V1.',url6,urlmaster6],
-        'cur_idx_Prc_susp_501Y_V2_3' :
-        ['Prc_susp_501Y_V2_3: % de tests avec suspicion de variant 20H/501Y.V2 (ZA) ou 20J/501Y.V3 (BR).Afrique du Sud (ZA) : \
-        code Nexstrain= 20H/501Y.V2. Brésil (BR) : code Nexstrain= 20J/501Y.V3',url6,urlmaster6],
         'cur_idx_Prc_susp_IND' :
         ['Prc_susp_IND: % de tests avec une détection de variant mais non identifiable',url6,urlmaster6],
         'cur_idx_Prc_susp_ABS' :

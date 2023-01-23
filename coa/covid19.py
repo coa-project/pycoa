@@ -126,8 +126,8 @@ class DataBase(object):
                     obepine_data=self.csv2pandas(url,cast=cast,separator=';',rename_columns=rename_dict)
                     obepine_data['idx_obepine']=obepine_data['idx_obepine'].astype(float)
                     self.return_structured_pandas(obepine_data,columns_keeped=['idx_obepine'])
-                elif self.db == 'jpnmhlw' : #JAP
-                    info('JAP, Ministry of wealth, labor and welfare')
+                elif self.db == 'jpnmhlw' : # JPN
+                    info('JPN, Ministry of wealth, labor and welfare')
                     url = 'https://www.mhlw.go.jp/english/'
                     rename_dict = {
                                 'deaths_cumulative_daily' : 'tot_deaths',\

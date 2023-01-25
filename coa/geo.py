@@ -560,6 +560,8 @@ class GeoRegion():
         "G20":"https://en.wikipedia.org/wiki/G20",
         "G77":"https://www.g77.org/doc/members.html",
         "OECD":"https://en.wikipedia.org/wiki/OECD",
+        "BRICS":"https://en.wikipedia.org/wiki/BRICS",
+        "CELAC":"https://en.wikipedia.org/wiki/Community_of_Latin_American_and_Caribbean_States",
         "Commonwealth":"https://en.wikipedia.org/wiki/Member_states_of_the_Commonwealth_of_Nations",
         }
 
@@ -589,6 +591,8 @@ class GeoRegion():
                                     "G8":"G8",
                                     "G20":"G20",
                                     "OECD":"Oecd",
+                                    "BRICS":"Brics",
+                                    "CELAC":"Celac",
                                     "G77":"G77",
                                     "CW":"Commonwealth"
                                     })  # add UE for other analysis
@@ -596,6 +600,11 @@ class GeoRegion():
         # --- filling cw information
         p_cw=pd.read_html(get_local_from_url('https://en.wikipedia.org/w/index.php?title=Member_states_of_the_Commonwealth_of_Nations&oldid=1090420488'))
         self._cw=[w.split('[')[0] for w in p_cw[0]['Country'].to_list()]   # removing wikipedia notes
+
+        # --- filling celac information
+        p_celac=pd.read_html(get_local_from_url('https://en.wikipedia.org/wiki/Community_of_Latin_American_and_Caribbean_States'))
+        self._celac=[w.split(',')[0] for w in p_celac[4][p_celac[4].index<33]["Country"].to_list()]
+        
         # --- get the UnitedNation GeoScheme and organize the data
         p_gs=pd.read_html(get_local_from_url(self._source_dict["GeoScheme"],0))[0]
         p_gs.columns=['country','capital','iso2','iso3','num','m49']
@@ -679,8 +688,13 @@ class GeoRegion():
                 'SSD','LKA','PSE','SDN','SUR','SYR','TJK','THA','TLS','TGO','TON',
                 'TTO','TUN','TKM','UGA','ARE','TZA','URY','VUT','VEN','VNM','YEM',
                 'ZMB','ZWE']
+
         elif region=='Commonwealth':
             clist=self._cw
+        elif region=='Celac':
+            clist=self._celac
+        elif region=='Brics':
+            clist=['BRA','RUS','IND','CHN','ZAF']
         else:
             clist=self._p_gs[self._p_gs['region_name']==region]['iso3'].to_list()
 
@@ -1150,6 +1164,8 @@ class GeoCountry():
             df_japan = pd.DataFrame(data = dic_japan)
             df_japan.index = np.arange(1,48)
             self._country_data = gpd.GeoDataFrame(df_japan.join(self._country_data))
+            # Solving by hand a None geometry for the Okinawa subregion
+            self._country_data.loc[self._country_data.code_subregion==47,"geometry"]=sg.Polygon(((127.92778,26.47944),(127.92978,26.47944),(127.92878,26.47845),(127.92778,26.47944)))
 
     # def get_region_from_municipality(self,lname):
     #     """  Return region list from a municipality list

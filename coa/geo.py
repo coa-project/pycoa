@@ -562,6 +562,13 @@ class GeoRegion():
         "OECD":"https://en.wikipedia.org/wiki/OECD",
         "BRICS":"https://en.wikipedia.org/wiki/BRICS",
         "CELAC":"https://en.wikipedia.org/wiki/Community_of_Latin_American_and_Caribbean_States",
+        "CEDEAO":"https://fr.wikipedia.org/wiki/Communaut%C3%A9_%C3%A9conomique_des_%C3%89tats_de_l%27Afrique_de_l%27Ouest",
+        "SADC":"https://en.wikipedia.org/wiki/Southern_African_Development_Community",
+        "AMU":"https://en.wikipedia.org/wiki/Arab_Maghreb_Union",
+        "CEEAC":"https://fr.wikipedia.org/wiki/Communaut%C3%A9_%C3%A9conomique_des_%C3%89tats_de_l%27Afrique_centrale",
+        "EAC":"https://en.wikipedia.org/wiki/East_African_Community",
+        "CENSAD":"https://en.wikipedia.org/wiki/Community_of_Sahel%E2%80%93Saharan_States",
+        "COMESA":"https://www.worlddata.info/trade-agreements/comesa.php",
         "Commonwealth":"https://en.wikipedia.org/wiki/Member_states_of_the_Commonwealth_of_Nations",
         }
 
@@ -593,6 +600,13 @@ class GeoRegion():
                                     "OECD":"Oecd",
                                     "BRICS":"Brics",
                                     "CELAC":"Celac",
+                                    "CEDEAO":"Cedeao",
+                                    "AMU":"Amu",
+                                    "CEEAC":"Ceeac",
+                                    "EAC":"Eac",
+                                    "SADC":"Sadc",
+                                    "CENSAD":"Censad",
+                                    "COMESA":"Comesa",
                                     "G77":"G77",
                                     "CW":"Commonwealth"
                                     })  # add UE for other analysis
@@ -604,6 +618,34 @@ class GeoRegion():
         # --- filling celac information
         p_celac=pd.read_html(get_local_from_url('https://en.wikipedia.org/wiki/Community_of_Latin_American_and_Caribbean_States'))
         self._celac=[w.split(',')[0] for w in p_celac[4][p_celac[4].index<33]["Country"].to_list()]
+
+        # --- filling cedeao information
+        p_cedeao=pd.read_html(get_local_from_url('https://en.wikipedia.org/wiki/Economic_Community_of_West_African_States'))
+        self._cedeao=["Cabo Verde" if x=="Cape Verde" else "CIV" if x=="Ivory Coast" else x for x in pd.concat([p_cedeao[1][0:-1],p_cedeao[2][0:-1]]).Country.to_list()]
+
+        # --- filling sadc information
+        p_sadc=pd.read_html(get_local_from_url('https://en.wikipedia.org/wiki/Southern_African_Development_Community'))
+        self._sadc=["COD" if x == "Democratic Republic of the Congo" else x for x in [w.split('[')[0] for w in p_sadc[2][p_sadc[2].columns[0]].to_list()]]
+
+        # --- filling amu information
+        p_amu=pd.read_html(get_local_from_url('https://en.wikipedia.org/wiki/Arab_Maghreb_Union'))
+        self._amu=p_amu[2].Country.to_list()[0:-1]
+
+        # --- filling ceeac information
+        p_ceeac=pd.read_html(get_local_from_url('https://en.wikipedia.org/wiki/Economic_Community_of_Central_African_States'))
+        self._ceeac=["COD" if w == "Democratic Republic of the Congo" else w for w in [x.split('[')[0] for x in p_ceeac[3].Country.to_list()]]
+
+        # --- filling eac information
+        p_eac=pd.read_html(get_local_from_url('https://en.wikipedia.org/wiki/East_African_Community'))
+        self._eac=["COD" if x == "DR Congo" else x for x in p_eac[1].Country.to_list()[0:-1]]
+
+        # --- filling censad information
+        p_censad=pd.read_html(get_local_from_url('https://en.wikipedia.org/wiki/Community_of_Sahel%E2%80%93Saharan_States'))
+        self._censad=["Cabo Verde" if x == "Cape Verde" else "CIV" if x == "Ivory Coast" else x.split('[')[0] for x in p_censad[3][p_censad[3].columns[0]].to_list()[0:-1]]
+
+        # --- filing comesa information
+        p_comesa=pd.read_html(get_local_from_url('https://www.worlddata.info/trade-agreements/comesa.php'))
+        self._comesa=["COD" if x == "Congo (Dem. Republic)" else x for x in p_comesa[0].Country.to_list()]
         
         # --- get the UnitedNation GeoScheme and organize the data
         p_gs=pd.read_html(get_local_from_url(self._source_dict["GeoScheme"],0))[0]
@@ -693,6 +735,20 @@ class GeoRegion():
             clist=self._cw
         elif region=='Celac':
             clist=self._celac
+        elif region=='Cedeao':
+            clist=self._cedeao
+        elif region=='Sadc':
+            clist=self._sadc
+        elif region=='Amu':
+            clist=self._amu
+        elif region=='Ceeac':
+            clist=self._ceeac
+        elif region=='Eac':
+            clist=self._eac
+        elif region=='Censad':
+            clist=self._censad
+        elif region=='Comesa':
+            clist=self._comesa
         elif region=='Brics':
             clist=['BRA','RUS','IND','CHN','ZAF']
         else:

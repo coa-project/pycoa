@@ -1135,6 +1135,7 @@ class GeoCountry():
             self._country_data['name_region'].replace(changename, inplace=True)
 
         #--- 'JPN' case ----------------------------------------------------------------------------------------
+        # HERE FOR SAMEO
         elif self._country == 'JPN':
             self._country_data = gpd.read_file(get_local_from_url(url,0))
             np_name_subregion_jpn = np.array(['Hokkaido', 'Aomori', 'Iwate', 'Miyagi', 'Akita',\

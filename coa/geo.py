@@ -1137,7 +1137,7 @@ class GeoCountry():
         #--- 'JPN' case ----------------------------------------------------------------------------------------
         # HERE FOR SAMEO
         elif self._country == 'JPN':
-            self._country_data = gpd.read_file(get_local_from_url(url,0))
+            self._country_data = gpd.read_file('https://raw.githubusercontent.com/dataofjapan/land/master/japan.geojson')
             np_name_subregion_jpn = np.array(['Hokkaido', 'Aomori', 'Iwate', 'Miyagi', 'Akita',\
                                               'Yamagata', 'Fukushima', 'Ibaraki', 'Tochigi',\
                                               'Gunma', 'Saitama','Chiba', 'Tokyo', 'Kanagawa',\
@@ -1220,9 +1220,10 @@ class GeoCountry():
                          'population_subregrion' : np_population_subregion_jpn, 'area_subregion' : np_area_subregion_jpn }
             df_japan = pd.DataFrame(data = dic_japan)
             df_japan.index = np.arange(1,48)
-            self._country_data = gpd.GeoDataFrame(df_japan.join(self._country_data))
-            # Solving by hand a None geometry for the Okinawa subregion
-            self._country_data.loc[self._country_data.code_subregion==47,"geometry"]=sg.Polygon(((127.92778,26.47944),(127.92978,26.47944),(127.92878,26.47845),(127.92778,26.47944)))
+            self._country_data = self._country_data.rename(columns = {"id" : "code_subregion"})  # 
+            df_final_japan = pd.merge(df_japan,self._country_data, on = ['code_subregion']) 
+            df_final_japan.drop(columns = ['nam', 'nam_ja'], inplace = True) 
+            self._country_data = gpd.GeoDataFrame(df_final_japan) 
 
     # def get_region_from_municipality(self,lname):
     #     """  Return region list from a municipality list

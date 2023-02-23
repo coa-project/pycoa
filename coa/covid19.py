@@ -1269,7 +1269,7 @@ class DataBase(object):
         optionskipped=False
         othersinputfieldpandas=pd.DataFrame()
         kwargs_test(kwargs,['where','which','what','option','input','input_field','when','output',
-        'typeofplot','typeofhist','tile','visu','mode','maplabel'],'Bad args used in the get_stats() function.')
+        'typeofplot','typeofhist','tile','visu','mode','maplabel','bypop'],'Bad args used in the get_stats() function.')
         if not 'where' in kwargs or kwargs['where'] is None.__class__ or kwargs['where'] == None:
             if get_db_list_dict()[self.db][0] == 'WW':
                 kwargs['where'] = get_db_list_dict()[self.db][2]

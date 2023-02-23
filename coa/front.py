@@ -518,7 +518,7 @@ def chartsinput_deco(f):
             if which != None:
                 pandy['standard'] = pandy[which]
             else:
-                pandy['standard'] = pandy.columns[2]
+                pandy['standard'] = pandy[pandy.columns[2]]
                 which = list(pandy.columns)[2]
             input_field = what
             if pandy[[which,'date']].isnull().values.all():

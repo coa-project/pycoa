@@ -1135,7 +1135,6 @@ class GeoCountry():
             self._country_data['name_region'].replace(changename, inplace=True)
 
         #--- 'JPN' case ----------------------------------------------------------------------------------------
-        # HERE FOR SAMEO
         elif self._country == 'JPN':
             self._country_data = gpd.read_file('https://raw.githubusercontent.com/dataofjapan/land/master/japan.geojson')
             np_name_subregion_jpn = np.array(['Hokkaido', 'Aomori', 'Iwate', 'Miyagi', 'Akita',\
@@ -1217,13 +1216,15 @@ class GeoCountry():
                              'https://upload.wikimedia.org/wikipedia/commons/2/2f/Flag_of_Okinawa_Prefecture.svg'], dtype = object)
             dic_japan = {'name_subregion' : np_name_subregion_jpn,'code_region' : np_name_region_jpn, 'name_region': np_name_region_jpn,\
                          'code_subregion' : np_code_subregion_jpn, 'flag_subregion' : np_flag_subregion_jpn, 'town_subregion' : np_town_subregion_jpn,\
-                         'population_subregrion' : np_population_subregion_jpn, 'area_subregion' : np_area_subregion_jpn }
+                         'population_subregion' : np_population_subregion_jpn, 'area_subregion' : np_area_subregion_jpn }
             df_japan = pd.DataFrame(data = dic_japan)
             df_japan.index = np.arange(1,48)
             self._country_data = self._country_data.rename(columns = {"id" : "code_subregion"})  # 
             df_final_japan = pd.merge(df_japan,self._country_data, on = ['code_subregion']) 
             df_final_japan.drop(columns = ['nam', 'nam_ja'], inplace = True) 
             self._country_data = gpd.GeoDataFrame(df_final_japan) 
+            #code_subregion as to be str to be able to be merged ...
+            self._country_data['code_subregion']=self._country_data['code_subregion'].astype(str)
 
     # def get_region_from_municipality(self,lname):
     #     """  Return region list from a municipality list

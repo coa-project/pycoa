@@ -12,94 +12,91 @@ from coa.error import *
 
 def generic_info(namedb, keys):
     '''
-    Return information on the available keyswords for the database selected
+    For a specific database (call namedb), returns information on the epidemiological variables.
+    Those informations are used later on in covid19.py.
+    It returns a dictionnary with:
+        * key: epidemiological variable
+        * values:
+            - new variable name for pycoa purpose, if needed. By default is an empty string ''
+            - desciption of the variable. By default is an empty string '' but it is highly recommended to describe the variable
+            - url of the csv where the epidemiological variable is
+            - url of the master i.e where some description could be located. By default is an empty string ''
     '''
     mydico = {}
     if namedb == 'spf':
-        urlmaster3='https://www.data.gouv.fr/fr/datasets/donnees-de-laboratoires-pour-le-depistage-a-compter-du-18-05-2022-si-dep/'
-        urlmaster5='https://www.data.gouv.fr/fr/datasets/donnees-relatives-aux-personnes-vaccinees-contre-la-covid-19-1'
-        urlmaster4='https://www.data.gouv.fr/fr/datasets/indicateurs-de-suivi-de-lepidemie-de-covid-19/'
-        urlmaster6='https://www.data.gouv.fr/fr/datasets/donnees-de-laboratoires-pour-le-depistage-indicateurs-sur-les-variants/'
-        urlmaster7='https://www.data.gouv.fr/fr/datasets/donnees-de-laboratoires-pour-le-depistage-focus-par-niveau-scolaire/'
-        urlmaster8='https://www.data.gouv.fr/fr/datasets/donnees-de-laboratoires-pour-le-depistage-indicateurs-sur-les-mutations/'
-        urlmaster9='https://www.data.gouv.fr/en/datasets/donnees-des-urgences-hospitalieres-et-de-sos-medecins-relatives-a-lepidemie-de-covid-19/'
-        url3='https://www.data.gouv.fr/fr/datasets/r/ca490480-09a3-470f-8556-76d6fd291325'
-        url4='https://www.data.gouv.fr/fr/datasets/r/4acad602-d8b1-4516-bc71-7d5574d5f33e'
-        url5='https://www.data.gouv.fr/fr/datasets/r/32a16487-3dd3-4326-9d2b-317e5a3b2daf'
-        url6='https://www.data.gouv.fr/fr/datasets/r/16f4fd03-797f-4616-bca9-78ff212d06e8'
-        url8='https://www.data.gouv.fr/fr/datasets/r/bc318bc7-fb90-4e76-a6cb-5cdc0a4e5432'
-        url9='https://www.data.gouv.fr/en/datasets/r/eceb9fb4-3ebc-4da3-828d-f5939712600a'
+        urlmaster1='https://www.data.gouv.fr/fr/datasets/donnees-de-laboratoires-pour-le-depistage-a-compter-du-18-05-2022-si-dep/'
+        urlmaster2='https://www.data.gouv.fr/fr/datasets/indicateurs-de-suivi-de-lepidemie-de-covid-19/'
+        urlmaster3='https://www.data.gouv.fr/fr/datasets/donnees-relatives-aux-personnes-vaccinees-contre-la-covid-19-1'
+        urlmaster4='https://www.data.gouv.fr/fr/datasets/donnees-de-laboratoires-pour-le-depistage-indicateurs-sur-les-variants/'
+        urlmaster5='https://www.data.gouv.fr/fr/datasets/donnees-de-laboratoires-pour-le-depistage-indicateurs-sur-les-mutations/'
+        urlmaster6='https://www.data.gouv.fr/en/datasets/donnees-des-urgences-hospitalieres-et-de-sos-medecins-relatives-a-lepidemie-de-covid-19/'
+        url1='https://www.data.gouv.fr/fr/datasets/r/ca490480-09a3-470f-8556-76d6fd291325'
+        url2='https://www.data.gouv.fr/fr/datasets/r/4acad602-d8b1-4516-bc71-7d5574d5f33e'
+        url3='https://www.data.gouv.fr/fr/datasets/r/32a16487-3dd3-4326-9d2b-317e5a3b2daf'
+        url4='https://www.data.gouv.fr/fr/datasets/r/16f4fd03-797f-4616-bca9-78ff212d06e8'
+        url5='https://www.data.gouv.fr/fr/datasets/r/bc318bc7-fb90-4e76-a6cb-5cdc0a4e5432'
+        url6='https://www.data.gouv.fr/en/datasets/r/eceb9fb4-3ebc-4da3-828d-f5939712600a'
         spfdic = {
         'tot_dchosp':
-        ['tot_dc:FILLIT',url3,urlmaster3],
+        ['tot_dc:FILLIT',url1,urlmaster1],
         'cur_hosp':
-        ['cur_hosp:FILLIT',url3,urlmaster3],
+        ['cur_hosp:FILLIT',url1,urlmaster1],
         'tot_rad':
-        ['tot_rad:FILLIT',url3,urlmaster3],
+        ['tot_rad:FILLIT',url1,urlmaster1],
         'cur_rea':
-        ['cur_rea:FILLIT',url3,urlmaster3],
+        ['cur_rea:FILLIT',url1,urlmaster1],
         'cur_idx_tx_incid':
         ['cur_idx_tx_incid: Taux d\'incidence (activité épidémique : Le taux d\'incidence correspond au nombre de personnes testées\
         positives (RT-PCR et test antigénique) pour la première fois depuis plus de 60 jours rapporté à la taille de la population. \
-        Il est exprimé pour 100 000 habitants)',url3,urlmaster3],
+        Il est exprimé pour 100 000 habitants)',url1,urlmaster1],
         'cur_idx_R':
-        ['cur_idx_R:FILLIT',url4,urlmaster4],
+        ['cur_idx_R:FILLIT',url2,urlmaster2],
         'cur_tx_crib':
-        ['cur_tx_crib:FILLIT',url4,urlmaster3],
+        ['cur_tx_crib:FILLIT',url2,urlmaster1],
         'cur_idx_tx_occupation_sae':
-        ['cur_idx_tx_occupation_sae:FILLIT',url4,urlmaster4],
+        ['cur_idx_tx_occupation_sae:FILLIT',url2,urlmaster2],
         'cur_tx_pos':
         ['cur_tx_pos: Taux de positivité des tests virologiques (Le taux de positivité correspond au nombre de personnes testées positives\
          (RT-PCR et test antigénique) pour la première fois depuis plus de 60 jours rapporté au nombre total de personnes testées positives ou \
-         négatives sur une période donnée ; et qui n‘ont jamais été testées positive dans les 60 jours précédents.)',url4,urlmaster3],
+         négatives sur une période donnée ; et qui n‘ont jamais été testées positive dans les 60 jours précédents.)',url2,urlmaster3],
         'tot_vacc1':
-        ['tot_vacc1:(nom initial  n_cum_dose1)',url5,urlmaster5],
+        ['tot_vacc1:(nom initial  n_cum_dose1)',url3,urlmaster3],
         'tot_vacc_complet':
-        ['tot_vacc_complet:(nom initial n_cum_complet)',url5,urlmaster5],
+        ['tot_vacc_complet:(nom initial n_cum_complet)',url3,urlmaster3],
         'tot_vacc_rappel':
-        ['tot_vacc_rappel: (nom initial  n_cum_rappel)',url5,urlmaster5],
+        ['tot_vacc_rappel: (nom initial  n_cum_rappel)',url3,urlmaster3],
         'tot_vacc2_rappel':
-        ['tot_vacc2_rappel:(nom initial  n_cum_2_rappel)',url5,urlmaster5],
+        ['tot_vacc2_rappel:(nom initial  n_cum_2_rappel)',url3,urlmaster3],
         'tot_incid_hosp':
-        ['tot_incid_hosp: Nombre total de personnes hospitalisées',url3,urlmaster3],
+        ['tot_incid_hosp: Nombre total de personnes hospitalisées',url1,urlmaster1],
         'tot_incid_rea':
-        ['tot_incid_rea: Nombre total d\'admissions en réanimation',url3,urlmaster3],
+        ['tot_incid_rea: Nombre total d\'admissions en réanimation',url1,urlmaster1],
         'tot_incid_rad':
-        ['tot_incid_rad: Nombre total de  retours à domicile',url3,urlmaster3],
+        ['tot_incid_rad: Nombre total de  retours à domicile',url1,urlmaster1],
         'tot_incid_dchosp':
-        ['tot_incid_dchosp: Nombre total de personnes  décédées',url3,urlmaster3],
+        ['tot_incid_dchosp: Nombre total de personnes  décédées',url1,urlmaster1],
         'tot_P':
-        ['tot_P: Nombre total de tests positifs',url3,urlmaster3],
+        ['tot_P: Nombre total de tests positifs',url1,urlmaster1],
         'tot_T':
-        ['tot_T: Nombre total de tests réalisés',url3,urlmaster3],
+        ['tot_T: Nombre total de tests réalisés',url1,urlmaster1],
         'cur_idx_Prc_susp_IND' :
-        ['Prc_susp_IND: % de tests avec une détection de variant mais non identifiable',url6,urlmaster6],
+        ['Prc_susp_IND: % de tests avec une détection de variant mais non identifiable',url4,urlmaster4],
         'cur_idx_Prc_susp_ABS' :
-        ['Prc_susp_ABS: % de tests avec une absence de détection de variant',url6,urlmaster6],
-        #'cur_idx_ti':
-        #['ti : taux d\'incidence hebdomadaire rapporté à la population pour 100 000 habitants , par semaine calendaire (en milieu scolaire)',url7,urlmaster7],
-        #'cur_idx_tp':
-        #['tp :Le taux de positivité hebdomadaire rapporté 100 tests réalisés, par semaine calendaire (en milieu scolaire)',url7,urlmaster7],
-        #'nb_crib' : ['Nombre de tests criblés',url8,urlmaster8],
-        #'nb_pos' : ['Nombre de tests positifs',url8,urlmaster8],
-        #'tx_crib' : ['Taux tests criblés',url8,urlmaster8],
-        #'cur_idx_tx_A1':['FILL IT',url8,urlmaster8],
-        #'cur_idx_tx_B1':['FILL IT',url8,urlmaster8],
-        #'cur_idx_tx_C1':['FILL IT',url8,urlmaster8],
+        ['Prc_susp_ABS: % de tests avec une absence de détection de variant',url4,urlmaster4],
         'cur_nb_A0' :
-        ['cur_nb_A0:Nombre des tests positifs pour lesquels la recherche de mutation A est négatif (A = E484K)',url8,urlmaster8],
+        ['cur_nb_A0:Nombre des tests positifs pour lesquels la recherche de mutation A est négatif (A = E484K)',url5,urlmaster5],
         'cur_nb_A1' :
-        ['cur_nb_A1:Nombre des tests positifs pour lesquels la recherche de mutation A est positif (A = E484K)',url8,urlmaster8],
+        ['cur_nb_A1:Nombre des tests positifs pour lesquels la recherche de mutation A est positif (A = E484K)',url5,urlmaster5],
         'cur_tx_A1' :
-        ['cur_tx_A1:Taux de présence mutation A (A = E484K)',url8,urlmaster8],
+        ['cur_tx_A1:Taux de présence mutation A (A = E484K)',url5,urlmaster5],
         'cur_nb_C0' :
-        ['cur_nb_C0:Nombre des tests positifs pour lesquels la recherche de mutation C est négatif (C = L452R)',url8,urlmaster8],
+        ['cur_nb_C0:Nombre des tests positifs pour lesquels la recherche de mutation C est négatif (C = L452R)',url5,urlmaster5],
         'cur_nb_C1' :
-        ['cur_nb_C1:Nombre des tests positifs pour lesquels la recherche de mutation C est positif (C = L452R)',url8,urlmaster8],
+        ['cur_nb_C1:Nombre des tests positifs pour lesquels la recherche de mutation C est positif (C = L452R)',url5,urlmaster5],
         'cur_tx_C1' :
-        ['cur_tx_C1:Taux de présence mutation C (C = L452R)',url8,urlmaster8],
+        ['cur_tx_C1:Taux de présence mutation C (C = L452R)',url5,urlmaster5],
         'cur_nbre_pass_corona' :
-        ['Nombre de passages aux urgences pour suspicion de COVID-19 (nbre_pass_corona)',url9,urlmaster9],
+        ['Nombre de passages aux urgences pour suspicion de COVID-19 (nbre_pass_corona)',url6,urlmaster6],
         }
         mydico = spfdic
     elif namedb == 'spfnational':

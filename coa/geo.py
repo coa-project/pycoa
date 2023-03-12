@@ -646,7 +646,7 @@ class GeoRegion():
         # --- filing comesa information
         p_comesa=pd.read_html(get_local_from_url('https://www.worlddata.info/trade-agreements/comesa.php'))
         self._comesa=["COD" if x == "Congo (Dem. Republic)" else x for x in p_comesa[0].Country.to_list()]
-        
+
         # --- get the UnitedNation GeoScheme and organize the data
         p_gs=pd.read_html(get_local_from_url(self._source_dict["GeoScheme"],0))[0]
         p_gs.columns=['country','capital','iso2','iso3','num','m49']
@@ -1052,6 +1052,7 @@ class GeoCountry():
                 'niscode':'code_subregion',\
                 'prov_code':'code_region'},inplace=True)
             p=[]
+
             for index,row in self._country_data.iterrows():
                 if row.prov_name_f is not None:
                     p0=row.prov_name_f
@@ -1154,7 +1155,7 @@ class GeoCountry():
                                               'Matsue','Okayama','Hiroshima','Yamaguchi','Tokushima','Takamatsu',\
                                               'Matsuyama','Kochi','Fukuoka','Saga','Nagasaki','Kumamoto','Oita',\
                                               'Miyazaki','Kagoshima','Naha'])
-            np_name_region_jpn = np.array(['Hokkaido']+ 6*['Tohoku'] + 7*['Kanto'] + 9*['Chubu'] + 5*['Chugoku'] + 4*['Shikoku'] + 7*['Kansai'] + 8*['Kyushu']) 
+            np_name_region_jpn = np.array(['Hokkaido']+ 6*['Tohoku'] + 7*['Kanto'] + 9*['Chubu'] + 5*['Chugoku'] + 4*['Shikoku'] + 7*['Kansai'] + 8*['Kyushu'])
             np_code_region_jpn = np.array(['Hokkaido']+ 6*['Tohoku'] + 7*['Kanto'] + 9*['Chubu'] + 5*['Chugoku'] + 4*['Shikoku'] + 7*['Kansai'] + 8*['Kyushu'])
             np_code_subregion_jpn =np.arange(1,48)
             np_population_subregion_jpn = np.array([5224614,1237984,1210534,2301996,959502, 1068027,
@@ -1190,18 +1191,18 @@ class GeoCountry():
                              'https://upload.wikimedia.org/wikipedia/commons/3/3e/Flag_of_Gifu_Prefecture.svg',
                              'https://upload.wikimedia.org/wikipedia/commons/9/92/Flag_of_Shizuoka_Prefecture.svg',
                              'https://upload.wikimedia.org/wikipedia/commons/0/02/Flag_of_Aichi_Prefecture.svg',
-                             'https://upload.wikimedia.org/wikipedia/commons/8/8c/Flag_of_Mie_Prefecture.svg', 
+                             'https://upload.wikimedia.org/wikipedia/commons/8/8c/Flag_of_Mie_Prefecture.svg',
                              'https://upload.wikimedia.org/wikipedia/commons/9/99/Flag_of_Shiga_Prefecture.svg',
                              'https://upload.wikimedia.org/wikipedia/commons/0/06/Flag_of_Kyoto_Prefecture.svg',
                              'https://upload.wikimedia.org/wikipedia/commons/5/5a/Flag_of_Osaka_Prefecture.svg',
                              'https://upload.wikimedia.org/wikipedia/commons/7/74/Flag_of_Hyogo_Prefecture.svg',
-                             'https://upload.wikimedia.org/wikipedia/commons/0/00/Flag_of_Nara_Prefecture.svg', 
+                             'https://upload.wikimedia.org/wikipedia/commons/0/00/Flag_of_Nara_Prefecture.svg',
                              'https://upload.wikimedia.org/wikipedia/commons/6/6e/Flag_of_Wakayama_Prefecture.svg',
                              'https://upload.wikimedia.org/wikipedia/commons/1/1c/Flag_of_Tottori_Prefecture.svg',
                              'https://upload.wikimedia.org/wikipedia/commons/e/e8/Flag_of_Shimane_Prefecture.svg',
                              'https://upload.wikimedia.org/wikipedia/commons/3/33/Flag_of_Okayama_Prefecture.svg',
                              'https://upload.wikimedia.org/wikipedia/commons/e/ed/Flag_of_Hiroshima_Prefecture.svg',
-                             'https://upload.wikimedia.org/wikipedia/commons/b/b9/Flag_of_Yamaguchi_Prefecture.svg', 
+                             'https://upload.wikimedia.org/wikipedia/commons/b/b9/Flag_of_Yamaguchi_Prefecture.svg',
                              'https://upload.wikimedia.org/wikipedia/commons/a/ac/Flag_of_Tokushima_Prefecture.svg',
                              'https://upload.wikimedia.org/wikipedia/commons/2/29/Flag_of_Kagawa_Prefecture.svg',
                              'https://upload.wikimedia.org/wikipedia/commons/2/2d/Flag_of_Ehime_Prefecture.svg',
@@ -1219,10 +1220,10 @@ class GeoCountry():
                          'population_subregion' : np_population_subregion_jpn, 'area_subregion' : np_area_subregion_jpn }
             df_japan = pd.DataFrame(data = dic_japan)
             df_japan.index = np.arange(1,48)
-            self._country_data = self._country_data.rename(columns = {"id" : "code_subregion"})  # 
-            df_final_japan = pd.merge(df_japan,self._country_data, on = ['code_subregion']) 
-            df_final_japan.drop(columns = ['nam', 'nam_ja'], inplace = True) 
-            self._country_data = gpd.GeoDataFrame(df_final_japan) 
+            self._country_data = self._country_data.rename(columns = {"id" : "code_subregion"})  #
+            df_final_japan = pd.merge(df_japan,self._country_data, on = ['code_subregion'])
+            df_final_japan.drop(columns = ['nam', 'nam_ja'], inplace = True)
+            self._country_data = gpd.GeoDataFrame(df_final_japan)
             #code_subregion as to be str to be able to be merged ...
             self._country_data['code_subregion']=self._country_data['code_subregion'].astype(str)
 

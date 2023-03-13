@@ -23,7 +23,7 @@ import pandas as pd
 import datetime as dt
 
 import sys
-from coa.tools import info, verb, kwargs_test, get_local_from_url, fill_missing_dates, check_valid_date, week_to_date, get_db_list_dict
+from coa.tools import info, verb, kwargs_test, get_local_from_url, fill_missing_dates, check_valid_date, week_to_date
 
 import coa.geo as coge
 import coa.dbinfo as dbinfo
@@ -49,8 +49,8 @@ class DataBase(object):
          Fill the pandas_datase
         """
         verb("Init of covid19.DataBase()")
-        self.database_name = list(get_db_list_dict().keys())
-        self.database_type = get_db_list_dict()
+        self.database_name = list(dbinfo._db_list_dict.keys())
+        self.database_type = dbinfo._db_list_dict
         self.available_options = ['nonneg', 'nofillnan', 'smooth7', 'sumall']
         self.available_keywords = []
         self.dates = []
@@ -64,76 +64,24 @@ class DataBase(object):
             raise CoaDbError('Unknown ' + self.db + '. Available database so far in PyCoa are : ' + str(self.database_name), file=sys.stderr)
         else:
             try:
-                if get_db_list_dict()[self.db][1] == 'nation': # world wide dba
+                if self.dbfullinfo.get_dbinfo(db_name)[1] == 'nation': # world wide dba
                     self.db_world = True
                     self.geo = coge.GeoManager('name')
                     self.geo_all = 'world'
                 else: # local db
                     self.db_world = False
-                    self.geo = coge.GeoCountry(get_db_list_dict()[self.db][0])
-                    if get_db_list_dict()[self.db][1] == 'region':
+                    self.geo = coge.GeoCountry(dbinfo._db_list_dict[self.db][0])
+                    if dbinfo._db_list_dict[self.db][1] == 'region':
                         self.geo_all = self.geo.get_region_list()
-                    elif get_db_list_dict()[self.db][1] == 'subregion':
+                    elif dbinfo._db_list_dict[self.db][1] == 'subregion':
                         self.geo_all = self.geo.get_subregion_list()
                     else:
                         CoaError('Granularity problem, neither region or subregion')
                 self.set_display(self.db,self.geo)
-
                 # specific reading of data according to the db
-                if self.db == 'jhu':
-                    info('JHU aka Johns Hopkins database selected ...')
-                    self.return_jhu_pandas()
-                elif self.db == 'jhu-usa': #USA
-                    info('USA, JHU aka Johns Hopkins database selected ...')
-                    self.return_jhu_pandas()
-                elif self.db == 'imed':
-                    info('Greece, imed database selected ...')
-                    self.return_jhu_pandas()
-                elif self.db == 'rki': # DEU
-                    info('DEU, Robert Koch Institut data selected ...')
-                    self.return_jhu_pandas()
-                elif self.db == 'govcy': #CYP
-                    gov = self.dbfullinfo.get_pandas()
-                    self.return_structured_pandas(gov)
-                elif self.db == 'dpc': #ITA
-                    dpc = self.dbfullinfo.get_pandas()
-                    self.return_structured_pandas(dpc)
-                elif self.db == 'dgs': # PRT
-                    dgs = self.dbfullinfo.get_pandas()
-                    self.return_structured_pandas(dgs)
-                elif self.db == 'jpnmhlw' : # JPN
-                    jpn = self.dbfullinfo.get_pandas()
-                    self.return_structured_pandas(jpn)
-                elif self.db == 'escovid19data': # ESP
-                    esp = self.dbfullinfo.get_pandas()
-                    self.return_structured_pandas(esp)
-                elif self.db == 'sciensano': #Belgian institute for health,
-                    bel = self.dbfullinfo.get_pandas()
-                    self.return_structured_pandas(bel)
-                elif self.db == 'phe': # GBR from owid
-                    phe = self.dbfullinfo.get_pandas()
-                    self.return_structured_pandas(phe)
-                elif self.db == 'moh': # MYS
-                    moh = self.dbfullinfo.get_pandas()
-                    self.return_structured_pandas(moh)
-                elif self.db == 'mpoxgh' :
-                    mpoxgh = self.dbfullinfo.get_pandas()
-                    self.return_structured_pandas(mpoxgh)
-                elif self.db == 'spf' or self.db == 'spfnational':
-                    spf = self.dbfullinfo.get_pandas()
-                    self.return_structured_pandas(spf) # with 'tot_dc' first
-                elif self.db == 'owid':
-                    owid = self.dbfullinfo.get_pandas()
-                    self.return_structured_pandas(owid)
-                elif self.db == 'risklayer':
-                    eur = self.dbfullinfo.get_pandas()
-                    self.return_structured_pandas(eur)
-                elif self.db == 'europa':
-                    euro = self.dbfullinfo.get_pandas()
-                    self.return_structured_pandas(euro)
-                elif self.db == 'insee':
-                    insee = self.dbfullinfo.get_pandas()
-                    self.return_structured_pandas(insee)
+                if db_name not in ['jhu','jhu-usa','imed','rki']:
+                    mypd = self.dbfullinfo.get_pandas()
+                    self.return_structured_pandas(mypd)
             except:
                 raise CoaDbError("An error occured while parsing data of "+self.get_db()+". This may be due to a data format modification. "
                     "You may contact support@pycoa.fr. Thanks.")
@@ -171,159 +119,6 @@ class DataBase(object):
         Return all the available Covid19 database
         '''
         return self.database_name
-
-   def return_jhu_pandas(self):
-        ''' For center for Systems Science and Engineering (CSSE) at Johns Hopkins University
-            COVID-19 Data Repository by the see homepage: https://github.com/CSSEGISandData/COVID-19
-            return a structure : pandas where - date - keywords
-            for jhu where are countries (where uses geo standard)
-            for jhu-usa where are Province_State (where uses geo standard)
-            '''
-        base_url = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/"+\
-                                "csse_covid_19_data/csse_covid_19_time_series/"
-        base_name = "time_series_covid19_"
-        # previous are default for actual jhu db
-
-        pandas_jhu = {}
-
-        if self.db == 'jhu': # worldwide
-            extension =  "_global.csv"
-            jhu_files_ext = ['deaths', 'confirmed']
-        elif self.db == 'jhu-usa': # 'USA'
-            extension = "_US.csv"
-            jhu_files_ext = ['deaths','confirmed']
-        elif self.db == 'rki': # 'DEU'
-            base_url = 'https://github.com/jgehrcke/covid-19-germany-gae/raw/master/'
-            jhu_files_ext = ['deaths','cases']
-            extension = '-rki-by-ags.csv'
-            base_name = ''
-        elif self.db == 'imed': # 'GRC'
-            base_url = 'https://raw.githubusercontent.com/iMEdD-Lab/open-data/master/COVID-19/greece_'
-            jhu_files_ext = ['deaths','cases']
-            extension = '_v2.csv'
-            base_name = ''
-        else:
-            raise CoaDbError('Unknown JHU like db '+str(self.db))
-
-        self.available_keywords = []
-        if self.db == 'rki':
-                self.available_keywords = ['tot_deaths','tot_cases']
-        pandas_list = []
-        for ext in jhu_files_ext:
-            fileName = base_name + ext + extension
-            url = base_url + fileName
-            self.database_url.append(url)
-            pandas_jhu_db = pandas.read_csv(get_local_from_url(url,7200), sep = ',') # cached for 2 hours
-            if self.db == 'jhu':
-                pandas_jhu_db = pandas_jhu_db.rename(columns={'Country/Region':'where'})
-                pandas_jhu_db = pandas_jhu_db.drop(columns=['Province/State','Lat','Long'])
-                pandas_jhu_db = pandas_jhu_db.melt(id_vars=['where'],var_name="date",value_name=ext)
-                pandas_jhu_db = pandas_jhu_db.loc[~pandas_jhu_db['where'].isin(['Diamond Princess'])]
-            elif self.db == 'jhu-usa':
-                pandas_jhu_db = pandas_jhu_db.rename(columns={'Province_State':'where'})
-                pandas_jhu_db = pandas_jhu_db.drop(columns=['UID','iso2','iso3','code3','FIPS',
-                                    'Admin2','Country_Region','Lat','Long_','Combined_Key'])
-                if 'Population' in pandas_jhu_db.columns:
-                    pandas_jhu_db = pandas_jhu_db.melt(id_vars=['where','Population'],var_name="date",value_name=ext)
-                else:
-                    pandas_jhu_db = pandas_jhu_db.melt(id_vars=['where'],var_name="date",value_name=ext)
-                removethose=['American Samoa','Diamond Princess','Grand Princess','Guam',
-                'Northern Mariana Islands','Puerto Rico','Virgin Islands']
-                pandas_jhu_db = pandas_jhu_db.loc[~pandas_jhu_db['where'].isin(removethose)]
-            elif self.db == 'rki':
-                pandas_jhu_db = pandas_jhu_db.drop(columns=['sum_'+ext])
-                pandas_jhu_db = pandas_jhu_db.set_index('time_iso8601').T.reset_index().rename(columns={'index':'where'})
-                pandas_jhu_db = pandas_jhu_db.melt(id_vars=['where'],var_name="date",value_name=ext)
-                pandas_jhu_db['where'] = pandas_jhu_db['where'].astype(str)
-                pandas_jhu_db = pandas_jhu_db.rename(columns={'deaths':'tot_deaths','cases':'tot_cases'})
-            elif self.db == 'imed':
-                pandas_jhu_db = pandas_jhu_db.rename(columns={'county_normalized':'where'})
-                pandas_jhu_db = pandas_jhu_db.drop(columns=['Γεωγραφικό Διαμέρισμα','Περιφέρεια','county','pop_11'])
-                ext='tot_'+ext
-                pandas_jhu_db = pandas_jhu_db.melt(id_vars=['where'],var_name="date",value_name=ext)
-                self.available_keywords += [ext]
-            else:
-                raise CoaTypeError('jhu nor jhu-usa database selected ... ')
-
-            pandas_jhu_db=pandas_jhu_db.groupby(['where','date']).sum().reset_index()
-            pandas_list.append(pandas_jhu_db)
-        if 'jhu' in self.db:
-            pandas_list = [pan.rename(columns={i:'tot_'+i for i in jhu_files_ext}) for pan in pandas_list]
-            self.available_keywords = ['tot_'+i for i in jhu_files_ext]
-        uniqloc = list(pandas_list[0]['where'].unique())
-        oldloc = uniqloc
-        codedico={}
-        toremove = None
-        newloc = None
-        location_is_code = False
-        if self.db_world:
-            d_loc_s = collections.OrderedDict(zip(uniqloc,self.geo.to_standard(uniqloc,output='list',db=self.get_db(),interpret_region=True)))
-            self.slocation = list(d_loc_s.values())
-            g=coge.GeoManager('iso3')
-            codename = collections.OrderedDict(zip(self.slocation,g.to_standard(self.slocation,output='list',db=self.get_db(),interpret_region=True)))
-        else:
-            if self.database_type[self.db][1] == 'subregion':
-                pdcodename = self.geo.get_subregion_list()
-                self.slocation = uniqloc
-                codename = collections.OrderedDict(zip(self.slocation,list(pdcodename.loc[pdcodename.code_subregion.isin(self.slocation)]['name_subregion'])))
-                if self.db == 'jhu-usa':
-                    d_loc_s = collections.OrderedDict(zip(uniqloc,list(pdcodename.loc[pdcodename.name_subregion.isin(uniqloc)]['code_subregion'])))
-                    self.slocation = list(d_loc_s.keys())
-                    codename = d_loc_s
-                if self.db == 'rki':
-                    d_loc_s = collections.OrderedDict(zip(uniqloc,list(pdcodename.loc[pdcodename.code_subregion.isin(uniqloc)]['name_subregion'])))
-                    self.slocation = list(d_loc_s.values())
-                    codename = d_loc_s
-                    location_is_code = True
-                    def notuse():
-                        count_values=collections.Counter(d_loc_s.values())
-                        duplicates_location = list({k:v for k,v in count_values.items() if v>1}.keys())
-                        def findkeywithvalue(dico,what):
-                            a=[]
-                            for k,v in dico.items():
-                                if v == what:
-                                    a.append(k)
-                            return a
-                        codedupli={i:findkeywithvalue(d_loc_s,i) for i in duplicates_location}
-            elif self.database_type[self.db][1] == 'region':
-                codename = self.geo.get_data().set_index('name_region')['code_region'].to_dict()
-                self.slocation = list(codename.keys())
-
-
-        result = reduce(lambda x, y: pd.merge(x, y, on = ['where','date']), pandas_list)
-
-        if location_is_code:
-            result['codelocation'] = result['where']
-            result['where'] = result['where'].map(codename)
-        else:
-            if self.db == 'jhu':
-                result['where'] = result['where'].map(d_loc_s)
-            result['codelocation'] = result['where'].map(codename)
-        result = result.loc[result['where'].isin(self.slocation)]
-
-        tmp = pd.DataFrame()
-        if 'Kosovo' in uniqloc:
-            #Kosovo is Serbia ! with geo.to_standard
-            tmp=(result.loc[result['where'].isin(['Serbia'])]).groupby('date').sum().reset_index()
-            tmp['where'] = 'Serbia'
-            tmp['codelocation'] = 'SRB'
-            kw = [i for i in self.available_keywords]
-            colpos=['where', 'date'] + kw + ['codelocation']
-            tmp = tmp[colpos]
-            result = result.loc[~result['where'].isin(['Serbia'])]
-            result = pd.concat([result,tmp])
-
-        result['date'] = pd.to_datetime(result['date'],errors='coerce').dt.date
-        result = result.sort_values(by=['where','date'])
-        result = result.reset_index(drop=True)
-        if self.db == 'jhu-usa':
-            col=result.columns.tolist()
-            ncol=col[:2]+col[3:]+[col[2]]
-            result=result[ncol]
-            self.available_keywords+=['Population']
-        self.mainpandas = fill_missing_dates(result)
-        self.dates  = self.mainpandas['date']
-
 
    def return_structured_pandas(self,mypandas,**kwargs):
         '''
@@ -541,7 +336,6 @@ class DataBase(object):
              j += 1
          df = df.loc[df.date >= watchdate - dt.timedelta(days=j - 1)]
          return df
-
 
    def get_stats(self,**kwargs):
         '''

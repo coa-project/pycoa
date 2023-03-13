@@ -16,7 +16,29 @@ import datetime
 
 from coa.error import *
 from coa.tools import info, verb, kwargs_test, get_local_from_url, week_to_date
+# Known db
 
+_db_list_dict = {
+    'jhu': ['WW','nation','World'],
+    'owid': ['WW','nation','World'],
+    'jhu-usa': ['USA','subregion','United States of America'],
+    'spf': ['FRA','subregion','France'],
+    'spfnational': ['WW','nation','France'],
+    'dpc': ['ITA','region','Italy'],
+    'rki':['DEU','subregion','Germany'],
+    'escovid19data':['ESP','subregion','Spain'],
+    'phe':['GBR','subregion','United Kingdom'],
+    'sciensano':['BEL','region','Belgium'],
+    'dgs':['PRT','region','Portugal'],
+    'moh':['MYS','subregion','Malaysia'],
+    'risklayer':['EUR','subregion','Europe'],
+    'imed':['GRC','region','Greece'],
+    'govcy':['CYP','nation','Cyprus'],
+    'insee':['FRA','subregion','France'],
+    'europa':['WW','nation','Europe'],
+    'mpoxgh':['WW','nation','World'],
+    'jpnmhlw' :['JPN','subregion','Japan'],
+    }
 class DBInfo:
   def __init__(self, namedb):
         '''
@@ -30,19 +52,16 @@ class DBInfo:
                 - url of the csv where the epidemiological variable is
                 - url of the master i.e where some general description could be located. By default is an empty string ''
         '''
-        # Known db
         self.dbinfo = {}
 
         self.dbparsed = pd.DataFrame()
         mydico = {}
         self.separator={}
         self.db=namedb
+        self.dbinfo ={namedb:_db_list_dict[namedb]}
         if namedb == 'spf':
             info('SPF aka Sante Publique France database selected (France departement granularity) ...')
             info('... 7 SPF databases will be parsed ...')
-            self.dbinfo ={
-                'spf': ['FRA','subregion','France']
-            }
             urlmaster0='https://www.data.gouv.fr/fr/datasets/donnees-de-laboratoires-pour-le-depistage-a-compter-du-18-05-2022-si-dep/'
             urlmaster1='https://www.data.gouv.fr/fr/datasets/donnees-de-laboratoires-pour-le-depistage-a-compter-du-18-05-2022-si-dep/'
             urlmaster2='https://www.data.gouv.fr/fr/datasets/indicateurs-de-suivi-de-lepidemie-de-covid-19/'
@@ -130,9 +149,6 @@ class DBInfo:
             self.dbparsed = result
         elif namedb == 'spfnational':
             info('SPFNational, aka Sante Publique France, database selected (France with no granularity) ...')
-            self.dbinfo ={
-                'spfnational': ['WW','nation','France'],
-            }
             spfn = {
             'cur_reanimation':['incid_rea','Nombre de nouveaux patients admis en réanimation au cours des dernières 24h.'],\
             'cur_hospitalises':['incid_hosp','Nombre de nouveaux patients hospitalisés au cours des dernières 24h.'],\
@@ -148,7 +164,6 @@ class DBInfo:
             for k,v in spfn.items():
                   spfn[k].append(url)
                   spfn[k].append(urlmaster)
-            mydico = spfn
             self.pandasdb = pd.DataFrame(spfn,index=['Original name','Description','URL','Homepage'])
             lurl=list(dict.fromkeys(self.get_url()))
             url=lurl[0]
@@ -161,9 +176,6 @@ class DBInfo:
             self.dbparsed = spfnat
         elif namedb == 'insee':
             info('FRA, INSEE global deaths statistics...')
-            self.dbinfo ={
-                'insee':['FRA','subregion','France']
-            }
             insee = {
             'tot_deaths_since_2018-01-01':['daily_number_of_deaths','tot deaths number_of_deaths integrated since 2018-01-01 '],\
             }
@@ -260,9 +272,6 @@ class DBInfo:
             self.dbparsed = insee_pd
         elif namedb == 'owid':
             info('OWID aka \"Our World in Data\" database selected ...')
-            self.dbinfo ={
-                'owid': ['WW','nation','World']
-            }
             owid={
             'total_deaths':['total_deaths','Total deaths attributed to COVID-19'],
             'total_cases':['total_cases','Total confirmed cases of COVID-19'],
@@ -304,32 +313,51 @@ class DBInfo:
             owid = self.new_csv2pandas(url=url,rename_columns = rename, separator = separator,keep_field = keep)
             self.dbparsed = owid
         elif namedb == 'jhu':
+            info('JHU aka Johns Hopkins database selected ...')
             jhu = {
-            'tot_deaths':['tot_deaths (original name deaths): counts include confirmed and probable (where reported).',\
-            'https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_deaths_global.csv'],
-            'tot_confirmed':['tot_confirmed (original name confirmed): counts include confirmed and probable (where reported).',\
-            'https://github.com/CSSEGISandData/COVID-19/blob/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv'],
-            'tot_recovered':['tot_recovered (original name recovered): cases are estimates based on local media reports, and state and local reporting when available, and therefore may be substantially lower than the true number. US state-level recovered cases are from COVID Tracking Project (https://covidtracking.com/)',\
-            'https://github.com/CSSEGISandData/COVID-19/blob/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_recovered_global.csv']
+            'tot_deaths':['deaths','counts include confirmed and probable (where reported).'],\
+            'tot_confirmed':['confirmed','counts include confirmed and probable (where reported).'],\
+            'tot_recovered':['recovered','cases are estimates based on local media reports, and state and local reporting'+
+                              'when available, and therefore may be substantially lower than the true number.US state-level recovered cases'+
+                              'are from COVID Tracking Project (https://covidtracking.com/)']\
              }
+            base_url = 'https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/'+\
+                       'csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_'
+            masterurl = 'https://github.com/CSSEGISandData/COVID-19'
             for k,v in jhu.items():
-                 jhu[k].append("https://github.com/CSSEGISandData/COVID-19")
-            mydico = jhu
+                 url=base_url+v[0]+"_global.csv"
+                 self.separator[url]=','
+                 jhu[k].append(url)
+                 jhu[k].append(masterurl)
+            self.pandasdb = pd.DataFrame(jhu,index=['Original name','Description','URL','Homepage'])
+            rename={'Country/Region':'where'}
+            drop_columns=['Province/State','Lat','Long']
+            drop_field={'where':['Diamond Princess']}
+            rename.update(self.original_to_available_keywords_dico())
+            self.return_jhu_pandas(namedb,rename_columns=rename,drop_columns=drop_columns,drop_field=drop_field)
         elif namedb == 'jhu-usa':
+            info('JHU USA aka Johns Hopkins USA database selected ...')
+            base_url='https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/'+\
+            'csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_'
             jhuusa = {
-            'tot_deaths':['tot_deaths (original name deaths): counts include confirmed and probable (where reported).',\
-            'https://github.com/CSSEGISandData/COVID-19/blob/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_deaths_US.csv'],
-            'tot_confirmed':['tot_confirmed (original name confirmed): counts include confirmed and probable (where reported).',\
-            'https://github.com/CSSEGISandData/COVID-19/blob/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_US.csv']
+            'tot_deaths':['deaths','counts include confirmed and probable (where reported).'],\
+            'tot_confirmed':['confirmed','counts include confirmed and probable (where reported).'],\
             }
+            masterurl="https://github.com/CSSEGISandData/COVID-19"
             for k,v in jhuusa.items():
-                jhuusa[k].append("https://github.com/CSSEGISandData/COVID-19")
-            mydico = jhuusa
+                 url=base_url+v[0]+"_US.csv"
+                 self.separator[url]=','
+                 jhuusa[k].append(url)
+                 jhuusa[k].append(masterurl)
+            self.pandasdb = pd.DataFrame(jhuusa,index=['Original name','Description','URL','Homepage'])
+            rename={'Province_State':'where'}
+            rename.update(self.original_to_available_keywords_dico())
+            drop_columns=['UID','iso2','iso3','code3','FIPS','Admin2','Country_Region','Lat','Long_','Combined_Key']
+            drop_field={'where':['American Samoa','Diamond Princess','Grand Princess','Guam',\
+                                 'Northern Mariana Islands','Puerto Rico','Virgin Islands']}
+            self.return_jhu_pandas(namedb, rename_columns = rename,drop_columns=drop_columns,drop_field=drop_field)
         elif namedb == 'moh':
             info('Malaysia moh covid19-public database selected ...')
-            self.dbinfo ={
-                'moh':['MYS','subregion','Malaysia']
-            }
             url0='https://raw.githubusercontent.com/MoH-Malaysia/covid19-public/main/epidemic/cases_state.csv'
             url1='https://raw.githubusercontent.com/MoH-Malaysia/covid19-public/main/epidemic/hospital.csv'
             url2='https://raw.githubusercontent.com/MoH-Malaysia/covid19-public/main/epidemic/icu.csv'
@@ -371,9 +399,6 @@ class DBInfo:
             self.dbparsed=result
         elif namedb == 'dpc':
             info('ITA, Dipartimento della Protezione Civile database selected ...')
-            self.dbinfo ={
-                'dpc': ['ITA','region','Italy']
-            }
             ita = {
             'tot_cases':['totale_casi','FILLIT'],\
             'tot_deaths':['deceduti','FILLIT']
@@ -393,18 +418,23 @@ class DBInfo:
             keep = ['date','where'] + self.get_url_original_keywords()[url]
             self.dbparsed = self.new_csv2pandas(url=url,rename_columns = rename, separator = separator ,keep_field = keep)
         elif namedb == 'rki':
+            info('DEU, Robert Koch Institut data selected ...')
             rki = {
-            'tot_deaths':['tot_deaths:FILLIT','https://github.com/jgehrcke/covid-19-germany-gae/raw/master/deaths-rki-by-ags.csv'],
-            'tot_cases':['tot_cases:FILLIT','https://github.com/jgehrcke/covid-19-germany-gae/raw/master/deaths-rki-by-ags.csv'],
+            'tot_deaths':['tot_deaths','FILLIT'],
+            'tot_cases':['tot_cases','FILLIT']
             }
+            url='https://github.com/jgehrcke/covid-19-germany-gae/raw/master/deaths-rki-by-ags.csv'
+            masterurl='https://github.com/jgehrcke/covid-19-germany-gae'
+            self.separator = {url:','}
             for k,v in rki.items():
-                rki[k].append('https://github.com/jgehrcke/covid-19-germany-gae')
-            mydico = rki
+                rki[k].append(url)
+                rki[k].append(masterurl)
+            self.pandasdb = pd.DataFrame(rki,index=['Original name','Description','URL','Homepage'])
+            drop_field={'where':['sum_'+self.get_url_original_keywords()[url][0]]}
+            rename={'index':'where'}
+            self.return_jhu_pandas(namedb,rename_columns=rename,drop_field=drop_field)
         elif namedb == 'escovid19data':
             info('ESP, EsCovid19Data ...')
-            self.dbinfo ={
-                'escovid19data':['ESP','subregion','Spain']
-            }
             esco = {
             'tot_deaths':['deceased','Cumulative deaths  (original name deceased)'],\
             'tot_cases':['cases_accumulated_PCR','Number of new COVID-19 cases detected with PCR (original name cases_accumulated_PCR)'],\
@@ -442,9 +472,6 @@ class DBInfo:
             self.dbparsed = esp_data
         elif namedb == 'sciensano':
             info('BEL, Sciensano Belgian institute for health data  ...')
-            self.dbinfo ={
-                'sciensano':['BEL','region','Belgium']
-            }
             sci = {
             'cur_hosp':['TOTAL_IN','Total number of lab-confirmed hospitalized COVID-19 patients at the moment of reporting, including ICU (prevalence) (original name TOTAL_IN)'],\
             'cur_icu':['TOTAL_IN_ICU','Total number of lab-confirmed hospitalized COVID-19 patients in ICU at the moment of reporting (prevalence) (original name TOTAL_IN_ICU)'],\
@@ -484,12 +511,8 @@ class DBInfo:
             beldata['date'] = pandas.to_datetime(beldata['date'],errors='coerce').dt.date
             self.return_structured_pandas(beldata,columns_keeped=columns_keeped)
             '''
-
         elif namedb == 'phe':
             info('GBR, Public Health England data ...')
-            self.dbinfo ={
-                'phe':['GBR','subregion','United Kingdom'],
-            }
             phe = {
             'tot_deaths':['cumDeaths28DaysByDeathDate','Total number of deaths '],\
             'tot_cases':['cumCasesBySpecimenDate','Total number of cases'],
@@ -530,9 +553,6 @@ class DBInfo:
             self.dbparsed = result
         elif namedb == 'dgs':
             info('PRT, Direcção Geral de Saúde - Ministério da Saúde Português data selected ...')
-            self.dbinfo ={
-                'dgs':['PRT','region','Portugal']
-            }
             dgs = {
                 'tot_cases':['confirmados_1','FILLIT']
                 }
@@ -552,9 +572,6 @@ class DBInfo:
             self.dbparsed = self.new_csv2pandas(url=url,rename_columns = rename, separator = separator,keep_field = keep)
         elif namedb == 'risklayer':
             info('EUR, Who Europe from RiskLayer ...')
-            self.dbinfo ={
-                'risklayer':['EUR','subregion','Europe']
-            }
             risk = {
                 'tot_positive': ['CumulativePositive','FILLIT'],\
                 'tot_incidence': ['IncidenceCumulative','FILLIT'],\
@@ -575,9 +592,6 @@ class DBInfo:
             self.dbparsed = self.new_csv2pandas(url=url,rename_columns = rename, separator = separator,keep_field = keep)
         elif namedb == 'europa':
             info('EUR, Rationale for the JRC COVID-19 website - data monitoring and national measures ...')
-            self.dbinfo ={
-                'europa':['WW','nation','Europe']
-            }
             euro = {
                 'tot_deaths':['CumulativeDeceased','FILLIT'],
                 'tot_positive':['CumulativePositive','FILLIT'],
@@ -603,20 +617,24 @@ class DBInfo:
             drop_field['iso_code']=['WWW']
             self.dbparsed = self.new_csv2pandas(url=url,rename_columns = rename, separator = separator, drop_field=drop_field, keep_field = keep)
         elif namedb == 'imed':
+            info('Greece, imed database selected ...')
             imed = {
-            'tot_cases':['tot_cases (original name cases)',\
-            'https://github.com/iMEdD-Lab/open-data/blob/master/COVID-19/greece_cases_v2.csv'],
-            'tot_deaths':['tot_deaths (original name deaths)',\
-            'https://github.com/iMEdD-Lab/open-data/blob/master/COVID-19/greece_deaths_v2.csv']
+            'tot_cases':['cases','FILLIT'],
+            'tot_deaths':['deaths','FILLIT']
             }
+            url='https://raw.githubusercontent.com/iMEdD-Lab/open-data/master/COVID-19/greece_cases_v2.csv'
+            masterurl='https://github.com/iMEdD-Lab/open-data/tree/master/COVID-19'
+            self.separator={url:','}
             for k,v in imed.items():
-                 imed[k].append("https://github.com/iMEdD-Lab/open-data/tree/master/COVID-19")
-            mydico = imed
+                 imed[k].append(url)
+                 imed[k].append(masterurl)
+            self.pandasdb = pd.DataFrame(imed,index=['Original name','Description','URL','Homepage'])
+            rename={'county_normalized':'where'}
+            rename.update(self.original_to_available_keywords_dico())
+            drop_columns=['Γεωγραφικό Διαμέρισμα','Περιφέρεια','county','pop_11']
+            self.return_jhu_pandas(namedb, rename_columns = rename,drop_columns=drop_columns)
         elif namedb == 'govcy':
             info('Cyprus, govcy database selected ...')
-            self.dbinfo ={
-                'govcy':['CYP','nation','Cyprus']
-            }
             mi = {
             'tot_deaths':['total deaths','total deaths attributed to Covid-19 disease (total deaths)'],\
             'tot_cases':['total cases','total number of confirmed cases (total cases)'],\
@@ -643,9 +661,6 @@ class DBInfo:
             self.dbparsed = self.new_csv2pandas(url=url,rename_columns = rename, separator = separator,keep_field = keep)
         elif namedb == 'mpoxgh':
             info('MonkeyPoxGlobalHealth selected...')
-            self.dbinfo ={
-                'mpoxgh':['WW','nation','World']
-            }
             url='https://raw.githubusercontent.com/owid/monkeypox/main/owid-monkeypox-data.csv'
             self.separator = {url:','}
             urlmaster='https://github.com/owid/monkeypox'
@@ -661,11 +676,8 @@ class DBInfo:
             rename.update(self.original_to_available_keywords_dico())
             separator=self.get_url_separator(url)
             self.dbparsed = self.new_csv2pandas(url=url,rename_columns = rename, separator = separator, keep_field = keep)
-        elif namedb ==  'jpnmhlw':
+        elif namedb == 'jpnmhlw':
             info('JPN, Ministry of wealth, labor and welfare')
-            self.dbinfo ={
-                'jpnmhlw' :['JPN','subregion','Japan']
-            }
             jpn = {
                 'tot_deaths':['deaths_cumulative_daily','FILLIT'],\
                 'cur_cases':['newly_confirmed_cases_daily','FILLIT'],\
@@ -812,5 +824,115 @@ class DBInfo:
      pandas_db = pandas_db.sort_values(['where','date'])
      return pandas_db
 
+  def return_jhu_pandas(self,db,**kwargs):
+      ''' For center for Systems Science and Engineering (CSSE) at Johns Hopkins University
+          COVID-19 Data Repository by the see homepage: https://github.com/CSSEGISandData/COVID-19
+          return a structure : pandas where - date - keywords
+          for jhu where are countries (where uses geo standard)
+          for jhu-usa where are Province_State (where uses geo standard)
+          '''
+      # previous are default for actual jhu db
+      rename_columns = kwargs.get('rename_columns', None)
+      drop_columns = kwargs.get('drop_columns', None)
+      drop_field = kwargs.get('drop_field', None)
+      self.available_keywords = []
+      pandas_list = []
+      self.pandasdb
+      lurl=list(dict.fromkeys(self.get_url()))
+      mypd = pd.DataFrame()
+      pandas_list = []
+      for url in lurl:
+          separator = self.get_url_separator(url)
+          mypd = pd.read_csv(get_local_from_url(url,7200), sep = separator) # cached for 2 hours
+          if rename_columns:
+              if db == 'rki':
+                  mypd = mypd.set_index('time_iso8601').T.reset_index().rename(columns=rename_columns)
+              else:
+                  mypd = mypd.rename(columns=rename_columns)
+          if drop_columns:
+              mypd = mypd.drop(columns=drop_columns)
+          mypd = mypd.melt(id_vars=['where'],var_name="date",value_name=self.get_url_original_keywords()[url][0])
+          if drop_field:
+            for key,val in drop_field.items():
+                mypd =  mypd[~mypd[key].isin(val)]
+          mypd=mypd.groupby(['where','date']).sum().reset_index()
+          pandas_list.append(mypd)
+
   def get_pandas(self):
       return self.dbparsed
+
+'''
+      uniqloc = list(pandas_list[0]['where'].unique())
+      oldloc = uniqloc
+      codedico={}
+      toremove = None
+      newloc = None
+      location_is_code = False
+      if self.db_world:
+          d_loc_s = collections.OrderedDict(zip(uniqloc,self.geo.to_standard(uniqloc,output='list',db=self.get_db(),interpret_region=True)))
+          self.slocation = list(d_loc_s.values())
+          g=coge.GeoManager('iso3')
+          codename = collections.OrderedDict(zip(self.slocation,g.to_standard(self.slocation,output='list',db=self.get_db(),interpret_region=True)))
+      else:
+          if self.database_type[self.db][1] == 'subregion':
+              pdcodename = self.geo.get_subregion_list()
+              self.slocation = uniqloc
+              codename = collections.OrderedDict(zip(self.slocation,list(pdcodename.loc[pdcodename.code_subregion.isin(self.slocation)]['name_subregion'])))
+              if db == 'jhu-usa':
+                  d_loc_s = collections.OrderedDict(zip(uniqloc,list(pdcodename.loc[pdcodename.name_subregion.isin(uniqloc)]['code_subregion'])))
+                  self.slocation = list(d_loc_s.keys())
+                  codename = d_loc_s
+              if db == 'rki':
+                  d_loc_s = collections.OrderedDict(zip(uniqloc,list(pdcodename.loc[pdcodename.code_subregion.isin(uniqloc)]['name_subregion'])))
+                  self.slocation = list(d_loc_s.values())
+                  codename = d_loc_s
+                  location_is_code = True
+                  def notuse():
+                      count_values=collections.Counter(d_loc_s.values())
+                      duplicates_location = list({k:v for k,v in count_values.items() if v>1}.keys())
+                      def findkeywithvalue(dico,what):
+                          a=[]
+                          for k,v in dico.items():
+                              if v == what:
+                                  a.append(k)
+                          return a
+                      codedupli={i:findkeywithvalue(d_loc_s,i) for i in duplicates_location}
+          elif self.database_type[db][1] == 'region':
+              codename = self.geo.get_data().set_index('name_region')['code_region'].to_dict()
+              self.slocation = list(codename.keys())
+
+
+      result = reduce(lambda x, y: pd.merge(x, y, on = ['where','date']), pandas_list)
+
+      if location_is_code:
+          result['codelocation'] = result['where']
+          result['where'] = result['where'].map(codename)
+      else:
+          if db == 'jhu':
+              result['where'] = result['where'].map(d_loc_s)
+          result['codelocation'] = result['where'].map(codename)
+      result = result.loc[result['where'].isin(self.slocation)]
+
+      tmp = pd.DataFrame()
+      if 'Kosovo' in uniqloc:
+          #Kosovo is Serbia ! with geo.to_standard
+          tmp=(result.loc[result['where'].isin(['Serbia'])]).groupby('date').sum().reset_index()
+          tmp['where'] = 'Serbia'
+          tmp['codelocation'] = 'SRB'
+          kw = [i for i in self.available_keywords]
+          colpos=['where', 'date'] + kw + ['codelocation']
+          tmp = tmp[colpos]
+          result = result.loc[~result['where'].isin(['Serbia'])]
+          result = pd.concat([result,tmp])
+
+      result['date'] = pd.to_datetime(result['date'],errors='coerce').dt.date
+      result = result.sort_values(by=['where','date'])
+      result = result.reset_index(drop=True)
+      if db == 'jhu-usa':
+          col=result.columns.tolist()
+          ncol=col[:2]+col[3:]+[col[2]]
+          result=result[ncol]
+          self.available_keywords+=['Population']
+      self.mainpandas = fill_missing_dates(result)
+      self.dates  = self.mainpandas['date']
+      '''

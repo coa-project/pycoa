@@ -45,37 +45,9 @@ if _coacache_module_info != None:
 # Verbosity of pycoa
 _verbose_mode = 1 # default
 
-# Known db
-_db_list_dict = {'jhu': ['WW','nation','World'],
-    'owid': ['WW','nation','World'],
-    'jhu-usa': ['USA','subregion','United States of America'],
-    'spf': ['FRA','subregion','France'],
-    'spfnational': ['WW','nation','France'],
-    'dpc': ['ITA','region','Italy'],
-    'rki':['DEU','subregion','Germany'],
-    'escovid19data':['ESP','subregion','Spain'],
-    'phe':['GBR','subregion','United Kingdom'],
-    'sciensano':['BEL','region','Belgium'],
-    'dgs':['PRT','region','Portugal'],
-    'moh':['MYS','subregion','Malaysia'],
-    'risklayer':['EUR','subregion','Europe'],
-    'imed':['GRC','region','Greece'],
-    'govcy':['CYP','nation','Cyprus'],
-    'insee':['FRA','subregion','France'],
-    'europa':['WW','nation','Europe'],
-    'mpoxgh':['WW','nation','World'],
-    'jpnmhlw' :['JPN','subregion','Japan'],
-    }
-
 # ----------------------------------------------------
 # --- Usefull functions for pycoa --------------------
 # ----------------------------------------------------
-
-def get_db_list_dict():
-    """Return db list dict"""
-    return _db_list_dict
-
-
 def get_verbose_mode():
     """Return the verbose mode
     """

@@ -60,7 +60,6 @@ class DBInfo:
         mydico = {}
         self.separator={}
         self.db = namedb
-        self.dbinfo = {namedb:_db_list_dict[namedb]}
         self.database_name = list(_db_list_dict.keys())
         self.db_world = False
         if self.db not in self.database_name:
@@ -765,7 +764,7 @@ class DBInfo:
       '''
         Return info concerning the db selected, i.e key, return iso code, granularity,name
       '''
-      return self.dbinfo[key]
+      return _db_list_dict[key]
 
   def get_db(self):
      '''
@@ -880,9 +879,9 @@ class DBInfo:
          pandas_db =  pandas_db[keep_field]
 
      pandas_db['date'] = pd.to_datetime(pandas_db['date'],errors='coerce',infer_datetime_format=True).dt.date
-     if self.dbinfo[self.db][1] == 'nation' and self.dbinfo[self.db][0] in ['FRA','CYP'] or \
+     if _db_list_dict[self.db][1] == 'nation' and _db_list_dict[self.db][0] in ['FRA','CYP'] or \
          self.db=="spfnational":
-         pandas_db['where'] = self.dbinfo[self.db][2]
+         pandas_db['where'] = _db_list_dict[self.db][2]
      pandas_db = pandas_db.sort_values(['where','date'])
      return pandas_db
 
@@ -1096,7 +1095,7 @@ class DBInfo:
                 mypd =  mypd[~mypd[key].isin(val)]
           mypd=mypd.groupby(['where','date']).sum().reset_index()
           pandas_list.append(mypd)
-      self.available_keywords = flat_list(self.available_keywords)      
+      self.available_keywords = flat_list(self.available_keywords)
       uniqloc = list(pandas_list[0]['where'].unique())
       oldloc = uniqloc
       codedico={}

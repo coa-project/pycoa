@@ -22,7 +22,7 @@ import pandas as pd
 import datetime as dt
 
 import sys
-from coa.tools import verb, kwargs_test
+from coa.tools import verb, kwargs_test, flat_list
 
 import coa.geo as coge
 import coa.dbinfo as dbinfo
@@ -72,18 +72,6 @@ class DataBase(object):
         Return all the available Covid19 database
         '''
         return self.database_name
-
-   @staticmethod
-   def flat_list(matrix):
-        ''' Flatten list function used in covid19 methods'''
-        flatten_matrix = []
-        for sublist in matrix:
-            if isinstance(sublist,list):
-                for val in sublist:
-                    flatten_matrix.append(val)
-            else:
-                flatten_matrix.append(sublist)
-        return flatten_matrix
 
    def return_nonan_dates_pandas(self, df = None, field = None):
          ''' Check if for last date all values are nan, if yes check previous date and loop until false'''

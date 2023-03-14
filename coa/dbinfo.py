@@ -17,7 +17,8 @@ import collections
 import random
 
 from coa.error import *
-from coa.tools import info, verb, kwargs_test, get_local_from_url, week_to_date, fill_missing_dates
+from coa.tools import info, verb, kwargs_test, get_local_from_url,\
+                      week_to_date, fill_missing_dates, flat_list
 import coa.geo as coge
 # Known db
 
@@ -55,12 +56,11 @@ class DBInfo:
                 - url of the csv where the epidemiological variable is
                 - url of the master i.e where some general description could be located. By default is an empty string ''
         '''
-        self.dbinfo = {}
         self.dbparsed = pd.DataFrame()
         mydico = {}
         self.separator={}
-        self.db=namedb
-        self.dbinfo ={namedb:_db_list_dict[namedb]}
+        self.db = namedb
+        self.dbinfo = {namedb:_db_list_dict[namedb]}
         self.database_name = list(_db_list_dict.keys())
         self.db_world = False
         if self.db not in self.database_name:
@@ -1096,6 +1096,7 @@ class DBInfo:
                 mypd =  mypd[~mypd[key].isin(val)]
           mypd=mypd.groupby(['where','date']).sum().reset_index()
           pandas_list.append(mypd)
+      self.available_keywords = flat_list(self.available_keywords)      
       uniqloc = list(pandas_list[0]['where'].unique())
       oldloc = uniqloc
       codedico={}
@@ -1147,7 +1148,6 @@ class DBInfo:
             result['where'] = result['where'].map(d_loc_s)
         result['codelocation'] = result['where'].map(codename)
       result = result.loc[result['where'].isin(self.slocation)]
-
       tmp = pd.DataFrame()
       if 'Kosovo' in uniqloc:
         #Kosovo is Serbia ! with geo.to_standard

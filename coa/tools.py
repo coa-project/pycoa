@@ -134,7 +134,6 @@ def fill_missing_dates(p, date_field='date', loc_field='where', d1=None, d2=None
     pfill.reset_index(inplace=True)
     return pfill
 
-
 def check_valid_date(date):
     """Check if a string is compatible with a valid date under the format day/month/year
     with 2 digits for day, 2 digits for month and 4 digits for year.
@@ -287,6 +286,17 @@ def testsublist(lst1, lst2):
     if len(extract)==len(lst1):
         test=True
     return test
+
+def flat_list(matrix):
+     ''' Flatten list function used in covid19 methods'''
+     flatten_matrix = []
+     for sublist in matrix:
+         if isinstance(sublist,list):
+             for val in sublist:
+                 flatten_matrix.append(val)
+         else:
+             flatten_matrix.append(sublist)
+     return flatten_matrix
 
 class dotdict(dict):
     """dot.notation access to dictionary attributes"""

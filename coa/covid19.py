@@ -43,13 +43,7 @@ class DataBase(object):
         verb("Init of covid19.DataBase()")
         self.database_type = dbinfo._db_list_dict
         self.available_options = ['nonneg', 'nofillnan', 'smooth7', 'sumall']
-        self.available_keywords = []
-        self.dates = []
-        self.database_columns_not_computed = {}
         self.db = db_name
-        self.geo_all = ''
-        self.database_url = []
-
         self.dbfullinfo = dbinfo.DBInfo(db_name)
         self.slocation = self.dbfullinfo.get_locations()
         self.geo = self.dbfullinfo.get_geo()
@@ -150,7 +144,7 @@ class DataBase(object):
             if self.dbfullinfo.get_dbinfo(self.db)[0] == 'WW':
                 kwargs['where'] = self.dbfullinfo.get_dbinfo(self.db)[2]
             else:
-                kwargs['where'] = self.slocation #self.geo_all['code_subregion'].to_list()
+                kwargs['where'] = self.slocation
             wallname = self.dbfullinfo.get_dbinfo(self.db)[2]
         else:
             kwargs['where'] = kwargs['where']

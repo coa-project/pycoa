@@ -23,16 +23,14 @@ import pandas as pd
 import datetime as dt
 
 import sys
-from coa.tools import info, verb, kwargs_test, get_local_from_url, fill_missing_dates, check_valid_date, week_to_date
+from coa.tools import info, verb, kwargs_test, get_local_from_url, check_valid_date, week_to_date
 
 import coa.geo as coge
 import coa.dbinfo as dbinfo
 import coa.display as codisplay
 from coa.error import *
 from scipy import stats as sps
-import random
 from functools import reduce
-import collections
 import re
 import requests
 import datetime
@@ -49,7 +47,7 @@ class DataBase(object):
          Fill the pandas_datase
         """
         verb("Init of covid19.DataBase()")
-        self.database_name = list(dbinfo._db_list_dict.keys())
+
         self.database_type = dbinfo._db_list_dict
         self.available_options = ['nonneg', 'nofillnan', 'smooth7', 'sumall']
         self.available_keywords = []
@@ -58,38 +56,12 @@ class DataBase(object):
         self.db = db_name
         self.geo_all = ''
         self.database_url = []
-        self.db_world=None
+
         self.dbfullinfo = dbinfo.DBInfo(db_name)
-        if self.db not in self.database_name:
-            raise CoaDbError('Unknown ' + self.db + '. Available database so far in PyCoa are : ' + str(self.database_name), file=sys.stderr)
-        else:
-            try:
-                if self.dbfullinfo.get_dbinfo(db_name)[1] == 'nation': # world wide dba
-                    self.db_world = True
-                    self.geo = coge.GeoManager('name')
-                    self.geo_all = 'world'
-                else: # local db
-                    self.db_world = False
-                    self.geo = coge.GeoCountry(dbinfo._db_list_dict[self.db][0])
-                    if dbinfo._db_list_dict[self.db][1] == 'region':
-                        self.geo_all = self.geo.get_region_list()
-                    elif dbinfo._db_list_dict[self.db][1] == 'subregion':
-                        self.geo_all = self.geo.get_subregion_list()
-                    else:
-                        CoaError('Granularity problem, neither region or subregion')
-                self.set_display(self.db,self.geo)
-                # specific reading of data according to the db
-                if db_name not in ['jhu','jhu-usa','imed','rki']:
-                    mypd = self.dbfullinfo.get_pandas()
-                    self.return_structured_pandas(mypd)
-            except:
-                raise CoaDbError("An error occured while parsing data of "+self.get_db()+". This may be due to a data format modification. "
-                    "You may contact support@pycoa.fr. Thanks.")
-            # some info
-            info('Few information concernant the selected database : ', self.get_db())
-            info('Available key-words, which ∈', self.dbfullinfo.get_available_keywords())
-            info('Example of where : ',  ', '.join(random.choices(self.get_locations(), k=min(5,len(self.get_locations() ))   )), ' ...')
-            info('Last date data ', self.get_dates().max())
+        self.slocation = self.dbfullinfo.get_locations()
+        self.geo = self.dbfullinfo.get_geo()
+        self.db_world = self.dbfullinfo.get_world_boolean()
+        self.set_display(db_name,self.geo)
 
    @staticmethod
    def factory(db_name):
@@ -108,194 +80,11 @@ class DataBase(object):
        ''' Return the instance of CocoDisplay initialized by factory'''
        return self.codisp
 
-   def get_db(self):
-        '''
-        Return the current covid19 database selected. See get_available_database() for full list
-        '''
-        return self.db
-
    def get_available_database(self):
         '''
         Return all the available Covid19 database
         '''
         return self.database_name
-
-   def return_structured_pandas(self,mypandas,**kwargs):
-        '''
-        Return the mainpandas core of the PyCoA structure
-        '''
-        kwargs_test(kwargs,['columns_skipped'],
-            'Bad args used in the return_structured_pandas function.')
-        columns_skipped = kwargs.get('columns_skipped', None)
-        if self.db_world and self.db not in ['govcy','spfnational','mpoxgh']:
-            not_UN_nation_dict=['Kosovo','Serbia']
-            tmp=(mypandas.loc[mypandas['where'].isin(not_UN_nation_dict)].groupby('date').sum()).reset_index()
-            tmp['where'] = 'Serbia'
-            tmp['iso_code'] = 'SRB'
-            cols = tmp.columns.tolist()
-            cols = cols[0:1] + cols[-1:] + cols[1:-1]
-            tmp = tmp[cols]
-            mypandas = mypandas.loc[~mypandas['where'].isin(not_UN_nation_dict)]
-            mypandas = pd.concat([tmp,mypandas])
-        if 'iso_code' in mypandas.columns:
-            mypandas['iso_code'] = mypandas['iso_code'].dropna().astype(str)
-            mypandasori=mypandas.copy()
-            strangeiso3tokick = [i for i in mypandasori['iso_code'].dropna().unique() if not len(i)==3 ]
-            mypandasori = mypandas.loc[~mypandas.iso_code.isin(strangeiso3tokick)]
-            mypandasori = mypandasori.drop(columns=['where'])
-            mypandasori = mypandasori.rename(columns={'iso_code':'where'})
-            if self.db == 'owid':
-                onlyowid = mypandas.loc[mypandas.iso_code.isin(strangeiso3tokick)]
-                onlyowid = onlyowid.copy()
-                onlyowid.loc[:,'where'] = onlyowid['where'].apply(lambda x : 'owid_'+x)
-            mypandas = mypandasori
-        if self.db == 'dpc':
-            gd = self.geo.get_data()[['name_region','code_region']]
-            A=['P.A. Bolzano','P.A. Trento']
-            tmp=mypandas.loc[mypandas['where'].isin(A)].groupby('date').sum()
-            tmp['where']='Trentino-Alto Adige'
-            mypandas = mypandas.loc[~mypandas['where'].isin(A)]
-            tmp = tmp.reset_index()
-            mypandas = pd.concat([mypandas,tmp])
-            uniqloc = list(mypandas['where'].unique())
-            sub2reg = dict(gd.values)
-            #collections.OrderedDict(zip(uniqloc,list(gd.loc[gd.name_region.isin(uniqloc)]['code_region'])))
-            mypandas['codelocation'] = mypandas['where'].map(sub2reg)
-        if self.db == 'dgs':
-            gd = self.geo.get_data()[['name_region','name_region']]
-            mypandas = mypandas.reset_index(drop=True)
-            mypandas['where'] = mypandas['where'].apply(lambda x: x.title().replace('Do', 'do').replace('Da','da').replace('De','de'))
-            uniqloc = list(mypandas['where'].unique())
-            sub2reg = dict(gd.values)
-            #sub2reg = collections.OrderedDict(zip(uniqloc,list(gd.loc[gd.name_subregion.isin(uniqloc)]['name_region'])))
-            mypandas['where'] = mypandas['where'].map(sub2reg)
-            mypandas = mypandas.loc[~mypandas['where'].isnull()]
-         # filling subregions.
-            gd = self.geo.get_data()[['code_region','name_region']]
-            uniqloc = list(mypandas['where'].unique())
-            name2code = collections.OrderedDict(zip(uniqloc,list(gd.loc[gd.name_region.isin(uniqloc)]['code_region'])))
-            mypandas = mypandas.loc[~mypandas['where'].isnull()]
-        codename = None
-        location_is_code = False
-        uniqloc = list(mypandas['where'].unique()) # if possible location from csv are codelocationv
-        if self.db_world:
-            uniqloc = [s for s in uniqloc if 'OWID_' not in s]
-            db=self.get_db()
-            if self.db in ['govcy','europa']:
-                db=None
-            codename = collections.OrderedDict(zip(uniqloc,self.geo.to_standard(uniqloc,output='list',db=db,interpret_region=True)))
-            location_is_code = True
-            self.slocation = list(codename.values())
-        else:
-            if self.database_type[self.db][1] == 'region' :
-                temp = self.geo.get_region_list()[['name_region','code_region']]
-                codename=dict(temp.values)
-                self.slocation = uniqloc
-            elif self.database_type[self.db][1] == 'subregion':
-                temp = self.geo_all[['code_subregion','name_subregion']]
-                codename=dict(temp.loc[temp.code_subregion.isin(uniqloc)].values)
-                if self.db == 'jpnmhlw':
-                    codename=dict(temp.loc[temp.name_subregion.isin(uniqloc)].values)
-                if self.db in ['phe','covidtracking','spf','escovid19data','opencovid19','moh','risklayer','insee']:
-                    self.slocation = list(codename.values())
-                    location_is_code = True
-                else:
-                    self.slocation = uniqloc
-            else:
-                CoaDbError('Granularity problem , neither region nor sub_region ...')
-        if self.db == 'dgs':
-            mypandas = mypandas.reset_index(drop=True)
-        if self.db != 'spfnational':
-            mypandas = mypandas.groupby(['where','date']).sum(min_count=1).reset_index() # summing in case of multiple dates (e.g. in opencovid19 data). But keep nan if any
-        if self.db == 'govcy' or self.db == 'jpnmhlw':
-            location_is_code=False
-        mypandas = fill_missing_dates(mypandas)
-        if location_is_code:
-            if self.db != 'dgs':
-                mypandas['codelocation'] =  mypandas['where'].astype(str)
-            mypandas['where'] = mypandas['where'].map(codename)
-            mypandas = mypandas.loc[~mypandas['where'].isnull()]
-        else:
-            if self.db == 'jpnmhlw':
-                reverse={j:i for i,j in codename.items()}
-                mypandas['codelocation'] =  mypandas['where'].map(reverse).astype(str)
-            else:
-                mypandas['codelocation'] =  mypandas['where'].map(codename).astype(str)
-
-        if self.db == 'owid':
-            onlyowid['codelocation'] = onlyowid['where']
-            mypandas = pd.concat([mypandas,onlyowid])
-        self.mainpandas  = mypandas
-        self.dates  = self.mainpandas['date']
-
-   def get_mainpandas(self,**kwargs):
-       '''
-            * defaut :
-                 - location = None
-                 - date = None
-                 - selected_col = None
-                Return the csv file to the mainpandas structure
-                index | location              | date      | keywords1       |  keywords2    | ...| keywordsn
-                -----------------------------------------------------------------------------------------
-                0     |        location1      |    1      |  l1-val1-1      |  l1-val2-1    | ...|  l1-valn-1
-                1     |        location1      |    2      |  l1-val1-2      |  l1-val2-2    | ...|  l1-valn-2
-                2     |        location1      |    3      |  l1-val1-3      |  l1-val2-3    | ...|  l1-valn-3
-                                 ...
-                p     |       locationp       |    1      |   lp-val1-1     |  lp-val2-1    | ...| lp-valn-1
-                ...
-            * location : list of location (None : all location)
-            * date : latest date to retrieve (None : max date)
-            * selected_col: column to keep according to get_available_keywords (None : all get_available_keywords)
-                            N.B. location column is added
-        '''
-       kwargs_test(kwargs,['where', 'date', 'selected_col'],
-                    'Bad args used in the get_stats() function.')
-
-       where = kwargs.get('where', None)
-       selected_col = kwargs.get('selected_col', None)
-       watch_date = kwargs.get('date', None)
-       if where:
-            if not isinstance(where, list):
-                clist = ([where]).copy()
-            else:
-                clist = (where).copy()
-            if not all(isinstance(c, str) for c in clist):
-                raise CoaWhereError("Location via the where keyword should be given as strings. ")
-            if self.db_world:
-                self.geo.set_standard('name')
-                if self.db == 'owid':
-                    owid_name = [c for c in clist if c.startswith('owid_')]
-                    clist = [c for c in clist if not c.startswith('owid_')]
-                clist=self.geo.to_standard(clist,output='list', interpret_region=True)
-            else:
-                clist=clist+self.geo.get_subregions_from_list_of_region_names(clist)
-                if clist in ['FRA','USA','ITA'] :
-                    clist=self.geo_all['code_subregion'].to_list()
-
-            clist=list(set(clist)) # to suppress duplicate countries
-            diff_locations = list(set(clist) - set(self.get_locations()))
-            clist = [i for i in clist if i not in diff_locations]
-            filtered_pandas = self.mainpandas.copy()
-            if len(clist) == 0 and len(owid_name) == 0:
-                raise CoaWhereError('Not a correct location found according to the where option given.')
-            if self.db == 'owid':
-                clist+=owid_name
-            filtered_pandas = filtered_pandas.loc[filtered_pandas['where'].isin(clist)]
-            if watch_date:
-                check_valid_date(watch_date)
-                mydate = pd.to_datetime(watch_date).date()
-            else :
-                mydate = filtered_pandas.date.max()
-            filtered_pandas = filtered_pandas.loc[filtered_pandas.date==mydate].reset_index(drop=True)
-            if selected_col:
-                l = selected_col
-            else:
-                l=list(self.get_available_keywords())
-            l.insert(0, 'where')
-            filtered_pandas = filtered_pandas[l]
-            return filtered_pandas
-       self.mainpandas = self.mainpandas.reset_index(drop=True)
-       return self.mainpandas
 
    @staticmethod
    def flat_list(matrix):
@@ -308,16 +97,6 @@ class DataBase(object):
             else:
                 flatten_matrix.append(sublist)
         return flatten_matrix
-
-   def get_dates(self):
-        ''' Return all dates available in the current database as datetime format'''
-        return self.dates.values
-
-   def get_locations(self):
-        ''' Return available location countries / regions in the current database
-            Using the geo method standardization
-        '''
-        return self.slocation
 
    def return_nonan_dates_pandas(self, df = None, field = None):
          ''' Check if for last date all values are nan, if yes check previous date and loop until false'''
@@ -343,7 +122,7 @@ class DataBase(object):
          - index: only an incremental value
          - location: list of location used in the database selected (using geo standardization)
          - 'which' :  return the keyword values selected from the avalailable keywords keepted seems
-            self.get_available_keywords()
+            self.dbfullinfo.get_available_keywords()
 
          - 'option' :default none
             * 'nonneg' In some cases negatives values can appeared due to a database updated, nonneg option
@@ -375,25 +154,23 @@ class DataBase(object):
         kwargs_test(kwargs,['where','which','what','option','input','input_field','when','output',
         'typeofplot','typeofhist','tile','visu','mode','maplabel','bypop'],'Bad args used in the get_stats() function.')
         if not 'where' in kwargs or kwargs['where'] is None.__class__ or kwargs['where'] == None:
-            if get_db_list_dict()[self.db][0] == 'WW':
-                kwargs['where'] = get_db_list_dict()[self.db][2]
+            if self.dbfullinfo.get_dbinfo(self.db)[0] == 'WW':
+                kwargs['where'] = self.dbfullinfo.get_dbinfo(self.db)[2]
             else:
                 kwargs['where'] = self.slocation #self.geo_all['code_subregion'].to_list()
-            wallname = get_db_list_dict()[self.db][2]
+            wallname = self.dbfullinfo.get_dbinfo(self.db)[2]
         else:
             kwargs['where'] = kwargs['where']
+
         wallname = None
         option = kwargs.get('option', 'fillnan')
         fillnan = True # default
         sumall = False # default
         sumallandsmooth7 = False
         if 'input' not in kwargs:
-            mypycoapd = self.get_mainpandas()
+            mypycoapd = self.dbfullinfo.get_mainpandas()
             if 'which' not in kwargs:
                 kwargs['which'] = mypycoapd.columns[2]
-            #if kwargs['which'] not in self.get_available_keywords():
-            #    raise CoaKeyError(kwargs['which']+' is not a available for ' + self.db + ' database name. '
-            #    'See get_available_keywords() for the full list.')
             mainpandas = self.return_nonan_dates_pandas(mypycoapd,kwargs['which'])
             #while for last date all values are nan previous date
         else:
@@ -430,7 +207,6 @@ class DataBase(object):
                 else:
                     raise CoaWhereError("In the case of sumall all locations must have the same types i.e\
                     list or string but both is not accepted, could be confusing")
-
         owid_name=''
         if self.db_world:
             self.geo.set_standard('name')
@@ -458,7 +234,6 @@ class DataBase(object):
             def explosion(listloc,typeloc='subregion'):
                 exploded = []
                 a=self.geo.get_data()
-
                 for i in listloc:
                     if typeloc == 'subregion':
                         if self.geo.is_region(i):
@@ -475,7 +250,7 @@ class DataBase(object):
                             tmp = list(tmp.loc[tmp.code_region==i]['name_region'])
                         elif self.geo.is_region(i):
                             tmp = self.geo.get_regions_from_macroregion(name=i,output='name')
-                            if get_db_list_dict()[self.db][0] in ['USA, FRA, ESP, PRT']:
+                            if dbinfo._db_list_dict[self.db][0] in ['USA, FRA, ESP, PRT']:
                                 tmp = tmp[:-1]
                         else:
                             if self.geo.is_subregion(i):
@@ -502,11 +277,12 @@ class DataBase(object):
                 #origlistlistloc = DataBase.flat_list(list(dicooriglist.values()))
                 #location_exploded = origlistlistloc
             else:
-                if any([i.upper() in [self.database_type[self.db][0].upper(),self.database_type[self.db][2].upper()] for i in listloc]):
+                if any([i.upper() in [self.dbfullinfo.get_dbinfo(self.db)[0].upper(),self.dbfullinfo.get_dbinfo(self.db)[2].upper()] for i in listloc]):
                     listloc=self.slocation
-                listloc = explosion(listloc,self.database_type[self.db][1])
+                listloc = explosion(listloc,self.dbfullinfo.get_dbinfo(self.db)[1])
                 listloc = DataBase.flat_list(listloc)
                 location_exploded = listloc
+
         def sticky(lname):
             if len(lname)>0:
                 tmp=''

@@ -42,16 +42,17 @@ import numpy as np
 from bokeh.io import show, output_notebook
 import types
 import datetime as dt
-from coa.tools import kwargs_test, extract_dates, get_db_list_dict, info, testsublist
+from coa.tools import kwargs_test, extract_dates, info, testsublist
 import coa.covid19 as coco
 from coa.error import *
 import coa._version
 import coa.geo as coge
+from coa.dbinfo import _db_list_dict
 
 output_notebook(hide_banner=True)
 
 # --- Needed global private variables ----------------------------------
-_listwhom = list(get_db_list_dict().keys())
+_listwhom = list(_db_list_dict.keys())
 
 if 'coa_db' in __builtins__.keys():
     if not __builtins__['coa_db'] in _listwhom:
@@ -127,7 +128,7 @@ def listwhom(detailed=False):
 
      If detailed=True, gives information location of each given database.
     """
-    df = pd.DataFrame(get_db_list_dict())
+    df = pd.DataFrame(_db_list_dict)
     df = df.T.reset_index()
     df.index = df.index+1
     df = df.rename(columns={'index':'Database',0: "WW/iso3",1:'Granularité',2:'WW/Name'})
@@ -219,34 +220,34 @@ def listwhere(clustered = False):
         raise CoaKeyError('setwhom MUST be defined first !')
     else:
         def clust():
-            if get_db_list_dict()[_whom][1] == 'nation' and get_db_list_dict()[_whom][2] != 'World':
-                return  _db.geo.to_standard(get_db_list_dict()[_whom][0])
+            if _db_list_dict[_whom][1] == 'nation' and _db_list_dict[_whom][2] != 'World':
+                return  _db.geo.to_standard(_db_list_dict[_whom][0])
             else:
                 r = _db.geo.get_region_list()
                 if not isinstance(r, list):
                     r=sorted(r['name_region'].to_list())
-                r.append(get_db_list_dict()[_whom][2])
+                r.append(_db_list_dict[_whom][2])
                 return r
 
-        if get_db_list_dict()[_whom][1] == 'nation' and get_db_list_dict()[_whom][2] != 'World':
-            return [ get_db_list_dict()[_whom][2] ]
+        if _db_list_dict[_whom][1] == 'nation' and _db_list_dict[_whom][2] != 'World':
+            return [ _db_list_dict[_whom][2] ]
 
         if clustered:
             return clust()
         else:
             if _db.db_world == True:
-                if get_db_list_dict()[_whom][1] == 'nation' and get_db_list_dict()[_whom][2] != 'World':
-                    r =  _db.geo.to_standard(get_db_list_dict()[_whom][0])
+                if _db_list_dict[_whom][1] == 'nation' and _db_list_dict[_whom][2] != 'World':
+                    r =  _db.geo.to_standard(_db_list_dict[_whom][0])
                 else:
                     r = _db.geo.get_GeoRegion().get_countries_from_region('world')
                     r = [_db.geo.to_standard(c)[0] for c in r]
             else:
-                if get_db_list_dict()[_whom][1] == 'subregion':
+                if _db_list_dict[_whom][1] == 'subregion':
                     pan = _db.geo.get_subregion_list()
                     r = list(pan.name_subregion.unique())
-                elif get_db_list_dict()[_whom][1] == 'region':
+                elif _db_list_dict[_whom][1] == 'region':
                     r = clust()
-                    r.append(get_db_list_dict()[_whom][2])
+                    r.append(_db_list_dict[_whom][2])
                 else:
                     raise CoaKeyError('What is the granularity of your DB ?')
             return r
@@ -958,7 +959,7 @@ def decoplot(func):
                 print('typeofplot is versus but dim(input_field)!=2, versus has not effect ...')
                 fig = _cocoplot.pycoa_date_plot(input,input_field,**kwargs)
         elif typeofplot == 'menulocation':
-            if get_db_list_dict()[_whom][1] == 'nation' and get_db_list_dict()[_whom][2] != 'World':
+            if _db_list_dict[_whom][1] == 'nation' and _db_list_dict[_whom][2] != 'World':
                 print('typeofplot is menulocation with a national DB granularity, use date plot instead ...')
                 fig = _cocoplot.pycoa_date_plot(input,input_field,**kwargs)
             else:

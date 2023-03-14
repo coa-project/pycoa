@@ -16,8 +16,9 @@ An interface module to easily plot pycoa data with bokeh
 
 """
 
-from coa.tools import kwargs_test, extract_dates, verb, get_db_list_dict,fill_missing_dates
+from coa.tools import kwargs_test, extract_dates, verb, fill_missing_dates
 from coa.error import *
+from coa.dbinfo import _db_list_dict
 
 import math
 import pandas as pd
@@ -70,7 +71,7 @@ class CocoDisplay:
     def __init__(self, db=None, geo = None):
         verb("Init of CocoDisplay() with db=" + str(db))
         self.database_name = db
-        self.dbld = get_db_list_dict()
+        self.dbld = _db_list_dict
         self.lcolors = Category20[20]
         self.scolors = Category10[5]
         self.pycoageopandas = False

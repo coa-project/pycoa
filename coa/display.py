@@ -18,7 +18,7 @@ An interface module to easily plot pycoa data with bokeh
 
 from coa.tools import kwargs_test, extract_dates, verb, fill_missing_dates
 from coa.error import *
-from coa.dbinfo import _db_list_dict
+from coa.dbparser import _db_list_dict
 
 import math
 import pandas as pd
@@ -118,12 +118,6 @@ class CocoDisplay:
                     list_dep_metro = None
                     self.location_geometry = self.geo.get_subregion_list()[['code_subregion', 'name_subregion', 'geometry']]
                     self.location_geometry = self.location_geometry.rename(columns={'name_subregion': 'where'})
-                    #if country == 'FRA':
-                    #     list_dep_metro =  geo.get_subregions_from_region(name='Métropole')
-                    #elif country == 'ESP':
-                    #     list_dep_metro =  geo.get_subregions_from_region(name='España peninsular')
-                    #if list_dep_metro:
-                    #    self.boundary_metropole = self['where']_geometry.loc[self['where']_geometry.code_subregion.isin(list_dep_metro)]['geometry'].total_bounds
             else:
                    self.geo=coge.GeoManager('name')
                    geopan = gpd.GeoDataFrame()#crs="EPSG:4326")
@@ -169,6 +163,7 @@ class CocoDisplay:
 
     def get_listfigures(self):
         return  self.listfigs
+
     def set_listfigures(self,fig):
             if not isinstance(fig,list):
                 fig = [fig]

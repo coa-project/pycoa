@@ -25,7 +25,7 @@ import sys
 from coa.tools import verb, kwargs_test, flat_list
 
 import coa.geo as coge
-import coa.dbinfo as dbinfo
+import coa.dbparser as dbparser
 import coa.display as codisplay
 from coa.error import *
 from scipy import stats as sps
@@ -41,10 +41,10 @@ class DataBase(object):
          Fill the pandas_datase
         """
         verb("Init of covid19.DataBase()")
-        self.database_type = dbinfo._db_list_dict
+        self.database_type = dbparser._db_list_dict
         self.available_options = ['nonneg', 'nofillnan', 'smooth7', 'sumall']
         self.db = db_name
-        self.dbfullinfo = dbinfo.DBInfo(db_name)
+        self.dbfullinfo = dbparser.DBInfo(db_name)
         self.slocation = self.dbfullinfo.get_locations()
         self.geo = self.dbfullinfo.get_geo()
         self.db_world = self.dbfullinfo.get_world_boolean()
@@ -129,11 +129,11 @@ class DataBase(object):
         kwargs_test(kwargs,['where','which','what','option','input','input_field','when','output',
         'typeofplot','typeofhist','tile','visu','mode','maplabel','bypop'],'Bad args used in the get_stats() function.')
         if not 'where' in kwargs or kwargs['where'] is None.__class__ or kwargs['where'] == None:
-            if self.dbfullinfo.get_dbinfo(self.db)[0] == 'WW':
-                kwargs['where'] = self.dbfullinfo.get_dbinfo(self.db)[2]
+            if self.dbfullinfo.get_dblistdico(self.db)[0] == 'WW':
+                kwargs['where'] = self.dbfullinfo.get_dblistdico(self.db)[2]
             else:
                 kwargs['where'] = self.slocation
-            wallname = self.dbfullinfo.get_dbinfo(self.db)[2]
+            wallname = self.dbfullinfo.get_dblistdico(self.db)[2]
         else:
             kwargs['where'] = kwargs['where']
 
@@ -225,7 +225,7 @@ class DataBase(object):
                             tmp = list(tmp.loc[tmp.code_region==i]['name_region'])
                         elif self.geo.is_region(i):
                             tmp = self.geo.get_regions_from_macroregion(name=i,output='name')
-                            if dbinfo._db_list_dict[self.db][0] in ['USA, FRA, ESP, PRT']:
+                            if dbparser._db_list_dict[self.db][0] in ['USA, FRA, ESP, PRT']:
                                 tmp = tmp[:-1]
                         else:
                             if self.geo.is_subregion(i):
@@ -247,9 +247,9 @@ class DataBase(object):
                     else:
                         dicooriglist[','.join(i)]=explosion(i,self.database_type[self.db][1])
             else:
-                if any([i.upper() in [self.dbfullinfo.get_dbinfo(self.db)[0].upper(),self.dbfullinfo.get_dbinfo(self.db)[2].upper()] for i in listloc]):
+                if any([i.upper() in [self.dbfullinfo.get_dblistdico(self.db)[0].upper(),self.dbfullinfo.get_dblistdico(self.db)[2].upper()] for i in listloc]):
                     listloc=self.slocation
-                listloc = explosion(listloc,self.dbfullinfo.get_dbinfo(self.db)[1])
+                listloc = explosion(listloc,self.dbfullinfo.get_dblistdico(self.db)[1])
                 listloc = flat_list(listloc)
                 location_exploded = listloc
 

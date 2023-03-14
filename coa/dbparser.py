@@ -66,16 +66,16 @@ class DBInfo:
             raise CoaDbError('Unknown ' + self.db + '. Available database so far in PyCoa are : ' + str(self.database_name), file=sys.stderr)
         else:
             try:
-                if self.get_dbinfo(namedb)[1] == 'nation': # world wide dba
+                if self.get_dblistdico(namedb)[1] == 'nation': # world wide dba
                     self.db_world = True
                     self.geo = coge.GeoManager('name')
                     self.geo_all = 'world'
                 else: # local db
                     self.db_world = False
-                    self.geo = coge.GeoCountry(_db_list_dict[namedb][0])
-                    if self.get_dbinfo(namedb)[1] == 'region':
+                    self.geo = coge.GeoCountry(self.get_dblistdico(namedb)[0])
+                    if self.get_dblistdico(namedb)[1] == 'region':
                         self.geo_all = self.geo.get_region_list()
-                    elif self.get_dbinfo(namedb)[1] == 'subregion':
+                    elif self.get_dblistdico(namedb)[1] == 'subregion':
                         self.geo_all = self.geo.get_subregion_list()
                     else:
                         CoaError('Granularity problem, neither region or subregion')
@@ -724,6 +724,7 @@ class DBInfo:
                   }
               urlb = 'https://covid19.mhlw.go.jp/public/opendata/'
               urlmaster='https://covid19.mhlw.go.jp/en/'
+
               for k,v in jpn.items():
                   url=urlb+v[0]+".csv"
                   self.separator[url]=','
@@ -759,10 +760,12 @@ class DBInfo:
       if namedb not in ['jhu','jhu-usa','imed','rki']:
             self.return_structured_pandas(self.dbparsed)
 
-  def get_dbinfo(self,key):
+  def get_dblistdico(self,key):
       '''
         Return info concerning the db selected, i.e key, return iso code, granularity,name
       '''
+      if key is None:
+         return  _db_list_dict
       return _db_list_dict[key]
 
   def get_db(self):
@@ -878,9 +881,9 @@ class DBInfo:
          pandas_db =  pandas_db[keep_field]
 
      pandas_db['date'] = pd.to_datetime(pandas_db['date'],errors='coerce',infer_datetime_format=True).dt.date
-     if _db_list_dict[self.db][1] == 'nation' and _db_list_dict[self.db][0] in ['FRA','CYP'] or \
+     if self.get_dblistdico(self.db)[1] == 'nation' and self.get_dblistdico(self.db)[0] in ['FRA','CYP'] or \
          self.db=="spfnational":
-         pandas_db['where'] = _db_list_dict[self.db][2]
+         pandas_db['where'] = self.get_dblistdico(self.db)[2]
      pandas_db = pandas_db.sort_values(['where','date'])
      return pandas_db
 
@@ -951,11 +954,11 @@ class DBInfo:
           location_is_code = True
           self.slocation = list(codename.values())
       else:
-          if _db_list_dict[self.db][1] == 'region' :
+          if self.get_dblistdico(self.db)[1] == 'region' :
               temp = self.geo.get_region_list()[['name_region','code_region']]
               codename=dict(temp.values)
               self.slocation = uniqloc
-          elif _db_list_dict[self.db][1] == 'subregion':
+          elif self.get_dblistdico(self.db)[1] == 'subregion':
               temp = self.geo_all[['code_subregion','name_subregion']]
               codename=dict(temp.loc[temp.code_subregion.isin(uniqloc)].values)
               if self.db == 'jpnmhlw':

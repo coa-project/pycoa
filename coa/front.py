@@ -46,7 +46,7 @@ import coa.covid19 as coco
 from coa.error import *
 import coa._version
 import coa.geo as coge
-from coa.dbinfo import _db_list_dict
+from coa.dbparser import _db_list_dict
 
 output_notebook(hide_banner=True)
 

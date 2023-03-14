@@ -62,6 +62,7 @@ class DBInfo:
         self.db = namedb
         self.database_name = list(_db_list_dict.keys())
         self.db_world = False
+        print(self.get_dblistdico())
         if self.db not in self.database_name:
             raise CoaDbError('Unknown ' + self.db + '. Available database so far in PyCoa are : ' + str(self.database_name), file=sys.stderr)
         else:
@@ -760,7 +761,7 @@ class DBInfo:
       if namedb not in ['jhu','jhu-usa','imed','rki']:
             self.return_structured_pandas(self.dbparsed)
 
-  def get_dblistdico(self,key):
+  def get_dblistdico(self,key=None):
       '''
         Return info concerning the db selected, i.e key, return iso code, granularity,name
       '''

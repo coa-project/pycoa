@@ -17,7 +17,6 @@ The parser class gives a simplier access through an already filled dict of data
 """
 
 import pandas
-from collections import defaultdict
 import numpy as np
 import pandas as pd
 import datetime as dt
@@ -30,8 +29,6 @@ import coa.dbinfo as dbinfo
 import coa.display as codisplay
 from coa.error import *
 from scipy import stats as sps
-from functools import reduce
-import math
 
 class DataBase(object):
    """

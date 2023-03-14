@@ -953,11 +953,11 @@ class DBInfo:
           location_is_code = True
           self.slocation = list(codename.values())
       else:
-          if self.database_type[self.db][1] == 'region' :
+          if _db_list_dict[self.db][1] == 'region' :
               temp = self.geo.get_region_list()[['name_region','code_region']]
               codename=dict(temp.values)
               self.slocation = uniqloc
-          elif self.database_type[self.db][1] == 'subregion':
+          elif _db_list_dict[self.db][1] == 'subregion':
               temp = self.geo_all[['code_subregion','name_subregion']]
               codename=dict(temp.loc[temp.code_subregion.isin(uniqloc)].values)
               if self.db == 'jpnmhlw':

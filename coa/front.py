@@ -40,9 +40,8 @@ import pandas as pd
 from functools import wraps
 import numpy as np
 from bokeh.io import show, output_notebook
-import types
 import datetime as dt
-from coa.tools import kwargs_test, extract_dates, info, testsublist
+from coa.tools import kwargs_test, extract_dates, info
 import coa.covid19 as coco
 from coa.error import *
 import coa._version
@@ -455,27 +454,6 @@ def chartsinput_deco(f):
         if whom != _whom:
             setwhom(whom)
 
-        '''
-        whichproblem=False
-        if input_arg is not None and not input_arg.empty:
-            if not isinstance(input_field, list):
-                if input_field not in input_arg.columns:
-                    whichproblem=True
-            else:
-                if not testsublist(input_field,input_arg.columns):
-                    whichproblem=True
-        else:
-            if not isinstance(which, list):
-                if which not in listwhich():
-                    whichproblem=True
-            else:
-                if not testsublist(which,listwhich()):
-                    whichproblem=True
-
-        if whichproblem:
-            raise CoaKeyError('which option ' + str(which) + ' not supported. '
-                                                            'See listwhich() for list.')
-        '''
         if bypop not in listbypop():
             raise CoaKeyError('The bypop arg should be selected in '+str(listbypop)+' only.')
         if isinstance(input_arg, pd.DataFrame) or isinstance(which, list):

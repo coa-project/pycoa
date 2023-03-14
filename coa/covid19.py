@@ -23,7 +23,7 @@ import pandas as pd
 import datetime as dt
 
 import sys
-from coa.tools import info, verb, kwargs_test, get_local_from_url, check_valid_date, week_to_date
+from coa.tools import verb, kwargs_test
 
 import coa.geo as coge
 import coa.dbinfo as dbinfo
@@ -31,9 +31,6 @@ import coa.display as codisplay
 from coa.error import *
 from scipy import stats as sps
 from functools import reduce
-import re
-import requests
-import datetime
 import math
 
 class DataBase(object):
@@ -47,7 +44,6 @@ class DataBase(object):
          Fill the pandas_datase
         """
         verb("Init of covid19.DataBase()")
-
         self.database_type = dbinfo._db_list_dict
         self.available_options = ['nonneg', 'nofillnan', 'smooth7', 'sumall']
         self.available_keywords = []

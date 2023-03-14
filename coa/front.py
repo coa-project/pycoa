@@ -134,13 +134,20 @@ def listwhom(detailed=False):
     df = df.sort_values(by='Database').reset_index(drop=True)
     try:
         if int(detailed):
-            return df
+            return df.sort_values(by='Database').style.apply(colour_col)
         else:
             return df.Database.tolist()
     except:
         raise CoaKeyError('Waiting for a boolean !')
 
-
+def colour_col (col):
+    colour = 'red'
+    return ['color: %s' % colour
+                if col.name=='Database' else '' for i,x in col.iteritems()]
+def bg_colour_col (col):
+    colour = 'red'
+    return ['background-color: %s' % colour
+                if col.name=='Database' else '' for i,x in col.iteritems()]
 # ----------------------------------------------------------------------
 # --- listwhat() -------------------------------------------------------
 # ----------------------------------------------------------------------

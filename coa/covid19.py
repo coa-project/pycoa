@@ -238,24 +238,19 @@ class DataBase(object):
                         exploded.append(tmp)
                     else:
                         exploded=[tmp]
-                return DataBase.flat_list(exploded)
+                return flat_list(exploded)
             if origlistlistloc != None:
                 dicooriglist={}
                 for i in origlistlistloc:
                     if i[0].upper() in [self.database_type[self.db][0].upper(),self.database_type[self.db][2].upper()]:
-                        dicooriglist[self.database_type[self.db][0]]=explosion(DataBase.flat_list(self.slocation))
+                        dicooriglist[self.database_type[self.db][0]]=explosion(flat_list(self.slocation))
                     else:
                         dicooriglist[','.join(i)]=explosion(i,self.database_type[self.db][1])
-
-                        #print(list(map(lambda x: x.replace(i, ', '.join(DataBase.flat_list(self.slocation))), origlistlistloc)))
-                #dicooriglist={','.join(i):explosion(i,self.database_type[self.db][1]) for i in origlistlistloc}
-                #origlistlistloc = DataBase.flat_list(list(dicooriglist.values()))
-                #location_exploded = origlistlistloc
             else:
                 if any([i.upper() in [self.dbfullinfo.get_dbinfo(self.db)[0].upper(),self.dbfullinfo.get_dbinfo(self.db)[2].upper()] for i in listloc]):
                     listloc=self.slocation
                 listloc = explosion(listloc,self.dbfullinfo.get_dbinfo(self.db)[1])
-                listloc = DataBase.flat_list(listloc)
+                listloc = flat_list(listloc)
                 location_exploded = listloc
 
         def sticky(lname):

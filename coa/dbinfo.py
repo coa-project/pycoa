@@ -58,7 +58,7 @@ class DBInfo:
         '''
         self.dbparsed = pd.DataFrame()
         mydico = {}
-        self.separator={}
+        self.separator = {}
         self.db = namedb
         self.database_name = list(_db_list_dict.keys())
         self.db_world = False
@@ -724,7 +724,6 @@ class DBInfo:
                   }
               urlb = 'https://covid19.mhlw.go.jp/public/opendata/'
               urlmaster='https://covid19.mhlw.go.jp/en/'
-              self.separator = {}
               for k,v in jpn.items():
                   url=urlb+v[0]+".csv"
                   self.separator[url]=','

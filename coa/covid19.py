@@ -22,7 +22,7 @@ import pandas as pd
 import datetime as dt
 
 import sys
-from coa.tools import verb, kwargs_test, flat_list
+from coa.tools import verb, kwargs_test, flat_list, return_nonan_dates_pandas
 
 import coa.geo as coge
 import coa.dbparser as dbparser
@@ -72,24 +72,6 @@ class DataBase(object):
         Return all the available Covid19 database
         '''
         return self.database_name
-
-   def return_nonan_dates_pandas(self, df = None, field = None):
-         ''' Check if for last date all values are nan, if yes check previous date and loop until false'''
-         watchdate = df.date.max()
-         boolval = True
-         j = 0
-         while (boolval):
-             boolval = df.loc[df.date == (watchdate - dt.timedelta(days=j))][field].dropna().empty
-             j += 1
-         df = df.loc[df.date <= watchdate - dt.timedelta(days=j - 1)]
-         boolval = True
-         j = 0
-         watchdate = df.date.min()
-         while (boolval):
-             boolval = df.loc[df.date == (watchdate + dt.timedelta(days=j))][field].dropna().empty
-             j += 1
-         df = df.loc[df.date >= watchdate - dt.timedelta(days=j - 1)]
-         return df
 
    def get_stats(self,**kwargs):
         '''
@@ -146,14 +128,14 @@ class DataBase(object):
             mypycoapd = self.dbfullinfo.get_mainpandas()
             if 'which' not in kwargs:
                 kwargs['which'] = mypycoapd.columns[2]
-            mainpandas = self.return_nonan_dates_pandas(mypycoapd,kwargs['which'])
+            mainpandas = return_nonan_dates_pandas(mypycoapd,kwargs['which'])
             #while for last date all values are nan previous date
         else:
             mypycoapd=kwargs['input']
             if str(type(mypycoapd['where'][0]))=="<class 'list'>":
                 return mypycoapd
             kwargs['which']=kwargs['input_field']
-            mainpandas = self.return_nonan_dates_pandas(mypycoapd,kwargs['input_field'])
+            mainpandas = return_nonan_dates_pandas(mypycoapd,kwargs['input_field'])
             #if isinstance(kwargs['input_field'],list):
             #    for i in kwargs['input_field']:
             #        mainpandas[i] = mypycoapd[i]

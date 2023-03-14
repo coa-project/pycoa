@@ -298,6 +298,24 @@ def flat_list(matrix):
              flatten_matrix.append(sublist)
      return flatten_matrix
 
+def return_nonan_dates_pandas(df = None, field = None):
+   ''' Check if for last date all values are nan, if yes check previous date and loop until false'''
+   watchdate = df.date.max()
+   boolval = True
+   j = 0
+   while (boolval):
+       boolval = df.loc[df.date == (watchdate - dt.timedelta(days=j))][field].dropna().empty
+       j += 1
+   df = df.loc[df.date <= watchdate - dt.timedelta(days=j - 1)]
+   boolval = True
+   j = 0
+   watchdate = df.date.min()
+   while (boolval):
+       boolval = df.loc[df.date == (watchdate + dt.timedelta(days=j))][field].dropna().empty
+       j += 1
+   df = df.loc[df.date >= watchdate - dt.timedelta(days=j - 1)]
+   return df
+
 class dotdict(dict):
     """dot.notation access to dictionary attributes"""
     __getattr__ = dict.get

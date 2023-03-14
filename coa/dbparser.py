@@ -62,7 +62,6 @@ class DBInfo:
         self.db = namedb
         self.database_name = list(_db_list_dict.keys())
         self.db_world = False
-        print(self.get_dblistdico())
         if self.db not in self.database_name:
             raise CoaDbError('Unknown ' + self.db + '. Available database so far in PyCoa are : ' + str(self.database_name), file=sys.stderr)
         else:

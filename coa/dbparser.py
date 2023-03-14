@@ -60,10 +60,10 @@ class DBInfo:
         mydico = {}
         self.separator = {}
         self.db = namedb
-        self.database_name = list(_db_list_dict.keys())
         self.db_world = False
-        if self.db not in self.database_name:
-            raise CoaDbError('Unknown ' + self.db + '. Available database so far in PyCoa are : ' + str(self.database_name), file=sys.stderr)
+        alldb  = list(_db_list_dict.keys())
+        if self.db not in alldb:
+            raise CoaDbError('Unknown ' + namedb + '. Available database so far in PyCoa are : ' + str(alldb), file=sys.stderr)
         else:
             try:
                 if self.get_dblistdico(namedb)[1] == 'nation': # world wide dba

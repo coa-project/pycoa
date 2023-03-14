@@ -496,7 +496,7 @@ class DataBase(object):
            pandy.to_excel(savename+'.xlsx',index=False, na_rep='NAN')
        elif saveformat == 'csv':
            pandy.to_csv(savename+'.csv', encoding='utf-8', index=False, float_format='%.4f',na_rep='NAN')
-           
+
    ## https://www.kaggle.com/freealf/estimation-of-rt-from-cases
    def smooth_cases(self,cases):
         new_cases = cases

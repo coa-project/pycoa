@@ -280,14 +280,14 @@ def setwhom(base):
     By default, the listbase()[0] is the default base used in other
     functions.
     """
-    if '_db' not in globals():
-        global _db, _cocoplot, _whom
+    if base not in listwhom():
+        raise CoaDbError(base + ' is not a supported database. '
+                                'See pycoa.listbase() for the full list.')
     else:
-        if base not in listwhom():
-            raise CoaDbError(base + ' is not a supported database. '
-                                    'See pycoa.listbase() for the full list.')
-    _db, _cocoplot = coco.DataBase.factory(base)
-    _whom = base
+        if '_db' not in globals():
+            global _db, _cocoplot, _whom
+        _db, _cocoplot = coco.DataBase.factory(base)
+        _whom = base
 
 
 # ----------------------------------------------------------------------

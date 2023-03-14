@@ -467,23 +467,6 @@ class DataBase(object):
             #base.drop([col for col in base.columns if 'drop' in col], axis=1, inplace=True)
         return base
 
-   def appender(self,**kwargs):
-      '''
-      Append two or more pycoa pandas from get_stats operation
-      'coapandas': list (min 2D) of pandas from stats
-      '''
-
-      coapandas = kwargs.get('coapandas', None)
-      if coapandas is None or not isinstance(coapandas, list) or len(coapandas)<=1:
-          raise CoaKeyError('coapandas value must be at least a list of 2 elements ... ')
-
-      coapandas = [ p.rename(columns={p.columns[2]:'cases'}) for p in coapandas ]
-      m = pd.concat(coapandas).reset_index(drop=True)
-      #m['clustername']=m.m('where')['clustername'].fillna(method='bfill')
-      #m['codelocation']=m.groupby('where')['codelocation'].fillna(method='bfill')
-      m=m.drop(columns=['codelocation','clustername'])
-      return fill_missing_dates(m)
-
    def saveoutput(self,**kwargs):
        '''
        saveoutput pycoas pandas as an  output file selected by output argument
@@ -513,7 +496,7 @@ class DataBase(object):
            pandy.to_excel(savename+'.xlsx',index=False, na_rep='NAN')
        elif saveformat == 'csv':
            pandy.to_csv(savename+'.csv', encoding='utf-8', index=False, float_format='%.4f',na_rep='NAN')
-
+           
    ## https://www.kaggle.com/freealf/estimation-of-rt-from-cases
    def smooth_cases(self,cases):
         new_cases = cases

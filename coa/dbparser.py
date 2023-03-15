@@ -117,7 +117,7 @@ class DBInfo:
                drop_columns=['Province/State','Lat','Long']
                drop_field={'where':['Diamond Princess']}
                rename.update(self.original_to_available_keywords_dico())
-               self.return_jhu_pandas(namedb,rename_columns=rename,drop_columns=drop_columns,drop_field=drop_field)
+               self.column_date_csv_parser(namedb,rename_columns=rename,drop_columns=drop_columns,drop_field=drop_field)
           elif namedb == 'jhu-usa':
                info('JHU USA aka Johns Hopkins USA database selected ...')
                base_url='https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/'+\
@@ -138,7 +138,7 @@ class DBInfo:
                drop_columns=['UID','iso2','iso3','code3','FIPS','Admin2','Country_Region','Lat','Long_','Combined_Key']
                drop_field={'where':['American Samoa','Diamond Princess','Grand Princess','Guam',\
                                     'Northern Mariana Islands','Puerto Rico','Virgin Islands']}
-               self.return_jhu_pandas(namedb, rename_columns = rename,drop_columns=drop_columns,drop_field=drop_field)
+               self.column_date_csv_parser(namedb, rename_columns = rename,drop_columns=drop_columns,drop_field=drop_field)
           elif namedb == 'imed':
                    info('Greece, imed database selected ...')
                    imed = {
@@ -156,7 +156,7 @@ class DBInfo:
                    rename={'county_normalized':'where'}
                    rename.update(self.original_to_available_keywords_dico())
                    drop_columns=['Γεωγραφικό Διαμέρισμα','Περιφέρεια','county','pop_11']
-                   self.return_jhu_pandas(namedb, rename_columns = rename,drop_columns=drop_columns)
+                   self.column_date_csv_parser(namedb, rename_columns = rename,drop_columns=drop_columns)
           elif namedb == 'rki':
               info('DEU, Robert Koch Institut data selected ...')
               rki = {
@@ -172,7 +172,7 @@ class DBInfo:
               self.pandasdb = pd.DataFrame(rki,index=['Original name','Description','URL','Homepage'])
               drop_field={'where':['sum_'+self.get_url_original_keywords()[url][0]]}
               rename={'index':'where'}
-              self.return_jhu_pandas(namedb,rename_columns=rename,drop_field=drop_field)
+              self.column_date_csv_parser(namedb,rename_columns=rename,drop_field=drop_field)
           elif namedb == 'spf':
               info('SPF aka Sante Publique France database selected (France departement granularity) ...')
               info('... 7 SPF databases will be parsed ...')
@@ -235,7 +235,7 @@ class DBInfo:
               for idx,url in enumerate(lurl):
                   keep = ['date','where'] + self.get_url_original_keywords()[url]
                   separator = self.get_url_separator(url)
-                  list_spf.append(self.new_csv2pandas(url=url,rename_columns = rename, separator = separator, constraints = constraints, cast = cast, keep_field = keep))
+                  list_spf.append(self.row_date_csv_parser(url=url,rename_columns = rename, separator = separator, constraints = constraints, cast = cast, keep_field = keep))
               result=pd.DataFrame()
               for i in list_spf:
                   if result.empty:
@@ -284,7 +284,7 @@ class DBInfo:
               rename=self.original_to_available_keywords_dico()
               separator=self.get_url_separator(url)
               keep = ['date'] + self.get_url_original_keywords()[url]
-              spfnat = self.new_csv2pandas(url=url,rename_columns = rename, separator = separator,keep_field = keep)
+              spfnat = self.row_date_csv_parser(url=url,rename_columns = rename, separator = separator,keep_field = keep)
               colcast=[i for i in self.get_available_keywords()]
               spfnat[colcast]=pd.to_numeric(spfnat[colcast].stack(),errors = 'coerce').unstack()
               self.dbparsed = spfnat
@@ -424,7 +424,7 @@ class DBInfo:
               rename.update(self.original_to_available_keywords_dico())
               separator=self.get_url_separator(url)
               keep = ['date','where','iso_code'] + self.get_url_original_keywords()[url]
-              owid = self.new_csv2pandas(url=url,rename_columns = rename, separator = separator,keep_field = keep)
+              owid = self.row_date_csv_parser(url=url,rename_columns = rename, separator = separator,keep_field = keep)
               self.dbparsed = owid
           elif namedb == 'moh':
               info('Malaysia moh covid19-public database selected ...')
@@ -456,7 +456,7 @@ class DBInfo:
               for url in lurl:
                   keep = ['date','where'] + self.get_url_original_keywords()[url]
                   separator=self.get_url_separator(url)
-                  list_moh.append(self.new_csv2pandas(url=url,rename_columns = rename, separator = separator, constraints = constraints, cast = cast, keep_field = keep))
+                  list_moh.append(self.row_date_csv_parser(url=url,rename_columns = rename, separator = separator, constraints = constraints, cast = cast, keep_field = keep))
               result=pd.DataFrame()
               for i in list_moh:
                   if result.empty:
@@ -486,7 +486,7 @@ class DBInfo:
               url=lurl[0]
               separator=self.get_url_separator(url)
               keep = ['date','where'] + self.get_url_original_keywords()[url]
-              self.dbparsed = self.new_csv2pandas(url=url,rename_columns = rename, separator = separator ,keep_field = keep)
+              self.dbparsed = self.row_date_csv_parser(url=url,rename_columns = rename, separator = separator ,keep_field = keep)
           elif namedb == 'escovid19data':
               info('ESP, EsCovid19Data ...')
               esco = {
@@ -517,7 +517,7 @@ class DBInfo:
               rename.update(self.original_to_available_keywords_dico())
               separator=self.get_url_separator(url)
               keep = ['date','where'] + self.get_url_original_keywords()[url]
-              esp_data = self.new_csv2pandas(url=url,rename_columns = rename, separator = separator,keep_field = keep)
+              esp_data = self.row_date_csv_parser(url=url,rename_columns = rename, separator = separator,keep_field = keep)
               esp_data['where']=esp_data['where'].astype(str).str.zfill(2)
               for w in list(esp_data.columns):
                   if w not in ['date','where']:
@@ -544,7 +544,7 @@ class DBInfo:
               rename.update(self.original_to_available_keywords_dico())
               separator=self.get_url_separator(url)
               keep = ['date','where'] + self.get_url_original_keywords()[url]
-              beldata = self.new_csv2pandas(url=url,rename_columns = rename, separator = separator,keep_field = keep)
+              beldata = self.row_date_csv_parser(url=url,rename_columns = rename, separator = separator,keep_field = keep)
               colcast=[i for i in self.get_available_keywords()]
               beldata[colcast]=pd.to_numeric(beldata[colcast].stack(),errors = 'coerce').unstack()
               self.dbparsed = beldata
@@ -595,7 +595,7 @@ class DBInfo:
                   separator=self.get_url_separator(url)
                   if idx==3:
                       constraints = {'Lineage': 'B.1.617.2'}
-                  list_phe.append(self.new_csv2pandas(url=url,rename_columns = rename, constraints=constraints, separator = separator,keep_field = keep))
+                  list_phe.append(self.row_date_csv_parser(url=url,rename_columns = rename, constraints=constraints, separator = separator,keep_field = keep))
               result=pd.DataFrame()
               for i in list_phe:
                   if result.empty:
@@ -622,7 +622,7 @@ class DBInfo:
               url=lurl[0]
               keep = ['date','where'] + self.get_url_original_keywords()[url]
               separator=self.get_url_separator(url)
-              self.dbparsed = self.new_csv2pandas(url=url,rename_columns = rename, separator = separator,keep_field = keep)
+              self.dbparsed = self.row_date_csv_parser(url=url,rename_columns = rename, separator = separator,keep_field = keep)
           elif namedb == 'risklayer':
               info('EUR, Who Europe from RiskLayer ...')
               risk = {
@@ -642,7 +642,7 @@ class DBInfo:
               keep = ['date','where'] + self.get_url_original_keywords()[url]
               rename.update(self.original_to_available_keywords_dico())
               separator=self.get_url_separator(url)
-              self.dbparsed = self.new_csv2pandas(url=url,rename_columns = rename, separator = separator,keep_field = keep)
+              self.dbparsed = self.row_date_csv_parser(url=url,rename_columns = rename, separator = separator,keep_field = keep)
           elif namedb == 'europa':
               info('EUR, Rationale for the JRC COVID-19 website - data monitoring and national measures ...')
               euro = {
@@ -668,7 +668,7 @@ class DBInfo:
                       'Mainland','NOT SPECIFIED','Obalno-kraške','Osrednjeslovenske','Podravske','Pomurske','Posavske','Primorsko-notranjske',\
                       'Repatriierte','Savinjske','West North','Zasavske']}
               drop_field['iso_code']=['WWW']
-              self.dbparsed = self.new_csv2pandas(url=url,rename_columns = rename, separator = separator, drop_field=drop_field, keep_field = keep)
+              self.dbparsed = self.row_date_csv_parser(url=url,rename_columns = rename, separator = separator, drop_field=drop_field, keep_field = keep)
           elif namedb == 'govcy':
               info('Cyprus, govcy database selected ...')
               mi = {
@@ -694,7 +694,7 @@ class DBInfo:
               url=lurl[0]
               separator=self.get_url_separator(url)
               keep = ['date'] + self.get_url_original_keywords()[url]
-              self.dbparsed = self.new_csv2pandas(url=url,rename_columns = rename, separator = separator,keep_field = keep)
+              self.dbparsed = self.row_date_csv_parser(url=url,rename_columns = rename, separator = separator,keep_field = keep)
           elif namedb == 'mpoxgh':
               info('MonkeyPoxGlobalHealth selected...')
               url='https://raw.githubusercontent.com/owid/monkeypox/main/owid-monkeypox-data.csv'
@@ -711,7 +711,7 @@ class DBInfo:
               rename = {'Date_confirmation':'date','iso_code':'where'}
               rename.update(self.original_to_available_keywords_dico())
               separator=self.get_url_separator(url)
-              self.dbparsed = self.new_csv2pandas(url=url,rename_columns = rename, separator = separator, keep_field = keep)
+              self.dbparsed = self.row_date_csv_parser(url=url,rename_columns = rename, separator = separator, keep_field = keep)
           elif namedb == 'jpnmhlw':
               info('JPN, Ministry of wealth, labor and welfare')
               jpn = {
@@ -756,9 +756,6 @@ class DBInfo:
               self.dbparsed = df_japan
       else:
           raise CoaKeyError('Error in the database selected: '+db+'.Please check !')
-
-      if namedb not in ['jhu','jhu-usa','imed','rki']:
-            self.return_structured_pandas(self.dbparsed)
 
   def get_dblistdico(self,key=None):
       '''
@@ -815,6 +812,12 @@ class DBInfo:
       '''
       return self.pandasdb.loc['Description']
 
+  def get_dbdescription(self):
+      '''
+           Return available information concerning the db selected
+      '''
+      return self.pandasdb
+
   def get_url_original_keywords(self):
       '''
            Return dico with keys=url and values=[original keywords]
@@ -843,7 +846,7 @@ class DBInfo:
           return ';'
       return self.separator[url]
 
-  def new_csv2pandas(self,**kwargs):
+  def row_date_csv_parser(self,**kwargs):
      '''
         Parse and convert the database cvs file to a pandas structure
      '''
@@ -885,14 +888,14 @@ class DBInfo:
          self.db=="spfnational":
          pandas_db['where'] = self.get_dblistdico(self.db)[2]
      pandas_db = pandas_db.sort_values(['where','date'])
-     return pandas_db
+     self.restructured_pandas(pandas_db)
 
-  def return_structured_pandas(self,mypandas,**kwargs):
+  def restructured_pandas(self,mypandas,**kwargs):
       '''
       Return the mainpandas core of the PyCoA structure
       '''
       kwargs_test(kwargs,['columns_skipped'],
-          'Bad args used in the return_structured_pandas function.')
+          'Bad args used in the restructured_pandas function.')
       columns_skipped = kwargs.get('columns_skipped', None)
       if self.db_world and self.db not in ['govcy','spfnational','mpoxgh']:
           not_UN_nation_dict=['Kosovo','Serbia']
@@ -1064,7 +1067,7 @@ class DBInfo:
     self.mainpandas = self.mainpandas.reset_index(drop=True)
     return self.mainpandas
 
-  def return_jhu_pandas(self,db,**kwargs):
+  def column_date_csv_parser(self,db,**kwargs):
       ''' For center for Systems Science and Engineering (CSSE) at Johns Hopkins University
           COVID-19 Data Repository by the see homepage: https://github.com/CSSEGISandData/COVID-19
           return a structure : pandas where - date - keywords

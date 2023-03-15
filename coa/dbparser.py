@@ -17,8 +17,15 @@ import collections
 import random
 
 from coa.error import *
-from coa.tools import info, verb, kwargs_test, get_local_from_url,\
-                      week_to_date, fill_missing_dates, flat_list
+from coa.tools import (
+    info,
+    verb,
+    kwargs_test,
+    get_local_from_url,
+    week_to_date,
+    fill_missing_dates,
+    flat_list
+)
 import coa.geo as coge
 # Known db
 
@@ -757,6 +764,9 @@ class DBInfo:
       else:
           raise CoaKeyError('Error in the database selected: '+db+'.Please check !')
 
+      if namedb not in ['jhu','jhu-usa','imed','rki']:
+            self.restructured_pandas(self.dbparsed)
+
   def get_dblistdico(self,key=None):
       '''
         Return info concerning the db selected, i.e key, return iso code, granularity,name
@@ -846,6 +856,115 @@ class DBInfo:
           return ';'
       return self.separator[url]
 
+  def column_date_csv_parser(self,db,**kwargs):
+    ''' For center for Systems Science and Engineering (CSSE) at Johns Hopkins University
+        COVID-19 Data Repository by the see homepage: https://github.com/CSSEGISandData/COVID-19
+        return a structure : pandas where - date - keywords
+        for jhu where are countries (where uses geo standard)
+        for jhu-usa where are Province_State (where uses geo standard)
+        '''
+    # previous are default for actual jhu db
+    rename_columns = kwargs.get('rename_columns', None)
+    drop_columns = kwargs.get('drop_columns', None)
+    drop_field = kwargs.get('drop_field', None)
+    self.available_keywords = []
+    pandas_list = []
+    lurl=list(dict.fromkeys(self.get_url()))
+    mypd = pd.DataFrame()
+    pandas_list = []
+    for url in lurl:
+        self.available_keywords.append(self.get_url_original_keywords()[url])
+        separator = self.get_url_separator(url)
+        mypd = pd.read_csv(get_local_from_url(url,7200), sep = separator) # cached for 2 hours
+        if rename_columns:
+            if db == 'rki':
+                mypd = mypd.set_index('time_iso8601').T.reset_index().rename(columns=rename_columns)
+            else:
+                mypd = mypd.rename(columns=rename_columns)
+        if drop_columns:
+            mypd = mypd.drop(columns=drop_columns)
+        mypd = mypd.melt(id_vars=['where'],var_name="date",value_name=self.get_url_original_keywords()[url][0])
+        if drop_field:
+          for key,val in drop_field.items():
+              mypd =  mypd[~mypd[key].isin(val)]
+        mypd=mypd.groupby(['where','date']).sum().reset_index()
+        pandas_list.append(mypd)
+    self.available_keywords = flat_list(self.available_keywords)
+    uniqloc = list(pandas_list[0]['where'].unique())
+    oldloc = uniqloc
+    codedico={}
+    toremove = None
+    newloc = None
+    location_is_code = False
+    if self.db_world:
+      d_loc_s = collections.OrderedDict(zip(uniqloc,self.geo.to_standard(uniqloc,output='list',db=self.get_db(),interpret_region=True)))
+      self.slocation = list(d_loc_s.values())
+      g=coge.GeoManager('iso3')
+      codename = collections.OrderedDict(zip(self.slocation,g.to_standard(self.slocation,output='list',db=self.get_db(),interpret_region=True)))
+    else:
+      if self.get_dbinfo(db)[1] == 'subregion':
+          pdcodename = self.geo.get_subregion_list()
+          self.slocation = uniqloc
+          codename = collections.OrderedDict(zip(self.slocation,list(pdcodename.loc[pdcodename.code_subregion.isin(self.slocation)]['name_subregion'])))
+          if db == 'jhu-usa':
+              d_loc_s = collections.OrderedDict(zip(uniqloc,list(pdcodename.loc[pdcodename.name_subregion.isin(uniqloc)]['code_subregion'])))
+              self.slocation = list(d_loc_s.keys())
+              codename = d_loc_s
+          if db == 'rki':
+              d_loc_s = collections.OrderedDict(zip(uniqloc,list(pdcodename.loc[pdcodename.code_subregion.isin(uniqloc)]['name_subregion'])))
+              self.slocation = list(d_loc_s.values())
+              codename = d_loc_s
+              location_is_code = True
+              def notuse():
+                  count_values=collections.Counter(d_loc_s.values())
+                  duplicates_location = list({k:v for k,v in count_values.items() if v>1}.keys())
+                  def findkeywithvalue(dico,what):
+                      a=[]
+                      for k,v in dico.items():
+                          if v == what:
+                              a.append(k)
+                      return a
+                  codedupli={i:findkeywithvalue(d_loc_s,i) for i in duplicates_location}
+      elif self.get_dbinfo(db)[1] == 'region':
+          codename = self.geo.get_data().set_index('name_region')['code_region'].to_dict()
+          self.slocation = list(codename.keys())
+      else:
+          raise CoaTypeError('Not a region nors ubregion ... sorry but what is it ?')
+
+    result = reduce(lambda x, y: pd.merge(x, y, on = ['where','date']), pandas_list)
+
+    if location_is_code:
+      result['codelocation'] = result['where']
+      result['where'] = result['where'].map(codename)
+    else:
+      if db == 'jhu':
+          result['where'] = result['where'].map(d_loc_s)
+      result['codelocation'] = result['where'].map(codename)
+    result = result.loc[result['where'].isin(self.slocation)]
+    tmp = pd.DataFrame()
+    if 'Kosovo' in uniqloc:
+      #Kosovo is Serbia ! with geo.to_standard
+      tmp=(result.loc[result['where'].isin(['Serbia'])]).groupby('date').sum().reset_index()
+      tmp['where'] = 'Serbia'
+      tmp['codelocation'] = 'SRB'
+      kw = [i for i in self.available_keywords]
+      colpos=['where', 'date'] + kw + ['codelocation']
+      tmp = tmp[colpos]
+      result = result.loc[~result['where'].isin(['Serbia'])]
+      result = pd.concat([result,tmp])
+
+    result = result.copy()
+    result.loc[:,'date'] = pd.to_datetime(result['date'],errors='coerce').dt.date
+    result = result.sort_values(by=['where','date'])
+    result = result.reset_index(drop=True)
+    if db == 'jhu-usa':
+      col=result.columns.tolist()
+      ncol=col[:2]+col[3:]+[col[2]]
+      result=result[ncol]
+      self.available_keywords+=['Population']
+    self.mainpandas = fill_missing_dates(result)
+    self.dates  = self.mainpandas['date']
+
   def row_date_csv_parser(self,**kwargs):
      '''
         Parse and convert the database cvs file to a pandas structure
@@ -888,7 +1007,7 @@ class DBInfo:
          self.db=="spfnational":
          pandas_db['where'] = self.get_dblistdico(self.db)[2]
      pandas_db = pandas_db.sort_values(['where','date'])
-     self.restructured_pandas(pandas_db)
+     return pandas_db
 
   def restructured_pandas(self,mypandas,**kwargs):
       '''
@@ -995,7 +1114,8 @@ class DBInfo:
       if self.db == 'owid':
           onlyowid['codelocation'] = onlyowid['where']
           mypandas = pd.concat([mypandas,onlyowid])
-      self.mainpandas  = mypandas
+
+      self.mainpandas = fill_missing_dates(result)
       self.dates  = self.mainpandas['date']
 
   def get_mainpandas(self,**kwargs):
@@ -1066,112 +1186,3 @@ class DBInfo:
          return filtered_pandas
     self.mainpandas = self.mainpandas.reset_index(drop=True)
     return self.mainpandas
-
-  def column_date_csv_parser(self,db,**kwargs):
-      ''' For center for Systems Science and Engineering (CSSE) at Johns Hopkins University
-          COVID-19 Data Repository by the see homepage: https://github.com/CSSEGISandData/COVID-19
-          return a structure : pandas where - date - keywords
-          for jhu where are countries (where uses geo standard)
-          for jhu-usa where are Province_State (where uses geo standard)
-          '''
-      # previous are default for actual jhu db
-      rename_columns = kwargs.get('rename_columns', None)
-      drop_columns = kwargs.get('drop_columns', None)
-      drop_field = kwargs.get('drop_field', None)
-      self.available_keywords = []
-      pandas_list = []
-      lurl=list(dict.fromkeys(self.get_url()))
-      mypd = pd.DataFrame()
-      pandas_list = []
-      for url in lurl:
-          self.available_keywords.append(self.get_url_original_keywords()[url])
-          separator = self.get_url_separator(url)
-          mypd = pd.read_csv(get_local_from_url(url,7200), sep = separator) # cached for 2 hours
-          if rename_columns:
-              if db == 'rki':
-                  mypd = mypd.set_index('time_iso8601').T.reset_index().rename(columns=rename_columns)
-              else:
-                  mypd = mypd.rename(columns=rename_columns)
-          if drop_columns:
-              mypd = mypd.drop(columns=drop_columns)
-          mypd = mypd.melt(id_vars=['where'],var_name="date",value_name=self.get_url_original_keywords()[url][0])
-          if drop_field:
-            for key,val in drop_field.items():
-                mypd =  mypd[~mypd[key].isin(val)]
-          mypd=mypd.groupby(['where','date']).sum().reset_index()
-          pandas_list.append(mypd)
-      self.available_keywords = flat_list(self.available_keywords)
-      uniqloc = list(pandas_list[0]['where'].unique())
-      oldloc = uniqloc
-      codedico={}
-      toremove = None
-      newloc = None
-      location_is_code = False
-      if self.db_world:
-        d_loc_s = collections.OrderedDict(zip(uniqloc,self.geo.to_standard(uniqloc,output='list',db=self.get_db(),interpret_region=True)))
-        self.slocation = list(d_loc_s.values())
-        g=coge.GeoManager('iso3')
-        codename = collections.OrderedDict(zip(self.slocation,g.to_standard(self.slocation,output='list',db=self.get_db(),interpret_region=True)))
-      else:
-        if self.get_dbinfo(db)[1] == 'subregion':
-            pdcodename = self.geo.get_subregion_list()
-            self.slocation = uniqloc
-            codename = collections.OrderedDict(zip(self.slocation,list(pdcodename.loc[pdcodename.code_subregion.isin(self.slocation)]['name_subregion'])))
-            if db == 'jhu-usa':
-                d_loc_s = collections.OrderedDict(zip(uniqloc,list(pdcodename.loc[pdcodename.name_subregion.isin(uniqloc)]['code_subregion'])))
-                self.slocation = list(d_loc_s.keys())
-                codename = d_loc_s
-            if db == 'rki':
-                d_loc_s = collections.OrderedDict(zip(uniqloc,list(pdcodename.loc[pdcodename.code_subregion.isin(uniqloc)]['name_subregion'])))
-                self.slocation = list(d_loc_s.values())
-                codename = d_loc_s
-                location_is_code = True
-                def notuse():
-                    count_values=collections.Counter(d_loc_s.values())
-                    duplicates_location = list({k:v for k,v in count_values.items() if v>1}.keys())
-                    def findkeywithvalue(dico,what):
-                        a=[]
-                        for k,v in dico.items():
-                            if v == what:
-                                a.append(k)
-                        return a
-                    codedupli={i:findkeywithvalue(d_loc_s,i) for i in duplicates_location}
-        elif self.get_dbinfo(db)[1] == 'region':
-            codename = self.geo.get_data().set_index('name_region')['code_region'].to_dict()
-            self.slocation = list(codename.keys())
-        else:
-            raise CoaTypeError('Not a region nors ubregion ... sorry but what is it ?')
-
-      result = reduce(lambda x, y: pd.merge(x, y, on = ['where','date']), pandas_list)
-
-      if location_is_code:
-        result['codelocation'] = result['where']
-        result['where'] = result['where'].map(codename)
-      else:
-        if db == 'jhu':
-            result['where'] = result['where'].map(d_loc_s)
-        result['codelocation'] = result['where'].map(codename)
-      result = result.loc[result['where'].isin(self.slocation)]
-      tmp = pd.DataFrame()
-      if 'Kosovo' in uniqloc:
-        #Kosovo is Serbia ! with geo.to_standard
-        tmp=(result.loc[result['where'].isin(['Serbia'])]).groupby('date').sum().reset_index()
-        tmp['where'] = 'Serbia'
-        tmp['codelocation'] = 'SRB'
-        kw = [i for i in self.available_keywords]
-        colpos=['where', 'date'] + kw + ['codelocation']
-        tmp = tmp[colpos]
-        result = result.loc[~result['where'].isin(['Serbia'])]
-        result = pd.concat([result,tmp])
-
-      result = result.copy()
-      result.loc[:,'date'] = pd.to_datetime(result['date'],errors='coerce').dt.date
-      result = result.sort_values(by=['where','date'])
-      result = result.reset_index(drop=True)
-      if db == 'jhu-usa':
-        col=result.columns.tolist()
-        ncol=col[:2]+col[3:]+[col[2]]
-        result=result[ncol]
-        self.available_keywords+=['Population']
-      self.mainpandas = fill_missing_dates(result)
-      self.dates  = self.mainpandas['date']

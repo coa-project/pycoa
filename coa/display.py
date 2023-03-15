@@ -15,11 +15,14 @@ About :
 An interface module to easily plot pycoa data with bokeh
 
 """
-
-from coa.tools import kwargs_test, extract_dates, verb, fill_missing_dates
+from coa.tools import (
+    kwargs_test,
+    extract_dates,
+    verb,
+    fill_missing_dates
+)
 from coa.error import *
 from coa.dbparser import _db_list_dict
-
 import math
 import pandas as pd
 import geopandas as gpd
@@ -33,28 +36,70 @@ import base64
 from IPython import display
 import copy
 import locale
-
-from bokeh.models import ColumnDataSource, TableColumn, DataTable, ColorBar, LogTicker,\
-    HoverTool, CrosshairTool, BasicTicker, GeoJSONDataSource, LinearColorMapper, LogColorMapper,Label, \
-    PrintfTickFormatter, BasicTickFormatter, NumeralTickFormatter, CustomJS, CustomJSHover, Select, \
-    Range1d, DatetimeTickFormatter, Legend, LegendItem, Text
-from bokeh.models.widgets import Tabs, Panel, Button, TableColumn, Toggle
+from bokeh.models import (
+    ColumnDataSource,
+    TableColumn,
+    DataTable,
+    ColorBar,
+    LogTicker,
+    HoverTool,
+    CrosshairTool,
+    BasicTicker,
+    GeoJSONDataSource,
+    LinearColorMapper,
+    LogColorMapper,
+    Label,
+    PrintfTickFormatter,
+    BasicTickFormatter,
+    NumeralTickFormatter,
+    CustomJS,
+    CustomJSHover,
+    Select,
+    Range1d,
+    DatetimeTickFormatter,
+    Legend,
+    LegendItem,
+    Text
+)
+from bokeh.models.widgets import (
+    Tabs,
+    Panel,
+    Button,
+    TableColumn,
+    Toggle
+)
 from bokeh.plotting import figure
-from bokeh.layouts import row, column, gridplot
-from bokeh.palettes import Category10, Category20, Viridis256
+from bokeh.layouts import (
+    row,
+    column,
+    gridplot
+)
+from bokeh.palettes import (
+    Category10,
+    Category20,
+    Viridis256
+)
 from bokeh.models import Title
 
 from bokeh.io import export_png
 from bokeh import events
 from bokeh.models.widgets import DateSlider
-from bokeh.models import LabelSet, WMTSTileSource
-from bokeh.transform import transform, cumsum
-
+from bokeh.models import (
+    LabelSet,
+    WMTSTileSource
+)
+from bokeh.transform import (
+    transform,
+    cumsum
+)
 import shapely.geometry as sg
 
 import branca.colormap
 from branca.colormap import LinearColormap
-from branca.element import Element, Figure
+from branca.element import (
+    Element,
+    Figure
+)
 import folium
 from PIL import Image
 import coa.geo as coge
@@ -62,10 +107,12 @@ import matplotlib.pyplot as plt
 import datetime as dt
 import bisect
 from functools import wraps
-from IPython.core.display import display, HTML
+from IPython.core.display import (
+    display,
+    HTML
+)
 
 width_height_default = [500, 380]
-
 MAXCOUNTRIESDISPLAYED = 24
 class CocoDisplay:
     def __init__(self, db=None, geo = None):

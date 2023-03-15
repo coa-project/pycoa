@@ -39,9 +39,16 @@ Basic usage
 import pandas as pd
 from functools import wraps
 import numpy as np
-from bokeh.io import show, output_notebook
+from bokeh.io import (
+    show,
+    output_notebook,
+)
 import datetime as dt
-from coa.tools import kwargs_test, extract_dates, info
+from coa.tools import (
+    kwargs_test,
+    extract_dates,
+    info,
+)
 import coa.covid19 as coco
 from coa.error import *
 import coa._version
@@ -134,9 +141,9 @@ def listwhom(detailed=False):
     df = df.sort_values(by='Database').reset_index(drop=True)
     try:
         if int(detailed):
-            return df.sort_values(by='Database').style.apply(colour_col)
+            return df#.style.set_table_styles([{'selector' : '','props' : [('border','5px solid green')]}])
         else:
-            return df.Database.tolist()
+            return list(df['Database'])
     except:
         raise CoaKeyError('Waiting for a boolean !')
 

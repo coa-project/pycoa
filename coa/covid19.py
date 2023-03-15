@@ -22,8 +22,12 @@ import pandas as pd
 import datetime as dt
 
 import sys
-from coa.tools import verb, kwargs_test, flat_list, return_nonan_dates_pandas
-
+from coa.tools import (
+    verb,
+    kwargs_test,
+    flat_list,
+    return_nonan_dates_pandas,
+)
 import coa.geo as coge
 import coa.dbparser as dbparser
 import coa.display as codisplay
@@ -44,6 +48,7 @@ class DataBase(object):
         self.database_type = dbparser._db_list_dict
         self.available_options = ['nonneg', 'nofillnan', 'smooth7', 'sumall']
         self.db = db_name
+        print("db_name",db_name)
         self.dbfullinfo = dbparser.DBInfo(db_name)
         self.slocation = self.dbfullinfo.get_locations()
         self.geo = self.dbfullinfo.get_geo()

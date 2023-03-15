@@ -1115,7 +1115,7 @@ class DBInfo:
           onlyowid['codelocation'] = onlyowid['where']
           mypandas = pd.concat([mypandas,onlyowid])
 
-      self.mainpandas = fill_missing_dates(result)
+      self.mainpandas = fill_missing_dates(mypandas)
       self.dates  = self.mainpandas['date']
 
   def get_mainpandas(self,**kwargs):

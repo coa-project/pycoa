@@ -32,7 +32,7 @@ from getpass import getuser
 from zlib import crc32
 from urllib.parse import urlparse
 import unidecode
-
+import datetime as dt
 from coa.error import CoaKeyError, CoaTypeError, CoaConnectionError, CoaNotManagedError
 
 # testing if coadata is available

@@ -63,6 +63,9 @@ class DataBase(object):
        datab = DataBase(db_name)
        return  datab, datab.get_display()
 
+   def get_parserdb(self):
+       return self.dbfullinfo
+
    def get_fulldb(self):
       return self.dbfullinfo.get_mainpandas()
       #.style.set_table_styles([{'selector' : '','props' : [('border','5px solid green')]}])

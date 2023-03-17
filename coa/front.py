@@ -31,7 +31,7 @@ Basic usage
                      # daily...)
     cf.plot(option='sumall') # return the cumulative plot for all countries
                      # for default which keyword. See cf.listwhich() and
-                     # and other cf.list**() function (see below)
+                    # and other cf.list**() function (see below)
 
 """
 
@@ -218,7 +218,7 @@ def listwhich():
     if  '_db' not in globals():
         raise CoaKeyError('setwhom MUST be defined first !')
     else:
-        return _db.get_available_keys_words()
+        return _db.get_parserdb().get_available_keywords()
 
 
 
@@ -319,14 +319,22 @@ def getwhom():
 # --- get(**kwargs) ----------------------------------------------------
 # ----------------------------------------------------------------------
 
-def getinfo(which):
+def getinfo(which=None):
     """
         Return keyword_definition for the db selected
     """
     if  '_db' not in globals():
         raise CoaKeyError('setwhom MUST be defined first !')
     else:
-        print(_db.get_keyword_definition(which),'\nurl:', _db.get_keyword_url(which)[0],'\n(more info ',_db.get_keyword_url(which)[1],')')
+        if which:
+            if which in listwhich():
+                print(_db.get_parserdb().get_keyword_definition(which))
+                print('Parsed from this url:',_db.get_parserdb().get_keyword_url(which))
+            else:
+                raise CoaKeyError('This value do not exist please check.'+'Available variable so far in this db ' + str(listwhich()))
+        else:
+            df = _db.get_parserdb().get_dbdescription()
+            return df
 
 def get_fulldb(**kwargs):
     """

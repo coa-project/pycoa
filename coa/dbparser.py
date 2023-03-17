@@ -816,11 +816,14 @@ class DBInfo:
       '''
       return self.pandasdb.loc['URL']
 
-  def get_keyword_definition(self,keys):
+  def get_keyword_definition(self,which):
       '''
            Return available keywords (originally named original keywords) definition
       '''
-      return self.pandasdb.loc['Description']
+      return self.pandasdb.loc['Description'][which]
+
+  def get_keyword_url(self,which):
+      return self.pandasdb.loc['URL'][which]
 
   def get_dbdescription(self):
       '''

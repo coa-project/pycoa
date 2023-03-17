@@ -299,7 +299,7 @@ def getinfo(which=None):
         else:
             df = _db.get_parserdb().get_dbdescription()
             return df
-def getfulldb(**kwargs):
+def getrawdb(**kwargs):
     """
         Return the main pandas i.e with all the which values loaded from the database selected
     """

@@ -72,9 +72,7 @@ _gi = None
 
 _dict_bypop = {'no':0,'100':100,'1k':1e3,'100k':1e5,'1M':1e6,'pop':1.}
 
-_listwhat = [ 'standard', # first one is default, nota:  we must avoid uppercases
-              'daily',
-              'weekly']
+_listwhat = [ 'standard', 'daily', 'weekly']
 
 _listoutput = ['pandas','geopandas','list', 'dict', 'array']  # first one is default for get
 
@@ -86,7 +84,7 @@ _listplot = ['date','menulocation','versus','spiral','yearly']
 
 _listmaplabel= ['text','textinteger','spark','spiral','label%','log','unsorted','exploded','dense']
 
-_listoption = ['nonneg', 'nofillnan', 'smooth7', 'sumall','sumallandsmooth7','sumallandsmooth7']
+_listoption = ['nonneg', 'nofillnan', 'smooth7', 'sumall','sumallandsmooth7']
 # --- Front end functions ----------------------------------------------
 
 # ----------------------------------------------------------------------
@@ -96,7 +94,6 @@ def getversion():
     """Return the current running version of pycoa.
     """
     return coa._version.__version__
-
 
 # ----------------------------------------------------------------------
 # --- listoutput() -----------------------------------------------------
@@ -109,7 +106,6 @@ def listoutput():
     """
     return _listoutput
 
-
 # ----------------------------------------------------------------------
 # --- listvisu() -------------------------------------------------------
 # ----------------------------------------------------------------------
@@ -119,8 +115,6 @@ def listvisu():
     not specified.
     """
     return _listvisu
-
-
 # ----------------------------------------------------------------------
 # --- listwhom() -------------------------------------------------------
 # ----------------------------------------------------------------------
@@ -146,39 +140,24 @@ def listwhom(detailed=False):
     except:
         raise CoaKeyError('Waiting for a boolean !')
 
-def colour_col (col):
-    colour = 'red'
-    return ['color: %s' % colour
-                if col.name=='Database' else '' for i,x in col.iteritems()]
-def bg_colour_col (col):
-    colour = 'red'
-    return ['background-color: %s' % colour
-                if col.name=='Database' else '' for i,x in col.iteritems()]
-# ----------------------------------------------------------------------
 # --- listwhat() -------------------------------------------------------
 # ----------------------------------------------------------------------
-
 def listwhat():
     """Return the list of currently avalailable type of series available.
      The first one is the default one.
     """
     return _listwhat
-
 # ----------------------------------------------------------------------
 # --- listhist() -------------------------------------------------------
 # ----------------------------------------------------------------------
-
 def listhist():
     """Return the list of currently avalailable type of hist available.
      The first one is the default one.
     """
     return _listhist
-
-
 # ----------------------------------------------------------------------
 # --- listplot() -------------------------------------------------------
 # ----------------------------------------------------------------------
-
 def listplot():
     """Return the list of currently avalailable type of plots available.
      The first one is the default one.
@@ -188,27 +167,22 @@ def listplot():
 # ----------------------------------------------------------------------
 # --- listoption() -----------------------------------------------------
 # ----------------------------------------------------------------------
-
 def listoption():
     """Return the list of currently avalailable option apply to data.
      Default is no option.
     """
     return _listoption
-
 # ----------------------------------------------------------------------
 # --- listtile() -------------------------------------------------------
 # ----------------------------------------------------------------------
-
 def listtile():
     """Return the list of currently avalailable tile option for map()
      Default is the first one.
     """
     return _cocoplot.tiles_list()
-
 # ----------------------------------------------------------------------
 # --- listwhich() ------------------------------------------------------
 # ----------------------------------------------------------------------
-
 def listwhich():
     """Get which are the available fields for the current base.
     Output is a list of string.
@@ -219,9 +193,6 @@ def listwhich():
         raise CoaKeyError('setwhom MUST be defined first !')
     else:
         return _db.get_parserdb().get_available_keywords()
-
-
-
 # ----------------------------------------------------------------------
 # --- listwhere() ------------------------------------------------------
 # ----------------------------------------------------------------------
@@ -263,12 +234,9 @@ def listwhere(clustered = False):
                 else:
                     raise CoaKeyError('What is the granularity of your DB ?')
             return r
-
-
 # ----------------------------------------------------------------------
 # --- listbypop() ------------------------------------------------------
 # ----------------------------------------------------------------------
-
 def listbypop():
     """Get the list of available population normalization
     """
@@ -276,7 +244,6 @@ def listbypop():
 # ----------------------------------------------------------------------
 # --- listmaplabel() ------------------------------------------------------
 # ----------------------------------------------------------------------
-
 def listmaplabel():
     """Get the list of available population normalization
     """
@@ -302,7 +269,6 @@ def setwhom(base):
         _db, _cocoplot = coco.DataBase.factory(base)
         _whom = base
 
-
 # ----------------------------------------------------------------------
 # --- getwhom() --------------------------------------------------------
 # ----------------------------------------------------------------------
@@ -314,11 +280,9 @@ def getwhom():
     else:
         return _whom
 
-
 # ----------------------------------------------------------------------
 # --- get(**kwargs) ----------------------------------------------------
 # ----------------------------------------------------------------------
-
 def getinfo(which=None):
     """
         Return keyword_definition for the db selected
@@ -335,8 +299,7 @@ def getinfo(which=None):
         else:
             df = _db.get_parserdb().get_dbdescription()
             return df
-
-def get_fulldb(**kwargs):
+def getfulldb(**kwargs):
     """
         Return the main pandas i.e with all the which values loaded from the database selected
     """
@@ -345,7 +308,6 @@ def get_fulldb(**kwargs):
     info('Memory usage of all columns: ' + mem + ' bytes')
     df = _db.get_fulldb(**kwargs)
     return df
-
 # ----------------------------------------------------------------------
 # --- Normalisation by pop input pandas return pandas whith by pop new column
 # ---------------------------------------------------------------------

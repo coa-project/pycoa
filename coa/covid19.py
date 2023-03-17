@@ -48,7 +48,6 @@ class DataBase(object):
         self.database_type = dbparser._db_list_dict
         self.available_options = ['nonneg', 'nofillnan', 'smooth7', 'sumall']
         self.db = db_name
-        print("db_name",db_name)
         self.dbfullinfo = dbparser.DBInfo(db_name)
         self.slocation = self.dbfullinfo.get_locations()
         self.geo = self.dbfullinfo.get_geo()
@@ -63,6 +62,10 @@ class DataBase(object):
        '''
        datab = DataBase(db_name)
        return  datab, datab.get_display()
+
+   def get_fulldb(self):
+      return self.dbfullinfo.get_mainpandas()
+      #.style.set_table_styles([{'selector' : '','props' : [('border','5px solid green')]}])
 
    def set_display(self,db,geo):
        ''' Set the CocoDisplay '''

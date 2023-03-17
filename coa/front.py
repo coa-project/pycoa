@@ -68,8 +68,6 @@ if 'coa_db' in __builtins__.keys():
 else:
     _whom = _listwhom[0]  # default base
 
-#_db, _cocoplot = coco.DataBase.factory(_whom)  # initialization with default
-
 _gi = None
 
 _dict_bypop = {'no':0,'100':100,'1k':1e3,'100k':1e5,'1M':1e6,'pop':1.}
@@ -141,7 +139,8 @@ def listwhom(detailed=False):
     df = df.sort_values(by='Database').reset_index(drop=True)
     try:
         if int(detailed):
-            return df#.style.set_table_styles([{'selector' : '','props' : [('border','5px solid green')]}])
+            display(df.style.set_table_styles([{'selector' : '','props' : [('border','3px solid green')]}]))
+            return df
         else:
             return list(df['Database'])
     except:
@@ -329,14 +328,15 @@ def getinfo(which):
     else:
         print(_db.get_keyword_definition(which),'\nurl:', _db.get_keyword_url(which)[0],'\n(more info ',_db.get_keyword_url(which)[1],')')
 
-def get_mainpandas(**kwargs):
+def get_fulldb(**kwargs):
     """
         Return the main pandas i.e with all the which values loaded from the database selected
     """
-    col = list(_db.get_mainpandas().columns)
-    mem='{:,}'.format(_db.get_mainpandas()[col].memory_usage(deep=True).sum())
+    col = list(_db.get_fulldb().columns)
+    mem='{:,}'.format(_db.get_fulldb()[col].memory_usage(deep=True).sum())
     info('Memory usage of all columns: ' + mem + ' bytes')
-    return _db.get_mainpandas(**kwargs)
+    df = _db.get_fulldb(**kwargs)
+    return df
 
 # ----------------------------------------------------------------------
 # --- Normalisation by pop input pandas return pandas whith by pop new column

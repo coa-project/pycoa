@@ -94,18 +94,15 @@ def getversion():
     """Return the current running version of pycoa.
     """
     return coa._version.__version__
-
 # ----------------------------------------------------------------------
 # --- listoutput() -----------------------------------------------------
 # ----------------------------------------------------------------------
-
 def listoutput():
     """Return the list of currently available output types for the
     get() function. The first one is the default output given if
     not specified.
     """
     return _listoutput
-
 # ----------------------------------------------------------------------
 # --- listvisu() -------------------------------------------------------
 # ----------------------------------------------------------------------
@@ -118,7 +115,6 @@ def listvisu():
 # ----------------------------------------------------------------------
 # --- listwhom() -------------------------------------------------------
 # ----------------------------------------------------------------------
-
 def listwhom(detailed=False):
     """Return the list of currently avalailable databases for covid19
      data in PyCoA.
@@ -133,13 +129,13 @@ def listwhom(detailed=False):
     df = df.sort_values(by='Database').reset_index(drop=True)
     try:
         if int(detailed):
-            display(df.style.set_table_styles([{'selector' : '','props' : [('border','3px solid green')]}]))
+            df = (df.style.set_table_styles([{'selector' : '','props' : [('border','3px solid green')]}]))
+            print("Pandas a have been pimped, use '.data' to get a pandas dataframe")
             return df
         else:
             return list(df['Database'])
     except:
         raise CoaKeyError('Waiting for a boolean !')
-
 # --- listwhat() -------------------------------------------------------
 # ----------------------------------------------------------------------
 def listwhat():
@@ -248,11 +244,9 @@ def listmaplabel():
     """Get the list of available population normalization
     """
     return _listmaplabel
-
 # ----------------------------------------------------------------------
 # --- setwhom() --------------------------------------------------------
 # ----------------------------------------------------------------------
-
 def setwhom(base):
     """Set the covid19 database used, given as a string.
     Please see pycoa.listbase() for the available current list.
@@ -268,7 +262,6 @@ def setwhom(base):
             global _db, _cocoplot, _whom
         _db, _cocoplot = coco.DataBase.factory(base)
         _whom = base
-
 # ----------------------------------------------------------------------
 # --- getwhom() --------------------------------------------------------
 # ----------------------------------------------------------------------

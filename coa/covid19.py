@@ -286,6 +286,7 @@ class DataBase(object):
             else:
                 pdfiltered = pdfiltered[['where','date','codelocation', kwargs['which']]]
             pdfiltered['clustername'] = pdfiltered['where'].copy()
+
         if not isinstance(option,list):
             option=[option]
         if 'fillnan' not in option and 'nofillnan' not in option:
@@ -293,7 +294,7 @@ class DataBase(object):
         if 'nonneg' in option:
             option.remove('nonneg')
             option.insert(0, 'nonneg')
-        if 'smooth7' in  option and 'sumall' in  option:
+        if 'smooth7' in option and 'sumall' in  option:
             option.remove('sumall')
             option.remove('smooth7')
             option+=['sumallandsmooth7']
@@ -350,7 +351,6 @@ class DataBase(object):
                 # fill with previous value
                 pdfiltered = pdfiltered.reset_index(drop=True)
                 pdfiltered_nofillnan = pdfiltered.copy()
-
                 pdfiltered.loc[:,kwargs['which']] =\
                 pdfiltered.groupby(['where','clustername'])[kwargs['which']].apply(lambda x: x.bfill())
                 #if kwargs['which'].startswith('total_') or kwargs['which'].startswith('tot_'):
@@ -374,8 +374,7 @@ class DataBase(object):
             elif o != None and o != '' and o != 'sumallandsmooth7':
                 raise CoaKeyError('The option '+o+' is not recognized in get_stats. See listoptions() for list.')
         pdfiltered = pdfiltered.reset_index(drop=True)
-
-        # if sumall set, return only integrate val
+        #sumallandsmooth7 if sumall set, return only integrate val
         tmppandas=pd.DataFrame()
         if sumall:
             if origlistlistloc != None:
@@ -392,10 +391,6 @@ class DataBase(object):
 
                pdfiltered = tmp
                pdfiltered = pdfiltered.drop_duplicates(['date','clustername'])
-               if sumallandsmooth7:
-                   pdfiltered[kwargs['which']] = pdfiltered.groupby(['clustername'])[kwargs['which']].rolling(7,min_periods=7).mean().reset_index(level=0,drop=True)
-                   pdfiltered.loc[:,kwargs['which']] =\
-                   pdfiltered.groupby(['clustername'])[kwargs['which']].apply(lambda x: x.bfill())
             # computing daily, cumul and weekly
             else:
                 if kwargs['which'].startswith('cur_idx_'):
@@ -412,6 +407,10 @@ class DataBase(object):
                     tmp.at[i,'codelocation'] = uniqcodeloc #sticky(uniqcodeloc)
                     tmp.at[i,'clustername'] =  sticky(uniqloc)[0]
                 pdfiltered = tmp
+            if sumallandsmooth7:
+                pdfiltered[kwargs['which']] = pdfiltered.groupby(['clustername'])[kwargs['which']].rolling(7,min_periods=7).mean().reset_index(level=0,drop=True)
+                pdfiltered.loc[:,kwargs['which']] =\
+                pdfiltered.groupby(['clustername'])[kwargs['which']].apply(lambda x: x.bfill())    
         else:
             if self.db_world :
                 pdfiltered['clustername'] = pdfiltered['where'].apply(lambda x: self.geo.to_standard(x)[0] if not x.startswith("owid_") else x)

@@ -375,6 +375,8 @@ class CocoDisplay:
             title_option=''
             if option:
                 if 'sumallandsmooth7' in option:
+                    if not isinstance(option,list):
+                        option = ['sumallandsmooth7']
                     option.remove('sumallandsmooth7')
                     option += ['sumall','smooth7']
                 title_option = ' (option: ' + str(option)+')'
@@ -409,7 +411,7 @@ class CocoDisplay:
                 textcopyright = '©pycoa.fr data from: {}'.format(self.database_name)+' '+title_temporal
 
             self.subtitle = textcopyright
-            kwargs['title'] = title+title_temporal
+            kwargs['title'] = title+title_temporal 
             return func(self, input, input_field, **kwargs)
         return wrapper
 

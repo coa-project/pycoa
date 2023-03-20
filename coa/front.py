@@ -130,7 +130,7 @@ def listwhom(detailed=False):
     try:
         if int(detailed):
             df = (df.style.set_table_styles([{'selector' : '','props' : [('border','3px solid green')]}]))
-            print("Pandas a have been pimped, use '.data' to get a pandas dataframe")
+            print("Pandas has been pimped, use '.data' to get a pandas dataframe")
             return df
         else:
             return list(df['Database'])

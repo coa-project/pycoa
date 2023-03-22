@@ -297,15 +297,15 @@ class DBInfo:
               self.dbparsed = spfnat
           elif namedb == 'insee':
               info('FRA, INSEE global deaths statistics...')
+              url = "https://www.data.gouv.fr/fr/datasets/fichier-des-personnes-decedees/"
               insee = {
               'tot_deaths_since_2018-01-01':['daily_number_of_deaths','tot deaths number_of_deaths integrated since 2018-01-01 '],\
               }
               for k,v in insee.items():
-                  insee[k].append('https://www.data.gouv.fr/fr/datasets/fichier-des-personnes-decedees/')
-                  insee[k].append('https://www.data.gouv.fr/fr/datasets/fichier-des-personnes-decedees/')
+                  insee[k].append(url)
+                  insee[k].append('')
               self.pandasdb = pd.DataFrame(insee,index=['Original name','Description','URL','Homepage'])
               since_year=2018 # Define the first year for stats
-              url = "https://www.data.gouv.fr/fr/datasets/fichier-des-personnes-decedees/"
               with open(get_local_from_url(url,86400*7)) as fp: # update each week
                   soup = BeautifulSoup(fp,features="lxml")
               ld_json=soup.find('script', {'type':'application/ld+json'}).contents
@@ -390,6 +390,7 @@ class DBInfo:
               since_date=str(since_year)+'-01-01'
               insee_pd = insee_pd[insee_pd.date>=datetime.date.fromisoformat(since_date)].reset_index(drop=True)
               insee_pd['tot_deaths_since_'+since_date]=insee_pd.groupby('where')['daily_number_of_deaths'].cumsum()
+              insee_pd=insee_pd.drop(columns='daily_number_of_deaths')
               self.dbparsed = insee_pd
           elif namedb == 'owid':
               info('OWID aka \"Our World in Data\" database selected ...')

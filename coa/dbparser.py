@@ -905,7 +905,7 @@ class DBInfo:
       g=coge.GeoManager('iso3')
       codename = collections.OrderedDict(zip(self.slocation,g.to_standard(self.slocation,output='list',db=self.get_db(),interpret_region=True)))
     else:
-      if self.get_dbinfo(db)[1] == 'subregion':
+      if self.get_dblistdico(db)[1] == 'subregion':
           pdcodename = self.geo.get_subregion_list()
           self.slocation = uniqloc
           codename = collections.OrderedDict(zip(self.slocation,list(pdcodename.loc[pdcodename.code_subregion.isin(self.slocation)]['name_subregion'])))
@@ -928,7 +928,7 @@ class DBInfo:
                               a.append(k)
                       return a
                   codedupli={i:findkeywithvalue(d_loc_s,i) for i in duplicates_location}
-      elif self.get_dbinfo(db)[1] == 'region':
+      elif self.get_dblistdico(db)[1] == 'region':
           codename = self.geo.get_data().set_index('name_region')['code_region'].to_dict()
           self.slocation = list(codename.keys())
       else:

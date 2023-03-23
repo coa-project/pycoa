@@ -122,10 +122,11 @@ class DataBase(object):
         kwargs_test(kwargs,['where','which','what','option','input','input_field','when','output',
         'typeofplot','typeofhist','tile','visu','mode','maplabel','bypop'],'Bad args used in the get_stats() function.')
         if not 'where' in kwargs or kwargs['where'] is None.__class__ or kwargs['where'] == None:
-            if self.dbfullinfo.get_dblistdico(self.db)[0] == 'WW':
-                kwargs['where'] = self.dbfullinfo.get_dblistdico(self.db)[2]
-            else:
-                kwargs['where'] = self.slocation
+            #if self.dbfullinfo.get_dblistdico(self.db)[0] == 'WW':
+            #    kwargs['where'] = self.dbfullinfo.get_dblistdico(self.db)[2]
+            #else:
+            #    kwargs['where'] = self.slocation
+            kwargs['where'] = self.dbfullinfo.get_dblistdico(self.db)[2]
             wallname = self.dbfullinfo.get_dblistdico(self.db)[2]
         else:
             kwargs['where'] = kwargs['where']
@@ -211,7 +212,6 @@ class DataBase(object):
                            tmp = self.geo.is_subregion(i)
                         else:
                             raise CoaTypeError(i + ': not subregion nor region ... what is it ?')
-
                     elif typeloc == 'region':
                         tmp = self.geo.get_region_list()
                         if i.isdigit():
@@ -236,7 +236,7 @@ class DataBase(object):
                 dicooriglist={}
                 for i in origlistlistloc:
                     if i[0].upper() in [self.database_type[self.db][0].upper(),self.database_type[self.db][2].upper()]:
-                        dicooriglist[self.database_type[self.db][0]]=explosion(flat_list(self.slocation))
+                        dicooriglist[self.database_type[self.db][0]]=explosion(flat_list(self.slocation),self.database_type[self.db][1])
                     else:
                         dicooriglist[','.join(i)]=explosion(i,self.database_type[self.db][1])
             else:
@@ -410,7 +410,7 @@ class DataBase(object):
             if sumallandsmooth7:
                 pdfiltered[kwargs['which']] = pdfiltered.groupby(['clustername'])[kwargs['which']].rolling(7,min_periods=7).mean().reset_index(level=0,drop=True)
                 pdfiltered.loc[:,kwargs['which']] =\
-                pdfiltered.groupby(['clustername'])[kwargs['which']].apply(lambda x: x.bfill())    
+                pdfiltered.groupby(['clustername'])[kwargs['which']].apply(lambda x: x.bfill())
         else:
             if self.db_world :
                 pdfiltered['clustername'] = pdfiltered['where'].apply(lambda x: self.geo.to_standard(x)[0] if not x.startswith("owid_") else x)

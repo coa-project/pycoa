@@ -782,7 +782,8 @@ class GeoCountry():
                     # missing some counties 'GBR':'https://opendata.arcgis.com/datasets/69dc11c7386943b4ad8893c45648b1e1_0.zip?geometry=%7B%22xmin%22%3A-44.36%2C%22ymin%22%3A51.099%2C%22xmax%22%3A39.487%2C%22ymax%22%3A59.78%2C%22type%22%3A%22extent%22%2C%22spatialReference%22%3A%7B%22wkid%22%3A4326%7D%7D&outSR=%7B%22latestWkid%22%3A27700%2C%22wkid%22%3A27700%7D',\
                     'GBR':'https://github.com/coa-project/coadata/raw/main/coastore/opendata.arcgis.com_3256063640',\
                     # previously (but broken) : https://opendata.arcgis.com/datasets/3a4fa2ce68f642e399b4de07643eeed3_0.geojson',\
-                    'BEL':'https://public.opendatasoft.com/explore/dataset/arrondissements-belges-2019/download/?format=shp&timezone=Europe/Berlin&lang=en',\
+                    'BEL':'https://github.com/coa-project/coadata/raw/main/coacache/public.opendatasoft.com_537867990.zip',\
+# previously (but not all regions now) 'https://public.opendatasoft.com/explore/dataset/arrondissements-belges-2019/download/?format=shp&timezone=Europe/Berlin&lang=en',\
                     'PRT':'https://github.com/coa-project/coadata/raw/main/coastore/concelhos.zip',\
                     # (simplification of 'https://github.com/coa-project/coadata/raw/main'https://dados.gov.pt/en/datasets/r/59368d37-cbdb-426a-9472-5a04cf30fbe4',\
                     'MYS':'https://stacks.stanford.edu/file/druid:zd362bc5680/data.zip',\
@@ -1054,12 +1055,17 @@ class GeoCountry():
             p=[]
 
             for index,row in self._country_data.iterrows():
-                if row.prov_name_f is not None:
-                    p0=row.prov_name_f
-                elif row.prov_name_n is not None:
+                if row.prov_name_n is not None:
                     p0=row.prov_name_n
+                elif row.prov_name_f is not None:
+                    p0=row.prov_name_f
                 else:
                     p0=row.region
+                p0=p0.title().replace(' ','').replace('(Le)','').replace('(La)','').replace('-','')
+                if p0=='RégionDeBruxellesCapitale':
+                    p0='Brussels'
+                if p0=='Henegouwen':
+                    p0='Hainaut'
                 p.append(p0)
             self._country_data['name_region']=p
             self._country_data.loc[self._country_data.code_region.isnull(),'code_region']='00000'

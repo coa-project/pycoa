@@ -265,11 +265,14 @@ def setwhom(base):
 # ----------------------------------------------------------------------
 # --- getwhom() --------------------------------------------------------
 # ----------------------------------------------------------------------
-def getwhom():
+def getwhom(return_error=True):
     """Return the current base which is used
     """
     if  '_db' not in globals():
-        raise CoaKeyError('setwhom MUST be defined first !')
+        if return_error:
+            raise CoaKeyError('setwhom MUST be defined first !')
+        else:
+            return ''
     else:
         return _whom
 

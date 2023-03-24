@@ -631,6 +631,7 @@ class DBInfo:
               keep = ['date','where'] + self.get_url_original_keywords()[url]
               separator=self.get_url_separator(url)
               self.dbparsed = self.row_date_csv_parser(url=url,rename_columns = rename, separator = separator,keep_field = keep)
+              self.dbparsed['tot_cases'] = self.dbparsed.groupby(['where'])['tot_cases'].cumsum()
           elif namedb == 'risklayer':
               info('EUR, Who Europe from RiskLayer ...')
               risk = {

@@ -36,6 +36,8 @@ import base64
 from IPython import display
 import copy
 import locale
+import inspect
+
 from bokeh.models import (
     ColumnDataSource,
     TableColumn,
@@ -205,7 +207,8 @@ class CocoDisplay:
         fig = figure(**kwargs, tools=['save', 'box_zoom,reset'], toolbar_location="right")
         #fig.add_layout(citation)
         fig.add_layout(Title(text=self.uptitle, text_font_size="10pt"), 'above')
-        fig.add_layout(Title(text=self.subtitle, text_font_size="8pt", text_font_style="italic"), 'below')
+        if 'innerdecomap' not in inspect.stack()[1].function:
+            fig.add_layout(Title(text=self.subtitle, text_font_size="8pt", text_font_style="italic"), 'below')
         return fig
 
     def get_listfigures(self):
@@ -411,7 +414,7 @@ class CocoDisplay:
                 textcopyright = '©pycoa.fr data from: {}'.format(self.database_name)+' '+title_temporal
 
             self.subtitle = textcopyright
-            kwargs['title'] = title+title_temporal 
+            kwargs['title'] = title+title_temporal
             return func(self, input, input_field, **kwargs)
         return wrapper
 
@@ -2013,7 +2016,7 @@ class CocoDisplay:
             color_bar.formatter = NumeralTickFormatter(format="0.0%")
 
         standardfig.add_layout(color_bar, 'below')
-
+        standardfig.add_layout(Title(text=self.subtitle, text_font_size="8pt", text_font_style="italic"), 'below')
         if date_slider:
             allcases_location, allcases_dates = pd.DataFrame(), pd.DataFrame()
             allcases_location = geopdwd.groupby('where')['cases'].apply(list)

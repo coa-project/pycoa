@@ -193,7 +193,7 @@ class DBInfo:
               url0='https://www.data.gouv.fr/fr/datasets/r/ca490480-09a3-470f-8556-76d6fd291325'
               url1='https://www.data.gouv.fr/fr/datasets/r/5c4e1452-3850-4b59-b11c-3dd51d7fb8b5'
               url2='https://www.data.gouv.fr/fr/datasets/r/4acad602-d8b1-4516-bc71-7d5574d5f33e'
-              url3='https://www.data.gouv.fr/fr/datasets/r/32a16487-3dd3-4326-9d2b-317e5a3b2daf'
+              url3='https://www.data.gouv.fr/fr/datasets/r/83cbbdb9-23cb-455e-8231-69fc25d58111'
               url4='https://www.data.gouv.fr/fr/datasets/r/16f4fd03-797f-4616-bca9-78ff212d06e8'
               url5='https://www.data.gouv.fr/fr/datasets/r/bc318bc7-fb90-4e76-a6cb-5cdc0a4e5432'
               url6='https://www.data.gouv.fr/en/datasets/r/eceb9fb4-3ebc-4da3-828d-f5939712600a'
@@ -208,20 +208,20 @@ class DBInfo:
               'cur_idx_tx_incid':['tx_incid','Taux d\'incidence (activité épidémique : Le taux d\'incidence correspond au nombre de personnes testées\
               positives (RT-PCR et test antigénique) pour la première fois depuis plus de 60 jours rapporté à la taille de la population. \
               Il est exprimé pour 100 000 habitants)',url1,urlmaster1],\
-              'tot_incid_hosp':['incid_hosp','Nombre total de personnes hospitalisées',url1,urlmaster1],\
-              'tot_incid_rea':['incid_rea','Nombre total d\'admissions en réanimation',url1,urlmaster1],\
-              'tot_incid_rad':['incid_rad','Nombre total de  retours à domicile',url1,urlmaster1],\
-              'tot_incid_dchosp':['incid_dchosp','Nombre total de personnes  décédées',url1,urlmaster1],\
+              'incid_hosp':['incid_hosp','Nombre total de personnes hospitalisées',url1,urlmaster1],\
+              'incid_rea':['incid_rea','Nombre total d\'admissions en réanimation',url1,urlmaster1],\
+              'incid_rad':['incid_rad','Nombre total de  retours à domicile',url1,urlmaster1],\
+              'incid_dchosp':['incid_dchosp','Nombre total de personnes  décédées',url1,urlmaster1],\
               'cur_idx_R':['R','FILLIT',url2,urlmaster2],\
               #'cur_tx_crib':['tx_crib','FILLIT',url2,urlmaster2],\
               'cur_idx_tx_occupation_sae':['taux_occupation_sae','FILLIT',url2,urlmaster2],\
               'cur_tx_pos':['tx_pos','Taux de positivité des tests virologiques (Le taux de positivité correspond au nombre de personnes testées positives\
                (RT-PCR et test antigénique) pour la première fois depuis plus de 60 jours rapporté au nombre total de personnes testées positives ou \
                négatives sur une période donnée ; et qui n‘ont jamais été testées positive dans les 60 jours précédents.)',url2,urlmaster3],
-              'tot_vacc1':['n_tot_dose1','FILLIT',url3,urlmaster3],\
-              'tot_vacc_complet':['n_tot_complet','FILLIT',url3,urlmaster3],\
-              'tot_vacc_rappel':['n_tot_rappel','FILLIT',url3,urlmaster3],\
-              'tot_vacc2_rappel':['n_tot_2_rappel','FILLIT',url3,urlmaster3],\
+              'tot_vacc1':['n_cum_dose1','FILLIT',url3,urlmaster3],\
+              'tot_vacc_complet':['n_cum_complet','FILLIT',url3,urlmaster3],\
+              'tot_vacc_rappel':['n_cum_rappel','FILLIT',url3,urlmaster3],\
+              'tot_vacc2_rappel':['n_cum_2_rappel','FILLIT',url3,urlmaster3],\
               'cur_idx_Prc_susp_IND':['Prc_susp_IND','% de tests avec une détection de variant mais non identifiable',url4,urlmaster4],\
               'cur_idx_Prc_susp_ABS' :['Prc_susp_ABS','% de tests avec une absence de détection de variant',url4,urlmaster4],\
               'cur_nb_A0' :['nb_A0','Nombre des tests positifs pour lesquels la recherche de mutation A est négatif (A = E484K)',url5,urlmaster5],\
@@ -250,7 +250,6 @@ class DBInfo:
                   else:
                       result=result.merge(i, how = 'outer', on=['where','date'])
               del list_spf
-
               result[['tot_T','tot_P']] = result[['tot_T','tot_P']].stack().str.replace(',','.').unstack()
               result = result.loc[~result['where'].isin(['00'])]
               result = result.sort_values(by=['where','date'])
@@ -260,13 +259,9 @@ class DBInfo:
                   if w not in ['where', 'date']:
                       result[w]=pd.to_numeric(result[w], errors = 'coerce')
                       if w.startswith('incid_'):
-                          ww = w[6:]
-                          result[ww] = result.groupby('where')[ww].fillna(method = 'bfill')
-                          result['incid_'+ww] = result.groupby('where')['incid_'+ww].fillna(method = 'bfill')
-                      else:
-                          pass
-                      if w != 'n_cum':
-                          result['tot_'+w]=result.groupby(['where'])[w].cumsum()
+                          result[w] = result.groupby('where')[w].fillna(method = 'bfill')
+                      if w in ['tot_P','tot_T']:
+                          result[w]=result.groupby(['where'])[w].cumsum()
               self.dbparsed = result
           elif namedb == 'spfnational':
               info('SPFNational, aka Sante Publique France, database selected (France with no granularity) ...')

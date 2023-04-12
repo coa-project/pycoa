@@ -472,8 +472,10 @@ class CocoDisplay:
                 location_ordered_byvalues = list(
                     input.loc[input.date == self.when_end].sort_values(by=input_field, ascending=False)['clustername'].unique())
                 input = input.copy()  # needed to avoid warning
-                input.loc[:,'clustername'] = pd.Categorical(input.clustername,
-                                                       categories=location_ordered_byvalues, ordered=True)
+                input[input['clustername']] = pd.Categorical(input.clustername,
+                                                        categories=location_ordered_byvalues, ordered=True)
+                #input.loc[:,'clustername'] = pd.Categorical(input.clustername,
+                #                                       categories=location_ordered_byvalues, ordered=True)
 
                 input = input.sort_values(by=['clustername', 'date']).reset_index(drop = True)
 

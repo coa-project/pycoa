@@ -351,8 +351,8 @@ class DataBase(object):
                 # fill with previous value
                 pdfiltered = pdfiltered.reset_index(drop=True)
                 pdfiltered_nofillnan = pdfiltered.copy()
-                pdfiltered.loc[:,kwargs['which']] =\
-                pdfiltered.groupby(['where','clustername'])[kwargs['which']].apply(lambda x: x.bfill())
+                #pdfiltered.loc[:,kwargs['which']] = pdfiltered.groupby(['where','clustername'])[kwargs['which']].apply(lambda x: x.bfill())
+                pdfiltered.loc[:,kwargs['which']] = pdfiltered.groupby(['where','clustername'],group_keys=False)[kwargs['which']].apply(lambda x: x.bfill())
                 #if kwargs['which'].startswith('total_') or kwargs['which'].startswith('tot_'):
                 #    pdfiltered.loc[:,kwargs['which']] = pdfiltered.groupby(['clustername'])[kwargs['which']].apply(lambda x: x.ffill())
                 if pdfiltered.loc[pdfiltered.date == pdfiltered.date.max()][kwargs['which']].isnull().values.any():
@@ -382,7 +382,7 @@ class DataBase(object):
                if kwargs['which'].startswith('cur_idx_') or kwargs['which'].startswith('cur_tx_'):
                   tmp = pdfiltered.groupby(['clustername','date']).mean().reset_index()
                else:
-                  tmp = pdfiltered.groupby(['clustername','date']).sum().reset_index()#.loc[pdfiltered.clustername.isin(uniqcluster)].\
+                  tmp = pdfiltered.groupby(['clustername','date']).sum(numeric_only=True).reset_index()#.loc[pdfiltered.clustername.isin(uniqcluster)].\
 
                codescluster = {i:list(pdfiltered.loc[pdfiltered.clustername==i]['codelocation'].unique()) for i in uniqcluster}
                namescluster = {i:list(pdfiltered.loc[pdfiltered.clustername==i]['where'].unique()) for i in uniqcluster}

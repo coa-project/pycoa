@@ -221,7 +221,7 @@ class DBInfo:
               'tot_vacc1':['n_cum_dose1','FILLIT',url3,urlmaster3],\
               'tot_vacc_complet':['n_cum_complet','FILLIT',url3,urlmaster3],\
               'tot_vacc_rappel':['n_cum_rappel','FILLIT',url3,urlmaster3],\
-              'tot_vacc2_rappel':['n_cum_2_rappel','FILLIT',url3,urlmaster3],\
+              'tot_vacc2_rappel':['n_cum_2_rappel@','FILLIT',url3,urlmaster3],\
               'cur_idx_Prc_susp_IND':['Prc_susp_IND','% de tests avec une détection de variant mais non identifiable',url4,urlmaster4],\
               'cur_idx_Prc_susp_ABS' :['Prc_susp_ABS','% de tests avec une absence de détection de variant',url4,urlmaster4],\
               'cur_nb_A0' :['nb_A0','Nombre des tests positifs pour lesquels la recherche de mutation A est négatif (A = E484K)',url5,urlmaster5],\
@@ -944,7 +944,7 @@ class DBInfo:
     tmp = pd.DataFrame()
     if 'Kosovo' in uniqloc:
       #Kosovo is Serbia ! with geo.to_standard
-      tmp=(result.loc[result['where'].isin(['Serbia'])]).groupby('date').sum().reset_index()
+      tmp=(result.loc[result['where'].isin(['Serbia'])]).groupby('date').sum(numeric_only=True).reset_index()
       tmp['where'] = 'Serbia'
       tmp['codelocation'] = 'SRB'
       kw = [i for i in self.available_keywords]
@@ -954,7 +954,7 @@ class DBInfo:
       result = pd.concat([result,tmp])
 
     result = result.copy()
-    result.loc[:,'date'] = pd.to_datetime(result['date'],errors='coerce').dt.date
+    result.loc[:,'date'] = pd.to_datetime(result['date'],errors='coerce',utc=True).dt.date
     result = result.sort_values(by=['where','date'])
     result = result.reset_index(drop=True)
     if db == 'jhu-usa':

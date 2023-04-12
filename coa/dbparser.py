@@ -1018,7 +1018,7 @@ class DBInfo:
       columns_skipped = kwargs.get('columns_skipped', None)
       if self.db_world and self.db not in ['govcy','spfnational','mpoxgh']:
           not_UN_nation_dict=['Kosovo','Serbia']
-          tmp=(mypandas.loc[mypandas['where'].isin(not_UN_nation_dict)].groupby('date').sum()).reset_index()
+          tmp=(mypandas.loc[mypandas['where'].isin(not_UN_nation_dict)].groupby('date').sum(numeric_only=True)).reset_index()
           tmp['where'] = 'Serbia'
           tmp['iso_code'] = 'SRB'
           cols = tmp.columns.tolist()

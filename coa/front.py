@@ -188,7 +188,7 @@ def listwhich():
     if  '_db' not in globals():
         raise CoaKeyError('setwhom MUST be defined first !')
     else:
-        return sorted(_db.get_parserdb().get_available_keywords())
+        return _db.get_parserdb().get_available_keywords()
 # ----------------------------------------------------------------------
 # --- listwhere() ------------------------------------------------------
 # ----------------------------------------------------------------------

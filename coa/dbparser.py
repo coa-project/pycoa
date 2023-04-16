@@ -805,7 +805,7 @@ class DBInfo:
       '''
            Return all the available keyswords for the database selected
       '''
-      return list(self.pandasdb.columns)
+      return sorted(list(self.pandasdb.columns))
 
   def get_url(self):
       '''

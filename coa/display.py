@@ -596,7 +596,7 @@ class CocoDisplay:
         cases_custom = CocoDisplay.rollerJS()
         if 'which' in kwargs and isinstance(kwargs['which'],list):
             input_field=kwargs['which']
-        if isinstance(input['rolloverdisplay'][0],list):
+        if isinstance(input['rolloverdisplay'].iloc[0],list):
             input['rolloverdisplay'] = input['clustername']
         for axis_type in self.ax_type:
             standardfig = self.standardfig( y_axis_type = axis_type, x_axis_type = 'datetime',**kwargs)

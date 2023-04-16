@@ -221,7 +221,7 @@ class DBInfo:
               'tot_vacc1':['n_cum_dose1','FILLIT',url3,urlmaster3],\
               'tot_vacc_complet':['n_cum_complet','FILLIT',url3,urlmaster3],\
               'tot_vacc_rappel':['n_cum_rappel','FILLIT',url3,urlmaster3],\
-              'tot_vacc2_rappel':['n_cum_2_rappel@','FILLIT',url3,urlmaster3],\
+              'tot_vacc2_rappel':['n_cum_2_rappel','FILLIT',url3,urlmaster3],\
               'cur_idx_Prc_susp_IND':['Prc_susp_IND','% de tests avec une détection de variant mais non identifiable',url4,urlmaster4],\
               'cur_idx_Prc_susp_ABS' :['Prc_susp_ABS','% de tests avec une absence de détection de variant',url4,urlmaster4],\
               'cur_nb_A0' :['nb_A0','Nombre des tests positifs pour lesquels la recherche de mutation A est négatif (A = E484K)',url5,urlmaster5],\

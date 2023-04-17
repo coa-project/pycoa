@@ -278,13 +278,13 @@ class CocoDisplay:
                 else:
                     if self.granularity == 'subregion' :
                         input = input.reset_index(drop=True)
-                        if isinstance(input['codelocation'][0],list):
+                        if isinstance(input['codelocation'].iloc[0],list):
                             input['codelocation'] = input['codelocation'].apply(lambda x: str(x).replace("'", '')\
                                                          if len(x)<5 else '['+str(x[0]).replace("'", '')+',...,'+str(x[-1]).replace("'", '')+']')
 
                         trad={}
                         cluster = input.clustername.unique()
-                        if isinstance(input['where'][0],list):
+                        if isinstance(input['where'].iloc[0],list):
                            cluster = [i for i in cluster]
                         for i in cluster:
                             if i == self.namecountry:
@@ -673,7 +673,7 @@ class CocoDisplay:
         guideline = kwargs.get('guideline',self.dvisu_default['guideline'])
         panels = []
         listfigs = []
-        if isinstance(input['rolloverdisplay'][0],list):
+        if isinstance(input['rolloverdisplay'].iloc[0],list):
             input['rolloverdisplay'] = input['clustername']
         borne = 300
         kwargs.pop('plot_width')
@@ -877,7 +877,7 @@ class CocoDisplay:
         input['allyears'] = input['allyears'].astype(int)
         input.loc[:,'dayofyear']= input['date'].apply(lambda x : x.dayofyear)
         allyears = list(input.allyears.unique())
-        if isinstance(input['rolloverdisplay'][0],list):
+        if isinstance(input['rolloverdisplay'].iloc[0],list):
             input['rolloverdisplay'] = input['clustername']
         if len(input_field)>1:
             CoaError('Only one variable could be displayed')
@@ -992,7 +992,7 @@ class CocoDisplay:
 
                 #if func.__name__ == 'pycoa_mapfolium' or func.__name__ == 'pycoa_map' or func.__name__ == 'innerdecomap' or func.__name__ == 'innerdecopycoageo':
                 if func.__name__ in ['pycoa_mapfolium','pycoa_map','pycoageo' ,'pycoa_pimpmap']:
-                    if isinstance(input['where'].to_list()[0],list):
+                    if isinstance(input['where'].iloc[0],list):
                         geom = self.location_geometry
                         geodic={loc:geom.loc[geom['where']==loc]['geometry'].values[0] for loc in geopdwd['where'].unique()}
                         geopdwd['geometry'] = geopdwd['where'].map(geodic)

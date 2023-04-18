@@ -380,8 +380,8 @@ def chartsinput_deco(f):
         '''
         kwargs_test(kwargs,
                     ['where', 'what', 'which', 'whom', 'when', 'input', 'input_field','output','typeofplot',\
-                    'title','typeofplot','typeofhist','bins','visu','tile','dateslider','maplabel','option','mode','guideline','bypop',
-                    'plot_width','plot_height','textcopyright'],
+                    'title','typeofplot','typeofhist','bins','visu','tile','dateslider','maplabel','option',
+                    'mode','guideline','bypop', 'plot_width','plot_height','textcopyright','cursor_date'],
                     'Bad args used in the pycoa function.')
 
     # no dateslider currently

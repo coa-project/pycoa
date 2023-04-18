@@ -42,7 +42,7 @@ _db_list_dict = {
     'sciensano':['BEL','region','Belgium'],
     'dgs':['PRT','region','Portugal'],
     'moh':['MYS','subregion','Malaysia'],
-    'risklayer':['EUR','subregion','Europe'],
+    'risklayer':['WW','subregion','Europe'],
     'imed':['GRC','region','Greece'],
     'govcy':['CYP','nation','Cyprus'],
     'insee':['FRA','subregion','France'],

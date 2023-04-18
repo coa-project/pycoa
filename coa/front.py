@@ -199,26 +199,32 @@ def listwhere(clustered = False):
         raise CoaKeyError('setwhom MUST be defined first !')
     else:
         def clust():
-            if _db_list_dict[_whom][1] == 'nation' and _db_list_dict[_whom][2] != 'World':
+            if _db_list_dict[_whom][1] == 'nation' and _db_list_dict[_whom][2] not in ['World','Europe']:
                 return  _db.geo.to_standard(_db_list_dict[_whom][0])
             else:
-                r = _db.geo.get_region_list()
-                if not isinstance(r, list):
-                    r=sorted(r['name_region'].to_list())
+                if _db_list_dict[_whom][2] == 'World':
+                    r = _db.geo.get_region_list()
+                    if not isinstance(r, list):
+                        r=sorted(r['name_region'].to_list())
+                elif _db_list_dict[_whom][2] == 'Europe':
+                    r = ['European Union']
+                else:
+                    CoaError('Error !! Should not be there ...')        
                 r.append(_db_list_dict[_whom][2])
                 return r
-
-        if _db_list_dict[_whom][1] == 'nation' and _db_list_dict[_whom][2] != 'World':
+        if _db_list_dict[_whom][1] == 'nation' and _db_list_dict[_whom][2] not in ['World','Europe']:
             return [ _db_list_dict[_whom][2] ]
-
         if clustered:
             return clust()
         else:
             if _db.db_world == True:
-                if _db_list_dict[_whom][1] == 'nation' and _db_list_dict[_whom][2] != 'World':
+                if _db_list_dict[_whom][1] == 'nation' and _db_list_dict[_whom][2] not in ['World','Europe']:
                     r =  _db.geo.to_standard(_db_list_dict[_whom][0])
                 else:
-                    r = _db.geo.get_GeoRegion().get_countries_from_region('world')
+                    if _db_list_dict[_whom][2]=='World':
+                        r = _db.geo.get_GeoRegion().get_countries_from_region('world')
+                    else:
+                        r = _db.geo.get_GeoRegion().get_countries_from_region('europe')
                     r = [_db.geo.to_standard(c)[0] for c in r]
             else:
                 if _db_list_dict[_whom][1] == 'subregion':

@@ -209,7 +209,7 @@ def listwhere(clustered = False):
                 elif _db_list_dict[_whom][2] == 'Europe':
                     r = ['European Union']
                 else:
-                    CoaError('Error !! Should not be there ...')        
+                    r = []
                 r.append(_db_list_dict[_whom][2])
                 return r
         if _db_list_dict[_whom][1] == 'nation' and _db_list_dict[_whom][2] not in ['World','Europe']:

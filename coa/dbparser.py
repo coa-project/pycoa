@@ -93,7 +93,7 @@ class DBInfo:
                     "You may contact support@pycoa.fr. Thanks.")
             # some info
             info('Few information concernant the selected database : ', self.get_db())
-            info('Available key-words, which ∈', self.get_available_keywords())
+            info('Available key-words, which ∈', sorted(self.get_available_keywords()))
             info('Example of where : ',  ', '.join(random.choices(self.get_locations(), k=min(5,len(self.get_locations() ))   )), ' ...')
             info('Last date data ', self.get_dates().max())
 

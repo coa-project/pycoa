@@ -2030,7 +2030,7 @@ class CocoDisplay:
             sourcemaplabel.data['rolloverdisplay'] = sourcemaplabel.data['clustername']
             callback = CustomJS(args =  dict(source = geopdwd_tmp, source_filter = geopdwd_filtered,
                                           date_sliderjs = date_slider, title=standardfig.title,
-                                          maplabeljs = sourcemaplabel),
+                                          color_mapperjs = color_mapper),
                         code = """
                         var ind_date_max = (date_sliderjs.end-date_sliderjs.start)/(24*3600*1000);
                         var ind_date = (date_sliderjs.value-date_sliderjs.start)/(24*3600*1000);
@@ -2059,14 +2059,6 @@ class CocoDisplay:
                             source_filter.data['cases'] = new_cases;
                             }
 
-                        if (maplabeljs.get_length() !== 0){
-                            maplabeljs.data['cases'] = source_filter.data['cases'];
-                            }
-                        for (var i = 0; i < maplabeljs.get_length(); i++)
-                        {
-                            maplabeljs.data['cases'][i] = form(maplabeljs.data['cases'][i]).toString();
-                            maplabeljs.data['rolloverdisplay'][i] = source_filter.data['rolloverdisplay'][i];
-                        }
                         var tmp = title.text;
                         tmp = tmp.slice(0, -11);
                         var dateconverted = new Date(date_sliderjs.value);
@@ -2075,10 +2067,10 @@ class CocoDisplay:
                         var yyyy = dateconverted.getFullYear();
                         var dmy = dd + '/' + mm + '/' + yyyy;
                         title.text = tmp + dmy+")";
-                        if (maplabeljs.get_length() !== 0)
-                            maplabeljs.change.emit();
 
-                        console.log(maplabeljs.data['cases']);
+                        color_mapperjs.high=Math.max.apply(Math, new_cases);
+                        color_mapperjs.low=Math.min.apply(Math, new_cases);
+
                         source_filter.change.emit();
                     """)
             date_slider.js_on_change('value', callback)

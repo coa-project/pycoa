@@ -202,15 +202,12 @@ def listwhere(clustered = False):
             if _db_list_dict[_whom][1] == 'nation' and _db_list_dict[_whom][2] not in ['World','Europe']:
                 return  _db.geo.to_standard(_db_list_dict[_whom][0])
             else:
-                if _db_list_dict[_whom][2] == 'World':
-                    r = _db.geo.get_region_list()
-                    if not isinstance(r, list):
-                        r=sorted(r['name_region'].to_list())
-                elif _db_list_dict[_whom][2] == 'Europe':
-                    r = ['European Union']
-                else:
-                    r = []
+                r = _db.geo.get_region_list()
+                if not isinstance(r, list):
+                    r=sorted(r['name_region'].to_list())
                 r.append(_db_list_dict[_whom][2])
+                if _db_list_dict[_whom][2] == 'Europe':
+                    r.append('European Union')
                 return r
         if _db_list_dict[_whom][1] == 'nation' and _db_list_dict[_whom][2] not in ['World','Europe']:
             return [ _db_list_dict[_whom][2] ]

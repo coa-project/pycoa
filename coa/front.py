@@ -253,7 +253,7 @@ def listmaplabel():
 # ----------------------------------------------------------------------
 # --- setwhom() --------------------------------------------------------
 # ----------------------------------------------------------------------
-def setwhom(base):
+def setwhom(base,refresh=True):
     """Set the covid19 database used, given as a string.
     Please see pycoa.listbase() for the available current list.
 
@@ -266,7 +266,7 @@ def setwhom(base):
     else:
         if '_db' not in globals():
             global _db, _cocoplot, _whom
-        _db, _cocoplot = coco.DataBase.factory(base)
+        _db, _cocoplot = coco.DataBase.factory(base,refresh)
         _whom = base
 # ----------------------------------------------------------------------
 # --- getwhom() --------------------------------------------------------

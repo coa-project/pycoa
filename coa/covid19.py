@@ -33,6 +33,8 @@ import coa.dbparser as dbparser
 import coa.display as codisplay
 from coa.error import *
 from scipy import stats as sps
+import pickle
+import os
 
 class DataBase(object):
    """
@@ -55,12 +57,28 @@ class DataBase(object):
         self.set_display(db_name,self.geo)
 
    @staticmethod
-   def factory(db_name):
+   def factory(db_name,refresh=True):
        '''
         Return an instance to DataBase and to CocoDisplay methods
         This is recommended to avoid mismatch in labeled figures
        '''
-       datab = DataBase(db_name)
+       path = "../.cash/"
+       if not os.path.exists(path):
+           os.makedirs(path)
+       filepkl=path+db_name+'.pkl'
+       if refresh:
+           datab = DataBase(db_name)
+           with open(filepkl, 'wb') as f:
+               pickle.dump(datab,f)
+       else:
+           if not os.path.isfile(filepkl):
+              print("Data from "+db_name + " isn't allready stored")
+              datab = DataBase(db_name)
+              with open(filepkl, 'wb') as f:
+                  pickle.dump(datab,f)
+
+           with open(filepkl, 'rb') as f:
+               datab = pickle.load(f)
        return  datab, datab.get_display()
 
    def get_parserdb(self):
@@ -295,8 +313,6 @@ class DataBase(object):
             option.remove('nonneg')
             option.insert(0, 'nonneg')
         if 'smooth7' and 'sumall' in option:
-            #option.remove('sumall')
-            #option.remove('smooth7')
             sumallandsmooth7=True
         for o in option:
             if o == 'nonneg':

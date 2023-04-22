@@ -84,7 +84,7 @@ _listplot = ['date','menulocation','versus','spiral','yearly']
 
 _listmaplabel= ['text','textinteger','spark','spiral','label%','log','unsorted','exploded','dense']
 
-_listoption = ['nonneg', 'nofillnan', 'smooth7', 'sumall','sumallandsmooth7']
+_listoption = ['nonneg', 'nofillnan', 'smooth7', 'sumall']
 # --- Front end functions ----------------------------------------------
 
 # ----------------------------------------------------------------------
@@ -385,7 +385,7 @@ def chartsinput_deco(f):
             wrapper dealing with arg testing
         '''
         kwargs_test(kwargs,
-                    ['where', 'what', 'which', 'whom', 'when', 'input', 'input_field','output','typeofplot',\
+                    ['where', 'what', 'which', 'whom', 'when', 'input', 'input_field','output',\
                     'title','typeofplot','typeofhist','bins','visu','tile','dateslider','maplabel','option',
                     'mode','guideline','bypop', 'plot_width','plot_height','textcopyright','cursor_date'],
                     'Bad args used in the pycoa function.')

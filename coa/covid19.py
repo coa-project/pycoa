@@ -294,10 +294,10 @@ class DataBase(object):
         if 'nonneg' in option:
             option.remove('nonneg')
             option.insert(0, 'nonneg')
-        if 'smooth7' in option and 'sumall' in  option:
-            option.remove('sumall')
-            option.remove('smooth7')
-            option+=['sumallandsmooth7']
+        if 'smooth7' and 'sumall' in option:
+            #option.remove('sumall')
+            #option.remove('smooth7')
+            sumallandsmooth7=True
         for o in option:
             if o == 'nonneg':
                 if kwargs['which'].startswith('cur_'):
@@ -368,10 +368,7 @@ class DataBase(object):
                 fillnan=True
             elif o == 'sumall':
                 sumall = True
-            elif o == 'sumallandsmooth7':
-                sumall = True
-                sumallandsmooth7 = True
-            elif o != None and o != '' and o != 'sumallandsmooth7':
+            elif o != None and o != '':
                 raise CoaKeyError('The option '+o+' is not recognized in get_stats. See listoptions() for list.')
         pdfiltered = pdfiltered.reset_index(drop=True)
         #sumallandsmooth7 if sumall set, return only integrate val

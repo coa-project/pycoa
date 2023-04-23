@@ -34,7 +34,7 @@ import coa.display as codisplay
 from coa.error import *
 from scipy import stats as sps
 import pickle
-import os
+import os, time
 
 class DataBase(object):
    """
@@ -76,9 +76,11 @@ class DataBase(object):
               datab = DataBase(db_name)
               with open(filepkl, 'wb') as f:
                   pickle.dump(datab,f)
-
            with open(filepkl, 'rb') as f:
+               print("Info of "+ db_name + " stored ")
+               print("last update: %s" % time.ctime(os.path.getmtime(filepkl)))
                datab = pickle.load(f)
+
        return  datab, datab.get_display()
 
    def get_parserdb(self):

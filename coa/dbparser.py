@@ -92,10 +92,13 @@ class DBInfo:
                 raise CoaDbError("An error occured while parsing data of "+self.get_db()+". This may be due to a data format modification. "
                     "You may contact support@pycoa.fr. Thanks.")
             # some info
-            info('Few information concernant the selected database : ', self.get_db())
-            info('Available key-words, which ∈', sorted(self.get_available_keywords()))
-            info('Example of where : ',  ', '.join(random.choices(self.get_locations(), k=min(5,len(self.get_locations() ))   )), ' ...')
-            info('Last date data ', self.get_dates().max())
+            self.get_echoinfo()
+
+  def get_echoinfo(self):
+      info('Few information concernant the selected database : ', self.get_db())
+      info('Available key-words, which ∈', sorted(self.get_available_keywords()))
+      info('Example of where : ',  ', '.join(random.choices(self.get_locations(), k=min(5,len(self.get_locations() ))   )), ' ...')
+      info('Last date data ', self.get_dates().max())
 
   def get_parsing(self,namedb):
       '''

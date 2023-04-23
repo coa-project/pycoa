@@ -264,6 +264,8 @@ def setwhom(base,refresh=True):
         if '_db' not in globals():
             global _db, _cocoplot, _whom
         _db, _cocoplot = coco.DataBase.factory(base,refresh)
+        if not refresh:
+            _db.get_parserdb().get_echoinfo()
         _whom = base
 # ----------------------------------------------------------------------
 # --- getwhom() --------------------------------------------------------
@@ -282,7 +284,7 @@ def getwhom(return_error=True):
 # ----------------------------------------------------------------------
 # --- get(**kwargs) ----------------------------------------------------
 # ----------------------------------------------------------------------
-def getinfo(which=None):
+def getkeywordinfo(which=None):
     """
         Return keyword_definition for the db selected
     """

@@ -994,8 +994,13 @@ class CocoDisplay:
                 if func.__name__ in ['pycoa_mapfolium','pycoa_map','pycoageo' ,'pycoa_pimpmap']:
                     if isinstance(input['where'].iloc[0],list):
                         geom = self.location_geometry
-                        geodic={loc:geom.loc[geom['where']==loc]['geometry'].values[0] for loc in geopdwd['where'].unique()}
-                        geopdwd['geometry'] = geopdwd['where'].map(geodic)
+                        geodic={}
+                        for uclust in geopdwd['clustername'].unique():
+                            loc = geopdwd.loc[geopdwd.clustername==uclust]['where'].iloc[0]
+                            cumulgeo = list(geom.loc[geom['where'].isin(loc)]['geometry'])
+                            geodic[uclust]=cumulgeo
+                        #geodic={loc:geom.loc[geom['where']==loc]['geometry'].values[0] for loc in geopdwd['where'].unique()}
+                        geopdwd.loc[:,'geometry'] = geopdwd.clustername.map(geodic)
                     else:
                         geopdwd = pd.merge(geopdwd, self.location_geometry, on='where')
                     kwargs['tile'] = tile
@@ -1024,7 +1029,6 @@ class CocoDisplay:
                             new_geo = geo.get_data()[['name_'+self.granularity,'geometry']]
                             new_geo = new_geo.rename(columns={'name_'+self.granularity:'where'})
                             new_geo = new_geo.set_index('where')['geometry'].to_dict()
-
                             geopdwd['geometry'] = geopdwd['where'].map(new_geo)
                     geopdwd = gpd.GeoDataFrame(geopdwd, geometry=geopdwd.geometry, crs="EPSG:4326")
 
@@ -1855,6 +1859,7 @@ class CocoDisplay:
                 geopdwd_filtered = pd.merge(geolistmodified, geopdwd_filtered, on='where')
                 #if kwargs['wanted_dates']:
                 #    kwargs.pop('wanted_dates')
+
             return func(self, geopdwd, geopdwd_filtered, **kwargs)
         return innerdecopycoageo
 
@@ -1884,12 +1889,17 @@ class CocoDisplay:
                     sumgeo = sumgeo.to_crs(3035)
                 else:
                     sumgeo['geometry'] = sumgeo['geometry'].buffer(0.001) #needed with geopandas 0.10.2
-                centrosx = sumgeo['geometry'].centroid.x
-                centrosy = sumgeo['geometry'].centroid.y
 
+                sumgeo.loc[:,'centroidx'] = sumgeo['geometry'].centroid.x
+                sumgeo.loc[:,'centroidy'] = sumgeo['geometry'].centroid.y
+                clust=sumgeo.clustername.unique()
+
+                centrosx = [sumgeo.loc[sumgeo.clustername==i]['centroidx'].mean() for i in clust]
+                centrosy = [sumgeo.loc[sumgeo.clustername==i]['centroidy'].mean() for i in clust]
                 sumgeo = sumgeo.dissolve(by='clustername', aggfunc='sum').reset_index()
                 sumgeo['nb'] = sumgeo['clustername'].map(numberpercluster)
                 cases = sumgeo['cases']/sumgeo['nb']
+
                 dfLabel=pd.DataFrame({'clustername':sumgeo.clustername,'centroidx':centrosx,'centroidy':centrosy,'cases':cases,'geometry':sumgeo['geometry']})
 
                 if maplabel:
@@ -1914,14 +1924,6 @@ class CocoDisplay:
                     dfLabel['cases']=[str(i) for i in dfLabel['cases']]
                 sourcemaplabel = ColumnDataSource(dfLabel.drop(columns='geometry'))
             minx, miny, maxx, maxy =  geopdwd_filtered.total_bounds #self.boundary
-            #if self.dbld[self.database_name][0] != 'WW':
-            #    ratio = 0.05
-            #    minx -= ratio*minx
-            #    maxx += ratio*maxx
-            #    miny -= ratio*miny
-            #    maxy += ratio*maxy
-            #if func.__name__ == 'pycoa_pimpmap':
-            #    dico['titlebar']=tit[:-12]+' [ '+dico['when_beg'].strftime('%d/%m/%Y')+ '-'+ tit[-12:-1]+'])'
 
             kwargs['plot_width']=kwargs['plot_height']
             x_range=(minx,maxx)
@@ -2028,9 +2030,10 @@ class CocoDisplay:
             geopdwd_tmp = ColumnDataSource(geopdwd_tmp.drop(columns=['geometry']))
 
             sourcemaplabel.data['rolloverdisplay'] = sourcemaplabel.data['clustername']
+
             callback = CustomJS(args =  dict(source = geopdwd_tmp, source_filter = geopdwd_filtered,
                                           date_sliderjs = date_slider, title=standardfig.title,
-                                          color_mapperjs = color_mapper),
+                                          color_mapperjs = color_mapper, maplabeljs = sourcemaplabel),
                         code = """
                         var ind_date_max = (date_sliderjs.end-date_sliderjs.start)/(24*3600*1000);
                         var ind_date = (date_sliderjs.value-date_sliderjs.start)/(24*3600*1000);
@@ -2059,6 +2062,15 @@ class CocoDisplay:
                             source_filter.data['cases'] = new_cases;
                             }
 
+                        if (maplabeljs.get_length() !== 0){
+                            maplabeljs.data['cases'] = source_filter.data['cases'];
+                            }
+                        for (var i = 0; i < maplabeljs.get_length(); i++)
+                        {
+                            maplabeljs.data['cases'][i] = form(maplabeljs.data['cases'][i]).toString();
+                            maplabeljs.data['rolloverdisplay'][i] = source_filter.data['rolloverdisplay'][i];
+                        }
+
                         var tmp = title.text;
                         tmp = tmp.slice(0, -11);
                         var dateconverted = new Date(date_sliderjs.value);
@@ -2068,9 +2080,12 @@ class CocoDisplay:
                         var dmy = dd + '/' + mm + '/' + yyyy;
                         title.text = tmp + dmy+")";
 
+                        if (maplabeljs.get_length() !== 0)
+                            maplabeljs.change.emit();
+
                         color_mapperjs.high=Math.max.apply(Math, new_cases);
                         color_mapperjs.low=Math.min.apply(Math, new_cases);
-
+                        console.log(maplabeljs.data['cases']);
                         source_filter.change.emit();
                     """)
             date_slider.js_on_change('value', callback)
@@ -2122,6 +2137,7 @@ class CocoDisplay:
                             line_color = 'black', line_width = 0.25, fill_alpha = 1)
         if maplabel:
             if 'text' in maplabel or 'textinteger' in maplabel:
+
                 if 'textinteger' in maplabel:
                     sourcemaplabel.data['cases'] = sourcemaplabel.data['cases'].astype(float).astype(int).astype(str)
                 labels = LabelSet(

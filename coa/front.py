@@ -259,6 +259,8 @@ def setwhom(base,**kwargs):
     """
     kwargs_test(kwargs, ['reload'], 'Bad args used in the pycoa.saveoutput function.')
     refresh = kwargs.get('reload', True)
+    if refresh not in [0,1]:
+        raise CoaError('reload must be a boolean ... ')
     if base not in listwhom():
         raise CoaDbError(base + ' is not a supported database. '
                                 'See pycoa.listbase() for the full list.')

@@ -25,7 +25,7 @@ Basic usage
     cf.get(where=['Spain','Italy'],which='recovered')
 ** listing available database and which data can be used **
     cf.listwhom()
-    cf.setwhom('jhu') # return available keywords (aka 'which' data)
+    cf.setwhom('jhu',reload=True) # return available keywords (aka 'which' data), reload DB is True by default
     cf.listwhich()   # idem
     cf.listwhat()    # return available time series type (weekly,
                      # daily...)
@@ -250,13 +250,14 @@ def listmaplabel():
 # ----------------------------------------------------------------------
 # --- setwhom() --------------------------------------------------------
 # ----------------------------------------------------------------------
-def setwhom(base,refresh=True):
+def setwhom(base,**kwargs):
     """Set the covid19 database used, given as a string.
     Please see pycoa.listbase() for the available current list.
 
     By default, the listbase()[0] is the default base used in other
     functions.
     """
+    refresh = kwargs.get('reload', True)
     if base not in listwhom():
         raise CoaDbError(base + ' is not a supported database. '
                                 'See pycoa.listbase() for the full list.')
@@ -384,7 +385,7 @@ def chartsinput_deco(f):
             wrapper dealing with arg testing
         '''
         kwargs_test(kwargs,
-                    ['where', 'what', 'which', 'whom', 'when', 'input', 'input_field','output',\
+                    ['where', 'what', 'which', 'whom','reload','when', 'input', 'input_field','output',\
                     'title','typeofplot','typeofhist','bins','visu','tile','dateslider','maplabel','option',
                     'mode','guideline','bypop', 'plot_width','plot_height','textcopyright','cursor_date'],
                     'Bad args used in the pycoa function.')

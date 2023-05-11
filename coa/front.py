@@ -257,6 +257,7 @@ def setwhom(base,**kwargs):
     By default, the listbase()[0] is the default base used in other
     functions.
     """
+    kwargs_test(kwargs, ['reload'], 'Bad args used in the pycoa.saveoutput function.')
     refresh = kwargs.get('reload', True)
     if base not in listwhom():
         raise CoaDbError(base + ' is not a supported database. '

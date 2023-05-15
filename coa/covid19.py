@@ -140,7 +140,7 @@ class DataBase(object):
         optionskipped=False
         othersinputfieldpandas=pd.DataFrame()
         kwargs_test(kwargs,['where','which','what','option','input','input_field','when','output',
-        'typeofplot','typeofhist','tile','visu','mode','maplabel','bypop','cursor_date'],'Bad args used in the get_stats() function.')
+        'typeofplot','typeofhist','tile','visu','mode','maplabel','bypop','cursor_date','title'],'Bad args used in the get_stats() function.')
         if 'where' not in kwargs or kwargs['where'] is None.__class__ or kwargs['where'] == None:
             #if self.dbfullinfo.get_dblistdico(self.db)[0] == 'WW':
             #    kwargs['where'] = self.dbfullinfo.get_dblistdico(self.db)[2]
@@ -460,7 +460,7 @@ class DataBase(object):
         if not othersinputfieldpandas.empty:
             pdfiltered = pd.merge(pdfiltered, othersinputfieldpandas, on=['date','where'])
         if 'input_field' not in kwargs:
-            verb("Here the information I\'ve got on ", kwargs['which']," : ",  self.dbfullinfo.get_keyword_definition(kwargs['which'])) 
+            verb("Here the information I\'ve got on ", kwargs['which']," : ",  self.dbfullinfo.get_keyword_definition(kwargs['which']))
         return pdfiltered
 
    def merger(self,**kwargs):

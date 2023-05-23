@@ -240,7 +240,8 @@ class DBInfo:
               for idx,url in enumerate(lurl):
                   keep = ['date','where'] + self.get_url_original_keywords()[url]
                   separator = self.get_url_separator(url)
-                  list_spf.append(self.row_date_csv_parser(url=url,rename_columns = rename, separator = separator, constraints = constraints, cast = cast, keep_field = keep))
+                  sp = self.row_date_csv_parser(url=url,rename_columns = rename, separator = separator, constraints = constraints, cast = cast, keep_field = keep)
+                  list_spf.append(sp)
               result=pd.DataFrame()
               for i in list_spf:
                   if result.empty:
@@ -982,7 +983,7 @@ class DBInfo:
      if encoding:
          encoding = encoding
      quoting=0
-     pandas_db = pd.read_csv(get_local_from_url(url,7200), sep=separator, encoding = encoding,
+     pandas_db = pd.read_csv(get_local_from_url(url,10000), sep=separator, encoding = encoding,
           keep_default_na=False,na_values='',header=0,quoting=quoting, dtype=cast,low_memory=False) # cached for 2 hours
      if constraints:
          for key,val in constraints.items():

@@ -185,22 +185,20 @@ class DBInfo:
               self.column_date_csv_parser(namedb,rename_columns=rename,drop_field=drop_field)
           elif namedb == 'spf':
               info('SPF aka Sante Publique France database selected (France departement granularity) ...')
-              info('... 7 SPF databases will be parsed ...')
+              info('... 5 SPF databases will be parsed ...')
               urlmaster0='https://www.data.gouv.fr/fr/datasets/donnees-de-laboratoires-pour-le-depistage-a-compter-du-18-05-2022-si-dep/'
               urlmaster1='https://www.data.gouv.fr/fr/datasets/donnees-de-laboratoires-pour-le-depistage-a-compter-du-18-05-2022-si-dep/'
               urlmaster2='https://www.data.gouv.fr/fr/datasets/indicateurs-de-suivi-de-lepidemie-de-covid-19/'
               urlmaster3='https://www.data.gouv.fr/fr/datasets/donnees-relatives-aux-personnes-vaccinees-contre-la-covid-19-1'
-              #urlmaster4='https://www.data.gouv.fr/fr/datasets/donnees-de-laboratoires-pour-le-depistage-indicateurs-sur-les-variants/'
-              urlmaster5='https://www.data.gouv.fr/fr/datasets/donnees-de-laboratoires-pour-le-depistage-indicateurs-sur-les-mutations/'
-              urlmaster6='https://www.data.gouv.fr/en/datasets/donnees-des-urgences-hospitalieres-et-de-sos-medecins-relatives-a-lepidemie-de-covid-19/'
+              urlmaster4='https://www.data.gouv.fr/fr/datasets/donnees-de-laboratoires-pour-le-depistage-indicateurs-sur-les-mutations/'
+              urlmaster5='https://www.data.gouv.fr/en/datasets/donnees-des-urgences-hospitalieres-et-de-sos-medecins-relatives-a-lepidemie-de-covid-19/'
               url0='https://www.data.gouv.fr/fr/datasets/r/ca490480-09a3-470f-8556-76d6fd291325'
               url1='https://www.data.gouv.fr/fr/datasets/r/5c4e1452-3850-4b59-b11c-3dd51d7fb8b5'
               url2='https://www.data.gouv.fr/fr/datasets/r/4acad602-d8b1-4516-bc71-7d5574d5f33e'
               url3='https://www.data.gouv.fr/fr/datasets/r/83cbbdb9-23cb-455e-8231-69fc25d58111'
-              #url4='https://www.data.gouv.fr/fr/datasets/r/16f4fd03-797f-4616-bca9-78ff212d06e8'
-              url5='https://www.data.gouv.fr/fr/datasets/r/bc318bc7-fb90-4e76-a6cb-5cdc0a4e5432'
-              url6='https://www.data.gouv.fr/en/datasets/r/eceb9fb4-3ebc-4da3-828d-f5939712600a'
-              self.separator={url0:';',url1:',',url2:',',url3:';',url5:';',url6:';',}
+              url4='https://www.data.gouv.fr/fr/datasets/r/bc318bc7-fb90-4e76-a6cb-5cdc0a4e5432'
+              url5='https://www.data.gouv.fr/en/datasets/r/eceb9fb4-3ebc-4da3-828d-f5939712600a'
+              self.separator={url0:';',url1:',',url2:',',url3:';',url4:';',url5:';',}
               spfdic = {
               'tot_P':['P','Nombre total de tests positifs',url0,urlmaster0],\
               'tot_T':['T','Nombre total de tests réalisés',url0,urlmaster0],\
@@ -216,7 +214,6 @@ class DBInfo:
               'incid_rad':['incid_rad','Nombre total de  retours à domicile',url1,urlmaster1],\
               'incid_dchosp':['incid_dchosp','Nombre total de personnes  décédées',url1,urlmaster1],\
               'cur_idx_R':['R','FILLIT',url2,urlmaster2],\
-              #'cur_tx_crib':['tx_crib','FILLIT',url2,urlmaster2],\
               'cur_idx_tx_occupation_sae':['taux_occupation_sae','FILLIT',url2,urlmaster2],\
               'cur_tx_pos':['tx_pos','Taux de positivité des tests virologiques (Le taux de positivité correspond au nombre de personnes testées positives\
                (RT-PCR et test antigénique) pour la première fois depuis plus de 60 jours rapporté au nombre total de personnes testées positives ou \
@@ -225,15 +222,13 @@ class DBInfo:
               'tot_vacc_complet':['n_cum_complet','FILLIT',url3,urlmaster3],\
               'tot_vacc_rappel':['n_cum_rappel','FILLIT',url3,urlmaster3],\
               'tot_vacc2_rappel':['n_cum_2_rappel','FILLIT',url3,urlmaster3],\
-              #'cur_idx_Prc_susp_IND':['Prc_susp_IND','% de tests avec une détection de variant mais non identifiable',url4,urlmaster4],\
-              #'cur_idx_Prc_susp_ABS' :['Prc_susp_ABS','% de tests avec une absence de détection de variant',url4,urlmaster4],\
-              'cur_nb_A0' :['nb_A0','Nombre des tests positifs pour lesquels la recherche de mutation A est négatif (A = E484K)',url5,urlmaster5],\
-              'cur_nb_A1':['nb_A1','Nombre des tests positifs pour lesquels la recherche de mutation A est positif (A = E484K)',url5,urlmaster5],\
-              'cur_tx_A1' :['tx_A1','Taux de présence mutation A (A = E484K)',url5,urlmaster5],\
-              'cur_nb_C0' :['nb_C0','Nombre des tests positifs pour lesquels la recherche de mutation C est négatif (C = L452R)',url5,urlmaster5],\
-              'cur_nb_C1' :['nb_C1','Nombre des tests positifs pour lesquels la recherche de mutation C est positif (C = L452R)',url5,urlmaster5],\
-              'cur_tx_C1' :['tx_C1','Taux de présence mutation C (C = L452R)',url5,urlmaster5],\
-              'cur_nbre_pass_corona':['nbre_pass_corona','Nombre de passages aux urgences pour suspicion de COVID-19 (nbre_pass_corona)',url6,urlmaster6],
+              'cur_nb_A0' :['nb_A0','Nombre des tests positifs pour lesquels la recherche de mutation A est négatif (A = E484K)',url4,urlmaster4],\
+              'cur_nb_A1':['nb_A1','Nombre des tests positifs pour lesquels la recherche de mutation A est positif (A = E484K)',url4,urlmaster4],\
+              'cur_tx_A1' :['tx_A1','Taux de présence mutation A (A = E484K)',url4,urlmaster4],\
+              'cur_nb_C0' :['nb_C0','Nombre des tests positifs pour lesquels la recherche de mutation C est négatif (C = L452R)',url4,urlmaster4],\
+              'cur_nb_C1' :['nb_C1','Nombre des tests positifs pour lesquels la recherche de mutation C est positif (C = L452R)',url4,urlmaster4],\
+              'cur_tx_C1' :['tx_C1','Taux de présence mutation C (C = L452R)',url4,urlmaster4],\
+              'cur_nbre_pass_corona':['nbre_pass_corona','Nombre de passages aux urgences pour suspicion de COVID-19 (nbre_pass_corona)',url5,urlmaster5],
               }
               self.pandasdb = pd.DataFrame(spfdic,index=['Original name','Description','URL','Homepage'])
               list_spf=[]
@@ -245,8 +240,6 @@ class DBInfo:
               for idx,url in enumerate(lurl):
                   keep = ['date','where'] + self.get_url_original_keywords()[url]
                   separator = self.get_url_separator(url)
-                  print(url)
-                  print(self.row_date_csv_parser(url=url,rename_columns = rename, separator = separator, constraints = constraints, cast = cast, keep_field = keep))
                   list_spf.append(self.row_date_csv_parser(url=url,rename_columns = rename, separator = separator, constraints = constraints, cast = cast, keep_field = keep))
               result=pd.DataFrame()
               for i in list_spf:

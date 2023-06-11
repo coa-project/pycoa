@@ -160,6 +160,8 @@ class DataBase(object):
             mypycoapd = self.dbfullinfo.get_mainpandas()
             if 'which' not in kwargs:
                 kwargs['which'] = mypycoapd.columns[2]
+            if kwargs['which'] not in self.dbfullinfo.get_available_keywords():
+                raise CoaKeyError(kwargs['which']+' this value is not available in this db, please check !')
             mainpandas = return_nonan_dates_pandas(mypycoapd,kwargs['which'])
             #while for last date all values are nan previous date
         else:
@@ -171,6 +173,7 @@ class DataBase(object):
             #if isinstance(kwargs['input_field'],list):
             #    for i in kwargs['input_field']:
             #        mainpandas[i] = mypycoapd[i]
+
         devorigclist = None
         origclistlist = None
         origlistlistloc = None
@@ -460,7 +463,7 @@ class DataBase(object):
         if not othersinputfieldpandas.empty:
             pdfiltered = pd.merge(pdfiltered, othersinputfieldpandas, on=['date','where'])
         if 'input_field' not in kwargs:
-            verb("Here the information I\'ve got on ", kwargs['which']," : ",  self.dbfullinfo.get_keyword_definition(kwargs['which']))   
+            verb("Here the information I\'ve got on ", kwargs['which']," : ",  self.dbfullinfo.get_keyword_definition(kwargs['which']))
         return pdfiltered
 
    def merger(self,**kwargs):

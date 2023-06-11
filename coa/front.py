@@ -411,14 +411,10 @@ def chartsinput_deco(f):
         input_field = kwargs.get('input_field',None)
 
         if (option != None or what != None) and (isinstance(input_field,list) or isinstance(which,list)):
-            raise CoaKeyError('option/what not compatible when input_fied/which  is a list')
+            raise CoaKeyError('option/what not compatible when input_fied/which is a list')
 
         if 'input_field' not in kwargs:
-            #if which:
-            #    kwargs['input_field'] = which
-            #else:
             which = input_field
-                #kwargs['which']=which
         else:
             which = kwargs['input_field']
 
@@ -442,7 +438,7 @@ def chartsinput_deco(f):
             whom = _whom
         if whom != _whom:
             setwhom(whom)
-
+           
         if bypop not in listbypop():
             raise CoaKeyError('The bypop arg should be selected in '+str(listbypop)+' only.')
         if isinstance(input_arg, pd.DataFrame) or isinstance(which, list):

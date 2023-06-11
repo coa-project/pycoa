@@ -103,6 +103,7 @@ class DBInfo:
   def get_parsing(self,namedb):
       '''
         Parse the DB selected
+        When available total deaths should be the first epidemiological variable
       '''
       if namedb in _db_list_dict.keys():
           if namedb == 'jhu':
@@ -200,9 +201,9 @@ class DBInfo:
               url5='https://www.data.gouv.fr/en/datasets/r/eceb9fb4-3ebc-4da3-828d-f5939712600a'
               self.separator={url0:';',url1:',',url2:',',url3:';',url4:';',url5:';',}
               spfdic = {
+              'tot_dchosp':['dchosp','FILLIT',url1,urlmaster1],\
               'tot_P':['P','Nombre total de tests positifs',url0,urlmaster0],\
               'tot_T':['T','Nombre total de tests réalisés',url0,urlmaster0],\
-              'tot_dchosp':['dchosp','FILLIT',url1,urlmaster1],\
               'cur_hosp':['hosp','FILLIT',url1,urlmaster1],\
               'tot_rad':['rad','FILLIT',url1,urlmaster1],\
               'cur_rea':['rea','FILLIT',url1,urlmaster1],\
@@ -265,10 +266,10 @@ class DBInfo:
           elif namedb == 'spfnational':
               info('SPFNational, aka Sante Publique France, database selected (France with no granularity) ...')
               spfn = {
+              'tot_dc_hosp':['dchosp','Cumul des décès (cumul des décès constatés à l\'hôpital et en EMS)'],\
               'cur_reanimation':['incid_rea','Nombre de nouveaux patients admis en réanimation au cours des dernières 24h.'],\
               'cur_hospitalises':['incid_hosp','Nombre de nouveaux patients hospitalisés au cours des dernières 24h.'],\
               'cur_cas':['conf_j1','Nombre de nouveaux cas confirmés (J-1 date de résultats)'],\
-              'tot_dc_hosp':['dchosp','Cumul des décès (cumul des décès constatés à l\'hôpital et en EMS)'],\
               'tot_dc_esms':['esms_dc','Décès en ESMS'],\
               'tot_dc':['dc_tot','FILL IT'],\
               'cur_tx_pos':['tx_pos','Taux de positivité des tests virologiques'],\
@@ -437,13 +438,13 @@ class DBInfo:
               url4='https://raw.githubusercontent.com/MoH-Malaysia/covid19-public/main/epidemic/deaths_state.csv'
               self.separator={url0:',',url1:',',url2:',',url3:',',url4:','}
               moh = {
+              'tot_deaths':['deaths_new','from original data deaths_new',url4],\
               'tot_cases':['cases_new','from original data cases_new',url0],\
               'hosp_covid':['hosp_covid','FILLIT',url1],\
               'icu_covid':['icu_covid','FILLIT',url2],\
               'beds_icu_covid':['beds_icu_covid','beds_icu_covid',url2],\
               'daily_partial':['daily_partial','FILLIT',url3],\
               'daily_full':['daily_full','FILLIT',url3],\
-              'tot_deaths':['deaths_new','from original data deaths_new',url4],\
               }
               for k,v in moh.items():
                   moh[k].append("https://github.com/MoH-Malaysia/covid19-public")
@@ -472,8 +473,8 @@ class DBInfo:
           elif namedb == 'dpc':
               info('ITA, Dipartimento della Protezione Civile database selected ...')
               ita = {
-              'tot_cases':['totale_casi','FILLIT'],\
-              'tot_deaths':['deceduti','FILLIT']
+              'tot_deaths':['deceduti','FILLIT'],\
+              'tot_cases':['totale_casi','FILLIT']
               }
               url='https://raw.githubusercontent.com/pcm-dpc/COVID-19/master/dati-regioni/dpc-covid19-ita-regioni.csv'
               self.separator = {url:','}
@@ -704,8 +705,8 @@ class DBInfo:
               self.separator = {url:','}
               urlmaster='https://github.com/owid/monkeypox'
               mpoxgh = {
-                  'total_cases': ['total confirmed cases','FILLIT',url,urlmaster],\
                   'total_deaths': ['total death cases','FILLIT',url,urlmaster],\
+                  'total_cases': ['total confirmed cases','FILLIT',url,urlmaster],\
                   }
               self.pandasdb = pd.DataFrame(mpoxgh,index=['Original name','Description','URL','Homepage'])
               lurl=list(dict.fromkeys(self.get_url()))

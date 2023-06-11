@@ -30,25 +30,25 @@ import coa.geo as coge
 # Known db
 
 _db_list_dict = {
-    'jhu': ['WW','nation','World'],
     'owid': ['WW','nation','World'],
-    'jhu-usa': ['USA','subregion','United States of America'],
-    'spf': ['FRA','subregion','France'],
-    'spfnational': ['WW','nation','France'],
-    'dpc': ['ITA','region','Italy'],
-    'rki':['DEU','subregion','Germany'],
-    'escovid19data':['ESP','subregion','Spain'],
-    'phe':['GBR','subregion','United Kingdom'],
-    'sciensano':['BEL','region','Belgium'],
     'dgs':['PRT','region','Portugal'],
-    'moh':['MYS','subregion','Malaysia'],
-    'risklayer':['WW','subregion','Europe'],
-    'imed':['GRC','region','Greece'],
-    'govcy':['CYP','nation','Cyprus'],
-    'insee':['FRA','subregion','France'],
+    'dpc': ['ITA','region','Italy'],
     'europa':['WW','nation','Europe'],
-    'mpoxgh':['WW','nation','World'],
+    'escovid19data':['ESP','subregion','Spain'],
+    'govcy':['CYP','nation','Cyprus'],
+    'imed':['GRC','region','Greece'],
+    'insee':['FRA','subregion','France'],
+    'jhu': ['WW','nation','World'],
+    'jhu-usa': ['USA','subregion','United States of America'],
     'jpnmhlw' :['JPN','subregion','Japan'],
+    'moh':['MYS','subregion','Malaysia'],
+    'mpoxgh':['WW','nation','World'],
+    'phe':['GBR','subregion','United Kingdom'],
+    'risklayer':['WW','subregion','Europe'],
+    'rki':['DEU','subregion','Germany'],
+    'sciensano':['BEL','region','Belgium'],
+    'spf': ['FRA','subregion','France'],
+    'spfnational': ['WW','nation','France'],    
     }
 class DBInfo:
   def __init__(self, namedb):
@@ -106,7 +106,292 @@ class DBInfo:
         When available total deaths should be the first epidemiological variable
       '''
       if namedb in _db_list_dict.keys():
-          if namedb == 'jhu':
+          if namedb == 'owid':
+              info('OWID aka \"Our World in Data\" database selected ...')
+              owid={
+              'total_deaths':['total_deaths','Total deaths attributed to COVID-19'],
+              'total_cases':['total_cases','Total confirmed cases of COVID-19'],
+              'total_tests':['total_tests','Total tests for COVID-19'],
+              'total_tests_per_thousand':['total_tests_per_thousand','Total tests for COVID-19 per thousand'],
+              'total_vaccinations':['total_vaccinations','Total number of COVID-19 vaccination doses administered'],
+              'total_population':['population','total population of a given country'],
+              'total_people_fully_vaccinated_per_hundred':['people_fully_vaccinated_per_hundred','Total number of people who received all doses prescribed by the vaccination protocol per 100 people in the total population'],
+              'total_boosters':['total_boosters','Total number of COVID-19 vaccination booster doses administered (doses administered beyond the number prescribed by the vaccination protocol)'],
+              'total_people_vaccinated':['people_vaccinated','Total number of people who received at least one vaccine dose'],
+              'total_people_fully_vaccinated':['people_fully_vaccinated','total_people_fully_vaccinated (original name people_fully_vaccinated): Total number of people who received all doses prescribed by the vaccination protocol'],
+              'total_people_vaccinated_per_hundred':['people_vaccinated_per_hundred','total_people_vaccinated_per_hundred (original name people_vaccinated_per_hundred): total_people_vaccinated_per_hundred:Total number of people who received all doses prescribed by the vaccination protocol per 100 people in the total population'],
+              'total_cases_per_million':['total_cases_per_million','Total confirmed cases of COVID-19 per 1,000,000 people'],
+              'total_deaths_per_million':['total_deaths_per_million','Total deaths attributed to COVID-19 per 1,000,000 people'],
+              'total_vaccinations_per_hundred':['total_vaccinations_per_hundred','COVID19 vaccine doses administered per 100 people'],
+              'cur_reproduction_rate':['reproduction_rate','cur_reproduction_rate (original name reproduction_rate): Real-time estimate of the effective reproduction rate (R) of COVID-19. See https://github.com/crondonm/TrackingR/tree/main/Estimates-Database'],
+              'cur_icu_patients':['icu_patients','cur_icu_patients (orignal name icu_patients): Number of COVID-19 patients in intensive care units (ICUs) on a given day'],
+              'cur_hosp_patients':['hosp_patients','cur_hosp_patients (original name hosp_patients): Number of COVID-19 patients in hospital on a given day'],
+              'cur_weekly_hosp_admissions':['weekly_hosp_admissions','cur_weekly_hosp_admissions (original name weekly_hosp_admissions): Number of COVID-19 patients in hospital on a given week'],
+              'cur_idx_positive_rate':['positive_rate','cur_idx_positive_rate (original name positive_rate): The share of COVID-19 tests that are positive, given as a rolling 7-day average (this is the inverse of tests_per_case)'],
+              'total_gdp_per_capita':['gdp_per_capita','Gross domestic product at purchasing power parity (constant 2011 international dollars), most recent year available'],
+              'cur_excess_mortality':['excess_mortality','original name excess_mortality. Percentage difference between the reported number of weekly or monthly deaths in 2020–2021 and the projected number of deaths for the same period based on previous years'],
+              'cur_excess_mortality_cumulative_per_million':['excess_mortality_cumulative_per_million','cur_excess_mortality_cumulative_per_million:original name excess_mortality_cumulative_per_million.Cumulative difference between the reported number of deaths since 1 January 2020 and the projected number of deaths for the same period based on previous years, per million people. '],
+              }
+              url='https://raw.githubusercontent.com/owid/covid-19-data/master/public/data/owid-covid-data.csv'
+              self.separator = {url:','}
+              masterurl='https://github.com/owid'
+              for k,v in owid.items():
+                  owid[k].append(url)
+                  owid[k].append(masterurl)
+              mydico = owid
+              self.pandasdb = pd.DataFrame(owid,index=['Original name','Description','URL','Homepage'])
+              lurl=list(dict.fromkeys(self.get_url()))
+              url=lurl[0]
+              rename = {'location':'where'}
+              rename.update(self.original_to_available_keywords_dico())
+              separator=self.get_url_separator(url)
+              keep = ['date','where','iso_code'] + self.get_url_original_keywords()[url]
+              owid = self.row_date_csv_parser(url=url,rename_columns = rename, separator = separator,keep_field = keep)
+              self.dbparsed = owid
+          elif namedb == 'dgs':
+             info('PRT, Direcção Geral de Saúde - Ministério da Saúde Português data selected ...')
+             dgs = {
+                 'tot_cases':['confirmados_1','FILLIT']
+                 }
+             url='https://raw.githubusercontent.com/dssg-pt/covid19pt-data/master/data_concelhos_new.csv'
+             self.separator = {url:','}
+             urlmaster = 'https://github.com/dssg-pt/covid19pt-data'
+             for k,v in dgs.items():
+                   dgs[k].append(url)
+                   dgs[k].append(urlmaster)
+             self.pandasdb = pd.DataFrame(dgs,index=['Original name','Description','URL','Homepage'])
+             rename = {'data': 'date','concelho':'where'}
+             rename.update(self.original_to_available_keywords_dico())
+             lurl=list(dict.fromkeys(self.get_url()))
+             url=lurl[0]
+             keep = ['date','where'] + self.get_url_original_keywords()[url]
+             separator=self.get_url_separator(url)
+             self.dbparsed = self.row_date_csv_parser(url=url,rename_columns = rename, separator = separator,keep_field = keep)
+             self.dbparsed['tot_cases'] = self.dbparsed.groupby(['where'])['tot_cases'].cumsum()
+          elif namedb == 'dpc':
+              info('ITA, Dipartimento della Protezione Civile database selected ...')
+              ita = {
+              'tot_deaths':['deceduti','FILLIT'],\
+              'tot_cases':['totale_casi','FILLIT']
+              }
+              url='https://raw.githubusercontent.com/pcm-dpc/COVID-19/master/dati-regioni/dpc-covid19-ita-regioni.csv'
+              self.separator = {url:','}
+              masterurl='https://github.com/pcm-dpc/COVID-19'
+              for k,v in ita.items():
+                  ita[k].append(url)
+                  ita[k].append(masterurl)
+              self.pandasdb = pd.DataFrame(ita,index=['Original name','Description','URL','Homepage'])
+              rename = {'data': 'date', 'denominazione_regione': 'where'}
+              rename.update(self.original_to_available_keywords_dico())
+              lurl=list(dict.fromkeys(self.get_url()))
+              url=lurl[0]
+              separator=self.get_url_separator(url)
+              keep = ['date','where'] + self.get_url_original_keywords()[url]
+              self.dbparsed = self.row_date_csv_parser(url=url,rename_columns = rename, separator = separator ,keep_field = keep)
+          elif namedb == 'europa':
+              info('EUR, Rationale for the JRC COVID-19 website - data monitoring and national measures ...')
+              euro = {
+                  'tot_deaths':['CumulativeDeceased','FILLIT'],
+                  'tot_positive':['CumulativePositive','FILLIT'],
+                  'cur_hosp':['Hospitalized','FILLIT'],
+                  'cur_icu':['IntensiveCare','FILLIT'],
+                  }
+              url='https://raw.githubusercontent.com/ec-jrc/COVID-19/master/data-by-region/jrc-covid-19-all-days-by-regions.csv'
+              self.separator={url:','}
+              urlmaster='https://github.com/ec-jrc/COVID-19/tree/master/data-by-region'
+              for k,v in euro.items():
+                  euro[k].append(url)
+                  euro[k].append(urlmaster)
+              self.pandasdb = pd.DataFrame(euro,index=['Original name','Description','URL','Homepage'])
+              lurl=list(dict.fromkeys(self.get_url()))
+              url=lurl[0]
+              rename = {'CountryName':'where','iso3':'iso_code','Date':'date'}
+              rename.update(self.original_to_available_keywords_dico())
+              separator=self.get_url_separator(url)
+              keep = ['date','where','iso_code'] + self.get_url_original_keywords()[url]
+              drop_field={'where':['Ciudad Autónoma de Melilla','Gorenjske','Goriške','Greenland','Itä-Savo','Jugovzhodne','Koroške','Länsi-Pohja',\
+                      'Mainland','NOT SPECIFIED','Obalno-kraške','Osrednjeslovenske','Podravske','Pomurske','Posavske','Primorsko-notranjske',\
+                      'Repatriierte','Savinjske','West North','Zasavske']}
+              drop_field['iso_code']=['WWW']
+              self.dbparsed = self.row_date_csv_parser(url=url,rename_columns = rename, separator = separator, drop_field=drop_field, keep_field = keep)
+          elif namedb == 'escovid19data':
+            info('ESP, EsCovid19Data ...')
+            esco = {
+            'tot_deaths':['deceased','Cumulative deaths  (original name deceased)'],\
+            'tot_cases':['cases_accumulated_PCR','Number of new COVID-19 cases detected with PCR (original name cases_accumulated_PCR)'],\
+            'cur_hosp':['hospitalized','Hospitalized (original name hospitalized)'],\
+            'tot_hosp':['hospitalized_accumulated','Cumulative Hospitalized (original name hospitalized_accumulated)'],\
+            'cur_hosp_per100k':['tot_cases_per100k','Intensive care per 100,000 inhabitants (original name hospitalized_per_100000'],\
+            'cur_icu':['intensive_care','UCI, intensive care patient, (original name intensive_care)'],\
+            'tot_recovered':['recovered','Recovered (original name recovered)'],\
+            'tot_cases_per100k':['cases_per_cienmil','Cumulative cases per 100,000 inhabitants (original name cases_per_cienmil)'],\
+            'cur_icu_per1M' :['intensive_care_per_1000000','Intensive care per 1000,000 inhabitants (original name intensive_care_per_1000000)'],\
+            'tot_deaths_per100k':['deceassed_per_100000','Cumulative deaths per 100,000 inhabitants (original name deceassed_per_100000)'],\
+            'cur_hosp_per100k':['hospitalized_per_100000','Hosp per 100,000 inhabitants, (original name hospitalized_per_100000)'],\
+            'incidence':['ia14','Cases in 14 days by 100,000 inhabitants (original name ia14'],\
+            'population':['poblacion','Inhabitants of the province (orignal name poblacion)'],\
+            }
+            url='https://raw.githubusercontent.com/montera34/escovid19data/master/data/output/covid19-provincias-spain_consolidated.csv'
+            urlmaster='https://github.com/montera34/escovid19data'
+            self.separator = {url:','}
+            for k,v in esco.items():
+                esco[k].append(url)
+                esco[k].append(urlmaster)
+            self.pandasdb = pd.DataFrame(esco,index=['Original name','Description','URL','Homepage'])
+            lurl=list(dict.fromkeys(self.get_url()))
+            url=lurl[0]
+            rename = {'ine_code': 'where'}
+            rename.update(self.original_to_available_keywords_dico())
+            separator=self.get_url_separator(url)
+            keep = ['date','where'] + self.get_url_original_keywords()[url]
+            esp_data = self.row_date_csv_parser(url=url,rename_columns = rename, separator = separator,keep_field = keep)
+            esp_data['where']=esp_data['where'].astype(str).str.zfill(2)
+            for w in list(esp_data.columns):
+                if w not in ['date','where']:
+                    esp_data[w]=pd.to_numeric(esp_data[w], errors = 'coerce')
+            self.dbparsed = esp_data
+          elif namedb == 'govcy':
+            info('Cyprus, govcy database selected ...')
+            mi = {
+            'tot_deaths':['total deaths','total deaths attributed to Covid-19 disease (total deaths)'],\
+            'tot_cases':['total cases','total number of confirmed cases (total cases)'],\
+            'cur_hosp':['Hospitalised Cases','number of patients with covid-19 hospitalized cases (Hospitalised Cases)'],\
+            'cur_icu':['Cases In ICUs','number of patients with covid-19 admitted to ICUs (Cases In ICUs)'],\
+            'cur_incub':['Incubated Cases','number of patients with covid-19 admitted to ICUs (Incubated Cases)'],\
+            'tot_pcr':['total PCR tests','extract from PCR_daily tests performedtotal number of PCR tests performed (PCR_daily tests performed)'],\
+            'tot_rat':['total RA tests','total number of rapid antigen (RAT) tests performed (total RA tests)'],\
+            'tot_test':['total tests','total numbers of PCR and RA tests performed (total tests)'],\
+            }
+            url='https://www.data.gov.cy/sites/default/files/CY%20Covid19%20Open%20Data%20-%20Extended%20-%20new_247.csv'
+            self.separator = {url:','}
+            masterurl='https://www.data.gov.cy/node/4617?language=en'
+            for k,v in mi.items():
+                mi[k].append(url)
+                mi[k].append(masterurl)
+            mydico = mi
+            self.pandasdb = pd.DataFrame(mi,index=['Original name','Description','URL','Homepage'])
+            rename=self.original_to_available_keywords_dico()
+            lurl=list(dict.fromkeys(self.get_url()))
+            url=lurl[0]
+            separator=self.get_url_separator(url)
+            keep = ['date'] + self.get_url_original_keywords()[url]
+            self.dbparsed = self.row_date_csv_parser(url=url,rename_columns = rename, separator = separator,keep_field = keep)
+          elif namedb == 'imed':
+                  info('Greece, imed database selected ...')
+                  imed = {
+                  'tot_cases':['cases','FILLIT'],
+                  'tot_deaths':['deaths','FILLIT']
+                  }
+                  urlb = 'https://raw.githubusercontent.com/iMEdD-Lab/open-data/master/COVID-19/greece_'
+                  masterurl='https://github.com/iMEdD-Lab/open-data/tree/master/COVID-19'
+                  for k,v in imed.items():
+                       url=urlb+v[0]+'_v2.csv'
+                       self.separator[url]=','
+                       imed[k].append(url)
+                       imed[k].append(masterurl)
+                  self.pandasdb = pd.DataFrame(imed,index=['Original name','Description','URL','Homepage'])
+                  rename={'county_normalized':'where'}
+                  rename.update(self.original_to_available_keywords_dico())
+                  drop_columns=['Γεωγραφικό Διαμέρισμα','Περιφέρεια','county','pop_11']
+                  self.column_date_csv_parser(namedb, rename_columns = rename,drop_columns=drop_columns)
+          elif namedb == 'insee':
+                   info('FRA, INSEE global deaths statistics...')
+                   url = "https://www.data.gouv.fr/fr/datasets/fichier-des-personnes-decedees/"
+                   insee = {
+                   'tot_deaths_since_2018-01-01':['daily_number_of_deaths','tot deaths number_of_deaths integrated since 2018-01-01 '],\
+                   }
+                   for k,v in insee.items():
+                       insee[k].append(url)
+                       insee[k].append('')
+                   self.pandasdb = pd.DataFrame(insee,index=['Original name','Description','URL','Homepage'])
+                   since_year=2018 # Define the first year for stats
+                   with open(get_local_from_url(url,86400*7)) as fp: # update each week
+                       soup = BeautifulSoup(fp,features="lxml")
+                   ld_json=soup.find('script', {'type':'application/ld+json'}).contents
+                   data=json.loads(ld_json[0])
+                   deces_url={}
+                   for d in data['distribution']:
+                       deces_url.update({d['name']:d['url']})
+                   dc={}
+                   current_year=datetime.date.today().year
+                   current_month=datetime.date.today().month
+
+                   # manage year between since_year-1 and current_year(excluded)
+                   for y in range(since_year-1,current_year):
+                       i=str(y) #  in string
+                       filename='deces-'+i+'.txt'
+                       if filename not in list(deces_url.keys()):
+                           continue
+                       with open(get_local_from_url(deces_url[filename],86400*30)) as f:
+                           dc.update({i:f.readlines()})
+
+                   # manage months for the current_year
+                   for m in range(current_month):
+                       i=str(m+1).zfill(2) #  in string with leading 0
+                       filename='deces-'+str(current_year)+'-m'+i+'.txt'
+                       if filename not in list(deces_url.keys()):
+                           continue
+                       with open(get_local_from_url(deces_url[filename],86400)) as f:
+                           dc.update({i:f.readlines()})
+
+                   def string_to_date(s):
+                       date=None
+                       y=int(s[0:4])
+                       m=int(s[4:6])
+                       d=int(s[6:8])
+                       if m==0:
+                           m=1
+                       if d==0:
+                           d=1
+                       if y==0:
+                           raise ValueError
+                       try:
+                           date=datetime.date(y,m,d)
+                       except:
+                           if m==2 and d==29:
+                               d=28
+                               date=datetime.date(y,m,d)
+                               raise ValueError
+                       return date
+                   pdict={}
+                   insee_pd=pd.DataFrame()
+                   for i in list(dc.keys()):
+                       data=[]
+
+                       for l in dc[i]:
+                           [last_name,first_name]=(l[0:80].split("/")[0]).split("*")
+                           sex=int(l[80])
+                           birthlocationcode=l[89:94]
+                           birthlocationname=l[94:124].rstrip()
+                           try:
+                               birthdate=string_to_date(l[81:89])
+                               deathdate=string_to_date(l[154:].strip()[0:8]) # sometimes, heading space
+                               lbis=list(l[154:].strip()[0:8])
+                               lbis[0:4]=list('2003')
+                               lbis=''.join(lbis)
+                               deathdatebis=string_to_date(lbis)
+                           except ValueError:
+                               if lbis!='20030229':
+                                   verb('Problem in a date parsing insee data for : ',l,lbis)
+                           deathlocationcode=l[162:167]
+                           deathlocationshortcode=l[162:164]
+                           deathid=l[167:176]
+                           data.append([deathlocationshortcode,deathdate])
+                       p=pd.DataFrame(data)
+                       p.columns=['where','death_date']
+                       insee_pd=pd.concat([insee_pd,p])
+                   insee_pd = insee_pd[['where','death_date']].reset_index(drop=True)
+                   insee_pd = insee_pd.rename(columns={'death_date':'date'})
+                   insee_pd['date']=pd.to_datetime(insee_pd['date']).dt.date
+                   insee_pd['where']=insee_pd['where'].astype(str)
+                   insee_pd = insee_pd.groupby(['date','where']).size().reset_index(name='daily_number_of_deaths')
+
+                   since_date=str(since_year)+'-01-01'
+                   insee_pd = insee_pd[insee_pd.date>=datetime.date.fromisoformat(since_date)].reset_index(drop=True)
+                   insee_pd['tot_deaths_since_'+since_date]=insee_pd.groupby('where')['daily_number_of_deaths'].cumsum()
+                   insee_pd=insee_pd.drop(columns='daily_number_of_deaths')
+                   self.dbparsed = insee_pd
+          elif namedb == 'jhu':
                info('JHU aka Johns Hopkins database selected ...')
                jhu = {
                'tot_deaths':['deaths','counts include confirmed and probable (where reported).'],\
@@ -150,24 +435,166 @@ class DBInfo:
                drop_field={'where':['American Samoa','Diamond Princess','Grand Princess','Guam',\
                                     'Northern Mariana Islands','Puerto Rico','Virgin Islands']}
                self.column_date_csv_parser(namedb, rename_columns = rename,drop_columns=drop_columns,drop_field=drop_field)
-          elif namedb == 'imed':
-                   info('Greece, imed database selected ...')
-                   imed = {
-                   'tot_cases':['cases','FILLIT'],
-                   'tot_deaths':['deaths','FILLIT']
-                   }
-                   urlb = 'https://raw.githubusercontent.com/iMEdD-Lab/open-data/master/COVID-19/greece_'
-                   masterurl='https://github.com/iMEdD-Lab/open-data/tree/master/COVID-19'
-                   for k,v in imed.items():
-                        url=urlb+v[0]+'_v2.csv'
-                        self.separator[url]=','
-                        imed[k].append(url)
-                        imed[k].append(masterurl)
-                   self.pandasdb = pd.DataFrame(imed,index=['Original name','Description','URL','Homepage'])
-                   rename={'county_normalized':'where'}
-                   rename.update(self.original_to_available_keywords_dico())
-                   drop_columns=['Γεωγραφικό Διαμέρισμα','Περιφέρεια','county','pop_11']
-                   self.column_date_csv_parser(namedb, rename_columns = rename,drop_columns=drop_columns)
+          elif namedb == 'jpnmhlw':
+             info('JPN, Ministry of wealth, labor and welfare')
+             jpn = {
+                 'tot_deaths':['deaths_cumulative_daily','FILLIT'],\
+                 'cur_cases':['newly_confirmed_cases_daily','FILLIT'],\
+                 'cur_cases_per_100_thousand':['newly_confirmed_cases_per_100_thousand_population_daily','FILLIT'],\
+                 'tot_cases':['confirmed_cases_cumulative_daily','FILLIT'],\
+                 'cur_severe_cases':['severe_cases_daily','FILLIT'],\
+                 'cur_deaths':['number_of_deaths_daily','FILLIT'] ,\
+                 }
+             urlb = 'https://covid19.mhlw.go.jp/public/opendata/'
+             urlmaster='https://covid19.mhlw.go.jp/en/'
+
+             for k,v in jpn.items():
+                 url=urlb+v[0]+".csv"
+                 self.separator[url]=','
+                 jpn[k].append(url)
+                 jpn[k].append(urlmaster)
+             self.pandasdb = pd.DataFrame(jpn,index=['Original name','Description','URL','Homepage'])
+
+             def df_import_and_reshape_jpn(original,available):
+                 url = self.pandasdb[available]['URL']
+                 df_var = pd.read_csv(url)
+                 df_var = df_var.drop(['ALL'], axis=1)
+                 df_var = pd.melt(frame = df_var,id_vars = "Date")
+                 rename = {'variable' : 'where', 'Date' : 'date', 'value' : available}
+                 df_var = df_var.rename(columns = rename)
+                 keep = ['date','where'] + self.get_url_original_keywords()[url]
+                 return df_var
+
+             def df_merge_jpn(dict_var):
+                 df_var = pd.DataFrame()
+                 for k,v in dict_var.items():
+                     if df_var.empty :
+                       df_var = df_import_and_reshape_jpn(k,v)
+                     else :
+                       df_var = pd.merge(df_var,df_import_and_reshape_jpn(k,v), on = ['date','where'])
+                 return df_var
+             rename=self.original_to_available_keywords_dico()
+             df_japan = df_merge_jpn(rename) # use a function to obtain the df
+             df_japan['date'] = pd.to_datetime(df_japan['date'])
+             self.dbparsed = df_japan
+          elif namedb == 'moh':
+            info('Malaysia moh covid19-public database selected ...')
+            url0='https://raw.githubusercontent.com/MoH-Malaysia/covid19-public/main/epidemic/cases_state.csv'
+            url1='https://raw.githubusercontent.com/MoH-Malaysia/covid19-public/main/epidemic/hospital.csv'
+            url2='https://raw.githubusercontent.com/MoH-Malaysia/covid19-public/main/epidemic/icu.csv'
+            url3='https://raw.githubusercontent.com/CITF-Malaysia/citf-public/main/vaccination/vax_state.csv'
+            url4='https://raw.githubusercontent.com/MoH-Malaysia/covid19-public/main/epidemic/deaths_state.csv'
+            self.separator={url0:',',url1:',',url2:',',url3:',',url4:','}
+            moh = {
+            'tot_deaths':['deaths_new','from original data deaths_new',url4],\
+            'tot_cases':['cases_new','from original data cases_new',url0],\
+            'hosp_covid':['hosp_covid','FILLIT',url1],\
+            'icu_covid':['icu_covid','FILLIT',url2],\
+            'beds_icu_covid':['beds_icu_covid','beds_icu_covid',url2],\
+            'daily_partial':['daily_partial','FILLIT',url3],\
+            'daily_full':['daily_full','FILLIT',url3],\
+            }
+            for k,v in moh.items():
+                moh[k].append("https://github.com/MoH-Malaysia/covid19-public")
+            self.pandasdb = pd.DataFrame(moh,index=['Original name','Description','URL','Homepage'])
+            lurl=list(dict.fromkeys(self.get_url()))
+            url=lurl[0]
+            list_moh=[]
+            cast = {'where': 'string'}
+            constraints = {'sexe': 0,'cl_age90': 0}
+            rename = {'state':'where'}
+            rename.update(self.original_to_available_keywords_dico())
+            for url in lurl:
+                keep = ['date','where'] + self.get_url_original_keywords()[url]
+                separator=self.get_url_separator(url)
+                list_moh.append(self.row_date_csv_parser(url=url,rename_columns = rename, separator = separator, constraints = constraints, cast = cast, keep_field = keep))
+            result=pd.DataFrame()
+            for i in list_moh:
+                if result.empty:
+                    result=i
+                else:
+                    result=result.merge(i, how = 'outer', on=['where','date'])
+            result = reduce(lambda left, right: left.merge(right, how = 'outer', on=['where','date']), list_moh)
+            result['tot_cases']=result.groupby(['where'])['tot_cases'].cumsum()
+            result['tot_deaths']=result.groupby(['where'])['tot_deaths'].cumsum()
+            self.dbparsed=result
+          elif namedb == 'mpoxgh':
+            info('MonkeyPoxGlobalHealth selected...')
+            url='https://raw.githubusercontent.com/owid/monkeypox/main/owid-monkeypox-data.csv'
+            self.separator = {url:','}
+            urlmaster='https://github.com/owid/monkeypox'
+            mpoxgh = {
+                'total_deaths': ['total death cases','FILLIT',url,urlmaster],\
+                'total_cases': ['total confirmed cases','FILLIT',url,urlmaster],\
+                }
+            self.pandasdb = pd.DataFrame(mpoxgh,index=['Original name','Description','URL','Homepage'])
+            lurl=list(dict.fromkeys(self.get_url()))
+            url=lurl[0]
+            keep = ['date','where'] + self.get_url_original_keywords()[url]
+            rename = {'Date_confirmation':'date','iso_code':'where'}
+            rename.update(self.original_to_available_keywords_dico())
+            separator=self.get_url_separator(url)
+            self.dbparsed = self.row_date_csv_parser(url=url,rename_columns = rename, separator = separator, keep_field = keep)
+          elif namedb == 'phe':
+            info('GBR, Public Health England data ...')
+            phe = {
+            'tot_deaths':['cumDeaths28DaysByDeathDate','Total number of deaths '],\
+            'tot_cases':['cumCasesBySpecimenDate','Total number of cases'],
+            'tot_tests':['cumLFDTestsBySpecimenDate','Total number of tests'],
+            'tot_vacc1':['cumPeopleVaccinatedFirstDoseByVaccinationDate','FILLIT'],
+            'tot_vacc2':['cumPeopleVaccinatedSecondDoseByVaccinationDate','FILLIT']
+            }
+            urlb='https://api.coronavirus.data.gov.uk/v2/data?areaType=ltla&metric='
+            urlmaster='https://coronavirus.data.gov.uk/details/download'
+            self.separator={}
+            for k,v in phe.items():
+                url=urlb+phe[k][0] +'&format=csv'
+                self.separator[url]=','
+                phe[k].append(url)
+                phe[k].append(urlmaster)
+            burl= 'https://covid-surveillance-data.cog.sanger.ac.uk/download/lineages_by_ltla_and_week.tsv'
+            phe['lineageB.1.617.2']=['Count','FILLIT',burl,urlmaster]
+            self.separator[burl]='\t'
+            self.pandasdb = pd.DataFrame(phe,index=['Original name','Description','URL','Homepage'])
+            lurl=list(dict.fromkeys(self.get_url()))
+            list_phe=[]
+            rename = {'areaCode':'where','WeekEndDate': 'date','LTLA':'where'}
+            rename.update(self.original_to_available_keywords_dico())
+            constraints = {}
+            for idx,url in enumerate(lurl):
+                keep = ['date','where'] + self.get_url_original_keywords()[url]
+                separator=self.get_url_separator(url)
+                if idx==3:
+                    constraints = {'Lineage': 'B.1.617.2'}
+                list_phe.append(self.row_date_csv_parser(url=url,rename_columns = rename, constraints=constraints, separator = separator,keep_field = keep))
+            result=pd.DataFrame()
+            for i in list_phe:
+                if result.empty:
+                    result=i
+                else:
+                    result = result.merge(i, how = 'outer', on=['where','date'])
+            del list_phe
+            self.dbparsed = result
+          elif namedb == 'risklayer':
+              info('EUR, Who Europe from RiskLayer ...')
+              risk = {
+                  'tot_positive': ['CumulativePositive','FILLIT'],\
+                  'tot_incidence': ['IncidenceCumulative','FILLIT'],\
+                  }
+              url='https://docs.google.com/spreadsheets/d/e/2PACX-1vQ-JLawOH35vPyOk39w0tjn64YQLlahiD2AaNfjd82pgQ37Jr1K8KMHOqJbxoi4k2FZVYBGbZ-nsxhi/pub?output=csv'
+              self.separator={url:','}
+              masterurl='https://www.risklayer-explorer.com/event/100/detail'
+              for k,v in risk.items():
+                  risk[k].append(url)
+                  risk[k].append(masterurl)
+              self.pandasdb = pd.DataFrame(risk,index=['Original name','Description','URL','Homepage'])
+              lurl=list(dict.fromkeys(self.get_url()))
+              url=lurl[0]
+              rename = {'UID': 'where','DateRpt':'date'}
+              keep = ['date','where'] + self.get_url_original_keywords()[url]
+              rename.update(self.original_to_available_keywords_dico())
+              separator=self.get_url_separator(url)
+              self.dbparsed = self.row_date_csv_parser(url=url,rename_columns = rename, separator = separator,keep_field = keep)
           elif namedb == 'rki':
               info('DEU, Robert Koch Institut data selected ...')
               rki = {
@@ -290,242 +717,6 @@ class DBInfo:
               colcast=[i for i in self.get_available_keywords()]
               spfnat[colcast]=pd.to_numeric(spfnat[colcast].stack(),errors = 'coerce').unstack()
               self.dbparsed = spfnat
-          elif namedb == 'insee':
-              info('FRA, INSEE global deaths statistics...')
-              url = "https://www.data.gouv.fr/fr/datasets/fichier-des-personnes-decedees/"
-              insee = {
-              'tot_deaths_since_2018-01-01':['daily_number_of_deaths','tot deaths number_of_deaths integrated since 2018-01-01 '],\
-              }
-              for k,v in insee.items():
-                  insee[k].append(url)
-                  insee[k].append('')
-              self.pandasdb = pd.DataFrame(insee,index=['Original name','Description','URL','Homepage'])
-              since_year=2018 # Define the first year for stats
-              with open(get_local_from_url(url,86400*7)) as fp: # update each week
-                  soup = BeautifulSoup(fp,features="lxml")
-              ld_json=soup.find('script', {'type':'application/ld+json'}).contents
-              data=json.loads(ld_json[0])
-              deces_url={}
-              for d in data['distribution']:
-                  deces_url.update({d['name']:d['url']})
-              dc={}
-              current_year=datetime.date.today().year
-              current_month=datetime.date.today().month
-
-              # manage year between since_year-1 and current_year(excluded)
-              for y in range(since_year-1,current_year):
-                  i=str(y) #  in string
-                  filename='deces-'+i+'.txt'
-                  if filename not in list(deces_url.keys()):
-                      continue
-                  with open(get_local_from_url(deces_url[filename],86400*30)) as f:
-                      dc.update({i:f.readlines()})
-
-              # manage months for the current_year
-              for m in range(current_month):
-                  i=str(m+1).zfill(2) #  in string with leading 0
-                  filename='deces-'+str(current_year)+'-m'+i+'.txt'
-                  if filename not in list(deces_url.keys()):
-                      continue
-                  with open(get_local_from_url(deces_url[filename],86400)) as f:
-                      dc.update({i:f.readlines()})
-
-              def string_to_date(s):
-                  date=None
-                  y=int(s[0:4])
-                  m=int(s[4:6])
-                  d=int(s[6:8])
-                  if m==0:
-                      m=1
-                  if d==0:
-                      d=1
-                  if y==0:
-                      raise ValueError
-                  try:
-                      date=datetime.date(y,m,d)
-                  except:
-                      if m==2 and d==29:
-                          d=28
-                          date=datetime.date(y,m,d)
-                          raise ValueError
-                  return date
-              pdict={}
-              insee_pd=pd.DataFrame()
-              for i in list(dc.keys()):
-                  data=[]
-
-                  for l in dc[i]:
-                      [last_name,first_name]=(l[0:80].split("/")[0]).split("*")
-                      sex=int(l[80])
-                      birthlocationcode=l[89:94]
-                      birthlocationname=l[94:124].rstrip()
-                      try:
-                          birthdate=string_to_date(l[81:89])
-                          deathdate=string_to_date(l[154:].strip()[0:8]) # sometimes, heading space
-                          lbis=list(l[154:].strip()[0:8])
-                          lbis[0:4]=list('2003')
-                          lbis=''.join(lbis)
-                          deathdatebis=string_to_date(lbis)
-                      except ValueError:
-                          if lbis!='20030229':
-                              verb('Problem in a date parsing insee data for : ',l,lbis)
-                      deathlocationcode=l[162:167]
-                      deathlocationshortcode=l[162:164]
-                      deathid=l[167:176]
-                      data.append([deathlocationshortcode,deathdate])
-                  p=pd.DataFrame(data)
-                  p.columns=['where','death_date']
-                  insee_pd=pd.concat([insee_pd,p])
-              insee_pd = insee_pd[['where','death_date']].reset_index(drop=True)
-              insee_pd = insee_pd.rename(columns={'death_date':'date'})
-              insee_pd['date']=pd.to_datetime(insee_pd['date']).dt.date
-              insee_pd['where']=insee_pd['where'].astype(str)
-              insee_pd = insee_pd.groupby(['date','where']).size().reset_index(name='daily_number_of_deaths')
-
-              since_date=str(since_year)+'-01-01'
-              insee_pd = insee_pd[insee_pd.date>=datetime.date.fromisoformat(since_date)].reset_index(drop=True)
-              insee_pd['tot_deaths_since_'+since_date]=insee_pd.groupby('where')['daily_number_of_deaths'].cumsum()
-              insee_pd=insee_pd.drop(columns='daily_number_of_deaths')
-              self.dbparsed = insee_pd
-          elif namedb == 'owid':
-              info('OWID aka \"Our World in Data\" database selected ...')
-              owid={
-              'total_deaths':['total_deaths','Total deaths attributed to COVID-19'],
-              'total_cases':['total_cases','Total confirmed cases of COVID-19'],
-              'total_tests':['total_tests','Total tests for COVID-19'],
-              'total_tests_per_thousand':['total_tests_per_thousand','Total tests for COVID-19 per thousand'],
-              'total_vaccinations':['total_vaccinations','Total number of COVID-19 vaccination doses administered'],
-              'total_population':['population','total population of a given country'],
-              'total_people_fully_vaccinated_per_hundred':['people_fully_vaccinated_per_hundred','Total number of people who received all doses prescribed by the vaccination protocol per 100 people in the total population'],
-              'total_boosters':['total_boosters','Total number of COVID-19 vaccination booster doses administered (doses administered beyond the number prescribed by the vaccination protocol)'],
-              'total_people_vaccinated':['people_vaccinated','Total number of people who received at least one vaccine dose'],
-              'total_people_fully_vaccinated':['people_fully_vaccinated','total_people_fully_vaccinated (original name people_fully_vaccinated): Total number of people who received all doses prescribed by the vaccination protocol'],
-              'total_people_vaccinated_per_hundred':['people_vaccinated_per_hundred','total_people_vaccinated_per_hundred (original name people_vaccinated_per_hundred): total_people_vaccinated_per_hundred:Total number of people who received all doses prescribed by the vaccination protocol per 100 people in the total population'],
-              'total_cases_per_million':['total_cases_per_million','Total confirmed cases of COVID-19 per 1,000,000 people'],
-              'total_deaths_per_million':['total_deaths_per_million','Total deaths attributed to COVID-19 per 1,000,000 people'],
-              'total_vaccinations_per_hundred':['total_vaccinations_per_hundred','COVID19 vaccine doses administered per 100 people'],
-              'cur_reproduction_rate':['reproduction_rate','cur_reproduction_rate (original name reproduction_rate): Real-time estimate of the effective reproduction rate (R) of COVID-19. See https://github.com/crondonm/TrackingR/tree/main/Estimates-Database'],
-              'cur_icu_patients':['icu_patients','cur_icu_patients (orignal name icu_patients): Number of COVID-19 patients in intensive care units (ICUs) on a given day'],
-              'cur_hosp_patients':['hosp_patients','cur_hosp_patients (original name hosp_patients): Number of COVID-19 patients in hospital on a given day'],
-              'cur_weekly_hosp_admissions':['weekly_hosp_admissions','cur_weekly_hosp_admissions (original name weekly_hosp_admissions): Number of COVID-19 patients in hospital on a given week'],
-              'cur_idx_positive_rate':['positive_rate','cur_idx_positive_rate (original name positive_rate): The share of COVID-19 tests that are positive, given as a rolling 7-day average (this is the inverse of tests_per_case)'],
-              'total_gdp_per_capita':['gdp_per_capita','Gross domestic product at purchasing power parity (constant 2011 international dollars), most recent year available'],
-              'cur_excess_mortality':['excess_mortality','original name excess_mortality. Percentage difference between the reported number of weekly or monthly deaths in 2020–2021 and the projected number of deaths for the same period based on previous years'],
-              'cur_excess_mortality_cumulative_per_million':['excess_mortality_cumulative_per_million','cur_excess_mortality_cumulative_per_million:original name excess_mortality_cumulative_per_million.Cumulative difference between the reported number of deaths since 1 January 2020 and the projected number of deaths for the same period based on previous years, per million people. '],
-              }
-              url='https://raw.githubusercontent.com/owid/covid-19-data/master/public/data/owid-covid-data.csv'
-              self.separator = {url:','}
-              masterurl='https://github.com/owid'
-              for k,v in owid.items():
-                  owid[k].append(url)
-                  owid[k].append(masterurl)
-              mydico = owid
-              self.pandasdb = pd.DataFrame(owid,index=['Original name','Description','URL','Homepage'])
-              lurl=list(dict.fromkeys(self.get_url()))
-              url=lurl[0]
-              rename = {'location':'where'}
-              rename.update(self.original_to_available_keywords_dico())
-              separator=self.get_url_separator(url)
-              keep = ['date','where','iso_code'] + self.get_url_original_keywords()[url]
-              owid = self.row_date_csv_parser(url=url,rename_columns = rename, separator = separator,keep_field = keep)
-              self.dbparsed = owid
-          elif namedb == 'moh':
-              info('Malaysia moh covid19-public database selected ...')
-              url0='https://raw.githubusercontent.com/MoH-Malaysia/covid19-public/main/epidemic/cases_state.csv'
-              url1='https://raw.githubusercontent.com/MoH-Malaysia/covid19-public/main/epidemic/hospital.csv'
-              url2='https://raw.githubusercontent.com/MoH-Malaysia/covid19-public/main/epidemic/icu.csv'
-              url3='https://raw.githubusercontent.com/CITF-Malaysia/citf-public/main/vaccination/vax_state.csv'
-              url4='https://raw.githubusercontent.com/MoH-Malaysia/covid19-public/main/epidemic/deaths_state.csv'
-              self.separator={url0:',',url1:',',url2:',',url3:',',url4:','}
-              moh = {
-              'tot_deaths':['deaths_new','from original data deaths_new',url4],\
-              'tot_cases':['cases_new','from original data cases_new',url0],\
-              'hosp_covid':['hosp_covid','FILLIT',url1],\
-              'icu_covid':['icu_covid','FILLIT',url2],\
-              'beds_icu_covid':['beds_icu_covid','beds_icu_covid',url2],\
-              'daily_partial':['daily_partial','FILLIT',url3],\
-              'daily_full':['daily_full','FILLIT',url3],\
-              }
-              for k,v in moh.items():
-                  moh[k].append("https://github.com/MoH-Malaysia/covid19-public")
-              self.pandasdb = pd.DataFrame(moh,index=['Original name','Description','URL','Homepage'])
-              lurl=list(dict.fromkeys(self.get_url()))
-              url=lurl[0]
-              list_moh=[]
-              cast = {'where': 'string'}
-              constraints = {'sexe': 0,'cl_age90': 0}
-              rename = {'state':'where'}
-              rename.update(self.original_to_available_keywords_dico())
-              for url in lurl:
-                  keep = ['date','where'] + self.get_url_original_keywords()[url]
-                  separator=self.get_url_separator(url)
-                  list_moh.append(self.row_date_csv_parser(url=url,rename_columns = rename, separator = separator, constraints = constraints, cast = cast, keep_field = keep))
-              result=pd.DataFrame()
-              for i in list_moh:
-                  if result.empty:
-                      result=i
-                  else:
-                      result=result.merge(i, how = 'outer', on=['where','date'])
-              result = reduce(lambda left, right: left.merge(right, how = 'outer', on=['where','date']), list_moh)
-              result['tot_cases']=result.groupby(['where'])['tot_cases'].cumsum()
-              result['tot_deaths']=result.groupby(['where'])['tot_deaths'].cumsum()
-              self.dbparsed=result
-          elif namedb == 'dpc':
-              info('ITA, Dipartimento della Protezione Civile database selected ...')
-              ita = {
-              'tot_deaths':['deceduti','FILLIT'],\
-              'tot_cases':['totale_casi','FILLIT']
-              }
-              url='https://raw.githubusercontent.com/pcm-dpc/COVID-19/master/dati-regioni/dpc-covid19-ita-regioni.csv'
-              self.separator = {url:','}
-              masterurl='https://github.com/pcm-dpc/COVID-19'
-              for k,v in ita.items():
-                  ita[k].append(url)
-                  ita[k].append(masterurl)
-              self.pandasdb = pd.DataFrame(ita,index=['Original name','Description','URL','Homepage'])
-              rename = {'data': 'date', 'denominazione_regione': 'where'}
-              rename.update(self.original_to_available_keywords_dico())
-              lurl=list(dict.fromkeys(self.get_url()))
-              url=lurl[0]
-              separator=self.get_url_separator(url)
-              keep = ['date','where'] + self.get_url_original_keywords()[url]
-              self.dbparsed = self.row_date_csv_parser(url=url,rename_columns = rename, separator = separator ,keep_field = keep)
-          elif namedb == 'escovid19data':
-              info('ESP, EsCovid19Data ...')
-              esco = {
-              'tot_deaths':['deceased','Cumulative deaths  (original name deceased)'],\
-              'tot_cases':['cases_accumulated_PCR','Number of new COVID-19 cases detected with PCR (original name cases_accumulated_PCR)'],\
-              'cur_hosp':['hospitalized','Hospitalized (original name hospitalized)'],\
-              'tot_hosp':['hospitalized_accumulated','Cumulative Hospitalized (original name hospitalized_accumulated)'],\
-              'cur_hosp_per100k':['tot_cases_per100k','Intensive care per 100,000 inhabitants (original name hospitalized_per_100000'],\
-              'cur_icu':['intensive_care','UCI, intensive care patient, (original name intensive_care)'],\
-              'tot_recovered':['recovered','Recovered (original name recovered)'],\
-              'tot_cases_per100k':['cases_per_cienmil','Cumulative cases per 100,000 inhabitants (original name cases_per_cienmil)'],\
-              'cur_icu_per1M' :['intensive_care_per_1000000','Intensive care per 1000,000 inhabitants (original name intensive_care_per_1000000)'],\
-              'tot_deaths_per100k':['deceassed_per_100000','Cumulative deaths per 100,000 inhabitants (original name deceassed_per_100000)'],\
-              'cur_hosp_per100k':['hospitalized_per_100000','Hosp per 100,000 inhabitants, (original name hospitalized_per_100000)'],\
-              'incidence':['ia14','Cases in 14 days by 100,000 inhabitants (original name ia14'],\
-              'population':['poblacion','Inhabitants of the province (orignal name poblacion)'],\
-              }
-              url='https://raw.githubusercontent.com/montera34/escovid19data/master/data/output/covid19-provincias-spain_consolidated.csv'
-              urlmaster='https://github.com/montera34/escovid19data'
-              self.separator = {url:','}
-              for k,v in esco.items():
-                  esco[k].append(url)
-                  esco[k].append(urlmaster)
-              self.pandasdb = pd.DataFrame(esco,index=['Original name','Description','URL','Homepage'])
-              lurl=list(dict.fromkeys(self.get_url()))
-              url=lurl[0]
-              rename = {'ine_code': 'where'}
-              rename.update(self.original_to_available_keywords_dico())
-              separator=self.get_url_separator(url)
-              keep = ['date','where'] + self.get_url_original_keywords()[url]
-              esp_data = self.row_date_csv_parser(url=url,rename_columns = rename, separator = separator,keep_field = keep)
-              esp_data['where']=esp_data['where'].astype(str).str.zfill(2)
-              for w in list(esp_data.columns):
-                  if w not in ['date','where']:
-                      esp_data[w]=pd.to_numeric(esp_data[w], errors = 'coerce')
-              self.dbparsed = esp_data
           elif namedb == 'sciensano':
               info('BEL, Sciensano Belgian institute for health data  ...')
               sci = {
@@ -567,200 +758,8 @@ class DBInfo:
               beldata['date'] = pandas.to_datetime(beldata['date'],errors='coerce').dt.date
               self.return_structured_pandas(beldata,columns_keeped=columns_keeped)
               '''
-          elif namedb == 'phe':
-              info('GBR, Public Health England data ...')
-              phe = {
-              'tot_deaths':['cumDeaths28DaysByDeathDate','Total number of deaths '],\
-              'tot_cases':['cumCasesBySpecimenDate','Total number of cases'],
-              'tot_tests':['cumLFDTestsBySpecimenDate','Total number of tests'],
-              'tot_vacc1':['cumPeopleVaccinatedFirstDoseByVaccinationDate','FILLIT'],
-              'tot_vacc2':['cumPeopleVaccinatedSecondDoseByVaccinationDate','FILLIT']
-              }
-              urlb='https://api.coronavirus.data.gov.uk/v2/data?areaType=ltla&metric='
-              urlmaster='https://coronavirus.data.gov.uk/details/download'
-              self.separator={}
-              for k,v in phe.items():
-                  url=urlb+phe[k][0] +'&format=csv'
-                  self.separator[url]=','
-                  phe[k].append(url)
-                  phe[k].append(urlmaster)
-              burl= 'https://covid-surveillance-data.cog.sanger.ac.uk/download/lineages_by_ltla_and_week.tsv'
-              phe['lineageB.1.617.2']=['Count','FILLIT',burl,urlmaster]
-              self.separator[burl]='\t'
-              self.pandasdb = pd.DataFrame(phe,index=['Original name','Description','URL','Homepage'])
-              lurl=list(dict.fromkeys(self.get_url()))
-              list_phe=[]
-              rename = {'areaCode':'where','WeekEndDate': 'date','LTLA':'where'}
-              rename.update(self.original_to_available_keywords_dico())
-              constraints = {}
-              for idx,url in enumerate(lurl):
-                  keep = ['date','where'] + self.get_url_original_keywords()[url]
-                  separator=self.get_url_separator(url)
-                  if idx==3:
-                      constraints = {'Lineage': 'B.1.617.2'}
-                  list_phe.append(self.row_date_csv_parser(url=url,rename_columns = rename, constraints=constraints, separator = separator,keep_field = keep))
-              result=pd.DataFrame()
-              for i in list_phe:
-                  if result.empty:
-                      result=i
-                  else:
-                      result = result.merge(i, how = 'outer', on=['where','date'])
-              del list_phe
-              self.dbparsed = result
-          elif namedb == 'dgs':
-              info('PRT, Direcção Geral de Saúde - Ministério da Saúde Português data selected ...')
-              dgs = {
-                  'tot_cases':['confirmados_1','FILLIT']
-                  }
-              url='https://raw.githubusercontent.com/dssg-pt/covid19pt-data/master/data_concelhos_new.csv'
-              self.separator = {url:','}
-              urlmaster = 'https://github.com/dssg-pt/covid19pt-data'
-              for k,v in dgs.items():
-                    dgs[k].append(url)
-                    dgs[k].append(urlmaster)
-              self.pandasdb = pd.DataFrame(dgs,index=['Original name','Description','URL','Homepage'])
-              rename = {'data': 'date','concelho':'where'}
-              rename.update(self.original_to_available_keywords_dico())
-              lurl=list(dict.fromkeys(self.get_url()))
-              url=lurl[0]
-              keep = ['date','where'] + self.get_url_original_keywords()[url]
-              separator=self.get_url_separator(url)
-              self.dbparsed = self.row_date_csv_parser(url=url,rename_columns = rename, separator = separator,keep_field = keep)
-              self.dbparsed['tot_cases'] = self.dbparsed.groupby(['where'])['tot_cases'].cumsum()
-          elif namedb == 'risklayer':
-              info('EUR, Who Europe from RiskLayer ...')
-              risk = {
-                  'tot_positive': ['CumulativePositive','FILLIT'],\
-                  'tot_incidence': ['IncidenceCumulative','FILLIT'],\
-                  }
-              url='https://docs.google.com/spreadsheets/d/e/2PACX-1vQ-JLawOH35vPyOk39w0tjn64YQLlahiD2AaNfjd82pgQ37Jr1K8KMHOqJbxoi4k2FZVYBGbZ-nsxhi/pub?output=csv'
-              self.separator={url:','}
-              masterurl='https://www.risklayer-explorer.com/event/100/detail'
-              for k,v in risk.items():
-                  risk[k].append(url)
-                  risk[k].append(masterurl)
-              self.pandasdb = pd.DataFrame(risk,index=['Original name','Description','URL','Homepage'])
-              lurl=list(dict.fromkeys(self.get_url()))
-              url=lurl[0]
-              rename = {'UID': 'where','DateRpt':'date'}
-              keep = ['date','where'] + self.get_url_original_keywords()[url]
-              rename.update(self.original_to_available_keywords_dico())
-              separator=self.get_url_separator(url)
-              self.dbparsed = self.row_date_csv_parser(url=url,rename_columns = rename, separator = separator,keep_field = keep)
-          elif namedb == 'europa':
-              info('EUR, Rationale for the JRC COVID-19 website - data monitoring and national measures ...')
-              euro = {
-                  'tot_deaths':['CumulativeDeceased','FILLIT'],
-                  'tot_positive':['CumulativePositive','FILLIT'],
-                  'cur_hosp':['Hospitalized','FILLIT'],
-                  'cur_icu':['IntensiveCare','FILLIT'],
-                  }
-              url='https://raw.githubusercontent.com/ec-jrc/COVID-19/master/data-by-region/jrc-covid-19-all-days-by-regions.csv'
-              self.separator={url:','}
-              urlmaster='https://github.com/ec-jrc/COVID-19/tree/master/data-by-region'
-              for k,v in euro.items():
-                  euro[k].append(url)
-                  euro[k].append(urlmaster)
-              self.pandasdb = pd.DataFrame(euro,index=['Original name','Description','URL','Homepage'])
-              lurl=list(dict.fromkeys(self.get_url()))
-              url=lurl[0]
-              rename = {'CountryName':'where','iso3':'iso_code','Date':'date'}
-              rename.update(self.original_to_available_keywords_dico())
-              separator=self.get_url_separator(url)
-              keep = ['date','where','iso_code'] + self.get_url_original_keywords()[url]
-              drop_field={'where':['Ciudad Autónoma de Melilla','Gorenjske','Goriške','Greenland','Itä-Savo','Jugovzhodne','Koroške','Länsi-Pohja',\
-                      'Mainland','NOT SPECIFIED','Obalno-kraške','Osrednjeslovenske','Podravske','Pomurske','Posavske','Primorsko-notranjske',\
-                      'Repatriierte','Savinjske','West North','Zasavske']}
-              drop_field['iso_code']=['WWW']
-              self.dbparsed = self.row_date_csv_parser(url=url,rename_columns = rename, separator = separator, drop_field=drop_field, keep_field = keep)
-          elif namedb == 'govcy':
-              info('Cyprus, govcy database selected ...')
-              mi = {
-              'tot_deaths':['total deaths','total deaths attributed to Covid-19 disease (total deaths)'],\
-              'tot_cases':['total cases','total number of confirmed cases (total cases)'],\
-              'cur_hosp':['Hospitalised Cases','number of patients with covid-19 hospitalized cases (Hospitalised Cases)'],\
-              'cur_icu':['Cases In ICUs','number of patients with covid-19 admitted to ICUs (Cases In ICUs)'],\
-              'cur_incub':['Incubated Cases','number of patients with covid-19 admitted to ICUs (Incubated Cases)'],\
-              'tot_pcr':['total PCR tests','extract from PCR_daily tests performedtotal number of PCR tests performed (PCR_daily tests performed)'],\
-              'tot_rat':['total RA tests','total number of rapid antigen (RAT) tests performed (total RA tests)'],\
-              'tot_test':['total tests','total numbers of PCR and RA tests performed (total tests)'],\
-              }
-              url='https://www.data.gov.cy/sites/default/files/CY%20Covid19%20Open%20Data%20-%20Extended%20-%20new_247.csv'
-              self.separator = {url:','}
-              masterurl='https://www.data.gov.cy/node/4617?language=en'
-              for k,v in mi.items():
-                  mi[k].append(url)
-                  mi[k].append(masterurl)
-              mydico = mi
-              self.pandasdb = pd.DataFrame(mi,index=['Original name','Description','URL','Homepage'])
-              rename=self.original_to_available_keywords_dico()
-              lurl=list(dict.fromkeys(self.get_url()))
-              url=lurl[0]
-              separator=self.get_url_separator(url)
-              keep = ['date'] + self.get_url_original_keywords()[url]
-              self.dbparsed = self.row_date_csv_parser(url=url,rename_columns = rename, separator = separator,keep_field = keep)
-          elif namedb == 'mpoxgh':
-              info('MonkeyPoxGlobalHealth selected...')
-              url='https://raw.githubusercontent.com/owid/monkeypox/main/owid-monkeypox-data.csv'
-              self.separator = {url:','}
-              urlmaster='https://github.com/owid/monkeypox'
-              mpoxgh = {
-                  'total_deaths': ['total death cases','FILLIT',url,urlmaster],\
-                  'total_cases': ['total confirmed cases','FILLIT',url,urlmaster],\
-                  }
-              self.pandasdb = pd.DataFrame(mpoxgh,index=['Original name','Description','URL','Homepage'])
-              lurl=list(dict.fromkeys(self.get_url()))
-              url=lurl[0]
-              keep = ['date','where'] + self.get_url_original_keywords()[url]
-              rename = {'Date_confirmation':'date','iso_code':'where'}
-              rename.update(self.original_to_available_keywords_dico())
-              separator=self.get_url_separator(url)
-              self.dbparsed = self.row_date_csv_parser(url=url,rename_columns = rename, separator = separator, keep_field = keep)
-          elif namedb == 'jpnmhlw':
-              info('JPN, Ministry of wealth, labor and welfare')
-              jpn = {
-                  'tot_deaths':['deaths_cumulative_daily','FILLIT'],\
-                  'cur_cases':['newly_confirmed_cases_daily','FILLIT'],\
-                  'cur_cases_per_100_thousand':['newly_confirmed_cases_per_100_thousand_population_daily','FILLIT'],\
-                  'tot_cases':['confirmed_cases_cumulative_daily','FILLIT'],\
-                  'cur_severe_cases':['severe_cases_daily','FILLIT'],\
-                  'cur_deaths':['number_of_deaths_daily','FILLIT'] ,\
-                  }
-              urlb = 'https://covid19.mhlw.go.jp/public/opendata/'
-              urlmaster='https://covid19.mhlw.go.jp/en/'
-
-              for k,v in jpn.items():
-                  url=urlb+v[0]+".csv"
-                  self.separator[url]=','
-                  jpn[k].append(url)
-                  jpn[k].append(urlmaster)
-              self.pandasdb = pd.DataFrame(jpn,index=['Original name','Description','URL','Homepage'])
-
-              def df_import_and_reshape_jpn(original,available):
-                  url = self.pandasdb[available]['URL']
-                  df_var = pd.read_csv(url)
-                  df_var = df_var.drop(['ALL'], axis=1)
-                  df_var = pd.melt(frame = df_var,id_vars = "Date")
-                  rename = {'variable' : 'where', 'Date' : 'date', 'value' : available}
-                  df_var = df_var.rename(columns = rename)
-                  keep = ['date','where'] + self.get_url_original_keywords()[url]
-                  return df_var
-
-              def df_merge_jpn(dict_var):
-                  df_var = pd.DataFrame()
-                  for k,v in dict_var.items():
-                      if df_var.empty :
-                        df_var = df_import_and_reshape_jpn(k,v)
-                      else :
-                        df_var = pd.merge(df_var,df_import_and_reshape_jpn(k,v), on = ['date','where'])
-                  return df_var
-              rename=self.original_to_available_keywords_dico()
-              df_japan = df_merge_jpn(rename) # use a function to obtain the df
-              df_japan['date'] = pd.to_datetime(df_japan['date'])
-              self.dbparsed = df_japan
       else:
           raise CoaKeyError('Error in the database selected: '+db+'.Please check !')
-
       if namedb not in ['jhu','jhu-usa','imed','rki']:
             self.restructured_pandas(self.dbparsed)
 

@@ -278,9 +278,9 @@ def getwhom(return_error=True):
     """Return the current base which is used
     """
     if  '_db' not in globals():
-        if return_error:
-            raise CoaKeyError('setwhom MUST be defined first !')
-        else:
+        #if return_error:
+        #    raise CoaKeyError('setwhom MUST be defined first !')
+        #else:
             return ''
     else:
         return _whom
@@ -438,7 +438,7 @@ def chartsinput_deco(f):
             whom = _whom
         if whom != _whom:
             setwhom(whom)
-           
+
         if bypop not in listbypop():
             raise CoaKeyError('The bypop arg should be selected in '+str(listbypop)+' only.')
         if isinstance(input_arg, pd.DataFrame) or isinstance(which, list):

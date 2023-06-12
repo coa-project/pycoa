@@ -1061,7 +1061,7 @@ class GeoCountry():
                     p0=row.prov_name_f
                 else:
                     p0=row.region
-                p0=p0.title().replace(' ','').replace('(Le)','').replace('(La)','').replace('-','')
+                p0=str(p0).title().replace(' ','').replace('(Le)','').replace('(La)','').replace('-','')
                 if p0=='RégionDeBruxellesCapitale':
                     p0='Brussels'
                 if p0=='Henegouwen':

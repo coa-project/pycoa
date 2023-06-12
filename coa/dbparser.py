@@ -44,11 +44,11 @@ _db_list_dict = {
     'moh':['MYS','subregion','Malaysia'],
     'mpoxgh':['WW','nation','World'],
     'phe':['GBR','subregion','United Kingdom'],
-    'risklayer':['WW','subregion','Europe'],
+    'risklayer':['EUR','subregion','Europe'],
     'rki':['DEU','subregion','Germany'],
     'sciensano':['BEL','region','Belgium'],
     'spf': ['FRA','subregion','France'],
-    'spfnational': ['WW','nation','France'],    
+    'spfnational': ['WW','nation','France'],
     }
 class DBInfo:
   def __init__(self, namedb):

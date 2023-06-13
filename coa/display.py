@@ -2154,9 +2154,8 @@ class CocoDisplay:
         """ )
         tooltips = """
                     <b>location: @rolloverdisplay<br>
-                    cases: @cases </b>
+                    cases: @cases{0,0.0} </b>
                     """
-                    #cases: @cases{0,0.0}
 
         standardfig.add_tools(HoverTool(tooltips = tooltips,
         formatters = {'where': 'printf', 'cases': 'printf',},

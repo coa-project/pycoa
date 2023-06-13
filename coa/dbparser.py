@@ -720,10 +720,12 @@ class DBInfo:
           elif namedb == 'sciensano':
               info('BEL, Sciensano Belgian institute for health data  ...')
               sci = {
-              'cur_hosp':['TOTAL_IN','Total number of lab-confirmed hospitalized COVID-19 patients at the moment of reporting, including ICU (prevalence) (original name TOTAL_IN)'],\
-              'cur_icu':['TOTAL_IN_ICU','Total number of lab-confirmed hospitalized COVID-19 patients in ICU at the moment of reporting (prevalence) (original name TOTAL_IN_ICU)'],\
-              'cur_resp':['TOTAL_IN_RESP','Total number of lab-confirmed hospitalized COVID-19 patients under respiratory support at the moment of reporting (prevalence) (original name TOTAL_IN_RESP)'],\
-              'cur_ecmo':['TOTAL_IN_ECMO','Total number of lab-confirmed hospitalized COVID-19 patients on ECMO at the moment of reporting (prevalence) (orginale name TOTAL_IN_ECMO)']
+              'tot_hosp':['TOTAL_IN','Total number of lab-confirmed hospitalized COVID-19 patients at the moment of reporting, including ICU (prevalence) (original name TOTAL_IN)'],\
+              'tot_icu':['TOTAL_IN_ICU','Total number of lab-confirmed hospitalized COVID-19 patients in ICU at the moment of reporting (prevalence) (original name TOTAL_IN_ICU)'],\
+              'cur_reporting':['NR_REPORTING','Number of hospitals reporting'],\
+              'cur_confirmed':['NEW_IN','Number of new lab-confirmed COVID-19 patients in the last 24h (incidence),\
+                                not referred from another hospital. This number excludes the patients that were admitted\
+                                to the hospital for other reasons but tested positive for COVID-19 in a screening context.']
               }
               url='https://epistat.sciensano.be/Data/COVID19BE_HOSP.csv'
               self.separator = {url:','}

@@ -48,6 +48,7 @@ from coa.tools import (
     kwargs_test,
     extract_dates,
     info,
+    flat_list,
 )
 import coa.covid19 as coco
 from coa.error import *
@@ -489,10 +490,11 @@ def chartsinput_deco(f):
                 info('--------------------------------------------')
                 info('All values for '+ which + ' is nan nor empty')
                 info('--------------------------------------------')
-                pandy['date']=_db.get_dates()
-                pandy['where']=where
-                pandy['clustername']=where
-                pandy['codelocation']='000'
+                pandy['date']=len(where)*[dt.date(2020,1,1),dt.date.today()]
+                lwhere=flat_list([[i,i] for i in where])
+                pandy['where']=lwhere
+                pandy['clustername']=lwhere
+                pandy['codelocation']=len(pandy)*['000']
                 pandy=pandy.fillna(0)
                 bypop = 'no'
             if bypop != 'no':
@@ -515,11 +517,13 @@ def chartsinput_deco(f):
             info('--------------------------------------------')
             info('All values for '+ which + ' is nan nor empty')
             info('--------------------------------------------')
-            pandy['date']=_db.get_dates()
-            pandy['where']=where
-            pandy['clustername']=where
-            pandy['codelocation']='000'
+            pandy['date']=len(where)*[dt.date(2020,1,1),dt.date.today()]
+            lwhere=flat_list([[i,i] for i in where])
+            pandy['where']=lwhere
+            pandy['clustername']=lwhere
+            pandy['codelocation']=len(pandy)*['000']
             pandy=pandy.fillna(0)
+            bypop = 'no'
             #raise CoaKeyError('All values for '+ which + ' is nan nor empty')
         if when_end > pandy[[which,'date']].date.max():
             when_end = pandy[[which,'date']].date.max()

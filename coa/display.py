@@ -15,10 +15,14 @@ About :
 An interface module to easily plot pycoa data with bokeh
 
 """
-
-from coa.tools import kwargs_test, extract_dates, verb, get_db_list_dict,fill_missing_dates
+from coa.tools import (
+    kwargs_test,
+    extract_dates,
+    verb,
+    fill_missing_dates
+)
 from coa.error import *
-
+from coa.dbparser import _db_list_dict
 import math
 import pandas as pd
 import geopandas as gpd
@@ -32,28 +36,72 @@ import base64
 from IPython import display
 import copy
 import locale
+import inspect
 
-from bokeh.models import ColumnDataSource, TableColumn, DataTable, ColorBar, LogTicker,\
-    HoverTool, CrosshairTool, BasicTicker, GeoJSONDataSource, LinearColorMapper, LogColorMapper,Label, \
-    PrintfTickFormatter, BasicTickFormatter, NumeralTickFormatter, CustomJS, CustomJSHover, Select, \
-    Range1d, DatetimeTickFormatter, Legend, LegendItem, Text
-from bokeh.models.widgets import Tabs, Panel, Button, TableColumn, Toggle
+from bokeh.models import (
+    ColumnDataSource,
+    TableColumn,
+    DataTable,
+    ColorBar,
+    LogTicker,
+    HoverTool,
+    CrosshairTool,
+    BasicTicker,
+    GeoJSONDataSource,
+    LinearColorMapper,
+    LogColorMapper,
+    Label,
+    PrintfTickFormatter,
+    BasicTickFormatter,
+    NumeralTickFormatter,
+    CustomJS,
+    CustomJSHover,
+    Select,
+    Range1d,
+    DatetimeTickFormatter,
+    Legend,
+    LegendItem,
+    Text
+)
+from bokeh.models.widgets import (
+    Tabs,
+    Panel,
+    Button,
+    TableColumn,
+    Toggle
+)
 from bokeh.plotting import figure
-from bokeh.layouts import row, column, gridplot
-from bokeh.palettes import Category10, Category20, Viridis256
+from bokeh.layouts import (
+    row,
+    column,
+    gridplot
+)
+from bokeh.palettes import (
+    Category10,
+    Category20,
+    Viridis256
+)
 from bokeh.models import Title
 
 from bokeh.io import export_png
 from bokeh import events
 from bokeh.models.widgets import DateSlider
-from bokeh.models import LabelSet, WMTSTileSource
-from bokeh.transform import transform, cumsum
-
+from bokeh.models import (
+    LabelSet,
+    WMTSTileSource
+)
+from bokeh.transform import (
+    transform,
+    cumsum
+)
 import shapely.geometry as sg
 
 import branca.colormap
 from branca.colormap import LinearColormap
-from branca.element import Element, Figure
+from branca.element import (
+    Element,
+    Figure
+)
 import folium
 from PIL import Image
 import coa.geo as coge
@@ -61,16 +109,18 @@ import matplotlib.pyplot as plt
 import datetime as dt
 import bisect
 from functools import wraps
-from IPython.core.display import display, HTML
+from IPython.core.display import (
+    display,
+    HTML
+)
 
 width_height_default = [500, 380]
-
 MAXCOUNTRIESDISPLAYED = 24
 class CocoDisplay:
     def __init__(self, db=None, geo = None):
         verb("Init of CocoDisplay() with db=" + str(db))
         self.database_name = db
-        self.dbld = get_db_list_dict()
+        self.dbld = _db_list_dict
         self.lcolors = Category20[20]
         self.scolors = Category10[5]
         self.pycoageopandas = False
@@ -117,12 +167,6 @@ class CocoDisplay:
                     list_dep_metro = None
                     self.location_geometry = self.geo.get_subregion_list()[['code_subregion', 'name_subregion', 'geometry']]
                     self.location_geometry = self.location_geometry.rename(columns={'name_subregion': 'where'})
-                    #if country == 'FRA':
-                    #     list_dep_metro =  geo.get_subregions_from_region(name='Métropole')
-                    #elif country == 'ESP':
-                    #     list_dep_metro =  geo.get_subregions_from_region(name='España peninsular')
-                    #if list_dep_metro:
-                    #    self.boundary_metropole = self['where']_geometry.loc[self['where']_geometry.code_subregion.isin(list_dep_metro)]['geometry'].total_bounds
             else:
                    self.geo=coge.GeoManager('name')
                    geopan = gpd.GeoDataFrame()#crs="EPSG:4326")
@@ -163,11 +207,13 @@ class CocoDisplay:
         fig = figure(**kwargs, tools=['save', 'box_zoom,reset'], toolbar_location="right")
         #fig.add_layout(citation)
         fig.add_layout(Title(text=self.uptitle, text_font_size="10pt"), 'above')
-        fig.add_layout(Title(text=self.subtitle, text_font_size="8pt", text_font_style="italic"), 'below')
+        if 'innerdecomap' not in inspect.stack()[1].function:
+            fig.add_layout(Title(text=self.subtitle, text_font_size="8pt", text_font_style="italic"), 'below')
         return fig
 
     def get_listfigures(self):
         return  self.listfigs
+
     def set_listfigures(self,fig):
             if not isinstance(fig,list):
                 fig = [fig]
@@ -232,13 +278,13 @@ class CocoDisplay:
                 else:
                     if self.granularity == 'subregion' :
                         input = input.reset_index(drop=True)
-                        if isinstance(input['codelocation'][0],list):
+                        if isinstance(input['codelocation'].iloc[0],list):
                             input['codelocation'] = input['codelocation'].apply(lambda x: str(x).replace("'", '')\
                                                          if len(x)<5 else '['+str(x[0]).replace("'", '')+',...,'+str(x[-1]).replace("'", '')+']')
 
                         trad={}
                         cluster = input.clustername.unique()
-                        if isinstance(input['where'][0],list):
+                        if isinstance(input['where'].iloc[0],list):
                            cluster = [i for i in cluster]
                         for i in cluster:
                             if i == self.namecountry:
@@ -332,6 +378,8 @@ class CocoDisplay:
             title_option=''
             if option:
                 if 'sumallandsmooth7' in option:
+                    if not isinstance(option,list):
+                        option = ['sumallandsmooth7']
                     option.remove('sumallandsmooth7')
                     option += ['sumall','smooth7']
                 title_option = ' (option: ' + str(option)+')'
@@ -424,6 +472,8 @@ class CocoDisplay:
                 location_ordered_byvalues = list(
                     input.loc[input.date == self.when_end].sort_values(by=input_field, ascending=False)['clustername'].unique())
                 input = input.copy()  # needed to avoid warning
+                #input[inputtmp['clustername']] = pd.Categorical(input.clustername,
+                #                                        categories=location_ordered_byvalues, ordered=True)
                 input.loc[:,'clustername'] = pd.Categorical(input.clustername,
                                                        categories=location_ordered_byvalues, ordered=True)
 
@@ -546,7 +596,7 @@ class CocoDisplay:
         cases_custom = CocoDisplay.rollerJS()
         if 'which' in kwargs and isinstance(kwargs['which'],list):
             input_field=kwargs['which']
-        if isinstance(input['rolloverdisplay'][0],list):
+        if isinstance(input['rolloverdisplay'].iloc[0],list):
             input['rolloverdisplay'] = input['clustername']
         for axis_type in self.ax_type:
             standardfig = self.standardfig( y_axis_type = axis_type, x_axis_type = 'datetime',**kwargs)
@@ -623,7 +673,7 @@ class CocoDisplay:
         guideline = kwargs.get('guideline',self.dvisu_default['guideline'])
         panels = []
         listfigs = []
-        if isinstance(input['rolloverdisplay'][0],list):
+        if isinstance(input['rolloverdisplay'].iloc[0],list):
             input['rolloverdisplay'] = input['clustername']
         borne = 300
         kwargs.pop('plot_width')
@@ -827,7 +877,7 @@ class CocoDisplay:
         input['allyears'] = input['allyears'].astype(int)
         input.loc[:,'dayofyear']= input['date'].apply(lambda x : x.dayofyear)
         allyears = list(input.allyears.unique())
-        if isinstance(input['rolloverdisplay'][0],list):
+        if isinstance(input['rolloverdisplay'].iloc[0],list):
             input['rolloverdisplay'] = input['clustername']
         if len(input_field)>1:
             CoaError('Only one variable could be displayed')
@@ -942,10 +992,15 @@ class CocoDisplay:
 
                 #if func.__name__ == 'pycoa_mapfolium' or func.__name__ == 'pycoa_map' or func.__name__ == 'innerdecomap' or func.__name__ == 'innerdecopycoageo':
                 if func.__name__ in ['pycoa_mapfolium','pycoa_map','pycoageo' ,'pycoa_pimpmap']:
-                    if isinstance(input['where'].to_list()[0],list):
+                    if isinstance(input['where'].iloc[0],list):
                         geom = self.location_geometry
-                        geodic={loc:geom.loc[geom['where']==loc]['geometry'].values[0] for loc in geopdwd['where'].unique()}
-                        geopdwd['geometry'] = geopdwd['where'].map(geodic)
+                        geodic={}
+                        for uclust in geopdwd['clustername'].unique():
+                            loc = geopdwd.loc[geopdwd.clustername==uclust]['where'].iloc[0]
+                            cumulgeo = list(geom.loc[geom['where'].isin(loc)]['geometry'])
+                            geodic[uclust]=cumulgeo
+                        #geodic={loc:geom.loc[geom['where']==loc]['geometry'].values[0] for loc in geopdwd['where'].unique()}
+                        geopdwd.loc[:,'geometry'] = geopdwd.clustername.map(geodic)
                     else:
                         geopdwd = pd.merge(geopdwd, self.location_geometry, on='where')
                     kwargs['tile'] = tile
@@ -974,7 +1029,6 @@ class CocoDisplay:
                             new_geo = geo.get_data()[['name_'+self.granularity,'geometry']]
                             new_geo = new_geo.rename(columns={'name_'+self.granularity:'where'})
                             new_geo = new_geo.set_index('where')['geometry'].to_dict()
-
                             geopdwd['geometry'] = geopdwd['where'].map(new_geo)
                     geopdwd = gpd.GeoDataFrame(geopdwd, geometry=geopdwd.geometry, crs="EPSG:4326")
 
@@ -1805,6 +1859,7 @@ class CocoDisplay:
                 geopdwd_filtered = pd.merge(geolistmodified, geopdwd_filtered, on='where')
                 #if kwargs['wanted_dates']:
                 #    kwargs.pop('wanted_dates')
+
             return func(self, geopdwd, geopdwd_filtered, **kwargs)
         return innerdecopycoageo
 
@@ -1834,12 +1889,17 @@ class CocoDisplay:
                     sumgeo = sumgeo.to_crs(3035)
                 else:
                     sumgeo['geometry'] = sumgeo['geometry'].buffer(0.001) #needed with geopandas 0.10.2
-                centrosx = sumgeo['geometry'].centroid.x
-                centrosy = sumgeo['geometry'].centroid.y
 
+                sumgeo.loc[:,'centroidx'] = sumgeo['geometry'].centroid.x
+                sumgeo.loc[:,'centroidy'] = sumgeo['geometry'].centroid.y
+                clust=sumgeo.clustername.unique()
+
+                centrosx = [sumgeo.loc[sumgeo.clustername==i]['centroidx'].mean() for i in clust]
+                centrosy = [sumgeo.loc[sumgeo.clustername==i]['centroidy'].mean() for i in clust]
                 sumgeo = sumgeo.dissolve(by='clustername', aggfunc='sum').reset_index()
                 sumgeo['nb'] = sumgeo['clustername'].map(numberpercluster)
                 cases = sumgeo['cases']/sumgeo['nb']
+
                 dfLabel=pd.DataFrame({'clustername':sumgeo.clustername,'centroidx':centrosx,'centroidy':centrosy,'cases':cases,'geometry':sumgeo['geometry']})
 
                 if maplabel:
@@ -1864,14 +1924,6 @@ class CocoDisplay:
                     dfLabel['cases']=[str(i) for i in dfLabel['cases']]
                 sourcemaplabel = ColumnDataSource(dfLabel.drop(columns='geometry'))
             minx, miny, maxx, maxy =  geopdwd_filtered.total_bounds #self.boundary
-            #if self.dbld[self.database_name][0] != 'WW':
-            #    ratio = 0.05
-            #    minx -= ratio*minx
-            #    maxx += ratio*maxx
-            #    miny -= ratio*miny
-            #    maxy += ratio*maxy
-            #if func.__name__ == 'pycoa_pimpmap':
-            #    dico['titlebar']=tit[:-12]+' [ '+dico['when_beg'].strftime('%d/%m/%Y')+ '-'+ tit[-12:-1]+'])'
 
             kwargs['plot_width']=kwargs['plot_height']
             x_range=(minx,maxx)
@@ -1968,7 +2020,7 @@ class CocoDisplay:
             color_bar.formatter = NumeralTickFormatter(format="0.0%")
 
         standardfig.add_layout(color_bar, 'below')
-
+        standardfig.add_layout(Title(text=self.subtitle, text_font_size="8pt", text_font_style="italic"), 'below')
         if date_slider:
             allcases_location, allcases_dates = pd.DataFrame(), pd.DataFrame()
             allcases_location = geopdwd.groupby('where')['cases'].apply(list)
@@ -1978,9 +2030,10 @@ class CocoDisplay:
             geopdwd_tmp = ColumnDataSource(geopdwd_tmp.drop(columns=['geometry']))
 
             sourcemaplabel.data['rolloverdisplay'] = sourcemaplabel.data['clustername']
+
             callback = CustomJS(args =  dict(source = geopdwd_tmp, source_filter = geopdwd_filtered,
                                           date_sliderjs = date_slider, title=standardfig.title,
-                                          maplabeljs = sourcemaplabel),
+                                          color_mapperjs = color_mapper, maplabeljs = sourcemaplabel),
                         code = """
                         var ind_date_max = (date_sliderjs.end-date_sliderjs.start)/(24*3600*1000);
                         var ind_date = (date_sliderjs.value-date_sliderjs.start)/(24*3600*1000);
@@ -2017,6 +2070,7 @@ class CocoDisplay:
                             maplabeljs.data['cases'][i] = form(maplabeljs.data['cases'][i]).toString();
                             maplabeljs.data['rolloverdisplay'][i] = source_filter.data['rolloverdisplay'][i];
                         }
+
                         var tmp = title.text;
                         tmp = tmp.slice(0, -11);
                         var dateconverted = new Date(date_sliderjs.value);
@@ -2025,9 +2079,12 @@ class CocoDisplay:
                         var yyyy = dateconverted.getFullYear();
                         var dmy = dd + '/' + mm + '/' + yyyy;
                         title.text = tmp + dmy+")";
+
                         if (maplabeljs.get_length() !== 0)
                             maplabeljs.change.emit();
 
+                        color_mapperjs.high=Math.max.apply(Math, new_cases);
+                        color_mapperjs.low=Math.min.apply(Math, new_cases);
                         console.log(maplabeljs.data['cases']);
                         source_filter.change.emit();
                     """)
@@ -2080,6 +2137,7 @@ class CocoDisplay:
                             line_color = 'black', line_width = 0.25, fill_alpha = 1)
         if maplabel:
             if 'text' in maplabel or 'textinteger' in maplabel:
+
                 if 'textinteger' in maplabel:
                     sourcemaplabel.data['cases'] = sourcemaplabel.data['cases'].astype(float).astype(int).astype(str)
                 labels = LabelSet(
@@ -2096,9 +2154,8 @@ class CocoDisplay:
         """ )
         tooltips = """
                     <b>location: @rolloverdisplay<br>
-                    cases: @cases </b>
+                    cases: @cases{0,0.0} </b>
                     """
-                    #cases: @cases{0,0.0}
 
         standardfig.add_tools(HoverTool(tooltips = tooltips,
         formatters = {'where': 'printf', 'cases': 'printf',},

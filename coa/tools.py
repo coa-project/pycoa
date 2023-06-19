@@ -32,7 +32,7 @@ from getpass import getuser
 from zlib import crc32
 from urllib.parse import urlparse
 import unidecode
-
+import datetime as dt
 from coa.error import CoaKeyError, CoaTypeError, CoaConnectionError, CoaNotManagedError
 
 # testing if coadata is available
@@ -45,43 +45,9 @@ if _coacache_module_info != None:
 # Verbosity of pycoa
 _verbose_mode = 1 # default
 
-# Known db
-_db_list_dict = {'jhu': ['WW','nation','World'],
-    'owid': ['WW','nation','World'],
-    'jhu-usa': ['USA','subregion','United States of America'],
-    'spf': ['FRA','subregion','France'],
-    'spfnational': ['WW','nation','France'],
-    'opencovid19': ['FRA','subregion','France'],
-    'opencovid19national': ['WW','nation','France'],
-    'dpc': ['ITA','region','Italy'],
-    'covidtracking': ['USA','subregion','United States of America'],
-    'covid19india': ['IND','region','India'],
-    'rki':['DEU','subregion','Germany'],
-    'escovid19data':['ESP','subregion','Spain'],
-    'phe':['GBR','subregion','United Kingdom'],
-    'sciensano':['BEL','region','Belgium'],
-    'dgs':['PRT','region','Portugal'],
-    #'obepine':['FRA','region','France'],
-    'moh':['MYS','subregion','Malaysia'],
-    'risklayer':['EUR','subregion','Europe'],
-    'imed':['GRC','region','Greece'],
-    'govcy':['CYP','nation','Cyprus'],
-    'insee':['FRA','subregion','France'],
-    'europa':['EUR','subregion','Europe'],
-    'mpoxgh':['WW','nation','World'],
-    'jpnmhlw' :['JPN','subregion','Japan'],
-    #'minciencia':['CHL','subregion','Chile']
-    }
-
 # ----------------------------------------------------
 # --- Usefull functions for pycoa --------------------
 # ----------------------------------------------------
-
-def get_db_list_dict():
-    """Return db list dict"""
-    return _db_list_dict
-
-
 def get_verbose_mode():
     """Return the verbose mode
     """
@@ -167,7 +133,6 @@ def fill_missing_dates(p, date_field='date', loc_field='where', d1=None, d2=None
         pfill=pd.concat([pfill, pp3])
     pfill.reset_index(inplace=True)
     return pfill
-
 
 def check_valid_date(date):
     """Check if a string is compatible with a valid date under the format day/month/year
@@ -321,6 +286,35 @@ def testsublist(lst1, lst2):
     if len(extract)==len(lst1):
         test=True
     return test
+
+def flat_list(matrix):
+     ''' Flatten list function used in covid19 methods'''
+     flatten_matrix = []
+     for sublist in matrix:
+         if isinstance(sublist,list):
+             for val in sublist:
+                 flatten_matrix.append(val)
+         else:
+             flatten_matrix.append(sublist)
+     return flatten_matrix
+
+def return_nonan_dates_pandas(df = None, field = None):
+   ''' Check if for last date all values are nan, if yes check previous date and loop until false'''
+   watchdate = df.date.max()
+   boolval = True
+   j = 0
+   while (boolval):
+       boolval = df.loc[df.date == (watchdate - dt.timedelta(days=j))][field].dropna().empty
+       j += 1
+   df = df.loc[df.date <= watchdate - dt.timedelta(days=j - 1)]
+   boolval = True
+   j = 0
+   watchdate = df.date.min()
+   while (boolval):
+       boolval = df.loc[df.date == (watchdate + dt.timedelta(days=j))][field].dropna().empty
+       j += 1
+   df = df.loc[df.date >= watchdate - dt.timedelta(days=j - 1)]
+   return df
 
 class dotdict(dict):
     """dot.notation access to dictionary attributes"""

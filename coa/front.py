@@ -25,13 +25,13 @@ Basic usage
     cf.get(where=['Spain','Italy'],which='recovered')
 ** listing available database and which data can be used **
     cf.listwhom()
-    cf.setwhom('jhu') # return available keywords (aka 'which' data)
+    cf.setwhom('jhu',reload=True) # return available keywords (aka 'which' data), reload DB is True by default
     cf.listwhich()   # idem
     cf.listwhat()    # return available time series type (weekly,
                      # daily...)
     cf.plot(option='sumall') # return the cumulative plot for all countries
                      # for default which keyword. See cf.listwhich() and
-                     # and other cf.list**() function (see below)
+                    # and other cf.list**() function (see below)
 
 """
 
@@ -39,19 +39,27 @@ Basic usage
 import pandas as pd
 from functools import wraps
 import numpy as np
-from bokeh.io import show, output_notebook
-import types
+from bokeh.io import (
+    show,
+    output_notebook,
+)
 import datetime as dt
-from coa.tools import kwargs_test, extract_dates, get_db_list_dict, info, testsublist
+from coa.tools import (
+    kwargs_test,
+    extract_dates,
+    info,
+    flat_list,
+)
 import coa.covid19 as coco
 from coa.error import *
 import coa._version
 import coa.geo as coge
+from coa.dbparser import _db_list_dict
 
 output_notebook(hide_banner=True)
 
 # --- Needed global private variables ----------------------------------
-_listwhom = list(get_db_list_dict().keys())
+_listwhom = list(_db_list_dict.keys())
 
 if 'coa_db' in __builtins__.keys():
     if not __builtins__['coa_db'] in _listwhom:
@@ -61,15 +69,11 @@ if 'coa_db' in __builtins__.keys():
 else:
     _whom = _listwhom[0]  # default base
 
-#_db, _cocoplot = coco.DataBase.factory(_whom)  # initialization with default
-
 _gi = None
 
 _dict_bypop = {'no':0,'100':100,'1k':1e3,'100k':1e5,'1M':1e6,'pop':1.}
 
-_listwhat = [ 'standard', # first one is default, nota:  we must avoid uppercases
-              'daily',
-              'weekly']
+_listwhat = [ 'standard', 'daily', 'weekly']
 
 _listoutput = ['pandas','geopandas','list', 'dict', 'array']  # first one is default for get
 
@@ -81,7 +85,7 @@ _listplot = ['date','menulocation','versus','spiral','yearly']
 
 _listmaplabel= ['text','textinteger','spark','spiral','label%','log','unsorted','exploded','dense']
 
-_listoption = ['nonneg', 'nofillnan', 'smooth7', 'sumall','sumallandsmooth7','sumallandsmooth7']
+_listoption = ['nonneg', 'nofillnan', 'smooth7', 'sumall']
 # --- Front end functions ----------------------------------------------
 
 # ----------------------------------------------------------------------
@@ -91,20 +95,15 @@ def getversion():
     """Return the current running version of pycoa.
     """
     return coa._version.__version__
-
-
 # ----------------------------------------------------------------------
 # --- listoutput() -----------------------------------------------------
 # ----------------------------------------------------------------------
-
 def listoutput():
     """Return the list of currently available output types for the
     get() function. The first one is the default output given if
     not specified.
     """
     return _listoutput
-
-
 # ----------------------------------------------------------------------
 # --- listvisu() -------------------------------------------------------
 # ----------------------------------------------------------------------
@@ -114,12 +113,9 @@ def listvisu():
     not specified.
     """
     return _listvisu
-
-
 # ----------------------------------------------------------------------
 # --- listwhom() -------------------------------------------------------
 # ----------------------------------------------------------------------
-
 def listwhom(detailed=False):
     """Return the list of currently avalailable databases for covid19
      data in PyCoA.
@@ -127,45 +123,38 @@ def listwhom(detailed=False):
 
      If detailed=True, gives information location of each given database.
     """
-    df = pd.DataFrame(get_db_list_dict())
+    df = pd.DataFrame(_db_list_dict)
     df = df.T.reset_index()
     df.index = df.index+1
     df = df.rename(columns={'index':'Database',0: "WW/iso3",1:'Granularité',2:'WW/Name'})
     df = df.sort_values(by='Database').reset_index(drop=True)
     try:
         if int(detailed):
+            df = (df.style.set_table_styles([{'selector' : '','props' : [('border','3px solid green')]}]))
+            print("Pandas has been pimped, use '.data' to get a pandas dataframe")
             return df
         else:
-            return df.Database.tolist()
+            return list(df['Database'])
     except:
         raise CoaKeyError('Waiting for a boolean !')
-
-
-# ----------------------------------------------------------------------
 # --- listwhat() -------------------------------------------------------
 # ----------------------------------------------------------------------
-
 def listwhat():
     """Return the list of currently avalailable type of series available.
      The first one is the default one.
     """
     return _listwhat
-
 # ----------------------------------------------------------------------
 # --- listhist() -------------------------------------------------------
 # ----------------------------------------------------------------------
-
 def listhist():
     """Return the list of currently avalailable type of hist available.
      The first one is the default one.
     """
     return _listhist
-
-
 # ----------------------------------------------------------------------
 # --- listplot() -------------------------------------------------------
 # ----------------------------------------------------------------------
-
 def listplot():
     """Return the list of currently avalailable type of plots available.
      The first one is the default one.
@@ -175,27 +164,22 @@ def listplot():
 # ----------------------------------------------------------------------
 # --- listoption() -----------------------------------------------------
 # ----------------------------------------------------------------------
-
 def listoption():
     """Return the list of currently avalailable option apply to data.
      Default is no option.
     """
     return _listoption
-
 # ----------------------------------------------------------------------
 # --- listtile() -------------------------------------------------------
 # ----------------------------------------------------------------------
-
 def listtile():
     """Return the list of currently avalailable tile option for map()
      Default is the first one.
     """
     return _cocoplot.tiles_list()
-
 # ----------------------------------------------------------------------
 # --- listwhich() ------------------------------------------------------
 # ----------------------------------------------------------------------
-
 def listwhich():
     """Get which are the available fields for the current base.
     Output is a list of string.
@@ -205,10 +189,7 @@ def listwhich():
     if  '_db' not in globals():
         raise CoaKeyError('setwhom MUST be defined first !')
     else:
-        return _db.get_available_keys_words()
-
-
-
+        return sorted(_db.get_parserdb().get_available_keywords())
 # ----------------------------------------------------------------------
 # --- listwhere() ------------------------------------------------------
 # ----------------------------------------------------------------------
@@ -219,43 +200,43 @@ def listwhere(clustered = False):
         raise CoaKeyError('setwhom MUST be defined first !')
     else:
         def clust():
-            if get_db_list_dict()[_whom][1] == 'nation' and get_db_list_dict()[_whom][2] != 'World':
-                return  _db.geo.to_standard(get_db_list_dict()[_whom][0])
+            if _db_list_dict[_whom][1] == 'nation' and _db_list_dict[_whom][2] not in ['World','Europe']:
+                return  _db.geo.to_standard(_db_list_dict[_whom][0])
             else:
                 r = _db.geo.get_region_list()
                 if not isinstance(r, list):
                     r=sorted(r['name_region'].to_list())
-                r.append(get_db_list_dict()[_whom][2])
+                r.append(_db_list_dict[_whom][2])
+                if _db_list_dict[_whom][2] == 'Europe':
+                    r.append('European Union')
                 return r
-
-        if get_db_list_dict()[_whom][1] == 'nation' and get_db_list_dict()[_whom][2] != 'World':
-            return [ get_db_list_dict()[_whom][2] ]
-
+        if _db_list_dict[_whom][1] == 'nation' and _db_list_dict[_whom][2] not in ['World','Europe']:
+            return [ _db_list_dict[_whom][2] ]
         if clustered:
             return clust()
         else:
             if _db.db_world == True:
-                if get_db_list_dict()[_whom][1] == 'nation' and get_db_list_dict()[_whom][2] != 'World':
-                    r =  _db.geo.to_standard(get_db_list_dict()[_whom][0])
+                if _db_list_dict[_whom][1] == 'nation' and _db_list_dict[_whom][2] not in ['World','Europe']:
+                    r =  _db.geo.to_standard(_db_list_dict[_whom][0])
                 else:
-                    r = _db.geo.get_GeoRegion().get_countries_from_region('world')
+                    if _db_list_dict[_whom][2]=='World':
+                        r = _db.geo.get_GeoRegion().get_countries_from_region('world')
+                    else:
+                        r = _db.geo.get_GeoRegion().get_countries_from_region('europe')
                     r = [_db.geo.to_standard(c)[0] for c in r]
             else:
-                if get_db_list_dict()[_whom][1] == 'subregion':
+                if _db_list_dict[_whom][1] == 'subregion':
                     pan = _db.geo.get_subregion_list()
                     r = list(pan.name_subregion.unique())
-                elif get_db_list_dict()[_whom][1] == 'region':
+                elif _db_list_dict[_whom][1] == 'region':
                     r = clust()
-                    r.append(get_db_list_dict()[_whom][2])
+                    r.append(_db_list_dict[_whom][2])
                 else:
                     raise CoaKeyError('What is the granularity of your DB ?')
             return r
-
-
 # ----------------------------------------------------------------------
 # --- listbypop() ------------------------------------------------------
 # ----------------------------------------------------------------------
-
 def listbypop():
     """Get the list of available population normalization
     """
@@ -263,67 +244,76 @@ def listbypop():
 # ----------------------------------------------------------------------
 # --- listmaplabel() ------------------------------------------------------
 # ----------------------------------------------------------------------
-
 def listmaplabel():
     """Get the list of available population normalization
     """
     return _listmaplabel
-
 # ----------------------------------------------------------------------
 # --- setwhom() --------------------------------------------------------
 # ----------------------------------------------------------------------
-
-def setwhom(base):
+def setwhom(base,**kwargs):
     """Set the covid19 database used, given as a string.
     Please see pycoa.listbase() for the available current list.
 
     By default, the listbase()[0] is the default base used in other
     functions.
     """
-    if '_db' not in globals():
-        global _db, _cocoplot, _whom
+    kwargs_test(kwargs, ['reload'], 'Bad args used in the pycoa.saveoutput function.')
+    refresh = kwargs.get('reload', True)
+    if refresh not in [0,1]:
+        raise CoaError('reload must be a boolean ... ')
+    if base not in listwhom():
+        raise CoaDbError(base + ' is not a supported database. '
+                                'See pycoa.listbase() for the full list.')
     else:
-        if base not in listwhom():
-            raise CoaDbError(base + ' is not a supported database. '
-                                    'See pycoa.listbase() for the full list.')
-    _db, _cocoplot = coco.DataBase.factory(base)
-    _whom = base
-
-
+        if '_db' not in globals():
+            global _db, _cocoplot, _whom
+        _db, _cocoplot = coco.DataBase.factory(base,refresh)
+        if not refresh:
+            _db.get_parserdb().get_echoinfo()
+        _whom = base
 # ----------------------------------------------------------------------
 # --- getwhom() --------------------------------------------------------
 # ----------------------------------------------------------------------
-def getwhom():
+def getwhom(return_error=True):
     """Return the current base which is used
     """
     if  '_db' not in globals():
-        raise CoaKeyError('setwhom MUST be defined first !')
+        #if return_error:
+        #    raise CoaKeyError('setwhom MUST be defined first !')
+        #else:
+            return ''
     else:
         return _whom
-
 
 # ----------------------------------------------------------------------
 # --- get(**kwargs) ----------------------------------------------------
 # ----------------------------------------------------------------------
-
-def getinfo(which):
+def getkeywordinfo(which=None):
     """
         Return keyword_definition for the db selected
     """
     if  '_db' not in globals():
         raise CoaKeyError('setwhom MUST be defined first !')
     else:
-        print(_db.get_keyword_definition(which),'\nurl:', _db.get_keyword_url(which)[0],'\n(more info ',_db.get_keyword_url(which)[1],')')
-
-def get_mainpandas(**kwargs):
+        if which:
+            if which in listwhich():
+                print(_db.get_parserdb().get_keyword_definition(which))
+                print('Parsed from this url:',_db.get_parserdb().get_keyword_url(which))
+            else:
+                raise CoaKeyError('This value do not exist please check.'+'Available variable so far in this db ' + str(listwhich()))
+        else:
+            df = _db.get_parserdb().get_dbdescription()
+            return df
+def getrawdb(**kwargs):
     """
         Return the main pandas i.e with all the which values loaded from the database selected
     """
-    col = list(_db.get_mainpandas().columns)
-    mem='{:,}'.format(_db.get_mainpandas()[col].memory_usage(deep=True).sum())
+    col = list(_db.get_fulldb().columns)
+    mem='{:,}'.format(_db.get_fulldb()[col].memory_usage(deep=True).sum())
     info('Memory usage of all columns: ' + mem + ' bytes')
-    return _db.get_mainpandas(**kwargs)
-
+    df = _db.get_fulldb(**kwargs)
+    return df
 # ----------------------------------------------------------------------
 # --- Normalisation by pop input pandas return pandas whith by pop new column
 # ---------------------------------------------------------------------
@@ -399,9 +389,9 @@ def chartsinput_deco(f):
             wrapper dealing with arg testing
         '''
         kwargs_test(kwargs,
-                    ['where', 'what', 'which', 'whom', 'when', 'input', 'input_field','output','typeofplot',\
-                    'title','typeofplot','typeofhist','bins','visu','tile','dateslider','maplabel','option','mode','guideline','bypop',
-                    'plot_width','plot_height','textcopyright'],
+                    ['where', 'what', 'which', 'whom','reload','when', 'input', 'input_field','output',\
+                    'title','typeofplot','typeofhist','bins','visu','tile','dateslider','maplabel','option',
+                    'mode','guideline','bypop', 'plot_width','plot_height','textcopyright','cursor_date'],
                     'Bad args used in the pycoa function.')
 
     # no dateslider currently
@@ -422,14 +412,10 @@ def chartsinput_deco(f):
         input_field = kwargs.get('input_field',None)
 
         if (option != None or what != None) and (isinstance(input_field,list) or isinstance(which,list)):
-            raise CoaKeyError('option/what not compatible when input_fied/which  is a list')
+            raise CoaKeyError('option/what not compatible when input_fied/which is a list')
 
         if 'input_field' not in kwargs:
-            #if which:
-            #    kwargs['input_field'] = which
-            #else:
             which = input_field
-                #kwargs['which']=which
         else:
             which = kwargs['input_field']
 
@@ -454,27 +440,6 @@ def chartsinput_deco(f):
         if whom != _whom:
             setwhom(whom)
 
-        '''
-        whichproblem=False
-        if input_arg is not None and not input_arg.empty:
-            if not isinstance(input_field, list):
-                if input_field not in input_arg.columns:
-                    whichproblem=True
-            else:
-                if not testsublist(input_field,input_arg.columns):
-                    whichproblem=True
-        else:
-            if not isinstance(which, list):
-                if which not in listwhich():
-                    whichproblem=True
-            else:
-                if not testsublist(which,listwhich()):
-                    whichproblem=True
-
-        if whichproblem:
-            raise CoaKeyError('which option ' + str(which) + ' not supported. '
-                                                            'See listwhich() for list.')
-        '''
         if bypop not in listbypop():
             raise CoaKeyError('The bypop arg should be selected in '+str(listbypop)+' only.')
         if isinstance(input_arg, pd.DataFrame) or isinstance(which, list):
@@ -518,17 +483,18 @@ def chartsinput_deco(f):
             if which != None:
                 pandy['standard'] = pandy[which]
             else:
-                pandy['standard'] = pandy.columns[2]
+                pandy['standard'] = pandy[pandy.columns[2]]
                 which = list(pandy.columns)[2]
             input_field = what
             if pandy[[which,'date']].isnull().values.all():
                 info('--------------------------------------------')
                 info('All values for '+ which + ' is nan nor empty')
                 info('--------------------------------------------')
-                pandy['date']=_db.get_dates()
-                pandy['where']=where
-                pandy['clustername']=where
-                pandy['codelocation']='000'
+                pandy['date']=len(where)*[dt.date(2020,1,1),dt.date.today()]
+                lwhere=flat_list([[i,i] for i in where])
+                pandy['where']=lwhere
+                pandy['clustername']=lwhere
+                pandy['codelocation']=len(pandy)*['000']
                 pandy=pandy.fillna(0)
                 bypop = 'no'
             if bypop != 'no':
@@ -551,11 +517,13 @@ def chartsinput_deco(f):
             info('--------------------------------------------')
             info('All values for '+ which + ' is nan nor empty')
             info('--------------------------------------------')
-            pandy['date']=_db.get_dates()
-            pandy['where']=where
-            pandy['clustername']=where
-            pandy['codelocation']='000'
+            pandy['date']=len(where)*[dt.date(2020,1,1),dt.date.today()]
+            lwhere=flat_list([[i,i] for i in where])
+            pandy['where']=lwhere
+            pandy['clustername']=lwhere
+            pandy['codelocation']=len(pandy)*['000']
             pandy=pandy.fillna(0)
+            bypop = 'no'
             #raise CoaKeyError('All values for '+ which + ' is nan nor empty')
         if when_end > pandy[[which,'date']].date.max():
             when_end = pandy[[which,'date']].date.max()
@@ -958,7 +926,7 @@ def decoplot(func):
                 print('typeofplot is versus but dim(input_field)!=2, versus has not effect ...')
                 fig = _cocoplot.pycoa_date_plot(input,input_field,**kwargs)
         elif typeofplot == 'menulocation':
-            if get_db_list_dict()[_whom][1] == 'nation' and get_db_list_dict()[_whom][2] != 'World':
+            if _db_list_dict[_whom][1] == 'nation' and _db_list_dict[_whom][2] != 'World':
                 print('typeofplot is menulocation with a national DB granularity, use date plot instead ...')
                 fig = _cocoplot.pycoa_date_plot(input,input_field,**kwargs)
             else:

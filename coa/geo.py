@@ -646,7 +646,7 @@ class GeoRegion():
         # --- filing comesa information
         p_comesa=pd.read_html(get_local_from_url('https://www.worlddata.info/trade-agreements/comesa.php'))
         self._comesa=["COD" if x == "Congo (Dem. Republic)" else x for x in p_comesa[0].Country.to_list()]
-        
+
         # --- get the UnitedNation GeoScheme and organize the data
         p_gs=pd.read_html(get_local_from_url(self._source_dict["GeoScheme"],0))[0]
         p_gs.columns=['country','capital','iso2','iso3','num','m49']
@@ -782,7 +782,8 @@ class GeoCountry():
                     # missing some counties 'GBR':'https://opendata.arcgis.com/datasets/69dc11c7386943b4ad8893c45648b1e1_0.zip?geometry=%7B%22xmin%22%3A-44.36%2C%22ymin%22%3A51.099%2C%22xmax%22%3A39.487%2C%22ymax%22%3A59.78%2C%22type%22%3A%22extent%22%2C%22spatialReference%22%3A%7B%22wkid%22%3A4326%7D%7D&outSR=%7B%22latestWkid%22%3A27700%2C%22wkid%22%3A27700%7D',\
                     'GBR':'https://github.com/coa-project/coadata/raw/main/coastore/opendata.arcgis.com_3256063640',\
                     # previously (but broken) : https://opendata.arcgis.com/datasets/3a4fa2ce68f642e399b4de07643eeed3_0.geojson',\
-                    'BEL':'https://public.opendatasoft.com/explore/dataset/arrondissements-belges-2019/download/?format=shp&timezone=Europe/Berlin&lang=en',\
+                    'BEL':'https://github.com/coa-project/coadata/raw/main/coacache/public.opendatasoft.com_537867990.zip',\
+# previously (but not all regions now) 'https://public.opendatasoft.com/explore/dataset/arrondissements-belges-2019/download/?format=shp&timezone=Europe/Berlin&lang=en',\
                     'PRT':'https://github.com/coa-project/coadata/raw/main/coastore/concelhos.zip',\
                     # (simplification of 'https://github.com/coa-project/coadata/raw/main'https://dados.gov.pt/en/datasets/r/59368d37-cbdb-426a-9472-5a04cf30fbe4',\
                     'MYS':'https://stacks.stanford.edu/file/druid:zd362bc5680/data.zip',\
@@ -1052,13 +1053,19 @@ class GeoCountry():
                 'niscode':'code_subregion',\
                 'prov_code':'code_region'},inplace=True)
             p=[]
+
             for index,row in self._country_data.iterrows():
-                if row.prov_name_f is not None:
-                    p0=row.prov_name_f
-                elif row.prov_name_n is not None:
+                if row.prov_name_n is not None:
                     p0=row.prov_name_n
+                elif row.prov_name_f is not None:
+                    p0=row.prov_name_f
                 else:
                     p0=row.region
+                p0=str(p0).title().replace(' ','').replace('(Le)','').replace('(La)','').replace('-','')
+                if p0=='RégionDeBruxellesCapitale':
+                    p0='Brussels'
+                if p0=='Henegouwen':
+                    p0='Hainaut'
                 p.append(p0)
             self._country_data['name_region']=p
             self._country_data.loc[self._country_data.code_region.isnull(),'code_region']='00000'
@@ -1136,7 +1143,7 @@ class GeoCountry():
 
         #--- 'JPN' case ----------------------------------------------------------------------------------------
         elif self._country == 'JPN':
-            self._country_data = gpd.read_file(get_local_from_url(url,0))
+            self._country_data = gpd.read_file('https://raw.githubusercontent.com/dataofjapan/land/master/japan.geojson')
             np_name_subregion_jpn = np.array(['Hokkaido', 'Aomori', 'Iwate', 'Miyagi', 'Akita',\
                                               'Yamagata', 'Fukushima', 'Ibaraki', 'Tochigi',\
                                               'Gunma', 'Saitama','Chiba', 'Tokyo', 'Kanagawa',\
@@ -1154,7 +1161,7 @@ class GeoCountry():
                                               'Matsue','Okayama','Hiroshima','Yamaguchi','Tokushima','Takamatsu',\
                                               'Matsuyama','Kochi','Fukuoka','Saga','Nagasaki','Kumamoto','Oita',\
                                               'Miyazaki','Kagoshima','Naha'])
-            np_name_region_jpn = np.array(['Hokkaido']+ 6*['Tohoku'] + 7*['Kanto'] + 9*['Chubu'] + 5*['Chugoku'] + 4*['Shikoku'] + 7*['Kansai'] + 8*['Kyushu']) 
+            np_name_region_jpn = np.array(['Hokkaido']+ 6*['Tohoku'] + 7*['Kanto'] + 9*['Chubu'] + 5*['Chugoku'] + 4*['Shikoku'] + 7*['Kansai'] + 8*['Kyushu'])
             np_code_region_jpn = np.array(['Hokkaido']+ 6*['Tohoku'] + 7*['Kanto'] + 9*['Chubu'] + 5*['Chugoku'] + 4*['Shikoku'] + 7*['Kansai'] + 8*['Kyushu'])
             np_code_subregion_jpn =np.arange(1,48)
             np_population_subregion_jpn = np.array([5224614,1237984,1210534,2301996,959502, 1068027,
@@ -1190,18 +1197,18 @@ class GeoCountry():
                              'https://upload.wikimedia.org/wikipedia/commons/3/3e/Flag_of_Gifu_Prefecture.svg',
                              'https://upload.wikimedia.org/wikipedia/commons/9/92/Flag_of_Shizuoka_Prefecture.svg',
                              'https://upload.wikimedia.org/wikipedia/commons/0/02/Flag_of_Aichi_Prefecture.svg',
-                             'https://upload.wikimedia.org/wikipedia/commons/8/8c/Flag_of_Mie_Prefecture.svg', 
+                             'https://upload.wikimedia.org/wikipedia/commons/8/8c/Flag_of_Mie_Prefecture.svg',
                              'https://upload.wikimedia.org/wikipedia/commons/9/99/Flag_of_Shiga_Prefecture.svg',
                              'https://upload.wikimedia.org/wikipedia/commons/0/06/Flag_of_Kyoto_Prefecture.svg',
                              'https://upload.wikimedia.org/wikipedia/commons/5/5a/Flag_of_Osaka_Prefecture.svg',
                              'https://upload.wikimedia.org/wikipedia/commons/7/74/Flag_of_Hyogo_Prefecture.svg',
-                             'https://upload.wikimedia.org/wikipedia/commons/0/00/Flag_of_Nara_Prefecture.svg', 
+                             'https://upload.wikimedia.org/wikipedia/commons/0/00/Flag_of_Nara_Prefecture.svg',
                              'https://upload.wikimedia.org/wikipedia/commons/6/6e/Flag_of_Wakayama_Prefecture.svg',
                              'https://upload.wikimedia.org/wikipedia/commons/1/1c/Flag_of_Tottori_Prefecture.svg',
                              'https://upload.wikimedia.org/wikipedia/commons/e/e8/Flag_of_Shimane_Prefecture.svg',
                              'https://upload.wikimedia.org/wikipedia/commons/3/33/Flag_of_Okayama_Prefecture.svg',
                              'https://upload.wikimedia.org/wikipedia/commons/e/ed/Flag_of_Hiroshima_Prefecture.svg',
-                             'https://upload.wikimedia.org/wikipedia/commons/b/b9/Flag_of_Yamaguchi_Prefecture.svg', 
+                             'https://upload.wikimedia.org/wikipedia/commons/b/b9/Flag_of_Yamaguchi_Prefecture.svg',
                              'https://upload.wikimedia.org/wikipedia/commons/a/ac/Flag_of_Tokushima_Prefecture.svg',
                              'https://upload.wikimedia.org/wikipedia/commons/2/29/Flag_of_Kagawa_Prefecture.svg',
                              'https://upload.wikimedia.org/wikipedia/commons/2/2d/Flag_of_Ehime_Prefecture.svg',
@@ -1216,12 +1223,15 @@ class GeoCountry():
                              'https://upload.wikimedia.org/wikipedia/commons/2/2f/Flag_of_Okinawa_Prefecture.svg'], dtype = object)
             dic_japan = {'name_subregion' : np_name_subregion_jpn,'code_region' : np_name_region_jpn, 'name_region': np_name_region_jpn,\
                          'code_subregion' : np_code_subregion_jpn, 'flag_subregion' : np_flag_subregion_jpn, 'town_subregion' : np_town_subregion_jpn,\
-                         'population_subregrion' : np_population_subregion_jpn, 'area_subregion' : np_area_subregion_jpn }
+                         'population_subregion' : np_population_subregion_jpn, 'area_subregion' : np_area_subregion_jpn }
             df_japan = pd.DataFrame(data = dic_japan)
             df_japan.index = np.arange(1,48)
-            self._country_data = gpd.GeoDataFrame(df_japan.join(self._country_data))
-            # Solving by hand a None geometry for the Okinawa subregion
-            self._country_data.loc[self._country_data.code_subregion==47,"geometry"]=sg.Polygon(((127.92778,26.47944),(127.92978,26.47944),(127.92878,26.47845),(127.92778,26.47944)))
+            self._country_data = self._country_data.rename(columns = {"id" : "code_subregion"})  #
+            df_final_japan = pd.merge(df_japan,self._country_data, on = ['code_subregion'])
+            df_final_japan.drop(columns = ['nam', 'nam_ja'], inplace = True)
+            self._country_data = gpd.GeoDataFrame(df_final_japan)
+            #code_subregion as to be str to be able to be merged ...
+            self._country_data['code_subregion']=self._country_data['code_subregion'].astype(str)
 
     # def get_region_from_municipality(self,lname):
     #     """  Return region list from a municipality list

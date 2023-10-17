@@ -960,7 +960,7 @@ class DBInfo:
     result = result.reset_index(drop=True)
     if db == 'jhu-usa':
       col=result.columns.tolist()
-      ncol=col[:2]+col[3:]+[col[2]]
+      ncol=col[:2]+col[2:]
       result=result[ncol]
       self.available_keywords+=['Population']
     self.mainpandas = fill_missing_dates(result)

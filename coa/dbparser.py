@@ -279,8 +279,8 @@ class DBInfo:
           elif namedb == 'imed':
                   info('Greece, imed database selected ...')
                   imed = {
-                  'tot_cases':['cases','FILLIT'],
-                  'tot_deaths':['deaths','FILLIT']
+                  'tot_deaths':['deaths','FILLIT'],
+                  'tot_cases':['cases','FILLIT']
                   }
                   urlb = 'https://raw.githubusercontent.com/iMEdD-Lab/open-data/master/COVID-19/greece_'
                   masterurl='https://github.com/iMEdD-Lab/open-data/tree/master/COVID-19'

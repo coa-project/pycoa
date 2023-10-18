@@ -486,6 +486,7 @@ def chartsinput_deco(f):
                 pandy['standard'] = pandy[pandy.columns[2]]
                 which = list(pandy.columns)[2]
             input_field = what
+
             if pandy[[which,'date']].isnull().values.all():
                 info('--------------------------------------------')
                 info('All values for '+ which + ' is nan nor empty')
@@ -513,6 +514,7 @@ def chartsinput_deco(f):
             raise CoaTypeError('Waiting input as valid pycoa pandas '
                                'dataframe. See help.')
         when_beg, when_end = extract_dates(when)
+
         if pandy[[which,'date']].isnull().values.all():
             info('--------------------------------------------')
             info('All values for '+ which + ' is nan nor empty')

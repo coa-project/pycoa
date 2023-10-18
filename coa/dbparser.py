@@ -1065,6 +1065,7 @@ class DBInfo:
           uniqloc = list(mypandas['where'].unique())
           name2code = collections.OrderedDict(zip(uniqloc,list(gd.loc[gd.name_region.isin(uniqloc)]['code_region'])))
           mypandas = mypandas.loc[~mypandas['where'].isnull()]
+
       codename = None
       location_is_code = False
       uniqloc = list(mypandas['where'].unique()) # if possible location from csv are codelocationv
@@ -1095,8 +1096,7 @@ class DBInfo:
               CoaDbError('Granularity problem , neither region nor sub_region ...')
       if self.db == 'dgs':
           mypandas = mypandas.reset_index(drop=True)
-      if self.db != 'spfnational':
-          mypandas = mypandas.groupby(['where','date']).sum(min_count=1).reset_index() # summing in case of multiple dates (e.g. in opencovid19 data). But keep nan if any
+      mypandas = mypandas.groupby(['where','date']).sum(min_count=1).reset_index() # summing in case of multiple dates (e.g. in opencovid19 data). But keep nan if any
       if self.db == 'govcy' or self.db == 'jpnmhlw':
           location_is_code=False
       mypandas = fill_missing_dates(mypandas)
@@ -1111,11 +1111,9 @@ class DBInfo:
               mypandas['codelocation'] =  mypandas['where'].map(reverse).astype(str)
           else:
               mypandas['codelocation'] =  mypandas['where'].map(codename).astype(str)
-
       if self.db == 'owid':
           onlyowid['codelocation'] = onlyowid['where']
           mypandas = pd.concat([mypandas,onlyowid])
-
       self.mainpandas = fill_missing_dates(mypandas)
       self.dates  = self.mainpandas['date']
 

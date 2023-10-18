@@ -62,7 +62,7 @@ class DataBase(object):
         Return an instance to DataBase and to CocoDisplay methods
         This is recommended to avoid mismatch in labeled figures
        '''
-       path = ".cash/"
+       path = ".cache/"
        if not os.path.exists(path):
            os.makedirs(path)
        filepkl=path+db_name+'.pkl'

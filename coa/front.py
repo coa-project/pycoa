@@ -395,7 +395,6 @@ def chartsinput_deco(f):
                     'Bad args used in the pycoa function.')
 
     # no dateslider currently
-
         if '_db' not in globals():
             global _db, _cocoplot, _whom
             _db, _cocoplot = coco.DataBase.factory(_whom)

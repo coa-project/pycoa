@@ -76,12 +76,19 @@ class DataBase(object):
               datab = DataBase(db_name)
               with open(filepkl, 'wb') as f:
                   pickle.dump(datab,f)
-           with open(filepkl, 'rb') as f:
-               print("Info of "+ db_name + " stored ")
-               print("last update: %s" % time.ctime(os.path.getmtime(filepkl)))
-               datab = pickle.load(f)
+           else:
+               with open(filepkl, 'rb') as f:
+                   print("Info of "+ db_name + " stored ")
+                   print("last update: %s" % time.ctime(os.path.getmtime(filepkl)))
+                   datab = pickle.load(f)
+                   datab.set_display(db_name,datab.getgeo())
+       return datab, datab.get_display()
 
-       return  datab, datab.get_display()
+   def setgeo(self,geo):
+       self.geo = geo
+
+   def getgeo(self):
+       return self.geo
 
    def get_parserdb(self):
        return self.dbfullinfo
@@ -219,7 +226,6 @@ class DataBase(object):
                 owid_name = [c for c in origclist if c.startswith('owid_')]
                 clist = [c for c in origclist if not c.startswith('owid_')]
                 location_exploded = self.geo.to_standard(listloc,output='list',interpret_region=True)
-
                 if len(owid_name) !=0 :
                     location_exploded += owid_name
         else:

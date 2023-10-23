@@ -525,16 +525,18 @@ def chartsinput_deco(f):
             pandy['codelocation']=len(pandy)*['000']
             pandy=pandy.fillna(0)
             bypop = 'no'
-            #raise CoaKeyError('All values for '+ which + ' is nan nor empty')
-        if when_end > pandy[[which,'date']].date.max():
-            when_end = pandy[[which,'date']].date.max()
 
         db_first_date = pandy[[which,'date']].date.min()
         db_last_date = pandy[[which,'date']].date.max()
+
         if when_beg < db_first_date:
             when_beg = db_first_date
+
         if when_end > db_last_date:
             when_end = db_last_date
+
+        if when_end < db_first_date:
+            raise CoaNoData("No available data before "+str(db_first_date))
         # when cut
         if when_beg >  pandy[[which,'date']].date.max() or when_end >  pandy[[which,'date']].date.max():
             raise CoaNoData("No available data after "+str( pandy[[which,'date']].date.max()))

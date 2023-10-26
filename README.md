@@ -5,7 +5,7 @@
 ![GitHub last commit](https://img.shields.io/github/last-commit/pycoa/coa/dev?style=for-the-badge)
 ![GitHub](https://img.shields.io/github/license/pycoa/coa?style=for-the-badge)
 
-_April 2020 / March 2022_
+_April 2020 / October 2023_
 
 [<img src="https://github.com/coa-project/coa-project.github.io/raw/main/fig/UK.png" height="14px" alt="UK flag"> English  version ](https://github.com/coa-project/pycoa)
 /
@@ -38,20 +38,21 @@ _April 2020 / March 2022_
 It is designed to be accessible to non-specialists: teenagers learning Python™, students, science journalists, even scientists who are not familiar in data access methods. A simple analysis can be performed out of the box, as well as a more complex analysis for people familiar with Python™ programming. As an example, after <a href="https://github.com/coa-project/pycoa/wiki/Install" target=_blank>installing pycoa</a> to your framework, the following few lines of code produce the four figures introducing this short documentation.
 
 ```python
-import coa.front as cf
-# default database is JHU
-cf.plot(option='sumall') # default is 'deaths', for all countries
-cf.plot(where='g20') # managing region
-cf.map(where='oecd',what='daily',when='01/02/2021',which='tot_confirmed')
+import coa.front as pycoa 
 
-cf.setwhom('owid') # changing database
-cf.hist(which='total_vaccinations') # default is for all countries
-cf.hist(which='cur_icu_patients',typeofhist='pie',where='european union')
-cf.hist(which='total_people_fully_vaccinated_per_hundred',typeofhist='byvalue',where='asia')
+pycoa.setwhom('jhu')
+pycoa.plot(option='sumall') # default is 'deaths', for all countries
+pycoa.plot(where='g20') # managing region
+pycoa.map(where='oecd',what='daily',when='01/05/2023',which='tot_confirmed')
 
-cf.plot(where='usa',which='total_people_fully_vaccinated',what='weekly',typeofplot='spiral')
-cf.setwhom('insee')
-cf.plot(typeofplot='yearly',what='daily',when="01/01/2019:31/12/2021",option=['smooth7','sumall'],title='Décès quotidiens totaux en France')
+pycoa.setwhom('owid') # changing database to OWID
+pycoa.hist(which='total_vaccinations') # default is for all countries
+pycoa.hist(which='cur_icu_patients',typeofhist='pie',where='european union')
+pycoa.hist(which='total_people_fully_vaccinated_per_hundred',typeofhist='byvalue',where='asia')
+pycoa.plot(where='usa',which='total_people_fully_vaccinated',what='weekly',typeofplot='spiral')
+
+pycoa.setwhom('insee')
+pycoa.plot(typeofplot='yearly', what='daily', when="01/01/2019:31/12/2022", option=['smooth7','sumall'], title='Deces quotidiens totaux en France')
 ```
 
 Since the `v2.0` version, PyCoA manages also local data :

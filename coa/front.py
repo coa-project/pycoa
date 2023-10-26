@@ -395,7 +395,6 @@ def chartsinput_deco(f):
                     'Bad args used in the pycoa function.')
 
     # no dateslider currently
-
         if '_db' not in globals():
             global _db, _cocoplot, _whom
             _db, _cocoplot = coco.DataBase.factory(_whom)
@@ -486,6 +485,7 @@ def chartsinput_deco(f):
                 pandy['standard'] = pandy[pandy.columns[2]]
                 which = list(pandy.columns)[2]
             input_field = what
+
             if pandy[[which,'date']].isnull().values.all():
                 info('--------------------------------------------')
                 info('All values for '+ which + ' is nan nor empty')
@@ -513,6 +513,7 @@ def chartsinput_deco(f):
             raise CoaTypeError('Waiting input as valid pycoa pandas '
                                'dataframe. See help.')
         when_beg, when_end = extract_dates(when)
+
         if pandy[[which,'date']].isnull().values.all():
             info('--------------------------------------------')
             info('All values for '+ which + ' is nan nor empty')
@@ -524,16 +525,18 @@ def chartsinput_deco(f):
             pandy['codelocation']=len(pandy)*['000']
             pandy=pandy.fillna(0)
             bypop = 'no'
-            #raise CoaKeyError('All values for '+ which + ' is nan nor empty')
-        if when_end > pandy[[which,'date']].date.max():
-            when_end = pandy[[which,'date']].date.max()
 
         db_first_date = pandy[[which,'date']].date.min()
         db_last_date = pandy[[which,'date']].date.max()
+
         if when_beg < db_first_date:
             when_beg = db_first_date
+
         if when_end > db_last_date:
             when_end = db_last_date
+
+        if when_end < db_first_date:
+            raise CoaNoData("No available data before "+str(db_first_date))
         # when cut
         if when_beg >  pandy[[which,'date']].date.max() or when_end >  pandy[[which,'date']].date.max():
             raise CoaNoData("No available data after "+str( pandy[[which,'date']].date.max()))

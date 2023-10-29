@@ -1048,6 +1048,7 @@ class GeoCountry():
         # --- 'BEL' case --------------------------------------------------------------------------------------------
         elif self._country == 'BEL':
             self._country_data = gpd.read_file('zip://'+get_local_from_url(url,0,'.zip'),encoding='utf-8') # this is shapefile file
+            self._country_data = self._country_data.where(pd.notnull(self._country_data), None) # to solve the issue https://github.com/geopandas/geopandas/issues/2783
             self._country_data.rename(columns={\
                 'nom_arrondi':'name_subregion',\
                 'niscode':'code_subregion',\

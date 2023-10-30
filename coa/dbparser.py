@@ -1003,7 +1003,12 @@ class DBInfo:
      if keep_field:
          pandas_db =  pandas_db[keep_field]
 
-     pandas_db['date'] = pd.to_datetime(pandas_db['date'],errors='coerce',infer_datetime_format=True).dt.date
+     if self.db == "govcy":
+        pandas_db['date'] = pd.to_datetime(pandas_db['date'], errors='coerce', format="%d/%m/%Y").dt.date
+     else:
+        pandas_db['date'] = pd.to_datetime(pandas_db['date'], errors='coerce', infer_datetime_format=True).dt.date
+
+     #pandas_db['date'] = pd.to_datetime(pandas_db['date'],errors='coerce',infer_datetime_format=True).dt.date
      if self.get_dblistdico(self.db)[1] == 'nation' and self.get_dblistdico(self.db)[0] in ['FRA','CYP'] or \
          self.db=="spfnational":
          pandas_db['where'] = self.get_dblistdico(self.db)[2]

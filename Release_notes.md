@@ -1,5 +1,20 @@
 # PyCoa - Release_notes
 
+## v2.22
+- add dbparser class
+The purpose was to split the database parsing and the analysis from covid19.
+Now all the decription of a database is done inside dbparser.py 
+In covid19 constructor dbparser.DBInfo("db_name") is used to retreave 
+all the database information
+- setwhom : accept a new argument 'reload' False by default.
+If reload=True then the pycoa pandas from the database selected is used.
+The pycoa pandas is stored inside a pickle python file located in add coabook/.cache
+- fixe govcy db problem plot dates
+- change order of which list: first death and then alphabetic order
+- change the default db loaded : replace jhu by owid
+- ffront.py has been removed
+- problem whith getwhom() when no database has been selected, fixed
+
 ## v2.21 
 - Add new option to maplabel:'condensed', when avaliable (so far for USA and FRA) condense the geometry. by default the geo is unconsended  
 - Remove some bugs (remote database structure modification)

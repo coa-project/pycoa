@@ -1,5 +1,8 @@
 # PyCoa - Release_notes
 
+## v2.23 
+- Packages update version in prepartion
+
 ## v2.22
 - add dbparser class
 The purpose was to split the database parsing and the analysis from covid19.

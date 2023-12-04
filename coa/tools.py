@@ -218,6 +218,13 @@ def week_to_date(whenstr):
         convertion = datetime.datetime.strptime(whenstr  + '-1' , "%G-S%V-%u")+datetime.timedelta(days = 7)
     return convertion
 
+def exists_from_url(path):
+    """"Check if url for files responds
+    Boolean return
+    """
+    r = requests.head(path)
+    return r.status_code == requests.codes.ok
+
 def get_local_from_url(url,expiration_time=0,suffix=''):
     """"Download data from the given url and store it into a local file.
 

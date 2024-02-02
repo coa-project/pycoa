@@ -53,7 +53,6 @@ pycoa.plot(where='usa',which='total_people_fully_vaccinated',what='weekly',typeo
 
 pycoa.setwhom('insee')
 pycoa.plot(typeofplot='yearly', what='daily', when="01/01/2019:31/12/2022", option=['smooth7','sumall'], title='Deces quotidiens totaux en France')
-
 ```
 
 Since the `v2.0` version, PyCoA manages also local data :

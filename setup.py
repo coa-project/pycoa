@@ -2,7 +2,7 @@
 
 """
 Project : PyCoA
-Date :    april 2020 - march 2021
+Date :    april 2020 - november 2023
 Authors : Olivier Dadoun, Julien Browaeys, Tristan Beau
 Copyright ©pycoa.fr
 License:  See joint LICENSE file
@@ -27,7 +27,7 @@ setup(
     packages=['coa'],
     # Needed for dependencies
     install_requires=[ \
-         'bokeh',\
+        'bokeh ==2.4.0',\
         'branca',\
         'bs4',\
         'datascroller',\
@@ -36,7 +36,7 @@ setup(
         'geopandas ==0.10.2',\
         'matplotlib',\
         'numpy',\
-        'pandas',\
+        'pandas ==1.4.2',\
         'pycountry',\
         'pycountry_convert',\
         'requests',\

@@ -27,7 +27,7 @@ setup(
     packages=['coa'],
     # Needed for dependencies
     install_requires=[ \
-         'bokeh',\
+        'bokeh ==2.4.0',\
         'branca',\
         'bs4',\
         'datascroller',\
@@ -36,7 +36,7 @@ setup(
         'geopandas ==0.10.2',\
         'matplotlib',\
         'numpy',\
-        'pandas',\
+        'pandas ==1.4.2',\
         'pycountry',\
         'pycountry_convert',\
         'requests',\

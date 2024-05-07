@@ -57,6 +57,13 @@ class DataBase(object):
         self.set_display(db_name,self.geo)
 
    @staticmethod
+   def getlistallkargs():
+       listallkargs = ['where', 'what', 'which', 'whom','reload','when', 'input', 'input_field','output',\
+            'title','typeofplot','typeofhist','bins','visu','tile','dateslider','maplabel','option',\
+            'mode','guideline','bypop', 'plot_width','plot_height','textcopyright','cursor_date']
+       return listallkargs
+
+   @staticmethod
    def factory(db_name,refresh=True):
        '''
         Return an instance to DataBase and to CocoDisplay methods
@@ -146,8 +153,7 @@ class DataBase(object):
         wallname = None
         optionskipped=False
         othersinputfieldpandas=pd.DataFrame()
-        kwargs_test(kwargs,['where','which','what','option','input','input_field','when','output',
-        'typeofplot','typeofhist','tile','visu','mode','maplabel','bypop','cursor_date','title'],'Bad args used in the get_stats() function.')
+        kwargs_test(kwargs,DataBase.getlistallkargs(),'Bad args used in the get_stats() function.')
         if 'where' not in kwargs or kwargs['where'] is None.__class__ or kwargs['where'] == None:
             #if self.dbfullinfo.get_dblistdico(self.db)[0] == 'WW':
             #    kwargs['where'] = self.dbfullinfo.get_dblistdico(self.db)[2]

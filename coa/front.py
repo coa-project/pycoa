@@ -87,9 +87,7 @@ _listmaplabel= ['text','textinteger','spark','spiral','label%','log','unsorted',
 
 _listoption = ['nonneg', 'nofillnan', 'smooth7', 'sumall']
 
-_listallkargs = ['where', 'what', 'which', 'whom','reload','when', 'input', 'input_field','output',\
-'title','typeofplot','typeofhist','bins','visu','tile','dateslider','maplabel','option',\
-'mode','guideline','bypop', 'plot_width','plot_height','textcopyright','cursor_date']
+
 # --- Front end functions ----------------------------------------------
 
 # ----------------------------------------------------------------------
@@ -399,7 +397,7 @@ def chartsinput_deco(f):
             wrapper dealing with arg testing
         '''
         kwargs_test(kwargs,
-                    listallkargs(),
+                    coco.DataBase.getlistallkargs(),
                     'Bad args used in the pycoa function.')
 
     # no dateslider currently

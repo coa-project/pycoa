@@ -61,7 +61,7 @@ class DataBase(object):
        listallkargs = ['where', 'what', 'which', 'whom','reload','when', 'input', 'input_field','output',\
             'title','typeofplot','typeofhist','bins','visu','tile','dateslider','maplabel','option',\
             'mode','guideline','bypop', 'plot_width','plot_height','textcopyright','cursor_date']
-       return listallkargs
+       return sorted(listallkargs)
 
    @staticmethod
    def factory(db_name,refresh=True):

@@ -175,7 +175,9 @@ def listoption():
 def listallkargs():
     """Return the list of currently avalailable kargs
     """
-    return _listallkargs
+    if '_db' not in globals():
+        raise CoaDbError('Please select a database before asking ...')
+    return _db.getlistallkargs()
 
 # ----------------------------------------------------------------------
 # --- listtile() -------------------------------------------------------
@@ -911,6 +913,8 @@ def decoplot(func):
                                  Moreover dim(input_field) must be 2.
                         'spiral' : plot variable as a spiral angular plot, angle being the date
                         'yearly' : same as date but modulo 1 year
+
+        guideline add a guideline for the plot. False by default
         """
         input = kwargs.get('input')
         input_field = kwargs.get('input_field')

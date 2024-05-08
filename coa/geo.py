@@ -292,6 +292,7 @@ class GeoManager():
                     "United States Virgin Islands":"VIR",\
                     "Iran":"IRN",\
                     "Micronesia (Country)":"FSM",\
+                    "Micronesia (country)":"FSM",\
                     "Northern Cyprus":"CYP",\
                     "Curacao":"CUW",\
                     "Faeroe Islands":"FRO",\
@@ -616,8 +617,9 @@ class GeoRegion():
         self._cw=[w.split('[')[0] for w in p_cw[0]['Country'].to_list()]   # removing wikipedia notes
 
         # --- filling celac information
-        p_celac=pd.read_html(get_local_from_url('https://en.wikipedia.org/wiki/Community_of_Latin_American_and_Caribbean_States'))
-        self._celac=[w.split(',')[0] for w in p_celac[4][p_celac[4].index<33]["Country"].to_list()]
+        p_celac=pd.read_html(get_local_from_url('https://en.wikipedia.org/wiki/Community_of_Latin_American_and_Caribbean_States'),\
+                    match='Country')
+        self._celac = [p_celac[0].Country.to_list()] 
 
         # --- filling cedeao information
         p_cedeao=pd.read_html(get_local_from_url('https://en.wikipedia.org/wiki/Economic_Community_of_West_African_States'))

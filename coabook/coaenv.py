@@ -11,6 +11,6 @@ except ImportError as e:
     print("Error when importing pycoa:", e)
     print("Make sure the pycoa module is installed correctly.")
     
-from coa import *
-#from coa.front import * 
+#from coa import *
+from coa.front import * 
 

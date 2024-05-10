@@ -3,6 +3,7 @@ from colorama import init, Fore, Style
 
 __version__ = '2.22.1'
 __author__ = 'Tristan Beau, Julien Browaeys, Olivier Dadoun'
+__github__ = 'https://github.com/coa-project/pycoa'
 
 def main():
     #init() 
@@ -12,10 +13,14 @@ def main():
                         help="Affiche la version de Pycoa")
     parser.add_argument('-a', '--author', action='version', version=f'%(prog)s {__author__}',
                         help="Affiche les auteurs de Pycoa")
+    parser.add_argument('-g', '--github', action='version', version=f'%(prog)s {__github__}', help="Affiche le github") # Add closing parenthesis here
+
+    print()
 
     # Ajoutez une sous-commande pour afficher les descriptions des fonctions
-    subparsers = parser.add_subparsers(title='Liste des commandes :', dest='commande', description='')
+    print(Fore.BLUE + "Liste des commandes" + Style.RESET_ALL)
 
+    print()
     # Liste des commandes et leurs descriptions
     list_commands = [
         ('listwhom', "Liste les bases de données disponibles"),
@@ -32,26 +37,48 @@ def main():
         ('dir(pycoa)', "Affiche toutes les méthodes")
     ]
 
-    # Ajouter les sous-commandes avec les descriptions
-    for command, description in list_commands:
-        subparser = subparsers.add_parser(Fore.GREEN + command + Style.RESET_ALL, help=description)
+    # for command, description in list_commands:
+    #     subparser = subparsers.add_parser(Fore.GREEN + command + Style.RESET_ALL, help=description)
 
+    #sans subparser mais pour faire un espace fixe entre commande et description
+    for command, description in list_commands:        
+        print(Fore.GREEN + command.ljust(30) + Style.RESET_ALL + description)
 
+    print()
     # Ajouter une nouvelle section pour les commandes de graphiques
-    subparsers.add_parser(Fore.BLUE + "Commandes de graphiques" + Style.RESET_ALL, help="", description="")
+    print(Fore.BLUE + "Commandes de graphiques" + Style.RESET_ALL)
 
+    print()
     # Liste des commandes et descriptions pour les commandes de graphiques
     graph_commands = [
         ('plot', "Représentation de la donnée sélectionnée en fonction du temps (série temporelle)"),
         ('map', "Représentation sous forme de carte"),
-        ('hist', "Représentation sous forme d'histogrammes, avec pour option : typeofhist='bycountry' (par défaut), typeofhist='byvalue', typeofhist='pie'"),
+        ('hist', "Représentation sous forme d'histogrammes"),
         ('get', "Récupérer les données en vue d'un traitement ultérieur")
     ]
 
     # Ajouter les sous-commandes avec les descriptions pour les commandes de graphiques
     for command, description in graph_commands:
-        subparser = subparsers.add_parser(Fore.GREEN + command + Style.RESET_ALL, help=description)
-
+        print(Fore.GREEN + command.ljust(30) + Style.RESET_ALL + description)
+        # typeofplot
+        if command == 'plot':
+            plot_options = [
+                ("typeofplot='date'(défaut)", "Le plot est une évolution temporelle de la variable épidémiologique étudiée."),
+                ("typeofplot='menulocation'", "Si l'on désire comparer uniquement 2 variations temporelles parmi la liste where."),
+                ("typeofplot='yearly'", "Permet de comparer les différentes années entre elles mois par mois."),
+                ("typeofplot='spiral'", "Représentation en spiral, complémentaire de la précédente.")
+            ]
+            for plot_command, plot_description in plot_options:
+                print("  " + Fore.YELLOW + plot_command.ljust(30) + Style.RESET_ALL + plot_description)
+        # typeofhist
+        if command == 'hist':
+            hist_options = [
+                ("typeofhist='bycountry'(défaut)", "Histogramme par pays"),
+                ("typeofhist='byvalue'", "Histogramme en fonction des valeurs"),
+                ("typeofhist='pie'", "Diagramme circulaire")
+            ]
+            for hist_command, hist_description in hist_options:
+                print("  " + Fore.YELLOW + hist_command.ljust(30) + Style.RESET_ALL + hist_description)
     args = parser.parse_args()
 
 if __name__ == '__main__':

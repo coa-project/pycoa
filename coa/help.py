@@ -4,26 +4,36 @@ from colorama import init, Fore, Style
 __version__ = '2.22.1'
 __author__ = 'Tristan Beau, Julien Browaeys, Olivier Dadoun'
 __github__ = 'https://github.com/coa-project/pycoa'
+__web__ = 'http://pycoa.fr/'
 
 def main():
     #init() 
 
-    parser = argparse.ArgumentParser(description=Fore.RED+"Aide de Pycoa"+Style.RESET_ALL)
+    #Message d'accueil
+    print(Fore.RED + "Bienvenue dans l'aide de Pycoa" + Style.RESET_ALL)
+
+    parser = argparse.ArgumentParser(description=Fore.RED+"Aide supplémentaire de Pycoa"+Style.RESET_ALL)
+
     parser.add_argument('-v', '--version', action='version', version=f'%(prog)s {__version__}',
                         help="Affiche la version de Pycoa")
     parser.add_argument('-a', '--author', action='version', version=f'%(prog)s {__author__}',
                         help="Affiche les auteurs de Pycoa")
-    parser.add_argument('-g', '--github', action='version', version=f'%(prog)s {__github__}', help="Affiche le github") # Add closing parenthesis here
+    parser.add_argument('-g', '--github', action='version', version=f'%(prog)s {__github__}', 
+                        help="Affiche le github")
+    parser.add_argument('-w', '--web', action='version', version=f'%(prog)s {__web__}',
+                        help="Affiche le site web de Pycoa")
+    
 
+    #Affichage de l'aide 
     print()
-
-    # Ajoutez une sous-commande pour afficher les descriptions des fonctions
+    # Section liste des commandes basiques
     print(Fore.BLUE + "Liste des commandes" + Style.RESET_ALL)
 
     print()
     # Liste des commandes et leurs descriptions
     list_commands = [
         ('listwhom', "Liste les bases de données disponibles"),
+        ('listwhom(True)', "Liste les bases de données disponibles en format pandas (recommandé)"),
         ('setwhom("DBname")', "Pour définir la base de données à utiliser"),
         ('getwhom', "Connaitre la base de données utilisée"),
         ('listwhich', "Liste les variables épidémiologiques disponibles dans la BD choisie"),
@@ -34,6 +44,8 @@ def main():
         ('listoutput', "Liste les formats de sortie disponibles : pandas, geopandas, list, dict, array"),
         ('listbypop', "Liste les options pour normaliser les courbes par le nombre d'habitants"),
         ('listplot', "Liste les types de graphiques disponibles"),
+        ('listtile', "Liste les textures disponibles pour les cartes"),
+        ('listvisu', "Liste les options de visualisation disponibles pour les cartes"),
         ('dir(pycoa)', "Affiche toutes les méthodes")
     ]
 
@@ -45,7 +57,7 @@ def main():
         print(Fore.GREEN + command.ljust(30) + Style.RESET_ALL + description)
 
     print()
-    # Ajouter une nouvelle section pour les commandes de graphiques
+    # Section pour les commandes de graphiques
     print(Fore.BLUE + "Commandes de graphiques" + Style.RESET_ALL)
 
     print()
@@ -57,7 +69,7 @@ def main():
         ('get', "Récupérer les données en vue d'un traitement ultérieur")
     ]
 
-    # Ajouter les sous-commandes avec les descriptions pour les commandes de graphiques
+    # sous commande de plot et hist
     for command, description in graph_commands:
         print(Fore.GREEN + command.ljust(30) + Style.RESET_ALL + description)
         # typeofplot
@@ -79,6 +91,26 @@ def main():
             ]
             for hist_command, hist_description in hist_options:
                 print("  " + Fore.YELLOW + hist_command.ljust(30) + Style.RESET_ALL + hist_description)
+
+    print()
+    # Section exemple
+    print(Fore.BLUE + "Exemple de requêtes avec Pycoa" + Style.RESET_ALL)
+
+    print()
+    # Liste des commandes et descriptions pour les commandes de graphiques
+    exemple_commands = [
+        ('listwhich', "pycoa.listwhich()"),
+        ('plot', "pycoa.plot(where=['France', 'Italy', 'United kingdom'])"),
+        ('map', "pycoa.map(where='world',what='daily',when='01/04/2020')"),
+        ('hist', "pycoa.hist(where='middle africa', which='tot_confirmed',what='cumul')"),
+        ('get', "pycoa.get(where='usa', what='daily', which='tot_recovered',output='pandas')")
+    ]
+
+    for command, description in exemple_commands:
+        print(Fore.GREEN + command.ljust(30) + Style.RESET_ALL + Style.BRIGHT + description + Style.RESET_ALL)
+
+    print()
+
     args = parser.parse_args()
 
 if __name__ == '__main__':

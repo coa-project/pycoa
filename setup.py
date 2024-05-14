@@ -48,6 +48,7 @@ setup(
         'unidecode',\
         'openpyxl',\
         'lxml',\
+        'colorama',\
         ],
     dependency_links=['git+https://github.com/Toblerity/Fiona.git'],
     # The license can be anything you like 

@@ -21,7 +21,7 @@ import numpy as np
 import pandas as pd
 import datetime as dt
 
-import sys
+import coa.display as codisplay
 from coa.tools import (
     verb,
     kwargs_test,
@@ -30,7 +30,8 @@ from coa.tools import (
 )
 import coa.geo as coge
 import coa.dbparser as dbparser
-import coa.display as codisplay
+from coa.dbparser import _db_list_dict
+import geopandas as gpd
 from coa.error import *
 from scipy import stats as sps
 import pickle
@@ -52,9 +53,49 @@ class DataBase(object):
         self.db = db_name
         self.dbfullinfo = dbparser.DBInfo(db_name)
         self.slocation = self.dbfullinfo.get_locations()
-        self.geo = self.dbfullinfo.get_geo()
+        #self.geo = self.dbfullinfo.get_geo()
         self.db_world = self.dbfullinfo.get_world_boolean()
-        self.set_display(db_name,self.geo)
+        self.codisp  = None
+        self.iso3country = _db_list_dict[db_name][0]
+        self.granularity = _db_list_dict[db_name][1]
+        self.namecountry = _db_list_dict[db_name][2]
+
+        try:
+            if self.granularity != 'nation':
+                self.geo = coge.GeoCountry(self.iso3country)
+                if self.granularity == 'region':
+                    where_kindgeo = self.geo.get_region_list()[['code_region', 'name_region', 'geometry']]
+                    where_kindgeo = where_kindgeo.rename(columns={'name_region': 'where'})
+                    if self.iso3country == 'PRT':
+                         tmp = where_kindgeo.rename(columns={'name_region': 'where'})
+                         tmp = tmp.loc[tmp.code_region=='PT.99']
+                         self.boundary_metropole =tmp['geometry'].total_bounds
+                    if self.iso3country == 'FRA':
+                         tmp = where_kindgeo.rename(columns={'name_region': 'where'})
+                         tmp = tmp.loc[tmp.code_region=='999']
+                         self.boundary_metropole =tmp['geometry'].total_bounds
+                elif self.granularity == 'subregion':
+                    list_dep_metro = None
+                    where_kindgeo = self.geo.get_subregion_list()[['code_subregion', 'name_subregion', 'geometry']]
+                    where_kindgeo = where_kindgeo.rename(columns={'name_subregion': 'where'})
+            else:
+                   self.geo = coge.GeoManager('name')
+                   geopan = gpd.GeoDataFrame()#crs="EPSG:4326")
+                   info = coge.GeoInfo()
+                   allcountries = self.geo.get_GeoRegion().get_countries_from_region('world')
+                   geopan['where'] = [self.geo.to_standard(c)[0] for c in allcountries]
+                   geopan = info.add_field(field=['geometry'],input=geopan ,geofield='where')
+                   geopan = gpd.GeoDataFrame(geopan, geometry=geopan.geometry, crs="EPSG:4326")
+                   geopan = geopan[geopan['where'] != 'Antarctica']
+                   where_kindgeo = geopan.dropna().reset_index(drop=True)
+        except:
+            raise CoaTypeError('What data base are you looking for ?')
+        self.where_geodescription = where_kindgeo
+        vis='bokeh'
+        self.set_display(db_name,where_kindgeo,vis)
+
+   def getwheregeometrydescription(self):
+        return self.where_geodescription
 
    @staticmethod
    def getlistallkargs():
@@ -64,32 +105,48 @@ class DataBase(object):
        return sorted(listallkargs)
 
    @staticmethod
-   def factory(db_name,refresh=True):
+   def factory(**kwargs):
        '''
-        Return an instance to DataBase and to CocoDisplay methods
+        Return an instance to DataBase and to Display methods
         This is recommended to avoid mismatch in labeled figures
        '''
+       db_name = kwargs.get('db_name')
+       reload = kwargs.get('reload', True)
+       visu = kwargs.get('visu', True)
+
        path = ".cache/"
        if not os.path.exists(path):
            os.makedirs(path)
-       filepkl=path+db_name+'.pkl'
-       if refresh:
+       filepkl = path + db_name + '.pkl'
+
+       if reload:
            datab = DataBase(db_name)
            with open(filepkl, 'wb') as f:
                pickle.dump(datab,f)
        else:
-           if not os.path.isfile(filepkl):
-              print("Data from "+db_name + " isn't allready stored")
-              datab = DataBase(db_name)
-              with open(filepkl, 'wb') as f:
-                  pickle.dump(datab,f)
-           else:
-               with open(filepkl, 'rb') as f:
-                   print("Info of "+ db_name + " stored ")
-                   print("last update: %s" % time.ctime(os.path.getmtime(filepkl)))
-                   datab = pickle.load(f)
-                   datab.set_display(db_name,datab.getgeo())
-       return datab, datab.get_display()
+           datab=DataBase.readpekl(filepkl)
+           if visu:
+               datab.set_display(db_name,datab.getwheregeometrydescription(),datab.getvisu())
+       if visu:
+           return datab, datab.get_display()
+       else:
+           return datab, None
+
+   @staticmethod
+   def readpekl(filepkl):
+      if not os.path.isfile(filepkl):
+         db_name=filepkl.replace('.cache/','').replace('.pkl','')
+         print("Data from "+db_name + " isn't allready stored")
+         datab = DataBase(db_name)
+         with open(filepkl, 'wb') as f:
+             pickle.dump(datab,f)
+      else:
+         with open(filepkl, 'rb') as f:
+             #print("Info of "+ db_name + " stored ")
+             print("last update: %s" % time.ctime(os.path.getmtime(filepkl)))
+             datab = pickle.load(f)
+             datab.get_parserdb().get_echoinfo()
+      return datab
 
    def setgeo(self,geo):
        self.geo = geo
@@ -104,12 +161,12 @@ class DataBase(object):
       return self.dbfullinfo.get_mainpandas()
       #.style.set_table_styles([{'selector' : '','props' : [('border','5px solid green')]}])
 
-   def set_display(self,db,geo):
-       ''' Set the CocoDisplay '''
-       self.codisp = codisplay.CocoDisplay(db, geo)
+   def set_display(self,db,wheregeometrydescription,visu):
+       ''' Set the Display '''
+       self.codisp = codisplay.Display(db, wheregeometrydescription,visu)
 
    def get_display(self):
-       ''' Return the instance of CocoDisplay initialized by factory'''
+       ''' Return the instance of Display initialized by factory'''
        return self.codisp
 
    def get_available_database(self):

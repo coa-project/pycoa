@@ -61,3 +61,7 @@ class Display(object):
    
    def pycoa_resume_data(self, input,input_field,**kwargs):
        return self.codisp.pycoa_resume_data(input,input_field,**kwargs)
+   
+   def pycoa_geodata(self, input,input_field,**kwargs):
+       return self.codisp.pycoa_geodata(input,input_field,**kwargs)
+

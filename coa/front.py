@@ -604,6 +604,7 @@ class Front:
         """
         output = kwargs.get('output')
         pandy = kwargs.get('input')
+        input_field  = kwargs.get('input_field')
         pandy = pandy.drop(columns='standard')
         if output == 'pandas':
             def color_df(val):
@@ -625,7 +626,8 @@ class Front:
             info('Memory usage of all columns: ' + mem + ' bytes')
 
         elif output == 'geopandas':
-            casted_data = _cocoplot.pycoageo(pandy)
+            casted_data = pd.merge(pandy, self._db.getwheregeometrydescription(), on='where')
+            #self._cocoplot.pycoa_geodata(pandy)
         elif output == 'dict':
             casted_data = pandy.to_dict('split')
         elif output == 'list' or output == 'array':
@@ -722,7 +724,7 @@ class Front:
                 #if all([ True if i in ['text','spark','label%','log'] else False for i in kwargs['maplabel'] ]) :
                 #    CoaKeyError('Waiting for a valide label visualisation: text, spark or label%')
                 input.loc[:,input_field]=input[input_field].fillna(0) #needed in the case where there are nan else js pb
-            print(kwargs)
+
             return func(self,input,input_field,**kwargs)
         return inner
 

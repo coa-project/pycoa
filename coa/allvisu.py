@@ -1813,9 +1813,9 @@ class CocoDisplay:
         @wraps(func)
         def innerdecopycoageo(self, geopdwd, input_field,**kwargs):
             geopdwd['cases'] = geopdwd[input_field]
+            loca=geopdwd['where'].unique()
+            locgeo=geopdwd.loc[geopdwd['where'].isin(loca)].drop_duplicates('where').set_index('where')['geometry']
             if self.pycoageopandas:
-                loc=geopdwd['where'].unique()
-                locgeo=geopdwd.loc[geopdwd['where'].isin(loc)].drop_duplicates('where').set_index('where')['geometry']
                 geopdwd=fill_missing_dates(geopdwd)
                 geopdwd_filtered = geopdwd.loc[geopdwd.date == self.when_end]
                 geopdwd_filtered_cp = geopdwd_filtered.copy()
@@ -1826,7 +1826,9 @@ class CocoDisplay:
             else:
                 geopdwd_filtered = geopdwd.loc[geopdwd.date == self.when_end]
                 geopdwd_filtered = geopdwd_filtered.reset_index(drop = True)
-                geopdwd_filtered = gpd.GeoDataFrame(geopdwd_filtered, geometry=geopdwd_filtered.geometry, crs="EPSG:4326")
+                geopdwd_filtered.loc[:,'geometry'] = geopdwd_filtered_cp['where'].map(locgeo)
+                geopdwd_filtered_cp.loc[:,'geometry']=geopdwd_filtered_cp['geometry'].to_crs(crs="EPSG:4326")
+                #geopdwd_filtered = gpd.GeoDataFrame(geopdwd_filtered, geometry=geopdwd_filtered.geometry, crs="EPSG:4326")
                 geopdwd = geopdwd.sort_values(by=['clustername', 'date'], ascending = [True, False])
                 geopdwd_filtered = geopdwd_filtered.sort_values(by=['clustername', 'date'], ascending = [True, False]).drop(columns=['date', 'colors'])
                 new_poly = []
@@ -1864,7 +1866,7 @@ class CocoDisplay:
     @decowrapper
     @decohistomap
     @decopycoageo
-    def pycoageo(self, geopdwd, geopdwd_filtered, **kwargs):
+    def pycoa_geodata(self, geopdwd, geopdwd_filtered, **kwargs):
         return geopdwd
 
     def decomap(func):

@@ -6,25 +6,12 @@ __author__ = 'Tristan Beau, Julien Browaeys, Olivier Dadoun'
 __github__ = 'https://github.com/coa-project/pycoa'
 __web__ = 'http://pycoa.fr/'
 
-def main():
-    #init() 
-
-    #Message d'accueil
+def display_full_help():
+    print()
+    # Message d'accueil
     print(Fore.RED + "Bienvenue dans l'aide de Pycoa" + Style.RESET_ALL)
 
-    parser = argparse.ArgumentParser(description=Fore.RED+"Aide supplémentaire de Pycoa"+Style.RESET_ALL)
-
-    parser.add_argument('-v', '--version', action='version', version=f'%(prog)s {__version__}',
-                        help="Affiche la version de Pycoa")
-    parser.add_argument('-a', '--author', action='version', version=f'%(prog)s {__author__}',
-                        help="Affiche les auteurs de Pycoa")
-    parser.add_argument('-g', '--github', action='version', version=f'%(prog)s {__github__}', 
-                        help="Affiche le github")
-    parser.add_argument('-w', '--web', action='version', version=f'%(prog)s {__web__}',
-                        help="Affiche le site web de Pycoa")
-    
-
-    #Affichage de l'aide 
+    # Affichage de l'aide 
     print()
     # Section liste des commandes basiques
     print(Fore.BLUE + "Liste des commandes" + Style.RESET_ALL)
@@ -49,10 +36,6 @@ def main():
         ('dir(pycoa)', "Affiche toutes les méthodes")
     ]
 
-    # for command, description in list_commands:
-    #     subparser = subparsers.add_parser(Fore.GREEN + command + Style.RESET_ALL, help=description)
-
-    #sans subparser mais pour faire un espace fixe entre commande et description
     for command, description in list_commands:        
         print(Fore.GREEN + command.ljust(30) + Style.RESET_ALL + description)
 
@@ -111,7 +94,35 @@ def main():
 
     print()
 
+def main():
+    # Initialiser colorama
+    init()
+
+    parser = argparse.ArgumentParser(description=Fore.RED+"Aide supplémentaire de Pycoa"+Style.RESET_ALL, add_help=False)
+
+    parser.add_argument('-h', '--help', action='store_true', help="Affiche l'aide complète de Pycoa")
+    parser.add_argument('-v', '--version', action='version', version=f'%(prog)s {__version__}',
+                        help="Affiche la version de Pycoa")
+    parser.add_argument('-a', '--author', action='store_true',
+                        help="Affiche les auteurs de Pycoa")
+    parser.add_argument('-g', '--github', action='store_true', 
+                        help="Affiche le github de Pycoa")
+    parser.add_argument('-w', '--web', action='store_true',
+                        help="Affiche le site web de Pycoa")
+
     args = parser.parse_args()
+
+    if args.help:
+        parser.print_help()
+        display_full_help()
+    elif args.github:
+        print(__github__)
+    elif args.web:
+        print(__web__)
+    elif args.author:
+        print(__author__)
+    else:
+        parser.print_help()
 
 if __name__ == '__main__':
     main()

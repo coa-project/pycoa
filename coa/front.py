@@ -70,7 +70,7 @@ class Front:
         self._dict_bypop = {'no':0,'100':100,'1k':1e3,'100k':1e5,'1M':1e6,'pop':1.}
         self._listwhat = [ 'standard', 'daily', 'weekly']
         self._listoutput = ['pandas','geopandas','list', 'dict', 'array']  # first one is default for get
-        self._listvisu = ['bokeh', 'folium']
+        self._listvisu = ['bokeh', 'folium', 'seaborn']
         self._listhist = ['bylocation','byvalue','pie']
         self._listplot = ['date','menulocation','versus','spiral','yearly']
         self._listmaplabel = ['text','textinteger','spark','spiral','label%','log','unsorted','exploded','dense']
@@ -80,13 +80,13 @@ class Front:
         self.vis = 'bokeh'
 
     def setvisu(self,visu):
-        vis=['bokeh','mplt','ascii']
+        vis=['bokeh','mplt','ascii', 'seaborn']
         if visu not in vis:
             raise CoaError("Sorry but " + visu + " visualisation isn't implemented ")
         else:
-            print('Visu has been set to ', visu)
-            self._cocoplot.setvisu(visu)
             self.vis = visu
+            print('Visu has been set to ', visu)
+            #return self.vis
 
     def getvisu(self,):
         return self.vis
@@ -952,5 +952,13 @@ class Front:
         ''' show plot '''
         show(fig)
 
+    # ----------------------------------------------------------------------
+    @chartsinput_deco
+    def plot_seaborn(self, **kwargs):
+        """Show plot using Seaborn."""
+        if self.vis != 'seaborn':
+            raise CoaError("Visualisation not set to seaborn.")
+        fig = self._cocoplot.pycoa_date_plot_seaborn(kwargs['input'], kwargs['input_field'], **kwargs)
+        return fig
 
 pycoa=Front()

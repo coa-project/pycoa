@@ -28,7 +28,7 @@ class Display(object):
        self.codisp = allvis.AllVisu(self.db, self.geo)
    
    def setvisu(self,visu):
-       vis=['bokeh','mplt','ascii']
+       vis=['bokeh','mplt','ascii', 'seaborn']
        if visu not in vis:
             raise CoaError("Visualisation "+ visu + " not implemented setting problem. Please contact support@pycoa.fr")
        else: 

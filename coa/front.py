@@ -56,7 +56,7 @@ from coa.error import *
 import coa._version
 import coa.geo as coge
 from coa.dbparser import _db_list_dict
-
+import geopandas as gpd
 output_notebook(hide_banner=True)
 
 class Front:
@@ -627,7 +627,7 @@ class Front:
 
         elif output == 'geopandas':
             casted_data = pd.merge(pandy, self._db.getwheregeometrydescription(), on='where')
-            #self._cocoplot.pycoa_geodata(pandy)
+            casted_data=gpd.GeoDataFrame(casted_data)
         elif output == 'dict':
             casted_data = pandy.to_dict('split')
         elif output == 'list' or output == 'array':

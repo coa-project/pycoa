@@ -85,7 +85,9 @@ class Front:
             raise CoaError("Sorry but " + visu + " visualisation isn't implemented ")
         else:
             print('Visu has been set to ', visu)
-        return self.vis
+            self._cocoplot.setvisu(visu)
+            self.vis = visu
+
     def getvisu(self,):
         return self.vis
     # ----------------------------------------------------------------------
@@ -269,12 +271,12 @@ class Front:
                                     'See pycoa.listbase() for the full list.')
         else:
             if reload:
-                self._db, self._cocoplot = coco.DataBase.factory(db_name=base,reload=reload,visu=self.getvisu())
+                self._db, self._cocoplot = coco.DataBase.factory(db_name=base,reload=reload)
             else:
                 self._db = coco.DataBase.readpekl('.cache/'+base+'.pkl')
                 pandy = self._db.getwheregeometrydescription()
-                self._db.set_display(base,pandy,self.vis)
-                self._cocoplot = self._db.get_display()
+                self._cocoplot = display.Display(base, pandy)
+                self._cocoplot.setvisu(self.getvisu())
                 coge.GeoManager('name')
         self._whom = base
     # ----------------------------------------------------------------------
@@ -761,7 +763,12 @@ class Front:
                     CoaError("What kind of pimp map you want ?!")
             else:
                 fig = self._cocoplot.pycoa_map(input,input_field,**kwargs)
-            return show(fig)
+            print(self.getvisu())
+            if self.getvisu()=='bokeh':
+
+                    return show(fig)
+            else:
+                return fig
         elif visu == 'folium':
             if dateslider is not None :
                 raise CoaKeyError('Not available with folium map, you should considere to use bokeh map visu in this case')

@@ -21,13 +21,18 @@ class Display(object):
    """
     display  
    """
-   def __init__(self,db, geo,visu):
-        vis=['bokeh','mplt','ascii']
-        if visu not in vis:
-            raise CoaError("Locale setting problem. Please contact support@pycoa.fr")
-        else:  
-            self.codisp = allvis.CocoDisplay(db, geo,visu)
+   def __init__(self,db, geo):
+       self.db = db
+       self.geo = geo
+       self.setvisu('bokeh')
+       self.codisp = allvis.AllVisu(self.db, self.geo)
    
+   def setvisu(self,visu):
+       vis=['bokeh','mplt','ascii']
+       if visu not in vis:
+            raise CoaError("Visualisation "+ visu + " not implemented setting problem. Please contact support@pycoa.fr")
+       else: 
+            self.visu = visu
 
    def pycoa_date_plot(self,input, input_field,**kwargs):  
       return self.codisp.pycoa_date_plot(input, input_field,**kwargs)
@@ -57,7 +62,13 @@ class Display(object):
        return self.codisp.tiles_list()
 
    def pycoa_map(self, input,input_field,**kwargs):
-       return self.codisp.pycoa_map(input,input_field,**kwargs)
+       if self.visu == 'bokeh':
+            return self.codisp.pycoa_map(input,input_field,**kwargs)
+       elif self.visu == 'mplt':
+            return self.codisp.pycoa_mpltmap(input,input_field,**kwargs)
+       else:
+            print('Not implemented !!')
+
    
    def pycoa_resume_data(self, input,input_field,**kwargs):
        return self.codisp.pycoa_resume_data(input,input_field,**kwargs)

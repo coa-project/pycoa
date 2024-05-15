@@ -27,6 +27,7 @@ from coa.tools import (
     flat_list
 )
 import coa.geo as coge
+import sys
 # Known db
 
 _db_list_dict = {

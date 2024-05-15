@@ -2547,12 +2547,13 @@ class AllVisu:
         input = pd.merge(input, self.kindgeo, on='where')
         input = input.drop_duplicates('where')
         input = gpd.GeoDataFrame(input)
-
-
-
         ax = input.plot(column=input_field, ax=ax,legend=True,
                                 legend_kwds={'label': input_field,
                                 'orientation': "horizontal","pad": 0.001})
-
-
         return ax
+    @decowrapper
+    def pycoa_date_plot_mpltmap(self,input,input_field,**kwargs):
+        fig, ax = plt.subplots(1, 1,figsize=(15, 15))
+        dates=input.date
+        s=input[input_field]
+        return input.set_index('date')[input_field].plot(legend=False, colormap='viridis');

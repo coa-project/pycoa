@@ -35,7 +35,13 @@ class Display(object):
             self.visu = visu
 
    def pycoa_date_plot(self,input, input_field,**kwargs):  
-      return self.codisp.pycoa_date_plot(input, input_field,**kwargs)
+      if self.visu == 'bokeh':
+          return self.codisp.pycoa_date_plot(input, input_field,**kwargs)
+      elif self.visu == 'mplt':
+          return self.codisp.pycoa_date_plot_mpltmap(input,input_field,**kwargs)
+      else:
+            print('Not implemented !!')
+       
 
    def pycoa_spiral_plot(self, input, input_field,**kwargs):
        return self.codisp.pycoa_spiral_plot(**kwargs)

@@ -27,8 +27,6 @@ import math
 import pandas as pd
 import geopandas as gpd
 import numpy as np
-import seaborn as sns
-import matplotlib.pyplot as plt
 from collections import defaultdict
 import itertools
 import json
@@ -118,14 +116,17 @@ from IPython.core.display import (
 
 width_height_default = [500, 380]
 MAXCOUNTRIESDISPLAYED = 24
-class CocoDisplay:
-    def __init__(self, db = None, kindgeo = None,visu = None):
+class AllVisu:
+    """
+        All visualisation should be implemented here !
+    """
+    def __init__(self, db = None, kindgeo = None):
         if kindgeo is None:
             pass
         else:
             self.kindgeo = kindgeo
 
-        verb("Init of CocoDisplay() with db=" + str(db))
+        verb("Init of AllVisu() with db=" + str(db))
         self.database_name = db
         self.dbld = _db_list_dict
         self.lcolors = Category20[20]
@@ -320,7 +321,7 @@ class CocoDisplay:
                     #raise CoaTypeError("Sorry all data are NaN for " + i)
                     print("Sorry all data are NaN for " + i)
                 else:
-                    when_end_change = min(when_end_change,CocoDisplay.changeto_nonull_date(input, when_end, i))
+                    when_end_change = min(when_end_change,AllVisu.changeto_nonull_date(input, when_end, i))
 
             if func.__name__ not in ['pycoa_date_plot', 'pycoa_plot', 'pycoa_scrollingmenu', 'pycoa_spiral_plot','pycoa_yearly_plot']:
                 if len(input_field) > 1:
@@ -424,12 +425,12 @@ class CocoDisplay:
         input['cases'] = input[input_field]
         resumetype = kwargs.get('resumetype','spiral')
         if resumetype == 'spiral':
-            dspiral={i:CocoDisplay.spiral(input.loc[ (input.clustername==i) &
+            dspiral={i:AllVisu.spiral(input.loc[ (input.clustername==i) &
                         (input.date >= self.when_beg) &
                         (input.date <= self.when_end)].sort_values(by='date')) for i in loc}
             input['resume']=input['clustername'].map(dspiral)
         elif resumetype == 'spark':
-            spark={i:CocoDisplay.sparkline(input.loc[ (input.clustername==i) &
+            spark={i:AllVisu.sparkline(input.loc[ (input.clustername==i) &
                         (input.date >= self.when_beg) &
                         (input.date <= self.when_end)].sort_values(by='date')) for i in loc}
             input['resume']=input['clustername'].map(spark)
@@ -529,7 +530,7 @@ class CocoDisplay:
         if len(input_field) != 2:
             raise CoaTypeError('Two variables are needed to plot a versus chart ... ')
         panels = []
-        cases_custom = CocoDisplay.rollerJS()
+        cases_custom = AllVisu.rollerJS()
         if self.get_listfigures():
             self.set_listfigures([])
         listfigs=[]
@@ -559,7 +560,7 @@ class CocoDisplay:
 
             standardfig.legend.location = "top_left"
             listfigs.append(standardfig)
-            CocoDisplay.bokeh_legend(standardfig)
+            AllVisu.bokeh_legend(standardfig)
         self.set_listfigures(listfigs)
         tabs = Tabs(tabs=panels)
         return tabs
@@ -593,7 +594,7 @@ class CocoDisplay:
         guideline = kwargs.get('guideline',self.dvisu_default['guideline'])
         panels = []
         listfigs = []
-        cases_custom = CocoDisplay.rollerJS()
+        cases_custom = AllVisu.rollerJS()
         if 'which' in kwargs and isinstance(kwargs['which'],list):
             input_field=kwargs['which']
         if isinstance(input['rolloverdisplay'].iloc[0],list):
@@ -660,7 +661,7 @@ class CocoDisplay:
                 standardfig.legend.visible=False
             standardfig.xaxis.formatter = DatetimeTickFormatter(
                 days = ["%d/%m/%y"], months = ["%d/%m/%y"], years = ["%b %Y"])
-            CocoDisplay.bokeh_legend(standardfig)
+            AllVisu.bokeh_legend(standardfig)
             listfigs.append(standardfig)
         self.set_listfigures(listfigs)
         tabs = Tabs(tabs = panels)
@@ -721,7 +722,7 @@ class CocoDisplay:
                         line_width = 3, line_color = 'blue')
         circle = standardfig.circle('x', 'y', size=2, source=src)
 
-        cases_custom = CocoDisplay.rollerJS()
+        cases_custom = AllVisu.rollerJS()
         hover_tool = HoverTool(tooltips=[('Cases', '@cases{0,0.0}'), ('date', '@date{%F}')],
                                formatters={'Cases': 'printf', '@{cases}': cases_custom, '@date': 'datetime'},
                                renderers=[circle],
@@ -794,7 +795,7 @@ class CocoDisplay:
         filter_data2 = mypivot[[uniqloc[1]]].rename(columns={uniqloc[1]: 'cases'})
         src2 = ColumnDataSource(filter_data2)
 
-        cases_custom = CocoDisplay.rollerJS()
+        cases_custom = AllVisu.rollerJS()
         hover_tool = HoverTool(tooltips=[('Cases', '@cases{0,0.0}'), ('date', '@date{%F}')],
                                formatters={'Cases': 'printf', '@{cases}': cases_custom, '@date': 'datetime'}, mode = mode,
                                point_policy="snap_to_data")  # ,PanTool())
@@ -868,7 +869,7 @@ class CocoDisplay:
 
         panels = []
         listfigs = []
-        cases_custom = CocoDisplay.rollerJS()
+        cases_custom = AllVisu.rollerJS()
         input['date']=pd.to_datetime(input["date"])
         #drop bissextile fine tuning in needed in the future
         input = input.loc[~(input['date'].dt.month.eq(2) & input['date'].dt.day.eq(29))].reset_index(drop=True)
@@ -929,7 +930,7 @@ class CocoDisplay:
             #label_dict = dict(zip(input.loc[input.allyears.eq(2020)]['daymonth'],input.loc[input.allyears.eq(2020)]['date'].apply(lambda x: str(x.day)+'/'+str(x.month))))
             standardfig.xaxis.major_label_overrides = dict(zip(list(labelspd['dayofyear'].astype(int)),list(replacelabelspd)))
 
-            CocoDisplay.bokeh_legend(standardfig)
+            AllVisu.bokeh_legend(standardfig)
             listfigs.append(standardfig)
 
         tooltips = [('where', '@rolloverdisplay'), ('date', '@date{%F}'), (r.name, '@$name{0,0.0}')]
@@ -1512,7 +1513,7 @@ class CocoDisplay:
                     toggl = Toggle(label='► Play',active=False, button_type="success",height=30,width=10)
                     toggl.js_on_change('active',toggl_js)
 
-                cases_custom = CocoDisplay.rollerJS()
+                cases_custom = AllVisu.rollerJS()
 
                 if min(srcfiltered.data['cases'])<0.01:
                     tooltips=[('where', '@rolloverdisplay'), (input_field, '@cases'), ]
@@ -1704,7 +1705,7 @@ class CocoDisplay:
         '''
         title = kwargs.get('title', None)
         tile =  kwargs.get('tile', self.dvisu_default['tile'])
-        tile = CocoDisplay.convert_tile(tile, 'folium')
+        tile = AllVisu.convert_tile(tile, 'folium')
         maplabel = kwargs.get('maplabel',self.dvisu_default['maplabel'])
         plot_width = kwargs.get('plot_width',self.dfigure_default['plot_width'])
         plot_height = kwargs.get('plot_height',self.dfigure_default['plot_height'])
@@ -1737,7 +1738,7 @@ class CocoDisplay:
 
         fig = Figure(width=plot_width, height=plot_height)
         fig.add_child(mapa)
-        min_col, max_col = CocoDisplay.min_max_range(np.nanmin(geopdwd_filtered[input_field]),
+        min_col, max_col = AllVisu.min_max_range(np.nanmin(geopdwd_filtered[input_field]),
                                                      np.nanmax(geopdwd_filtered[input_field]))
         min_col_non0 = (np.nanmin(geopdwd_filtered.loc[geopdwd_filtered['cases']>0.]['cases']))
 
@@ -1816,8 +1817,9 @@ class CocoDisplay:
         def innerdecopycoageo(self, geopdwd, input_field,**kwargs):
             geopdwd['cases'] = geopdwd[input_field]
             loca=geopdwd['where'].unique()
-            locgeo=geopdwd.loc[geopdwd['where'].isin(loca)].drop_duplicates('where').set_index('where')['geometry']
+
             if self.pycoageopandas:
+                locgeo=geopdwd.loc[geopdwd['where'].isin(loca)].drop_duplicates('where').set_index('where')['geometry']
                 geopdwd=fill_missing_dates(geopdwd)
                 geopdwd_filtered = geopdwd.loc[geopdwd.date == self.when_end]
                 geopdwd_filtered_cp = geopdwd_filtered.copy()
@@ -1828,9 +1830,7 @@ class CocoDisplay:
             else:
                 geopdwd_filtered = geopdwd.loc[geopdwd.date == self.when_end]
                 geopdwd_filtered = geopdwd_filtered.reset_index(drop = True)
-                geopdwd_filtered.loc[:,'geometry'] = geopdwd_filtered_cp['where'].map(locgeo)
-                geopdwd_filtered_cp.loc[:,'geometry']=geopdwd_filtered_cp['geometry'].to_crs(crs="EPSG:4326")
-                #geopdwd_filtered = gpd.GeoDataFrame(geopdwd_filtered, geometry=geopdwd_filtered.geometry, crs="EPSG:4326")
+                geopdwd_filtered = gpd.GeoDataFrame(geopdwd_filtered, geometry=geopdwd_filtered.geometry, crs="EPSG:4326")
                 geopdwd = geopdwd.sort_values(by=['clustername', 'date'], ascending = [True, False])
                 geopdwd_filtered = geopdwd_filtered.sort_values(by=['clustername', 'date'], ascending = [True, False]).drop(columns=['date', 'colors'])
                 new_poly = []
@@ -1842,11 +1842,11 @@ class CocoDisplay:
                     if row['geometry']:
                         for pt in self.get_polycoords(row):
                             if type(pt) == tuple:
-                                new_poly.append(CocoDisplay.wgs84_to_web_mercator(pt))
+                                new_poly.append(AllVisu.wgs84_to_web_mercator(pt))
                             elif type(pt) == list:
                                 shifted = []
                                 for p in pt:
-                                    shifted.append(CocoDisplay.wgs84_to_web_mercator(p))
+                                    shifted.append(AllVisu.wgs84_to_web_mercator(p))
                                 new_poly.append(sg.Polygon(shifted))
                             else:
                                 raise CoaTypeError("Neither tuple or list don't know what to do with \
@@ -1865,12 +1865,6 @@ class CocoDisplay:
         return innerdecopycoageo
 
     ''' RETURN GEOMETRY, LOCATIO + CASES '''
-    @decowrapper
-    @decohistomap
-    @decopycoageo
-    def pycoa_geodata(self, geopdwd, geopdwd_filtered, **kwargs):
-        return geopdwd
-
     def decomap(func):
         @wraps(func)
         def innerdecomap(self, geopdwd, geopdwd_filtered,**kwargs):
@@ -1878,7 +1872,7 @@ class CocoDisplay:
             maplabel = kwargs.get('maplabel',self.dvisu_default['maplabel'])
             tile =  kwargs.get('tile', None)
             if tile:
-                tile = CocoDisplay.convert_tile(tile, 'bokeh')
+                tile = AllVisu.convert_tile(tile, 'bokeh')
             uniqloc = list(geopdwd_filtered.clustername.unique())
             dfLabel = pd.DataFrame()
             sourcemaplabel = ColumnDataSource(dfLabel)
@@ -1905,13 +1899,13 @@ class CocoDisplay:
 
                 if maplabel:
                     if 'spark' in maplabel:
-                        sparkos = {i: CocoDisplay.sparkline(geopdwd.loc[ (geopdwd.clustername==i) &
+                        sparkos = {i: AllVisu.sparkline(geopdwd.loc[ (geopdwd.clustername==i) &
                                     (geopdwd.date >= self.when_beg) &
                                     (geopdwd.date <= self.when_end)].sort_values(by='date')['cases']) for i in locsum }
                         dfpimp = pd.DataFrame(list(sparkos.items()), columns=['clustername', 'pimpmap'])
                         dfLabel=pd.merge(dfLabel,dfpimp,on=['clustername'],how="inner")
                     if 'spiral' in maplabel:
-                        sparkos = {i: CocoDisplay.spiral(geopdwd.loc[ (geopdwd.clustername==i) &
+                        sparkos = {i: AllVisu.spiral(geopdwd.loc[ (geopdwd.clustername==i) &
                                     (geopdwd.date >= self.when_beg) &
                                     (geopdwd.date <= self.when_end)].sort_values(by='date')[['date','cases','clustername']]) for i in locsum }
                         dfpimp = pd.DataFrame(list(sparkos.items()), columns=['clustername', 'pimpmap'])
@@ -1993,11 +1987,11 @@ class CocoDisplay:
         min_col, max_col, min_col_non0 = 3*[0.]
         try:
             if date_slider:
-                min_col, max_col = CocoDisplay.min_max_range(np.nanmin(geopdwd['cases']),
+                min_col, max_col = AllVisu.min_max_range(np.nanmin(geopdwd['cases']),
                                                          np.nanmax(geopdwd['cases']))
                 min_col_non0 = (np.nanmin(geopdwd.loc[geopdwd['cases']>0.]['cases']))
             else:
-                min_col, max_col = CocoDisplay.min_max_range(np.nanmin(geopdwd_filtered['cases']),
+                min_col, max_col = AllVisu.min_max_range(np.nanmin(geopdwd_filtered['cases']),
                                                          np.nanmax(geopdwd_filtered['cases']))
                 min_col_non0 = (np.nanmin(geopdwd_filtered.loc[geopdwd_filtered['cases']>0.]['cases']))
         except ValueError:  #raised if `geopdwd_filtered` is empty.
@@ -2148,7 +2142,7 @@ class CocoDisplay:
                     source = sourcemaplabel, text_font_size='10px',text_color='white',background_fill_color='grey',background_fill_alpha=0.5)
                 standardfig.add_layout(labels)
 
-        #cases_custom = CocoDisplay.rollerJS()
+        #cases_custom = AllVisu.rollerJS()
         callback = CustomJS(code="""
         //document.getElementsByClassName('bk-tooltip')[0].style.backgroundColor="transparent";
         document.getElementsByClassName('bk-tooltip')[0].style.opacity="0.7";
@@ -2201,7 +2195,7 @@ class CocoDisplay:
         standardfig.xgrid.grid_line_color = None
         standardfig.ygrid.grid_line_color = None
 
-        min_col, max_col = CocoDisplay.min_max_range(np.nanmin(geopdwd_filtered['cases']),
+        min_col, max_col = AllVisu.min_max_range(np.nanmin(geopdwd_filtered['cases']),
                                                      np.nanmax(geopdwd_filtered['cases']))
 
         json_data = json.dumps(json.loads(geopdwd_filtered.to_json()))
@@ -2539,13 +2533,26 @@ class CocoDisplay:
         plt.close()
         return 'data:image/png;base64,' + "{}".format(base64.b64encode(img.read()).decode())
 
-    ######################
-    def pycoa_date_plot_seaborn(self, input, input_field, **kwargs):
-        plt.figure(figsize=(10, 6))
-        sns.lineplot(data=input, x='date', y=input_field, hue='where')
-        plt.title(kwargs.get('title', 'Seaborn Plot'))
-        plt.xlabel('Date')
-        plt.ylabel(input_field)
-        plt.show()
+    '''
+        MATPLOTLIB chart drawing methods ...
+    '''
 
-    
+    @decowrapper
+    def pycoa_mpltmap(self,input,input_field,**kwargs):
+        from matplotlib.colors import Normalize
+        from matplotlib import cm
+        from mpl_toolkits.axes_grid1 import make_axes_locatable
+        fig, ax = plt.subplots(1, 1,figsize=(15, 15))
+        plt.axis('off')
+        input = pd.merge(input, self.kindgeo, on='where')
+        input = input.drop_duplicates('where')
+        input = gpd.GeoDataFrame(input)
+
+
+
+        ax = input.plot(column=input_field, ax=ax,legend=True,
+                                legend_kwds={'label': input_field,
+                                'orientation': "horizontal","pad": 0.001})
+
+
+        return ax

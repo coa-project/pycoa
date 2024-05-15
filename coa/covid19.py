@@ -91,8 +91,7 @@ class DataBase(object):
         except:
             raise CoaTypeError('What data base are you looking for ?')
         self.where_geodescription = where_kindgeo
-        vis='bokeh'
-        self.set_display(db_name,where_kindgeo,vis)
+        #self.set_display(db_name,where_kindgeo,vis)
 
    def getwheregeometrydescription(self):
         return self.where_geodescription
@@ -123,14 +122,23 @@ class DataBase(object):
            datab = DataBase(db_name)
            with open(filepkl, 'wb') as f:
                pickle.dump(datab,f)
-       else:
-           datab=DataBase.readpekl(filepkl)
-           if visu:
-               datab.set_display(db_name,datab.getwheregeometrydescription(),datab.getvisu())
+       #else:
+       #   datab=DataBase.readpekl(filepkl)
+       #   print("HERE")
+       #if visu:
+       datab.set_display(db_name,datab.getwheregeometrydescription())
        if visu:
            return datab, datab.get_display()
        else:
            return datab, None
+
+   def set_display(self,db,wheregeometrydescription):
+       ''' Set the Display '''
+       self.codisp = codisplay.Display(db, wheregeometrydescription)
+
+   def get_display(self):
+       ''' Return the instance of Display initialized by factory'''
+       return self.codisp
 
    @staticmethod
    def readpekl(filepkl):
@@ -159,15 +167,6 @@ class DataBase(object):
 
    def get_fulldb(self):
       return self.dbfullinfo.get_mainpandas()
-      #.style.set_table_styles([{'selector' : '','props' : [('border','5px solid green')]}])
-
-   def set_display(self,db,wheregeometrydescription,visu):
-       ''' Set the Display '''
-       self.codisp = codisplay.Display(db, wheregeometrydescription,visu)
-
-   def get_display(self):
-       ''' Return the instance of Display initialized by factory'''
-       return self.codisp
 
    def get_available_database(self):
         '''

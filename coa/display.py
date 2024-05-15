@@ -19,22 +19,38 @@ from coa.error import *
 
 class Display(object):
    """
-    display  
+    The display select the method requested by the visualization set by the user in the front
+    It give a pointer to allvisu.py
    """
    def __init__(self,db, geo):
+       '''
+        Init
+       '''
        self.db = db
        self.geo = geo
        self.setvisu('bokeh')
        self.codisp = allvis.AllVisu(self.db, self.geo)
    
    def setvisu(self,visu):
+       '''
+        Visualization seter
+       '''
        vis=['bokeh','mplt','ascii', 'seaborn']
        if visu not in vis:
             raise CoaError("Visualisation "+ visu + " not implemented setting problem. Please contact support@pycoa.fr")
        else: 
             self.visu = visu
 
+   def getvisu(self,):
+       '''
+        Visualization geter
+       '''
+       return self.visu
+   
    def pycoa_date_plot(self,input, input_field,**kwargs):  
+      '''
+        time evolution of ainput_field
+      '''
       if self.visu == 'bokeh':
           return self.codisp.pycoa_date_plot(input, input_field,**kwargs)
       elif self.visu == 'mplt':
@@ -68,6 +84,9 @@ class Display(object):
        return self.codisp.tiles_list()
 
    def pycoa_map(self, input,input_field,**kwargs):
+      '''
+        Map of an input_field 
+      '''
        if self.visu == 'bokeh':
             return self.codisp.pycoa_map(input,input_field,**kwargs)
        elif self.visu == 'mplt':

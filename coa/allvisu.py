@@ -2554,7 +2554,7 @@ class AllVisu:
     @decowrapper
     def pycoa_date_plot_mpltmap(self,input,input_field,**kwargs):
         fig, ax = plt.subplots(1, 1,figsize=(15, 15))
-        loc = input['where'].unique()
+        loc = input['where'].unique()[:MAXCOUNTRIESDISPLAYED]
         df = pd.pivot_table(input,index='date', columns='where', values=input_field)
         for col in loc:
             ax=plt.plot(df.index, df[col])

@@ -2554,6 +2554,9 @@ class AllVisu:
     @decowrapper
     def pycoa_date_plot_mpltmap(self,input,input_field,**kwargs):
         fig, ax = plt.subplots(1, 1,figsize=(15, 15))
-        dates=input.date
-        s=input[input_field]
-        return input.set_index('date')[input_field].plot(legend=False, colormap='viridis');
+        loc = input['where'].unique()
+        df = pd.pivot_table(input,index='date', columns='where', values=input_field)
+        for col in loc:
+            ax=plt.plot(df.index, df[col])
+        plt.legend(loc)
+        return ax

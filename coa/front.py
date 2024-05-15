@@ -950,7 +950,10 @@ class Front:
     @decoplot
     def plot(self,fig):
         ''' show plot '''
-        show(fig)
+        if self._cocoplot.getvisu() == 'bokeh':
+            show(fig)
+        else:
+            return fig    
 
     # ----------------------------------------------------------------------
     @chartsinput_deco

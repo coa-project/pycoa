@@ -54,10 +54,9 @@ class Display(object):
       if self.visu == 'bokeh':
           return self.codisp.pycoa_date_plot(input, input_field,**kwargs)
       elif self.visu == 'mplt':
-          return self.codisp.pycoa_date_plot_mpltmap(input,input_field,**kwargs)
+          return self.codisp.pycoa_mpltdate_plot(input,input_field,**kwargs)
       else:
             print('Not implemented !!')
-       
 
    def pycoa_spiral_plot(self, input, input_field,**kwargs):
        return self.codisp.pycoa_spiral_plot(**kwargs)
@@ -66,7 +65,7 @@ class Display(object):
        return self.codisp.pycoa_scrollingmenu(input, input_field,**kwargs)
    
    def pycoa_yearly_plot(self,input, input_field,**kwargs):
-       return self.codisp.pycoa_yearly_plot(**kwargs)
+       return self.codisp.pycoa_yearly_plot(input, input_field,**kwargs)
    
    def pycoa_histo(self, input, input_field,**kwargs):
        if self.visu == 'bokeh':
@@ -92,12 +91,6 @@ class Display(object):
        else:
             print('Not implemented !!') 
    
-   def pycoa_mapfolium(self,  input,input_field,**kwargs):
-       return self.codisp.pycoa_mapfolium( input,input_field,**kwargs)
-   
-   def tiles_list(self):
-       return self.codisp.tiles_list()
-
    def pycoa_map(self, input,input_field,**kwargs):
        '''
          Map of an input_field 
@@ -108,5 +101,11 @@ class Display(object):
             return self.codisp.pycoa_mpltmap(input,input_field,**kwargs)
        else:
             print('Not implemented !!')
+
+   def pycoa_mapfolium(self,  input,input_field,**kwargs):
+       return self.codisp.pycoa_mapfolium( input,input_field,**kwargs)
+   
+   def tiles_list(self):
+       return self.codisp.tiles_list()
 
    

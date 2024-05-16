@@ -2538,35 +2538,37 @@ class AllVisu:
     '''
 
     @decowrapper
-    def pycoa_mpltmap(self,input,input_field,**kwargs):
-        '''
-         matplotlib map display
-        '''
-        from matplotlib.colors import Normalize
-        from matplotlib import cm
-        from mpl_toolkits.axes_grid1 import make_axes_locatable
-        fig, ax = plt.subplots(1, 1,figsize=(8, 12))
-        plt.axis('off')
-        input = pd.merge(input, self.kindgeo, on='where')
-        input = input.drop_duplicates('where')
-        input = gpd.GeoDataFrame(input)
-        ax = input.plot(column=input_field, ax=ax,legend=True,
-                                legend_kwds={'label': input_field,
-                                'orientation': "horizontal","pad": 0.001})
-        return ax
-
-    @decowrapper
-    def pycoa_date_plot_mpltmap(self,input,input_field,**kwargs):
-        '''
-         matplotlib date plot chart
-         Max display defined by MAXCOUNTRIESDISPLAYED
-        '''
+    def pycoa_mpltdate_plot(self,input,input_field,**kwargs):
         fig, ax = plt.subplots(1, 1,figsize=(12, 8))
         loc = input['where'].unique()[:MAXCOUNTRIESDISPLAYED]
         df = pd.pivot_table(input,index='date', columns='where', values=input_field)
         for col in loc:
             ax=plt.plot(df.index, df[col])
         plt.legend(loc)
+        return ax
+
+    @decowrapper
+    def pycoa_yearly_plot(self,input,input_field,**kwargs):
+        '''
+         matplotlib date yearly plot chart
+         Max display defined by MAXCOUNTRIESDISPLAYED
+        '''
+        input['date']=pd.to_datetime(input["date"])
+        #drop bissextile fine tuning in needed in the future
+        input = input.loc[~(input['date'].dt.month.eq(2) & input['date'].dt.day.eq(29))].reset_index(drop=True)
+        input = input.copy()
+        input.loc[:,'allyears']=input['date'].apply(lambda x : x.year)
+        input['allyears'] = input['allyears'].astype(int)
+        input.loc[:,'dayofyear']= input['date'].apply(lambda x : x.dayofyear)
+
+        fig, ax = plt.subplots(1, 1,figsize=(12, 8))
+        loc = input['where'].unique()[:MAXCOUNTRIESDISPLAYED]
+        df = pd.pivot_table(input,index='date', columns='where', values=input_field)
+        for col in loc:
+            ax=plt.plot(df.index, df[col])
+        plt.legend(loc)
+        return ax
+
         return ax
 
     @decowrapper
@@ -2612,4 +2614,22 @@ class AllVisu:
         input = input[['where',input_field]].sort_values(by=input_field)
         bar = ax.bar(input['where'], input[input_field],color=cmap.colors)
         plt.xticks(rotation=30,ha='right')
+        return ax
+
+    @decowrapper
+    def pycoa_mpltmap(self,input,input_field,**kwargs):
+        '''
+         matplotlib map display
+        '''
+        from matplotlib.colors import Normalize
+        from matplotlib import cm
+        from mpl_toolkits.axes_grid1 import make_axes_locatable
+        fig, ax = plt.subplots(1, 1,figsize=(8, 12))
+        plt.axis('off')
+        input = pd.merge(input, self.kindgeo, on='where')
+        input = input.drop_duplicates('where')
+        input = gpd.GeoDataFrame(input)
+        ax = input.plot(column=input_field, ax=ax,legend=True,
+                                legend_kwds={'label': input_field,
+                                'orientation': "horizontal","pad": 0.001})
         return ax

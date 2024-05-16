@@ -45,7 +45,10 @@ class DataBase(object):
    """
    def __init__(self, db_name):
         """
-         Fill the pandas_datase
+            Main pycoa class:
+            - call the get_parser
+            - call the geo
+            - call the display
         """
         verb("Init of covid19.DataBase()")
         self.database_type = dbparser._db_list_dict

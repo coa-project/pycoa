@@ -78,6 +78,7 @@ class Front:
         self._db = ''
         self._whom = ''
         self.vis = 'bokeh'
+        self._cocoplot = None
 
 
     def setvisu(self,visu):
@@ -86,9 +87,9 @@ class Front:
             raise CoaError("Sorry but " + visu + " visualisation isn't implemented ")
         else:
             self.vis = visu
-            self._cocoplot.setvisu(visu)
+            if not self._cocoplot is None:
+                    self._cocoplot.setvisu(visu)
             print('Visu has been set to ', visu)
-            #return self.vis
 
     def getvisu(self,):
         return self.vis
@@ -412,7 +413,7 @@ class Front:
                 which = kwargs['input_field']
 
             if what:
-                if what not in listwhat():
+                if what not in self.listwhat():
                     raise CoaKeyError('What option ' + what + ' not supported. '
                                                               'See listwhat() for full list.')
                 if 'what'=='sandard':
@@ -765,10 +766,8 @@ class Front:
                     CoaError("What kind of pimp map you want ?!")
             else:
                 fig = self._cocoplot.pycoa_map(input,input_field,**kwargs)
-            print(self.getvisu())
             if self.getvisu()=='bokeh':
-
-                    return show(fig)
+                return show(fig)
             else:
                 return fig
         elif visu == 'folium':
@@ -842,7 +841,7 @@ class Front:
                 fig = self._cocoplot.pycoa_pie(**kwargs)
             else:
                 raise CoaKeyError('Unknown typeofhist value. Available value : listhist().')
-            return func(fig)
+            return func(self,fig)
         return inner
 
     @chartsinput_deco
@@ -853,9 +852,12 @@ class Front:
 
     @chartsinput_deco
     @decohist
-    def hist(fig):
+    def hist(self,fig):
         ''' show hist '''
-        show(fig)
+        if self._cocoplot.getvisu() == 'bokeh':
+            show(fig)
+        else:
+            fig
 
     # ----------------------------------------------------------------------
     # --- plot(**kwargs) ---------------------------------------------------
@@ -939,20 +941,23 @@ class Front:
                     fig = self._cocoplot.pycoa_yearly_plot(input, input_field,**kwargs)
             else:
                 raise CoaKeyError('Unknown typeofplot value. Should be date, versus, menulocation or spiral.')
-            return func(fig)
+            return func(self,fig)
         return inner
 
     @chartsinput_deco
     @decoplot
-    def figureplot(fig):
+    def figureplot(self,fig):
         ''' Return fig Bohek object '''
         return fig
 
     @chartsinput_deco
     @decoplot
-    def plot(fig):
+    def plot(self,fig):
         ''' show plot '''
-        show(fig)
-
+        if self._cocoplot.getvisu() == 'bokeh':
+            return show(fig)
+        else:
+            return fig
     # ----------------------------------------------------------------------
+
 pycoa=Front()

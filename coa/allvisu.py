@@ -765,7 +765,7 @@ class AllVisu:
         - title = None
         - textcopyright = default
         - mode = mouse
-        -guideline = False
+        - guideline = False
         - cursor_date = None if True
                 - orientation = horizontal
         - when : default min and max according to the inpude DataFrame.
@@ -2541,142 +2541,77 @@ class AllVisu:
 
     @decowrapper
     def pycoa_mpltmap(self,input,input_field,**kwargs):
+        '''
+         matplotlib map display
+        '''
         from matplotlib.colors import Normalize
         from matplotlib import cm
         from mpl_toolkits.axes_grid1 import make_axes_locatable
-        fig, ax = plt.subplots(1, 1,figsize=(15, 15))
+        fig, ax = plt.subplots(1, 1,figsize=(8, 12))
         plt.axis('off')
         input = pd.merge(input, self.kindgeo, on='where')
         input = input.drop_duplicates('where')
         input = gpd.GeoDataFrame(input)
-
-
-
         ax = input.plot(column=input_field, ax=ax,legend=True,
                                 legend_kwds={'label': input_field,
                                 'orientation': "horizontal","pad": 0.001})
         return ax
-    
-    ######SEABORN#########
-    ######################
-    
-    ######SEABORN PLOT#########
+
     @decowrapper
-    def pycoa_date_plot_seaborn(self, input, input_field, **kwargs):
-        """
-        Create a seaborn line plot with date on x-axis and input_field on y-axis.
-        """
-        # On inclut que les premiers 24 pays uniques
-        top_countries = input['where'].unique()[:MAXCOUNTRIESDISPLAYED]
-        filtered_input = input[input['where'].isin(top_countries)]
-        # Créer le graphique
-        plt.figure(figsize=(10, 6))
-        sns.lineplot(data=filtered_input, x='date', y=input_field, marker='o', hue='where')
-        plt.title(f"Graphique de {input_field} à {input['where'].iloc[0]}", )
-        plt.xlabel('Date')
-        plt.ylabel(input_field)
-        plt.xticks(rotation=45)
-        #permet de placer la légend 5% à gauche
-        plt.legend(bbox_to_anchor=(1.05, 1))
-        plt.show()
+    def pycoa_date_plot_mpltmap(self,input,input_field,**kwargs):
+        '''
+         matplotlib date plot chart
+         Max display defined by MAXCOUNTRIESDISPLAYED
+        '''
+        fig, ax = plt.subplots(1, 1,figsize=(12, 8))
+        loc = input['where'].unique()[:MAXCOUNTRIESDISPLAYED]
+        df = pd.pivot_table(input,index='date', columns='where', values=input_field)
+        for col in loc:
+            ax=plt.plot(df.index, df[col])
+        plt.legend(loc)
+        return ax
 
-    ######################
-    ######SEABORN HIST VERTICALE#########
     @decowrapper
-    def pycoa_hist_seaborn_verti(self, input, input_field, **kwargs):
-        """
-        Create a seaborn vertical histogram with input_field on y-axis.
-        """
-        # On inclut que les premiers 24 pays uniques
-        top_countries = input['where'].unique()[:MAXCOUNTRIESDISPLAYED]
-        filtered_input = input[input['where'].isin(top_countries)]
-        # Créer le graphique
-        sns.set_theme(style="whitegrid")
-        plt.figure(figsize=(14, 7))
-        sns.barplot(data=filtered_input, x='where', y=input_field, palette="viridis")
-        plt.title(f"Histogramme vertical de {input_field} à {input['where'].iloc[0]}", )
-        plt.xlabel('')  # Suppression de l'étiquette de l'axe x
-        plt.ylabel(input_field)
-        plt.xticks(rotation=45)
-        plt.show()
+    def pycoa_mpltpie(self,input,input_field,**kwargs):
+        '''
+         matplotlib pie chart
+         Max display defined by MAXCOUNTRIESDISPLAYED
+        '''
+        #fig, ax = plt.subplots(1, 1,figsize=(12, 8))
+        labels = input['where'].unique()[:MAXCOUNTRIESDISPLAYED]
+        input = input.loc[input.date==input.date.max()][:MAXCOUNTRIESDISPLAYED].set_index('where')
+        ax = input.plot(kind="pie",y=input_field, autopct='%1.1f%%', legend=True,
+        title=input_field, ylabel=input_field, labeldistance=None)
+        ax.legend(bbox_to_anchor=(1, 1.02), loc='upper left')
+        return ax
 
-
-    ######SEABORN HIST HORIZONTALE#########
     @decowrapper
-    def pycoa_hist_seaborn_hori(self, input, input_field, **kwargs):
-        """
-        Create a seaborn horizontal histogram with input_field on x-axis.
-        """
-        # On inclut que les premiers 24 pays uniques
-        top_countries = input['where'].unique()[:MAXCOUNTRIESDISPLAYED]
-        filtered_input = input[input['where'].isin(top_countries)]
-        # Créer le graphique
-        sns.set_theme(style="whitegrid")
-        plt.figure(figsize=(14, 7))
-        sns.barplot(data=filtered_input, x=input_field, y='where', palette="viridis")
-        plt.title(f"Histogramme horizontal de {input_field} à {input['where'].iloc[0]}", )
-        plt.xlabel(input_field)
-        plt.ylabel('')
-        plt.xticks(rotation=45)
-        plt.show()
+    def pycoa_mplthorizontalhisto(self,input,input_field,**kwargs):
+        '''
+        matplotlib horizon histo
+        '''
+        import matplotlib as mpl
+        from matplotlib.cm import get_cmap
+        fig, ax = plt.subplots(1, 1,figsize=(12, 8))
+        cmap = plt.get_cmap('Paired')
+        input = input.loc[input.date==input.date.max()][:MAXCOUNTRIESDISPLAYED]
+        loc = input['where'].unique()[:MAXCOUNTRIESDISPLAYED]
+        input = input[['where',input_field]].sort_values(by=input_field)
+        bar = ax.barh(input['where'], input[input_field],color=cmap.colors)
+        return ax
 
-    ######SEABORN BOXPLOT#########
     @decowrapper
-    def pycoa_pairplot_seaborn(self, input, input_field, **kwargs):
-        """
-        Create a seaborn pairplot 
-        """
-        # On inclut que les premiers 24 pays uniques
-        top_countries = input['where'].unique()[:MAXCOUNTRIESDISPLAYED]
-        filtered_input = input[input['where'].isin(top_countries)]
-        # Créer le graphique
-        sns.set_theme(style="whitegrid")
-        plt.figure(figsize=(14, 7))
-        sns.pairplot(data=filtered_input, hue='where')
-        plt.xlabel(input_field)
-        plt.ylabel('')
-        plt.xticks(rotation=45)
-        plt.show()
-    
-    ######SEABORN heatmap#########
-    @decowrapper
-    def pycoa_heatmap_seaborn(self, input, input_field, **kwargs):
-        """
-        Create a seaborn heatmap
-        """
-        # Convertir la colonne 'date' en datetime si nécessaire
-        if not pd.api.types.is_datetime64_any_dtype(input['date']):
-            input['date'] = pd.to_datetime(input['date'])
-
-        df=input
-        df.date=pd.to_datetime(df.date)
-        a=df.groupby(pd.Grouper(key='date', freq='1M'))['daily'].sum()
-        a=a.reset_index()
-
-        # On inclut que les premiers 24 pays uniques
-        # top_locations = input['where'].unique()[:MAXCOUNTRIESDISPLAYED]
-        # filtered_input = input[input['where'].isin(top_locations)]
-
-        a['month'] = [m.month for m in a['date']]
-        a['year'] = [m.year for m in a['date']]
-        
-        data_pivot = a.pivot_table(index='month', columns='year', values='daily')
-
-        total = data_pivot.sum().sum()
-        # Créer une nouvelle figure
-        plt.figure(figsize=(15, 10))
-
-        # Créer une heatmap à partir du tableau croisé dynamique
-        sns.heatmap(data_pivot, annot=True, fmt=".1f", linewidths=.5, cmap='plasma')
-
-        # Ajouter un titre
-        plt.title(f'Heatmap of {input_field.replace("_", " ").capitalize()} by Month and Year')
-        plt.xlabel('Year')
-        plt.ylabel('Month')
-
-        # Afficher le total en dehors du graphique
-        plt.text(0, data_pivot.shape[0] + 1, f'Total: {total}', fontsize=12)
-        # Afficher la heatmap
-        plt.show()
-
-        
+    def pycoa_mplthorizontalhisto(self,input,input_field,**kwargs):
+        '''
+        matplotlib horizon histo
+        '''
+        import matplotlib as mpl
+        from matplotlib.cm import get_cmap
+        fig, ax = plt.subplots(1, 1,figsize=(12, 8))
+        cmap = plt.get_cmap('Paired')
+        input = input.loc[input.date==input.date.max()][:MAXCOUNTRIESDISPLAYED]
+        loc = input['where'].unique()[:MAXCOUNTRIESDISPLAYED]
+        input = input[['where',input_field]].sort_values(by=input_field)
+        bar = ax.bar(input['where'], input[input_field],color=cmap.colors)
+        plt.xticks(rotation=30,ha='right')
+        return ax

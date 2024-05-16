@@ -19,28 +19,41 @@ from coa.error import *
 
 class Display(object):
    """
-    display  
+    The display select the method requested by the visualization set by the user in the front
+    It give a pointer to allvisu.py
    """
    def __init__(self,db, geo):
+       '''
+        Init
+       '''
        self.db = db
        self.geo = geo
        self.setvisu('bokeh')
        self.codisp = allvis.AllVisu(self.db, self.geo)
    
    def setvisu(self,visu):
+       '''
+        Visualization seter
+       '''
        vis=['bokeh','mplt','ascii', 'seaborn']
        if visu not in vis:
             raise CoaError("Visualisation "+ visu + " not implemented setting problem. Please contact support@pycoa.fr")
        else: 
             self.visu = visu
 
+   def getvisu(self,):
+       '''
+        Visualization geter
+       '''
+       return self.visu
+   
    def pycoa_date_plot(self,input, input_field,**kwargs):  
        if self.visu == 'bokeh':
             return self.codisp.pycoa_date_plot(input, input_field,**kwargs)
        elif self.visu == 'seaborn':
             return self.codisp.pycoa_date_plot_seaborn(input, input_field, **kwargs)
        elif self.visu == 'mplt':
-           return False
+          return self.codisp.pycoa_date_plot_mpltmap(input,input_field,**kwargs)
        else:
             print('Not implemented !!')
 
@@ -66,6 +79,18 @@ class Display(object):
             return self.codisp.pycoa_horizonhisto(input, input_field,**kwargs)
         elif self.visu == 'seaborn':
             return self.codisp.pycoa_hist_seaborn_hori(input, input_field, **kwargs)
+        elif self.visu == 'mplt':
+            return self.codisp.pycoa_mplthisto(input,input_field,**kwargs)
+        else:
+            print('Not implemented !!')
+
+   def pycoa_horizonhisto(self,input, input_field,**kwargs):
+       if self.visu == 'bokeh':
+            return self.codisp.pycoa_horizonhisto(input, input_field,**kwargs)
+       elif self.visu == 'mplt':
+            return self.codisp.pycoa_mplthorizontalhisto(input,input_field,**kwargs)
+       else:
+            print('Not implemented !!') 
    
    def pycoa_pie(self, input, input_field,**kwargs):
        if self.visu == 'bokeh':
@@ -73,6 +98,10 @@ class Display(object):
        elif self.visu == 'seaborn':
             print('pie seaborn')
             return self.codisp.pycoa_pairplot_seaborn(input, input_field, **kwargs)
+       elif self.visu == 'mplt':
+            return self.codisp.pycoa_mpltpie(input,input_field,**kwargs)
+       else:
+            print('Not implemented !!') 
    
    def pycoa_mapfolium(self,  input,input_field,**kwargs):
        return self.codisp.pycoa_mapfolium( input,input_field,**kwargs)
@@ -81,6 +110,9 @@ class Display(object):
        return self.codisp.tiles_list()
 
    def pycoa_map(self, input,input_field,**kwargs):
+       '''
+         Map of an input_field 
+       '''
        if self.visu == 'bokeh':
             return self.codisp.pycoa_map(input,input_field,**kwargs)
        elif self.visu == 'seaborn':
@@ -91,9 +123,3 @@ class Display(object):
             print('Not implemented !!')
 
    
-   def pycoa_resume_data(self, input,input_field,**kwargs):
-       return self.codisp.pycoa_resume_data(input,input_field,**kwargs)
-   
-   def pycoa_geodata(self, input,input_field,**kwargs):
-       return self.codisp.pycoa_geodata(input,input_field,**kwargs)
-

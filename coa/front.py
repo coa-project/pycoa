@@ -840,7 +840,7 @@ class Front:
                 fig = self._cocoplot.pycoa_pie(**kwargs)
             else:
                 raise CoaKeyError('Unknown typeofhist value. Available value : listhist().')
-            return func(fig)
+            return func(self,fig)
         return inner
 
     @chartsinput_deco
@@ -851,9 +851,12 @@ class Front:
 
     @chartsinput_deco
     @decohist
-    def hist(fig):
+    def hist(self,fig):
         ''' show hist '''
-        show(fig)
+        if self._cocoplot.getvisu() == 'bokeh':
+            show(fig)
+        else:
+            fig
 
     # ----------------------------------------------------------------------
     # --- plot(**kwargs) ---------------------------------------------------
@@ -951,17 +954,9 @@ class Front:
     def plot(self,fig):
         ''' show plot '''
         if self._cocoplot.getvisu() == 'bokeh':
-            show(fig)
+            return show(fig)
         else:
-            return fig    
-
+            return fig
     # ----------------------------------------------------------------------
-    @chartsinput_deco
-    def plot_seaborn(self, **kwargs):
-        """Show plot using Seaborn."""
-        if self.vis != 'seaborn':
-            raise CoaError("Visualisation not set to seaborn.")
-        fig = self._cocoplot.pycoa_date_plot_seaborn(kwargs['input'], kwargs['input_field'], **kwargs)
-        return fig
 
 pycoa=Front()

@@ -763,7 +763,7 @@ class AllVisu:
         - title = None
         - textcopyright = default
         - mode = mouse
-        -guideline = False
+        - guideline = False
         - cursor_date = None if True
                 - orientation = horizontal
         - when : default min and max according to the inpude DataFrame.
@@ -2539,10 +2539,13 @@ class AllVisu:
 
     @decowrapper
     def pycoa_mpltmap(self,input,input_field,**kwargs):
+        '''
+         matplotlib map display
+        '''
         from matplotlib.colors import Normalize
         from matplotlib import cm
         from mpl_toolkits.axes_grid1 import make_axes_locatable
-        fig, ax = plt.subplots(1, 1,figsize=(15, 15))
+        fig, ax = plt.subplots(1, 1,figsize=(8, 12))
         plt.axis('off')
         input = pd.merge(input, self.kindgeo, on='where')
         input = input.drop_duplicates('where')
@@ -2551,12 +2554,62 @@ class AllVisu:
                                 legend_kwds={'label': input_field,
                                 'orientation': "horizontal","pad": 0.001})
         return ax
+
     @decowrapper
     def pycoa_date_plot_mpltmap(self,input,input_field,**kwargs):
-        fig, ax = plt.subplots(1, 1,figsize=(15, 15))
+        '''
+         matplotlib date plot chart
+         Max display defined by MAXCOUNTRIESDISPLAYED
+        '''
+        fig, ax = plt.subplots(1, 1,figsize=(12, 8))
         loc = input['where'].unique()[:MAXCOUNTRIESDISPLAYED]
         df = pd.pivot_table(input,index='date', columns='where', values=input_field)
         for col in loc:
             ax=plt.plot(df.index, df[col])
         plt.legend(loc)
+        return ax
+
+    @decowrapper
+    def pycoa_mpltpie(self,input,input_field,**kwargs):
+        '''
+         matplotlib pie chart
+         Max display defined by MAXCOUNTRIESDISPLAYED
+        '''
+        #fig, ax = plt.subplots(1, 1,figsize=(12, 8))
+        labels = input['where'].unique()[:MAXCOUNTRIESDISPLAYED]
+        input = input.loc[input.date==input.date.max()][:MAXCOUNTRIESDISPLAYED].set_index('where')
+        ax = input.plot(kind="pie",y=input_field, autopct='%1.1f%%', legend=True,
+        title=input_field, ylabel=input_field, labeldistance=None)
+        ax.legend(bbox_to_anchor=(1, 1.02), loc='upper left')
+        return ax
+
+    @decowrapper
+    def pycoa_mplthorizontalhisto(self,input,input_field,**kwargs):
+        '''
+        matplotlib horizon histo
+        '''
+        import matplotlib as mpl
+        from matplotlib.cm import get_cmap
+        fig, ax = plt.subplots(1, 1,figsize=(12, 8))
+        cmap = plt.get_cmap('Paired')
+        input = input.loc[input.date==input.date.max()][:MAXCOUNTRIESDISPLAYED]
+        loc = input['where'].unique()[:MAXCOUNTRIESDISPLAYED]
+        input = input[['where',input_field]].sort_values(by=input_field)
+        bar = ax.barh(input['where'], input[input_field],color=cmap.colors)
+        return ax
+
+    @decowrapper
+    def pycoa_mplthorizontalhisto(self,input,input_field,**kwargs):
+        '''
+        matplotlib horizon histo
+        '''
+        import matplotlib as mpl
+        from matplotlib.cm import get_cmap
+        fig, ax = plt.subplots(1, 1,figsize=(12, 8))
+        cmap = plt.get_cmap('Paired')
+        input = input.loc[input.date==input.date.max()][:MAXCOUNTRIESDISPLAYED]
+        loc = input['where'].unique()[:MAXCOUNTRIESDISPLAYED]
+        input = input[['where',input_field]].sort_values(by=input_field)
+        bar = ax.bar(input['where'], input[input_field],color=cmap.colors)
+        plt.xticks(rotation=30,ha='right')
         return ax

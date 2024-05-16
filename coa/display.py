@@ -69,13 +69,28 @@ class Display(object):
        return self.codisp.pycoa_yearly_plot(**kwargs)
    
    def pycoa_histo(self, input, input_field,**kwargs):
-       return self.codisp.pycoa_histo(input, input_field,**kwargs)
-   
+       if self.visu == 'bokeh':
+            return self.codisp.pycoa_histo(input, input_field,**kwargs)
+       elif self.visu == 'mplt':
+            return self.codisp.pycoa_mplthisto(input,input_field,**kwargs)
+       else:
+            print('Not implemented !!')
+
    def pycoa_horizonhisto(self,input, input_field,**kwargs):
-       return self.codisp.pycoa_horizonhisto(input, input_field,**kwargs)
+       if self.visu == 'bokeh':
+            return self.codisp.pycoa_horizonhisto(input, input_field,**kwargs)
+       elif self.visu == 'mplt':
+            return self.codisp.pycoa_mplthorizontalhisto(input,input_field,**kwargs)
+       else:
+            print('Not implemented !!') 
    
    def pycoa_pie(self, input, input_field,**kwargs):
-       return self.codisp.pycoa_pie(input, input_field,**kwargs)
+       if self.visu == 'bokeh':
+            return self.codisp.pycoa_pie(input, input_field,**kwargs)
+       elif self.visu == 'mplt':
+            return self.codisp.pycoa_mpltpie(input,input_field,**kwargs)
+       else:
+            print('Not implemented !!') 
    
    def pycoa_mapfolium(self,  input,input_field,**kwargs):
        return self.codisp.pycoa_mapfolium( input,input_field,**kwargs)
@@ -84,9 +99,9 @@ class Display(object):
        return self.codisp.tiles_list()
 
    def pycoa_map(self, input,input_field,**kwargs):
-      '''
-        Map of an input_field 
-      '''
+       '''
+         Map of an input_field 
+       '''
        if self.visu == 'bokeh':
             return self.codisp.pycoa_map(input,input_field,**kwargs)
        elif self.visu == 'mplt':
@@ -95,9 +110,3 @@ class Display(object):
             print('Not implemented !!')
 
    
-   def pycoa_resume_data(self, input,input_field,**kwargs):
-       return self.codisp.pycoa_resume_data(input,input_field,**kwargs)
-   
-   def pycoa_geodata(self, input,input_field,**kwargs):
-       return self.codisp.pycoa_geodata(input,input_field,**kwargs)
-

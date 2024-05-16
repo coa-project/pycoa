@@ -412,7 +412,7 @@ class Front:
                 which = kwargs['input_field']
 
             if what:
-                if what not in listwhat():
+                if what not in self.listwhat():
                     raise CoaKeyError('What option ' + what + ' not supported. '
                                                               'See listwhat() for full list.')
                 if 'what'=='sandard':

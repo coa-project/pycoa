@@ -53,7 +53,7 @@ class Display(object):
        elif self.visu == 'seaborn':
             return self.codisp.pycoa_date_plot_seaborn(input, input_field, **kwargs)
        elif self.visu == 'mplt':
-          return self.codisp.pycoa_date_plot_mpltmap(input,input_field,**kwargs)
+          return self.codisp.pycoa_mpltdate_plot(input,input_field,**kwargs)
        else:
             print('Not implemented !!')
 
@@ -80,23 +80,15 @@ class Display(object):
         elif self.visu == 'seaborn':
             return self.codisp.pycoa_hist_seaborn_hori(input, input_field, **kwargs)
         elif self.visu == 'mplt':
-            return self.codisp.pycoa_mplthisto(input,input_field,**kwargs)
-        else:
-            print('Not implemented !!')
-
-   def pycoa_horizonhisto(self,input, input_field,**kwargs):
-       if self.visu == 'bokeh':
-            return self.codisp.pycoa_horizonhisto(input, input_field,**kwargs)
-       elif self.visu == 'mplt':
             return self.codisp.pycoa_mplthorizontalhisto(input,input_field,**kwargs)
-       else:
-            print('Not implemented !!') 
-   
+        else:
+            print('Not implemented nimporte auoi!!')
+
+
    def pycoa_pie(self, input, input_field,**kwargs):
        if self.visu == 'bokeh':
             return self.codisp.pycoa_pie(input, input_field,**kwargs)
        elif self.visu == 'seaborn':
-            print('pie seaborn')
             return self.codisp.pycoa_pairplot_seaborn(input, input_field, **kwargs)
        elif self.visu == 'mplt':
             return self.codisp.pycoa_mpltpie(input,input_field,**kwargs)

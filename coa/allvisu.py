@@ -27,6 +27,8 @@ import math
 import pandas as pd
 import geopandas as gpd
 import numpy as np
+import seaborn as sns
+import matplotlib.pyplot as plt
 from collections import defaultdict
 import itertools
 import json
@@ -2553,6 +2555,128 @@ class AllVisu:
         ax = input.plot(column=input_field, ax=ax,legend=True,
                                 legend_kwds={'label': input_field,
                                 'orientation': "horizontal","pad": 0.001})
-
-
         return ax
+    
+    ######SEABORN#########
+    ######################
+    
+    ######SEABORN PLOT#########
+    @decowrapper
+    def pycoa_date_plot_seaborn(self, input, input_field, **kwargs):
+        """
+        Create a seaborn line plot with date on x-axis and input_field on y-axis.
+        """
+        # On inclut que les premiers 24 pays uniques
+        top_countries = input['where'].unique()[:MAXCOUNTRIESDISPLAYED]
+        filtered_input = input[input['where'].isin(top_countries)]
+        # Créer le graphique
+        plt.figure(figsize=(10, 6))
+        sns.lineplot(data=filtered_input, x='date', y=input_field, marker='o', hue='where')
+        plt.title(f"Graphique de {input_field} à {input['where'].iloc[0]}", )
+        plt.xlabel('Date')
+        plt.ylabel(input_field)
+        plt.xticks(rotation=45)
+        #permet de placer la légend 5% à gauche
+        plt.legend(bbox_to_anchor=(1.05, 1))
+        plt.show()
+
+    ######################
+    ######SEABORN HIST VERTICALE#########
+    @decowrapper
+    def pycoa_hist_seaborn_verti(self, input, input_field, **kwargs):
+        """
+        Create a seaborn vertical histogram with input_field on y-axis.
+        """
+        # On inclut que les premiers 24 pays uniques
+        top_countries = input['where'].unique()[:MAXCOUNTRIESDISPLAYED]
+        filtered_input = input[input['where'].isin(top_countries)]
+        # Créer le graphique
+        sns.set_theme(style="whitegrid")
+        plt.figure(figsize=(14, 7))
+        sns.barplot(data=filtered_input, x='where', y=input_field, palette="viridis")
+        plt.title(f"Histogramme vertical de {input_field} à {input['where'].iloc[0]}", )
+        plt.xlabel('')  # Suppression de l'étiquette de l'axe x
+        plt.ylabel(input_field)
+        plt.xticks(rotation=45)
+        plt.show()
+
+
+    ######SEABORN HIST HORIZONTALE#########
+    @decowrapper
+    def pycoa_hist_seaborn_hori(self, input, input_field, **kwargs):
+        """
+        Create a seaborn horizontal histogram with input_field on x-axis.
+        """
+        # On inclut que les premiers 24 pays uniques
+        top_countries = input['where'].unique()[:MAXCOUNTRIESDISPLAYED]
+        filtered_input = input[input['where'].isin(top_countries)]
+        # Créer le graphique
+        sns.set_theme(style="whitegrid")
+        plt.figure(figsize=(14, 7))
+        sns.barplot(data=filtered_input, x=input_field, y='where', palette="viridis")
+        plt.title(f"Histogramme horizontal de {input_field} à {input['where'].iloc[0]}", )
+        plt.xlabel(input_field)
+        plt.ylabel('')
+        plt.xticks(rotation=45)
+        plt.show()
+
+    ######SEABORN BOXPLOT#########
+    @decowrapper
+    def pycoa_pairplot_seaborn(self, input, input_field, **kwargs):
+        """
+        Create a seaborn pairplot 
+        """
+        # On inclut que les premiers 24 pays uniques
+        top_countries = input['where'].unique()[:MAXCOUNTRIESDISPLAYED]
+        filtered_input = input[input['where'].isin(top_countries)]
+        # Créer le graphique
+        sns.set_theme(style="whitegrid")
+        plt.figure(figsize=(14, 7))
+        sns.pairplot(data=filtered_input, hue='where')
+        plt.xlabel(input_field)
+        plt.ylabel('')
+        plt.xticks(rotation=45)
+        plt.show()
+    
+    ######SEABORN heatmap#########
+    @decowrapper
+    def pycoa_heatmap_seaborn(self, input, input_field, **kwargs):
+        """
+        Create a seaborn heatmap
+        """
+        # Convertir la colonne 'date' en datetime si nécessaire
+        if not pd.api.types.is_datetime64_any_dtype(input['date']):
+            input['date'] = pd.to_datetime(input['date'])
+
+        df=input
+        df.date=pd.to_datetime(df.date)
+        a=df.groupby(pd.Grouper(key='date', freq='1M'))['daily'].sum()
+        a=a.reset_index()
+
+        # On inclut que les premiers 24 pays uniques
+        # top_locations = input['where'].unique()[:MAXCOUNTRIESDISPLAYED]
+        # filtered_input = input[input['where'].isin(top_locations)]
+
+        a['month'] = [m.month for m in a['date']]
+        a['year'] = [m.year for m in a['date']]
+        
+        data_pivot = a.pivot_table(index='month', columns='year', values='daily')
+
+        total = data_pivot.sum().sum()
+        # Créer une nouvelle figure
+        plt.figure(figsize=(15, 10))
+
+        # Créer une heatmap à partir du tableau croisé dynamique
+        sns.heatmap(data_pivot, annot=True, fmt=".1f", linewidths=.5, cmap='plasma')
+
+        # Ajouter un titre
+        plt.title(f'Heatmap of {input_field.replace("_", " ").capitalize()} by Month and Year')
+        plt.xlabel('Year')
+        plt.ylabel('Month')
+
+        # Afficher le total en dehors du graphique
+        plt.text(0, data_pivot.shape[0] + 1, f'Total: {total}', fontsize=12)
+        # Afficher la heatmap
+        plt.show()
+
+        

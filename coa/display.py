@@ -35,7 +35,14 @@ class Display(object):
             self.visu = visu
 
    def pycoa_date_plot(self,input, input_field,**kwargs):  
-      return self.codisp.pycoa_date_plot(input, input_field,**kwargs)
+       if self.visu == 'bokeh':
+            return self.codisp.pycoa_date_plot(input, input_field,**kwargs)
+       elif self.visu == 'seaborn':
+            return self.codisp.pycoa_date_plot_seaborn(input, input_field, **kwargs)
+       elif self.visu == 'mplt':
+           return False
+       else:
+            print('Not implemented !!')
 
    def pycoa_spiral_plot(self, input, input_field,**kwargs):
        return self.codisp.pycoa_spiral_plot(**kwargs)
@@ -47,13 +54,25 @@ class Display(object):
        return self.codisp.pycoa_yearly_plot(**kwargs)
    
    def pycoa_histo(self, input, input_field,**kwargs):
-       return self.codisp.pycoa_histo(input, input_field,**kwargs)
+        if self.visu == 'bokeh':
+            print('byvalue')
+            return self.codisp.pycoa_histo(input, input_field,**kwargs)
+        elif self.visu == 'seaborn':
+            return self.codisp.pycoa_hist_seaborn_verti(input, input_field, **kwargs)
+
    
    def pycoa_horizonhisto(self,input, input_field,**kwargs):
-       return self.codisp.pycoa_horizonhisto(input, input_field,**kwargs)
+        if self.visu == 'bokeh':
+            return self.codisp.pycoa_horizonhisto(input, input_field,**kwargs)
+        elif self.visu == 'seaborn':
+            return self.codisp.pycoa_hist_seaborn_hori(input, input_field, **kwargs)
    
    def pycoa_pie(self, input, input_field,**kwargs):
-       return self.codisp.pycoa_pie(input, input_field,**kwargs)
+       if self.visu == 'bokeh':
+            return self.codisp.pycoa_pie(input, input_field,**kwargs)
+       elif self.visu == 'seaborn':
+            print('pie seaborn')
+            return self.codisp.pycoa_pairplot_seaborn(input, input_field, **kwargs)
    
    def pycoa_mapfolium(self,  input,input_field,**kwargs):
        return self.codisp.pycoa_mapfolium( input,input_field,**kwargs)
@@ -64,6 +83,8 @@ class Display(object):
    def pycoa_map(self, input,input_field,**kwargs):
        if self.visu == 'bokeh':
             return self.codisp.pycoa_map(input,input_field,**kwargs)
+       elif self.visu == 'seaborn':
+           return self.codisp.pycoa_heatmap_seaborn(input, input_field, **kwargs)
        elif self.visu == 'mplt':
             return self.codisp.pycoa_mpltmap(input,input_field,**kwargs)
        else:

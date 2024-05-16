@@ -70,7 +70,7 @@ class Front:
         self._dict_bypop = {'no':0,'100':100,'1k':1e3,'100k':1e5,'1M':1e6,'pop':1.}
         self._listwhat = [ 'standard', 'daily', 'weekly']
         self._listoutput = ['pandas','geopandas','list', 'dict', 'array']  # first one is default for get
-        self._listvisu = ['bokeh', 'folium', 'seaborn']
+        self._listvisu = ['bokeh', 'folium', 'seaborn','mplt']
         self._listhist = ['bylocation','byvalue','pie']
         self._listplot = ['date','menulocation','versus','spiral','yearly']
         self._listmaplabel = ['text','textinteger','spark','spiral','label%','log','unsorted','exploded','dense']
@@ -79,6 +79,7 @@ class Front:
         self._whom = ''
         self.vis = 'bokeh'
         self._cocoplot = None
+
 
     def setvisu(self,visu):
         vis=['bokeh','mplt','ascii', 'seaborn']

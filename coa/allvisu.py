@@ -28,7 +28,6 @@ import pandas as pd
 import geopandas as gpd
 import numpy as np
 import seaborn as sns
-import matplotlib.pyplot as plt
 from collections import defaultdict
 import itertools
 import json
@@ -2703,7 +2702,7 @@ class AllVisu:
     @decowrapper
     def pycoa_pairplot_seaborn(self, input, input_field, **kwargs):
         """
-        Create a seaborn pairplot 
+        Create a seaborn pairplot
         """
         # On inclut que les premiers 24 pays uniques
         top_countries = input['where'].unique()[:MAXCOUNTRIESDISPLAYED]
@@ -2757,4 +2756,3 @@ class AllVisu:
         plt.text(0, data_pivot.shape[0] + 1, f'Total: {total}', fontsize=12)
         # Afficher la heatmap
         plt.show()
-

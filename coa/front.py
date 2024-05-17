@@ -82,7 +82,7 @@ class Front:
 
 
     def setvisu(self,visu):
-        vis=['bokeh','mplt','ascii', 'seaborn']
+        vis=self._listvisu
         if visu not in vis:
             raise CoaError("Sorry but " + visu + " visualisation isn't implemented ")
         else:
@@ -694,7 +694,6 @@ class Front:
                            = label%, label are in %
                            = exploded/dense, when available exploded/dense map geometry (for USA & FRA sor far)
             """
-            visu = kwargs.get('visu', self.listvisu()[0])
             input = kwargs.get('input')
             input_field = kwargs.get('input_field')
             if not input.empty:
@@ -736,7 +735,6 @@ class Front:
     @chartsinput_deco
     @decomap
     def figuremap(self,input,input_field,**kwargs):
-        visu = kwargs.get('visu', self.listvisu()[0])
         dateslider = kwargs.get('dateslider', None)
         maplabel = kwargs.get('maplabel', None)
         if visu == 'bokeh':
@@ -753,9 +751,9 @@ class Front:
     @chartsinput_deco
     @decomap
     def map(self,input,input_field,**kwargs):
-        visu = kwargs.get('visu', self.listvisu()[0])
         dateslider = kwargs.get('dateslider', None)
         maplabel = kwargs.get('maplabel', None)
+        visu = self.getvisu()
         if visu == 'bokeh':
             if maplabel:
                 if 'spark' in maplabel or 'spiral' in maplabel:

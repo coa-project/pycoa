@@ -35,7 +35,7 @@ class Display(object):
        '''
         Visualization seter
        '''
-       vis=['bokeh','mplt','ascii', 'seaborn']
+       vis=['bokeh','mplt','folium', 'seaborn']
        if visu not in vis:
             raise CoaError("Visualisation "+ visu + " not implemented setting problem. Please contact support@pycoa.fr")
        else: 
@@ -106,6 +106,8 @@ class Display(object):
            return self.codisp.pycoa_heatmap_seaborn(input, input_field, **kwargs)
        elif self.visu == 'mplt':
             return self.codisp.pycoa_mpltmap(input,input_field,**kwargs)
+       elif self.visu == 'folium':
+            return self.codisp.pycoa_mapfolium(input,input_field,**kwargs)
        else:
             print('Not implemented !!')
 

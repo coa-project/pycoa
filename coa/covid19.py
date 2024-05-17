@@ -100,13 +100,6 @@ class DataBase(object):
         return self.where_geodescription
 
    @staticmethod
-   def getlistallkargs():
-       listallkargs = ['where', 'what', 'which', 'whom','reload','when', 'input', 'input_field','output',\
-            'title','typeofplot','typeofhist','bins','visu','tile','dateslider','maplabel','option',\
-            'mode','guideline','bypop', 'plot_width','plot_height','textcopyright','cursor_date']
-       return sorted(listallkargs)
-
-   @staticmethod
    def factory(**kwargs):
        '''
         Return an instance to DataBase and to Display methods
@@ -114,7 +107,6 @@ class DataBase(object):
        '''
        db_name = kwargs.get('db_name')
        reload = kwargs.get('reload', True)
-       visu = kwargs.get('visu', True)
 
        path = ".cache/"
        if not os.path.exists(path):
@@ -212,7 +204,6 @@ class DataBase(object):
         wallname = None
         optionskipped=False
         othersinputfieldpandas=pd.DataFrame()
-        kwargs_test(kwargs,DataBase.getlistallkargs(),'Bad args used in the get_stats() function.')
         if 'where' not in kwargs or kwargs['where'] is None.__class__ or kwargs['where'] == None:
             #if self.dbfullinfo.get_dblistdico(self.db)[0] == 'WW':
             #    kwargs['where'] = self.dbfullinfo.get_dblistdico(self.db)[2]

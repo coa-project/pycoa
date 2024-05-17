@@ -75,6 +75,9 @@ class Front:
         self._listplot = ['date','menulocation','versus','spiral','yearly']
         self._listmaplabel = ['text','textinteger','spark','spiral','label%','log','unsorted','exploded','dense']
         self._listoption = ['nonneg', 'nofillnan', 'smooth7', 'sumall']
+        self._listallkargs = ['where', 'what', 'which', 'whom','reload','when', 'input', 'input_field','output',\
+             'title','typeofplot','typeofhist','bins','tile','dateslider','maplabel','option',\
+             'mode','guideline','bypop', 'plot_width','plot_height','textcopyright','cursor_date']
         self._db = ''
         self._whom = ''
         self.vis = 'bokeh'
@@ -173,6 +176,7 @@ class Front:
          Default is no option.
         """
         return self._listoption
+
     # ----------------------------------------------------------------------
     # --- listallkargs() -----------------------------------------------------
     # ----------------------------------------------------------------------
@@ -180,7 +184,7 @@ class Front:
         """Return the list of currently avalailable kargs
         """
 
-        return coco.DataBase.getlistallkargs()
+        return self._listallkargs()
     # ----------------------------------------------------------------------
     # --- listtile() -------------------------------------------------------
     # ----------------------------------------------------------------------
@@ -390,9 +394,7 @@ class Front:
             if self._db == '':
                 self._db, self._cocoplot = coco.DataBase.factory(db_name = self._whom)
 
-            kwargs_test(kwargs,
-                        coco.DataBase.getlistallkargs(),
-                        'Bad args used in the pycoa function.')
+                kwargs_test(kwargs,self._listallkargs,'Bad args used ! please check your '+kwargs)
 
             where = kwargs.get('where', None)
             which = kwargs.get('which', None)

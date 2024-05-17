@@ -151,7 +151,6 @@ class AllVisu:
                             'guideline':[False,True],\
                             'bins':10,\
                             'resumetype':['spiral','spark'],\
-                            'visu':['bokeh','folium'],\
                             'what':['standard', 'daily', 'weekly'],\
                             'which':None,\
                             'option':['nonneg', 'nofillnan', 'smooth7', 'sumall'],\
@@ -2545,7 +2544,7 @@ class AllVisu:
         df = pd.pivot_table(input,index='date', columns='where', values=input_field)
         for col in loc:
             ax=plt.plot(df.index, df[col])
-        plt.legend(loc, bbox_to_anchor=(1.02, 1), loc='upper left')
+        plt.legend(loc)
         return ax
 
     @decowrapper
@@ -2646,20 +2645,15 @@ class AllVisu:
         top_countries = input['where'].unique()[:MAXCOUNTRIESDISPLAYED]
         filtered_input = input[input['where'].isin(top_countries)]
         # Créer le graphique
-        sns.set_theme(style="whitegrid")
         plt.figure(figsize=(10, 6))
-        sns.lineplot(data=filtered_input, x='date', y=input_field, hue='where')
-        title = f"Graphique de {input_field}"
-        if 'where' in kwargs:
-            title += f" - {kwargs['where']}"
-        plt.title(title)
+        sns.lineplot(data=filtered_input, x='date', y=input_field, marker='o', hue='where')
+        plt.title(f"Graphique de {input_field} à {input['where'].iloc[0]}", )
         plt.xlabel('Date')
         plt.ylabel(input_field)
         plt.xticks(rotation=45)
-        #permet de placer la légend 4% à droite
-        plt.legend(bbox_to_anchor=(1.04, 1))
+        #permet de placer la légend 5% à gauche
+        plt.legend(bbox_to_anchor=(1.05, 1))
         plt.show()
-
 
     ######################
     ######SEABORN HIST VERTICALE#########
@@ -2671,24 +2665,14 @@ class AllVisu:
         # On inclut que les premiers 24 pays uniques
         top_countries = input['where'].unique()[:MAXCOUNTRIESDISPLAYED]
         filtered_input = input[input['where'].isin(top_countries)]
-
-        filtered_input = (filtered_input.sort_values('date')
-                  .drop_duplicates('where', keep='last')    #garde le last en terme de date
-                  .drop_duplicates(['where', input_field])  #quand une ligne avec where et input est pareil on drop
-                  .sort_values(by=input_field, ascending=False) #trier
-                  .reset_index(drop=True))
         # Créer le graphique
         sns.set_theme(style="whitegrid")
         plt.figure(figsize=(14, 7))
         sns.barplot(data=filtered_input, x='where', y=input_field, palette="viridis")
-        
-        title = f"Histogramme vertical de {input_field}"
-        if 'where' in kwargs:
-            title += f" - {kwargs['where']}"
-        plt.title(title)
+        plt.title(f"Histogramme vertical de {input_field} à {input['where'].iloc[0]}", )
         plt.xlabel('')  # Suppression de l'étiquette de l'axe x
         plt.ylabel(input_field)
-        plt.xticks(rotation=70, ha='center')  # Rotation à 70 degrés et alignement central
+        plt.xticks(rotation=45)
         plt.show()
 
 
@@ -2701,22 +2685,11 @@ class AllVisu:
         # On inclut que les premiers 24 pays uniques
         top_countries = input['where'].unique()[:MAXCOUNTRIESDISPLAYED]
         filtered_input = input[input['where'].isin(top_countries)]
-
-        filtered_input = (filtered_input.sort_values('date')
-                  .drop_duplicates('where', keep='last')    #garde le last en terme de date
-                  .drop_duplicates(['where', input_field])  #quand une ligne avec where et input est pareil on drop
-                  .sort_values(by=input_field, ascending=False) #trier
-                  .reset_index(drop=True))
-
         # Créer le graphique
         sns.set_theme(style="whitegrid")
         plt.figure(figsize=(14, 7))
         sns.barplot(data=filtered_input, x=input_field, y='where', palette="viridis", ci=None)
-        title = f"Histogramme horizontal de {input_field}"
-        if 'where' in kwargs:
-            title += f" - {kwargs['where']}"
-        plt.title(title)
-
+        plt.title(f"Histogramme horizontal de {input_field} à {kwargs['where']}", )
         plt.xlabel(input_field)
         plt.ylabel('')
         plt.xticks(rotation=45)
@@ -2731,9 +2704,6 @@ class AllVisu:
         # On inclut que les premiers 24 pays uniques
         top_countries = input['where'].unique()[:MAXCOUNTRIESDISPLAYED]
         filtered_input = input[input['where'].isin(top_countries)]
-
-        filtered_input = filtered_input.sort_values(by=input_field, ascending=False)
-
         # Créer le graphique
         sns.set_theme(style="whitegrid")
         plt.figure(figsize=(14, 7))

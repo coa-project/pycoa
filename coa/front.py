@@ -183,8 +183,7 @@ class Front:
     def listallkargs(self,):
         """Return the list of currently avalailable kargs
         """
-
-        return self._listallkargs()
+        return self._listallkargs
     # ----------------------------------------------------------------------
     # --- listtile() -------------------------------------------------------
     # ----------------------------------------------------------------------

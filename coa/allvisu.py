@@ -162,6 +162,7 @@ class AllVisu:
         self.options_charts = [ 'bins']
         self.options_front = ['where','option','which','what','visu']
         self.available_tiles = ['openstreet','esri','stamen']
+        self.tile = self.available_tiles[0]
         self.available_modes = ['mouse','vline','hline']
         self.uptitle, self.subtitle = ' ',' '
 
@@ -380,6 +381,12 @@ class AllVisu:
             kwargs['title'] = title+title_temporal
             return func(self,input, input_field, **kwargs)
         return wrapper
+
+    def set_tile(self,tile):
+        if tile in self.available_tiles:
+            self.tile = tile
+        else:
+            raise CoaTypeError('Don\'t know the tile you want. So far:' + str(self.available_tiles))
 
     ''' FIGURE COMMUN FOR ALL Bokeh Figure'''
     def standardfig(self, **kwargs):
@@ -952,7 +959,7 @@ class AllVisu:
         @wraps(func)
         def inner_hm(self, input = None, input_field = None, **kwargs):
 
-            tile = kwargs.get('tile', self.dvisu_default['tile'])
+            tile = self.gettile()
 
             maplabel = kwargs.get('maplabel', None)
             if maplabel :
@@ -1003,7 +1010,6 @@ class AllVisu:
                         geopdwd.loc[:,'geometry'] = geopdwd.clustername.map(geodic)
                     else:
                         geopdwd = pd.merge(geopdwd, self.kindgeo, on='where')
-                    kwargs['tile'] = tile
                     '''
                     if self.iso3country in ['FRA','USA']:
                         geo = copy.deepcopy(self.geo)
@@ -1014,16 +1020,13 @@ class AllVisu:
                                 if maplabel:
                                     if 'dense' in maplabel:
                                         geo.set_dense_geometry()
-                                        kwargs.pop('tile')
                                     elif 'exploded' in maplabel:
                                         geo.set_exploded_geometry()
-                                        kwargs.pop('tile')
                                     else:
                                         print('don\'t know ')
                                 else:
                                     if any([len(i)==3 for i in geopdwd.codelocation.unique()]):
                                         geo.set_dense_geometry()
-                                        kwargs.pop('tile')
                             else:
                                 geo.set_main_geometry()
                                 d = {}
@@ -1704,8 +1707,7 @@ class AllVisu:
                          if [dd/mm/yyyy:] up to max date
         '''
         title = kwargs.get('title', None)
-        tile =  kwargs.get('tile', self.dvisu_default['tile'])
-        tile = AllVisu.convert_tile(tile, 'folium')
+        tile = AllVisu.convert_tile(self.getitle(), 'folium')
         maplabel = kwargs.get('maplabel',self.dvisu_default['maplabel'])
         plot_width = kwargs.get('plot_width',self.dfigure_default['plot_width'])
         plot_height = kwargs.get('plot_height',self.dfigure_default['plot_height'])
@@ -1870,7 +1872,7 @@ class AllVisu:
         def innerdecomap(self, geopdwd, geopdwd_filtered,**kwargs):
             title = kwargs.get('title', None)
             maplabel = kwargs.get('maplabel',self.dvisu_default['maplabel'])
-            tile =  kwargs.get('tile', None)
+            tile=self.gettile()
             if tile:
                 tile = AllVisu.convert_tile(tile, 'bokeh')
             uniqloc = list(geopdwd_filtered.clustername.unique())
@@ -1979,7 +1981,6 @@ class AllVisu:
                          when format [dd/mm/yyyy : dd/mm/yyyy]
                          if [:dd/mm/yyyy] min date up to
                          if [dd/mm/yyyy:] up to max date
-            - tile : tile
             - maplabel: False
         '''
         date_slider = kwargs['date_slider']
@@ -2187,7 +2188,6 @@ class AllVisu:
                          when format [dd/mm/yyyy : dd/mm/yyyy]
                          if [:dd/mm/yyyy] min date up to
                          if [dd/mm/yyyy:] up to max date
-            - tile : tile
             - maplabel: False
         '''
         standardfig.xaxis.visible = False
@@ -2213,8 +2213,8 @@ class AllVisu:
         standardfig.image_url(url='pimpmap', x='centroidx', y='centroidy',source=sourcemaplabel,anchor="center")
         return standardfig
     ######################
-    def tiles_list(self):
-        return self.available_tiles
+    def gettile(self):
+        return self.tile
     ###################### BEGIN Static Methods ##################
     @staticmethod
     def convert_tile(tilename, which = 'bokeh'):

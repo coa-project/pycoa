@@ -76,7 +76,7 @@ class Front:
         self._listmaplabel = ['text','textinteger','spark','spiral','label%','log','unsorted','exploded','dense']
         self._listoption = ['nonneg', 'nofillnan', 'smooth7', 'sumall']
         self._listallkargs = ['where', 'what', 'which', 'whom','reload','when', 'input', 'input_field','output',\
-             'title','typeofplot','typeofhist','bins','tile','dateslider','maplabel','option',\
+             'title','typeofplot','typeofhist','bins','dateslider','maplabel','option',\
              'mode','guideline','bypop', 'plot_width','plot_height','textcopyright','cursor_date']
         self._db = ''
         self._whom = ''
@@ -84,7 +84,7 @@ class Front:
         self._cocoplot = None
 
 
-    def setvisu(self,visu):
+    def setvisu(self,visu,tile=None):
         vis=self._listvisu
         if visu not in vis:
             raise CoaError("Sorry but " + visu + " visualisation isn't implemented ")
@@ -92,6 +92,11 @@ class Front:
             self.vis = visu
             if not self._cocoplot is None:
                     self._cocoplot.setvisu(visu)
+            if  self.vis == 'bokeh':
+                if tile :
+                    self.tile = tile
+                    self._cocoplot.set_tile(tile)
+                    print('Tile has been set to:',tile)
             print('Visu has been set to ', visu)
 
     def getvisu(self,):
@@ -191,7 +196,7 @@ class Front:
         """Return the list of currently avalailable tile option for map()
          Default is the first one.
         """
-        return self._cocoplot.tiles_list()
+        return self._cocoplot.getavailable_tiles()
     # ----------------------------------------------------------------------
     # --- listwhich() ------------------------------------------------------
     # ----------------------------------------------------------------------

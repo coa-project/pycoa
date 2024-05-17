@@ -47,6 +47,12 @@ class Display(object):
        '''
        return self.visu
    
+   def set_tile(self,tile):
+       return self.codisp.set_tile(tile)
+
+   def getavailable_tiles(self,):
+       return self.codisp.available_tiles 
+   
    def pycoa_date_plot(self,input, input_field,**kwargs):  
        if self.visu == 'bokeh':
             return self.codisp.pycoa_date_plot(input, input_field,**kwargs)

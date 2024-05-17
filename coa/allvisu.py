@@ -2666,6 +2666,12 @@ class AllVisu:
         # On inclut que les premiers 24 pays uniques
         top_countries = input['where'].unique()[:MAXCOUNTRIESDISPLAYED]
         filtered_input = input[input['where'].isin(top_countries)]
+
+        filtered_input = (filtered_input.sort_values('date')
+                  .drop_duplicates('where', keep='last')    #garde le last en terme de date
+                  .drop_duplicates(['where', input_field])  #quand une ligne avec where et input est pareil on drop
+                  .sort_values(by=input_field, ascending=False) #trier
+                  .reset_index(drop=True))
         # Créer le graphique
         sns.set_theme(style="whitegrid")
         plt.figure(figsize=(14, 7))
@@ -2673,7 +2679,7 @@ class AllVisu:
         plt.title(f"Histogramme vertical de {input_field} à {input['where'].iloc[0]}", )
         plt.xlabel('')  # Suppression de l'étiquette de l'axe x
         plt.ylabel(input_field)
-        plt.xticks(rotation=45)
+        plt.xticks(rotation=70, ha='center')  # Rotation à 90 degrés et alignement central
         plt.show()
 
 
@@ -2686,6 +2692,14 @@ class AllVisu:
         # On inclut que les premiers 24 pays uniques
         top_countries = input['where'].unique()[:MAXCOUNTRIESDISPLAYED]
         filtered_input = input[input['where'].isin(top_countries)]
+
+        filtered_input = (filtered_input.sort_values('date')
+                  .drop_duplicates('where', keep='last')    #garde le last en terme de date
+                  .drop_duplicates(['where', input_field])  #quand une ligne avec where et input est pareil on drop
+                  .sort_values(by=input_field, ascending=False) #trier
+                  .reset_index(drop=True))
+
+        print(filtered_input)
         # Créer le graphique
         sns.set_theme(style="whitegrid")
         plt.figure(figsize=(14, 7))
@@ -2705,6 +2719,9 @@ class AllVisu:
         # On inclut que les premiers 24 pays uniques
         top_countries = input['where'].unique()[:MAXCOUNTRIESDISPLAYED]
         filtered_input = input[input['where'].isin(top_countries)]
+
+        filtered_input = filtered_input.sort_values(by=input_field, ascending=False)
+
         # Créer le graphique
         sns.set_theme(style="whitegrid")
         plt.figure(figsize=(14, 7))

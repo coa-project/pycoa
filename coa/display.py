@@ -50,28 +50,30 @@ class Display(object):
    def pycoa_date_plot(self,input, input_field,**kwargs):  
        if self.visu == 'bokeh':
             return self.codisp.pycoa_date_plot(input, input_field,**kwargs)
-       elif self.visu == 'seaborn':
-            return self.codisp.pycoa_date_plot_seaborn(input, input_field, **kwargs)
        elif self.visu == 'mplt':
           return self.codisp.pycoa_mpltdate_plot(input,input_field,**kwargs)
+       elif self.visu == 'seaborn':
+            return self.codisp.pycoa_date_plot_seaborn(input, input_field, **kwargs)
        else:
             print('Not implemented !!')
 
-   def pycoa_spiral_plot(self, input, input_field,**kwargs):
-       return self.codisp.pycoa_spiral_plot(**kwargs)
-
-   def pycoa_scrollingmenu(self,input, input_field,**kwargs):
-       return self.codisp.pycoa_scrollingmenu(input, input_field,**kwargs)
-   
    def pycoa_yearly_plot(self,input, input_field,**kwargs):
-       return self.codisp.pycoa_yearly_plot(input, input_field,**kwargs)
+       if self.visu == 'bokeh':
+            return self.codisp.pycoa_yearly_plot(input, input_field,**kwargs)
+       elif self.visu == 'mplt':
+            return self.codisp.pycoa_mpltyearly_plot(input, input_field,**kwargs)
+       else:
+            print('Not implemented !!')
    
    def pycoa_histo(self, input, input_field,**kwargs):
         if self.visu == 'bokeh':
-            print('byvalue')
             return self.codisp.pycoa_histo(input, input_field,**kwargs)
+        elif self.visu == 'mplt': 
+            return self.codisp.pycoa_mplthisto(input, input_field,**kwargs)
         elif self.visu == 'seaborn':
             return self.codisp.pycoa_hist_seaborn_verti(input, input_field, **kwargs)
+        else:
+            print('Not implemented !!')
 
    
    def pycoa_horizonhisto(self,input, input_field,**kwargs):
@@ -82,8 +84,7 @@ class Display(object):
         elif self.visu == 'mplt':
             return self.codisp.pycoa_mplthorizontalhisto(input,input_field,**kwargs)
         else:
-            print('Not implemented nimporte auoi!!')
-
+            print('Not implemented !!')
 
    def pycoa_pie(self, input, input_field,**kwargs):
        if self.visu == 'bokeh':
@@ -114,4 +115,9 @@ class Display(object):
    def tiles_list(self):
        return self.codisp.tiles_list()
 
+   def pycoa_spiral_plot(self, input, input_field,**kwargs):
+       return self.codisp.pycoa_spiral_plot(**kwargs)
+
+   def pycoa_scrollingmenu(self,input, input_field,**kwargs):
+       return self.codisp.pycoa_scrollingmenu(input, input_field,**kwargs)
    

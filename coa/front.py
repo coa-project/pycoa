@@ -336,7 +336,7 @@ class Front:
             if not isinstance(self._gi,coa.geo.GeoCountry):
                 self._gi=None
             else:
-                if self._gi.get_country() != _db.geo.get_country():
+                if self._gi.get_country() != self._db.geo.get_country():
                     self._gi=None
 
             if self._gi == None :
@@ -940,7 +940,7 @@ class Front:
                 else:
                     fig = self._cocoplot.pycoa_yearly_plot(input, input_field,**kwargs)
             else:
-                raise CoaKeyError('Unknown typeofplot value. Should be date, versus, menulocation or spiral.')
+                raise CoaKeyError('Unknown typeofplot value. Should be date, versus, menulocation, spiral or yearly.')
             return func(self,fig)
         return inner
 

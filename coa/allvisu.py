@@ -2549,7 +2549,7 @@ class AllVisu:
         return ax
 
     @decowrapper
-    def pycoa_yearly_plot(self,input,input_field,**kwargs):
+    def pycoa_mpltyearly_plot(self,input,input_field,**kwargs):
         '''
          matplotlib date yearly plot chart
          Max display defined by MAXCOUNTRIESDISPLAYED
@@ -2561,13 +2561,11 @@ class AllVisu:
         input.loc[:,'allyears']=input['date'].apply(lambda x : x.year)
         input['allyears'] = input['allyears'].astype(int)
         input.loc[:,'dayofyear']= input['date'].apply(lambda x : x.dayofyear)
-
+        print(input)
         fig, ax = plt.subplots(1, 1,figsize=(12, 8))
         loc = input['where'].unique()[:MAXCOUNTRIESDISPLAYED]
         df = pd.pivot_table(input,index='date', columns='where', values=input_field)
-        for col in loc:
-            ax=plt.plot(df.index, df[col])
-        plt.legend(loc)
+        ax=plt.plot(df.dayofyear, df[col])
         return ax
 
         return ax
@@ -2602,7 +2600,7 @@ class AllVisu:
         return ax
 
     @decowrapper
-    def pycoa_mplthorizontalhisto(self,input,input_field,**kwargs):
+    def pycoa_mplthisto(self,input,input_field,**kwargs):
         '''
         matplotlib horizon histo
         '''
@@ -2691,8 +2689,8 @@ class AllVisu:
         # Créer le graphique
         sns.set_theme(style="whitegrid")
         plt.figure(figsize=(14, 7))
-        sns.barplot(data=filtered_input, x=input_field, y='where', palette="viridis")
-        plt.title(f"Histogramme horizontal de {input_field} à {input['where'].iloc[0]}", )
+        sns.barplot(data=filtered_input, x=input_field, y='where', palette="viridis", ci=None)
+        plt.title(f"Histogramme horizontal de {input_field} à {kwargs['where']}", )
         plt.xlabel(input_field)
         plt.ylabel('')
         plt.xticks(rotation=45)

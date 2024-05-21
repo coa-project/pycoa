@@ -2697,13 +2697,16 @@ class AllVisu:
         filtered_input = input[input['where'].isin(top_countries)]
         # Créer le graphique
         plt.figure(figsize=(10, 6))
-        sns.lineplot(data=filtered_input, x='date', y=input_field, marker='o', hue='where')
-        plt.title(f"Graphique de {input_field} à {input['where'].iloc[0]}", )
+        sns.lineplot(data=filtered_input, x='date', y=input_field, hue='where')
+        title = f"Graphique de {input_field}"
+        if 'where' in kwargs:
+            title += f" - {kwargs['where']}"
+        plt.title(title)
         plt.xlabel('Date')
         plt.ylabel(input_field)
         plt.xticks(rotation=45)
-        #permet de placer la légend 5% à gauche
-        plt.legend(bbox_to_anchor=(1.05, 1))
+        #permet de placer la légend 4% à gauche
+        plt.legend(bbox_to_anchor=(1.04, 1))
         plt.show()
 
     ######################
@@ -2718,14 +2721,25 @@ class AllVisu:
         input_field = kwargs.get('input_field')
         top_countries = input['where'].unique()[:MAXCOUNTRIESDISPLAYED]
         filtered_input = input[input['where'].isin(top_countries)]
+
+        #Trier les valeurs
+        filtered_input = (filtered_input.sort_values('date')
+                  .drop_duplicates('where', keep='last')    #garde le last en terme de date
+                  .drop_duplicates(['where', input_field])  #quand une ligne avec where et input est pareil on drop
+                  .sort_values(by=input_field, ascending=False) #trier
+                  .reset_index(drop=True))
+        
         # Créer le graphique
         sns.set_theme(style="whitegrid")
         plt.figure(figsize=(14, 7))
         sns.barplot(data=filtered_input, x='where', y=input_field, palette="viridis")
-        plt.title(f"Histogramme vertical de {input_field} à {input['where'].iloc[0]}", )
+        title = f"Histogramme vertical de {input_field}"
+        if 'where' in kwargs:
+            title += f" - {kwargs['where']}"
+        plt.title(title)        
         plt.xlabel('')  # Suppression de l'étiquette de l'axe x
         plt.ylabel(input_field)
-        plt.xticks(rotation=45)
+        plt.xticks(rotation=70, ha='center')  # Rotation à 70 degrés et alignement central
         plt.show()
 
 
@@ -2740,11 +2754,22 @@ class AllVisu:
         input_field = kwargs.get('input_field')
         top_countries = input['where'].unique()[:MAXCOUNTRIESDISPLAYED]
         filtered_input = input[input['where'].isin(top_countries)]
+
+        #Trier les valeurs
+        filtered_input = (filtered_input.sort_values('date')
+                  .drop_duplicates('where', keep='last')    #garde le last en terme de date
+                  .drop_duplicates(['where', input_field])  #quand une ligne avec where et input est pareil on drop
+                  .sort_values(by=input_field, ascending=False) #trier
+                  .reset_index(drop=True))
+
         # Créer le graphique
         sns.set_theme(style="whitegrid")
         plt.figure(figsize=(14, 7))
         sns.barplot(data=filtered_input, x=input_field, y='where', palette="viridis", ci=None)
-        plt.title(f"Histogramme horizontal de {input_field} à {kwargs['where']}", )
+        title = f"Histogramme horizontal de {input_field}"
+        if 'where' in kwargs:
+            title += f" - {kwargs['where']}"
+        plt.title(title)        
         plt.xlabel(input_field)
         plt.ylabel('')
         plt.xticks(rotation=45)
@@ -2776,6 +2801,7 @@ class AllVisu:
         """
         Create a seaborn heatmap
         """
+        input_field = kwargs.get('input_field')
         # Convertir la colonne 'date' en datetime si nécessaire
         if not pd.api.types.is_datetime64_any_dtype(input['date']):
             input['date'] = pd.to_datetime(input['date'])

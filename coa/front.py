@@ -96,7 +96,7 @@ class Front:
         dateslider = kwargs.get('dateslider',False)
         maplabel =  kwargs.get('maplabel','text')
         guideline = kwargs.get('guideline','False')
-
+        title = kwargs.get('title',None)
         if vis not in self._listvisu:
             raise CoaError("Sorry but " + visu + " visualisation isn't implemented ")
         else:
@@ -112,8 +112,7 @@ class Front:
                     kwargs.pop(i)
                 except:
                     pass
-
-            self._cocoplot.setvisattr(kwargs)
+            #self._cocoplot.setvisattr(kwargs)
             f = self.gatenamefunction()
             if f == 'Charts Function Not Registered':
                 raise CoaError("Sorry but " + f + ". Did you draw it ? ")
@@ -316,7 +315,6 @@ class Front:
         By default, the listbase()[0] is the default base used in other
         functions.
         """
-        kwargs_test(kwargs,self._listchartkargs,'Bad args used ! Please check ')
         reload = kwargs.get('reload', True)
         visu = True
         if reload not in [0,1]:
@@ -452,7 +450,7 @@ class Front:
                     kwargs.pop(i)
                 except:
                     pass
-                    
+
             kwargs_test(kwargs,self._listchartkargs,'Bad args used ! please check ')
             where = kwargs.get('where', None)
             which = kwargs.get('which', None)

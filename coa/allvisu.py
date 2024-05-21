@@ -138,53 +138,43 @@ class AllVisu:
         self.geopan = gpd.GeoDataFrame()
         self.listfigs = []
 
-        self.listchartkargs = ['where', 'what', 'which','reload','when', 'input', 'input_field','output','typeofplot',\
-        'typeofhist','bins','option','bypop']
-
-        self.listviskargs = ['vis','tile','title','dateslider','maplabel','mode','guideline','plot_width','plot_height',\
-        'textcopyright','cursor_date']
-
-        self.dicokargs = {
-                            'textcopyright' : 'default',
-                            'plot_width' : width_height_default[0],\
-                            'plot_height' : width_height_default[1],\
-                            'title' :  None,\
-                            'modes' : ['mouse','vline','hline'],\
-                            'tiles' : ['openstreet','esri','stamen'],\
-                            'orientation':['horizontal','vertical'],\
-                            'cursor_date':[False,True],\
-                            'maplabel':['unsorted','sorted'],\
-                            'guideline':[False,True],\
-                            'bins':10,\
-                            'resumetype':['spiral','spark'],\
-                            'what':['standard', 'daily', 'weekly'],\
-                            'which':None,\
-                            'option':['nonneg', 'nofillnan', 'smooth7', 'sumall'],\
-                            'where':None,
-                            'typeofhist':['bylocation','byvalue','pie'],\
-                            'maplabel':['text','textinteger','spark','spiral','label%','log','unsorted','exploded','dense'],
-                         }
-
         self.setchartsfunctions = [method for method in dir(AllVisu) if callable(getattr(AllVisu, method)) and method.startswith("pycoa_") and not method.startswith("__")]
+        self.dicochartargs  = {
+                                'where':None,\
+                                'option':['nonneg', 'nofillnan', 'smooth7', 'sumall'],\
+                                'which':None,\
+                                'what':['standard', 'daily', 'weekly'],\
+                                'when':None,\
+                                'input':None,\
+                                'input_field':None,\
+                                'typeofhist':['bylocation','byvalue','pie'],\
+                                'bins':10,\
+                                'resumetype':['spiral','spark'],\
+                                'bypop':['100', '1k', '100k', '1M'],\
+                                'dateslider':[False,True]
+                                }
+        self.listchartkargs = list(self.dicochartargs.keys())
 
-        self.options_stats  = ['where','option','which','what','when','input','input_field']
-        self.options_charts = [ 'bins']
-
-        self.available_tiles = ['openstreet','esri','stamen']
-        self.tile = self.available_tiles[0]
-        self.available_modes = ['mouse','vline','hline']
-        self.uptitle, self.subtitle = ' ',' '
-
-        self.dfigure_default = {'plot_height':width_height_default[1] ,'plot_width':width_height_default[0],'title':None,'textcopyright':'default'}
-        self.dvisu_default = {'vis':'bokeh','mode':'mouse','tile':self.available_tiles[0],\
-        'orientation':'horizontal','cursor_date':None,'maplabel':None,'guideline':False,'dateslider':False,'title':None}
-
+        self.dicofigureargs = {
+                                'plot_height':width_height_default[1],\
+                                'plot_width':width_height_default[0],\
+                                'title':None,\
+                                'textcopyright':'default'
+                                }
+        self.dicovisuargs =  {
+                             'vis':['bokeh','folium','seaborn','mplt'],
+                             'mode':['mouse','vline','hline'],\
+                             'tile' : ['openstreet','esri','stamen'],\
+                             'orientation':['horizontal','vertical'],\
+                             'dateslider':[False,True],\
+                             'maplabel':['text','textinteger','spark','spiral','label%','log','unsorted','exploded','dense'],\
+                             'guideline':[False,True],\
+                             'title': None
+                             }
+        self.listviskargs = list(self.dicovisuargs.keys())
 
         self.when_beg = dt.date(1, 1, 1)
         self.when_end = dt.date(1, 1, 1)
-
-        self.alloptions =  self.options_stats + self.options_charts + list(self.dfigure_default.keys()) +\
-                           list(self.dvisu_default.keys()) + ['resumetype']
 
         try:
             self.iso3country = self.dbld[self.database_name][0]
@@ -193,37 +183,46 @@ class AllVisu:
         except:
             pass
 
-        self.dicovisattr = {}
+        self.dchartkargs = {}
+        self.dvisukargs = {}
+        self.uptitle, self.subtitle = ' ',' '
 
-
-    def setvisattr(self,d_attr):
+    def splitetattr(self,d_attr):
         '''
-        set vis attribu getter, take a dico in input
-        return a dico vis attr element
+        split input dico into dico oriented chart and a dico oriented visu
         '''
         if isinstance(d_attr,dict):
             for k,v in d_attr.items():
-                if k not in list(self.dicovisattr.keys()):
-                    self.dicovisattr[k]=v
+                if k in self.listchartkargs:
+                    self.dchartkargs[k]=v
+                elif k in self.listvisukargs :
+                    self.dvisukargs[k]=v
+                else:
+                    CoaTypeError(" That's weird ... check your arugments")
         else:
             raise CoaTypeError(d_attr+" must be a dico")
 
-    def getvisattr(self):
+    def userchartskargs(self):
         '''
-        get vis attribu getter
+        get dico chart kargs
         '''
-        return self.dicovisattr
+        return self.dchartkargs
+
+    def uservisukargs(self):
+      '''
+      get dico visu kargs
+      '''
+      return self.dvisukargs
 
     def optionvisattr(self,):
         '''
         Return a dict of list vis attr
-        if vis attr stipulated using setvisattr methode keep it
+            if vis attr stipulated using setvisattr methode keep it
         else add the default one
         '''
-        if self.getvisattr():
-            for k,v in self.getvisattr().items():
-                self.dvisu_default[k] = v
-        return self.dvisu_default
+        for k,v in self.dicovisuargs.items():
+                self.dicovisuargs[k] = v
+        return self.dicovisuargs
 
 
     ''' WRAPPER COMMUN FOR ALL'''
@@ -244,11 +243,18 @@ class AllVisu:
                 raise CoaTypeError(input + 'Must be a pandas, with pycoa structure !')
 
             kwargs_test(kwargs, self.listchartkargs, 'Bad args used in the display function.')
-            when = kwargs.get('when', None)
+
             input = kwargs.get('input')
-            which = kwargs.get('which', input.columns[2])
             input_field = kwargs.get('input_field')
-            tile = kwargs.get('tile', self.dvisu_default['tile'])
+            which = kwargs.get('which', input.columns[2])
+            when = kwargs.get('when', None)
+            option = kwargs.get('option', None)
+            bins = kwargs.get('bins', self.dicochartargs['bins'])
+
+            tile = kwargs.get('tile', self.dicovisuargs['tile'])
+            titlesetted = kwargs.get('title', self.dicovisuargs['title'])
+            maplabel = kwargs.get('maplabel', self.dicovisuargs['maplabel'])
+
             if isinstance(which,list):
                 which = input.columns[2]
             if input_field and 'cur_' in input_field:
@@ -270,11 +276,6 @@ class AllVisu:
             if type(input)==gpd.geodataframe.GeoDataFrame:
                self.pycoageopandas = True
 
-            option = kwargs.get('option', None)
-            bins = kwargs.get('bins', 10)
-            title = kwargs.get('title', None)
-            maplabel = kwargs.get('maplabel', None)
-
             if maplabel and 'unsorted' in maplabel:
                 pass
             else:
@@ -292,11 +293,11 @@ class AllVisu:
             input = input.copy()
             if not 'colors' in input.columns:
                 input.loc[:,'colors'] = input['clustername'].map(dico_colors)#(pd.merge(input, country_col, on='where'))
-
             if not isinstance(input_field, list):
                   input_field = [input_field]
             else:
                   input_field = input_field
+
             col2=which
             when_beg = input[[col2,'date']].date.min()
             when_end = input[[col2,'date']].date.max()
@@ -366,12 +367,6 @@ class AllVisu:
                 else:
                     titlefig = whichtitle + ', cumulative'+ title_option
 
-            if title:
-                title = title
-            else:
-                title  = titlefig
-            self.uptitle = title
-
             textcopyright = kwargs.get('textcopyright', None)
             if textcopyright:
                 textcopyright = '©pycoa.fr ' + textcopyright + title_temporal
@@ -380,49 +375,45 @@ class AllVisu:
                 textcopyright = '©pycoa.fr data from: {}'.format(self.database_name)+' '+title_temporal
 
             self.subtitle = textcopyright
-            kwargs['title'] = title+title_temporal
+            if titlesetted:
+                title = titlesetted + title_temporal
+                self.uptitle = title
+                titlefig = titlesetted
+            else:
+                title = title_temporal
+                self.uptitle = title
+                titlefig = title
+            kwargs['title'] = title
             kwargs['input'] = input
             return func(self,**kwargs)
         return wrapper
 
     def set_tile(self,tile):
-        if tile in self.available_tiles:
+        if tile in list(self.dicovisuargs['tile']):
             self.tile = tile
         else:
-            raise CoaTypeError('Don\'t know the tile you want. So far:' + str(self.available_tiles))
+            raise CoaTypeError('Don\'t know the tile you want. So far:' + str(list(self.dicovisuargs['tile'])))
 
     ''' FIGURE COMMUN FOR ALL Bokeh Figure'''
     def standardfig(self, **kwargs):
         """
          Create a standard Bokeh figure, with pycoa.fr copyright, used in all the bokeh charts
          """
-        for k,v in self.dfigure_default.items():
-             if k not in kwargs.keys():
-                 kwargs[k] = v
-        for i in list(self.dvisu_default.keys())+self.options_stats:
-            try:
-                kwargs.pop(i)
-            except:
-                pass
+        textcopyright = kwargs.get('textcopyright',self.dicofigureargs['textcopyright'])
+        plot_width = kwargs.get('plot_width',self.dicofigureargs['plot_width'])
+        plot_height = kwargs.get('plot_height',self.dicofigureargs['plot_height'])
 
-        textcopyright = kwargs.get('textcopyright','default')
         if textcopyright  == 'default':
                 textcopyright = '©pycoa.fr (data from: {})'.format(self.database_name)
         else:
                 textcopyright = '©pycoa.fr ' + textcopyright
 
-        citation = Label(x=0.65 * kwargs['plot_width'] - len(textcopyright), y=0.01 * kwargs['plot_height'],
+        citation = Label(x=0.65 * plot_width - len(textcopyright), y=0.01 *plot_height,
                                           x_units='screen', y_units='screen',
                                           text_font_size='1.5vh', background_fill_color='white', background_fill_alpha=.75,
                                           text=textcopyright)
-        try:
-            kwargs.pop('textcopyright')
-            kwargs.pop('typeofplot')
-            kwargs.pop('typeofhist')
-            kwargs.pop('date_slider')
-        except:
-            pass
-        fig = figure(**kwargs, tools=['save', 'box_zoom,reset'], toolbar_location="right")
+
+        fig = figure(plot_width=plot_width,plot_height=plot_height, tools=['save', 'box_zoom,reset'], toolbar_location="right")
         #fig.add_layout(citation)
         fig.add_layout(Title(text=self.uptitle, text_font_size="10pt"), 'above')
         if 'innerdecomap' not in inspect.stack()[1].function:
@@ -478,10 +469,10 @@ class AllVisu:
         """
         @wraps(func)
         def inner_plot(self ,**kwargs):
-            vis = self.optionvisattr()
-            kwargs=dict(list(vis.items()) + list(kwargs.items()))
             input = kwargs.get('input')
             input_field = [kwargs.get('input_field')]
+            #vis = self.optionvisattr()
+            #kwargs=dict(list(vis.items()) + list(kwargs.items()))
 
             if 'where' in input.columns:
                 location_ordered_byvalues = list(
@@ -533,7 +524,7 @@ class AllVisu:
         - title = None
         - textcopyright = default
         - mode = mouse
-        - cursor_date = None if True
+        - dateslider = None if True
                 - orientation = horizontal
         - when : default min and max according to the inpude DataFrame.
                  Dates are given under the format dd/mm/yyyy.
@@ -541,11 +532,11 @@ class AllVisu:
                  if [:dd/mm/yyyy] min date up to
                  if [dd/mm/yyyy:] up to max date
         '''
-
+        input = kwargs.get('input')
         input_field = kwargs.get('input_field')
 
-        vis = self.optionvisattr()
-        kwargs=dict(list(vis.items()) + list(kwargs.items()))
+        #vis = self.optionvisattr()
+        #kwargs=dict(list(vis.items()) + list(kwargs.items()))
 
         if len(input_field) != 2:
             raise CoaTypeError('Two variables are needed to plot a versus chart ... ')
@@ -563,7 +554,7 @@ class AllVisu:
                           (input_field[0], '@{casesx}' + '{custom}'),
                           (input_field[1], '@{casesy}' + '{custom}')],
                 formatters={'where': 'printf', '@{casesx}': cases_custom, '@{casesy}': cases_custom,
-                            '@date': 'datetime'}, mode = kwargs['mode'],
+                            '@date': 'datetime'}, mode = mode,
                 point_policy="snap_to_data"))  # ,PanTool())
 
             for loc in input.clustername.unique():
@@ -603,7 +594,7 @@ class AllVisu:
         - textcopyright = default
         - mode = mouse
         - guideline = False
-        - cursor_date = None if True
+        - dateslider = None if True
                 - orientation = horizontal
         - when : default min and max according to the inpude DataFrame.
                  Dates are given under the format dd/mm/yyyy.
@@ -613,8 +604,12 @@ class AllVisu:
         '''
         input = kwargs.get('input')
         input_field = [kwargs.get('input_field')]
-        vis = self.optionvisattr()
-        kwargs=dict(list(vis.items()) + list(kwargs.items()))
+
+        mode = kwargs.get('mode',list(self.dicovisuargs['mode'])[0])
+        guideline = kwargs.get('guideline',list(self.dicovisuargs['guideline'])[0])
+        #vis = self.optionvisattr()
+        #kwargs=dict(list(vis.items()) + list(kwargs.items()))
+
         panels = []
         listfigs = []
         cases_custom = AllVisu.rollerJS()
@@ -662,9 +657,10 @@ class AllVisu:
                 label = r.name
                 tt = tooltips[i]
                 formatters = {'where': 'printf', '@date': 'datetime', '@name': 'printf'}
-                hover=HoverTool(tooltips = tt, formatters = formatters, point_policy = "snap_to_data", mode = kwargs['mode'], renderers=[r])  # ,PanTool())
+                hover=HoverTool(tooltips = tt, formatters = formatters, point_policy = "snap_to_data", mode = mode, renderers=[r])  # ,PanTool())
                 standardfig.add_tools(hover)
-                if vis['guideline']:
+
+                if guideline:
                     cross= CrosshairTool()
                     standardfig.add_tools(cross)
 
@@ -694,8 +690,8 @@ class AllVisu:
     @decowrapper
     @decoplot
     def pycoa_spiral_plot(self, **kwargs):
-        vis = self.optionvisattr()
-        kwargs=dict(list(vis.items()) + list(kwargs.items()))
+        #vis = self.optionvisattr()
+        #kwargs=dict(list(vis.items()) + list(kwargs.items()))
         panels = []
         listfigs = []
         input = kwargs.get('input')
@@ -790,7 +786,7 @@ class AllVisu:
         - textcopyright = default
         - mode = mouse
         - guideline = False
-        - cursor_date = None if True
+        - dateslider = None if True
                 - orientation = horizontal
         - when : default min and max according to the inpude DataFrame.
                  Dates are given under the format dd/mm/yyyy.
@@ -885,7 +881,7 @@ class AllVisu:
         - textcopyright = default
         - mode = mouse
         - guideline = False
-        - cursor_date = None if True
+        - dateslider = None if True
                 - orientation = horizontal
         - when : default min and max according to the inpude DataFrame.
                  Dates are given under the format dd/mm/yyyy.
@@ -996,11 +992,11 @@ class AllVisu:
             if 'map' in func.__name__:
                 kwargs['maplabel'] = maplabel
 
-            orientation = kwargs.get('orientation', self.dvisu_default['orientation'])
-            cursor_date = kwargs.get('cursor_date', None)
+            orientation = kwargs.get('orientation', list(self.dicovisuargs['orientation'])[0])
+            dateslider = kwargs.get('dateslider',list(self.dicovisuargs['dateslider'])[0])
             #if orientation:
             #    kwargs['orientation'] = orientation
-            #kwargs['cursor_date'] = kwargs.get('cursor_date',  self.dvisu_default['cursor_date'])
+            #kwargs['dateslider'] = kwargs.get('dateslider',  self.dvisu_default['dateslider'])
             if isinstance(input['where'].iloc[0],list):
                 input['rolloverdisplay'] = input['clustername']
                 input = input.explode('where')
@@ -1018,13 +1014,13 @@ class AllVisu:
 
                 started = geopdwd.date.min()
                 ended = geopdwd.date.max()
-                if cursor_date:
-                    date_slider = DateSlider(title = "Date: ", start = started, end = ended,
+                if dateslider:
+                    dateslider = DateSlider(title = "Date: ", start = started, end = ended,
                                          value = started, step=24 * 60 * 60 * 1000, orientation = orientation)
-                    #wanted_date = date_slider.value_as_datetime.date()
+                    #wanted_date = dateslider.value_as_datetime.date()
 
                 #if func.__name__ == 'pycoa_mapfolium' or func.__name__ == 'pycoa_map' or func.__name__ == 'innerdecomap' or func.__name__ == 'innerdecopycoageo':
-                if func.__name__ in ['pycoa_mapfolium','pycoa_map','pycoageo' ,'pycoa_pimpmap']:
+                if func.__name__ in ['pycoa_mapfolium','pycoa_map','pycoageo' ,'pycoa_pimpmap','pycoa_mpltmap']:
                     if isinstance(input['where'].iloc[0],list):
                         geom = self.kindgeo
                         geodic={}
@@ -1077,11 +1073,11 @@ class AllVisu:
                             new = pd.concat([new,perloc])
                         n += 1
                 geopdwd = new.reset_index(drop=True)
-            if cursor_date:
-                date_slider = date_slider
+            if dateslider:
+                dateslider = dateslider
             else:
-                date_slider = None
-            kwargs['date_slider'] = date_slider
+                dateslider = None
+            kwargs['dateslider'] = dateslider
             kwargs['geopdwd'] = geopdwd.sort_values(by=input_field, ascending = False).reset_index()
             return func(self, **kwargs)
         return inner_hm
@@ -1174,7 +1170,7 @@ class AllVisu:
                 axis_type_title = 'loglog'
 
             try:
-                kwargs.pop('date_slider')
+                kwargs.pop('dateslider')
             except:
                 pass
             standardfig = self.standardfig(x_axis_type=x_axis_type, y_axis_type=y_axis_type, **kwargs)
@@ -1214,14 +1210,14 @@ class AllVisu:
             input_field = kwargs['input_field']
             geopdwd['cases'] = geopdwd[input_field]
 
-            vis = self.optionvisattr()
-            kwargs=dict(list(vis.items()) + list(kwargs.items()))
+            #vis = self.optionvisattr()
+            #kwargs=dict(list(vis.items()) + list(kwargs.items()))
 
             geopdwd_filter = geopdwd.loc[geopdwd.date == self.when_end]
             geopdwd_filter = geopdwd_filter.reset_index(drop = True)
             geopdwd_filter['cases'] = geopdwd_filter[input_field]
-            cursor_date = kwargs['cursor_date']
-            date_slider = kwargs['date_slider']
+            dateslider = kwargs['dateslider']
+            dateslider = kwargs['dateslider']
             maplabel = kwargs['maplabel']
             my_date = geopdwd.date.unique()
             dico_utc = {i: DateSlider(value=i).value for i in my_date}
@@ -1259,7 +1255,7 @@ class AllVisu:
                 geopdwd_filter['right'] = geopdwd_filter['right'].apply(lambda x: 0 if x < 0 else x)
 
                 n = len(geopdwd_filter.index)
-                ymax = self.dfigure_default['plot_height']
+                ymax = self.dicofigureargs['plot_height']
 
                 geopdwd_filter['top'] = [ymax*(n-i)/n + 0.5*ymax/n   for i in range(n)]
                 geopdwd_filter['bottom'] = [ymax*(n-i)/n - 0.5*ymax/n for i in range(n)]
@@ -1288,7 +1284,7 @@ class AllVisu:
             min_value = min(input_filter['cases'])
             min_value_gt0 = min(input_filter[input_filter['cases'] >= 0]['cases'])
             panels = []
-            kwargs.pop('date_slider')
+            kwargs.pop('dateslider')
             for axis_type in self.ax_type:
                 standardfig = self.standardfig( x_axis_type = axis_type,  x_range = (1.05*min_value, 1.05 * max_value),**kwargs)
                 if maplabel and 'label%' in maplabel:
@@ -1320,18 +1316,18 @@ class AllVisu:
                     standardfig.plot_width = kwargs['plot_height']
                     standardfig.plot_height = kwargs['plot_height']
 
-                if date_slider:
-                    date_slider.width = int(0.8*plot_width)
+                if dateslider:
+                    dateslider.width = int(0.8*plot_width)
                     callback = CustomJS(args = dict(source = source,
                                                   source_filter = srcfiltered,
-                                                  date_slider = date_slider,
+                                                  dateslider = dateslider,
                                                   ylabel = standardfig.yaxis[0],
                                                   title = standardfig.title,
                                                   x_range = standardfig.x_range,
                                                   x_axis_type = axis_type,
                                                   figure = standardfig),
                             code = """
-                            var date_slide = date_slider.value;
+                            var date_slide = dateslider.value;
                             var dates = source.data['date_utc'];
                             var val = source.data['cases'];
                             var loc = source.data['clustername'];
@@ -1509,14 +1505,14 @@ class AllVisu:
 
                             source_filter.change.emit();
                         """)
-                    date_slider.js_on_change('value', callback)
+                    dateslider.js_on_change('value', callback)
                     # Set up Play/Pause button/toggle JS
                     date_list = pd.date_range(geopdwd.date.min(),geopdwd.date.max()-dt.timedelta(days=1),freq='d').to_list()
                     indexCDS = ColumnDataSource(dict(date=date_list))
-                    toggl_js = CustomJS(args=dict(date_slider=date_slider,indexCDS=indexCDS),code="""
+                    toggl_js = CustomJS(args=dict(dateslider=dateslider,indexCDS=indexCDS),code="""
                     // A little lengthy but it works for me, for this problem, in this version.
                         var check_and_iterate = function(date){
-                            var slider_val = date_slider.value;
+                            var slider_val = dateslider.value;
                             var toggle_val = cb_obj.active;
                             if(toggle_val == false) {
                                 cb_obj.label = '► Play';
@@ -1524,12 +1520,12 @@ class AllVisu:
                                 }
                             else if(slider_val == date[date.length - 1]) {
                                 cb_obj.label = '► Play';
-                                //date_slider.value = date[0];
+                                //dateslider.value = date[0];
                                 cb_obj.active = false;
                                 clearInterval(looop);
                                 }
                             else if(slider_val !== date[date.length - 1]){
-                                date_slider.value = date.filter((item) => item > slider_val)[0];
+                                dateslider.value = date.filter((item) => item > slider_val)[0];
                                 }
                             else {
                             clearInterval(looop);
@@ -1569,14 +1565,14 @@ class AllVisu:
                 panel = Panel(child = standardfig, title = axis_type)
                 panels.append(panel)
 
-            return func(self,srcfiltered, panels, date_slider, toggl)
+            return func(self,srcfiltered, panels, dateslider, toggl)
         return inner_decohistopie
 
     ''' VERTICAL HISTO '''
     @decowrapper
     @decohistomap
     @decohistopie
-    def pycoa_horizonhisto(self, srcfiltered, panels, date_slider,toggl):
+    def pycoa_horizonhisto(self, srcfiltered, panels, dateslider,toggl):
         '''
             -----------------
             Create 1D histogramme by location according to arguments.
@@ -1591,7 +1587,7 @@ class AllVisu:
             - title = None
             - textcopyright = default
             - mode = mouse
-            - cursor_date = None if True
+            - dateslider = None if True
                     - orientation = horizontal
             - when : default min and max according to the inpude DataFrame.
                          Dates are given under the format dd/mm/yyyy.
@@ -1628,8 +1624,8 @@ class AllVisu:
             panel = Panel(child = fig, title = panels[i].title)
             new_panels.append(panel)
         tabs = Tabs(tabs = new_panels)
-        if date_slider:
-                tabs = column(date_slider,tabs,toggl)
+        if dateslider:
+                tabs = column(dateslider,tabs,toggl)
         return tabs
 
     ''' PIE '''
@@ -1669,7 +1665,7 @@ class AllVisu:
     @decowrapper
     @decohistomap
     @decohistopie
-    def pycoa_pie(self, srcfiltered, panels, date_slider,toggl):
+    def pycoa_pie(self, srcfiltered, panels, dateslider,toggl):
         '''
             -----------------
             Create a pie chart according to arguments.
@@ -1684,7 +1680,7 @@ class AllVisu:
             - title = None
             - textcopyright = default
             - mode = mouse
-            - cursor_date = None if True
+            - dateslider = None if True
                     - orientation = horizontal
         '''
         standardfig = panels[0].child
@@ -1709,8 +1705,8 @@ class AllVisu:
 
         standardfig.add_layout(labels)
         standardfig.add_layout(labels2)
-        if date_slider:
-            standardfig = column(date_slider,standardfig)
+        if dateslider:
+            standardfig = column(dateslider,standardfig)
         return standardfig
 
     ''' MAP FOLIUM '''
@@ -1731,7 +1727,7 @@ class AllVisu:
             - title = None
             - textcopyright = default
             - mode = mouse
-            - cursor_date = None if True
+            - dateslider = None if True
                     - orientation = horizontal
             - when : default min and max according to the inpude DataFrame.
                          Dates are given under the format dd/mm/yyyy.
@@ -1740,10 +1736,10 @@ class AllVisu:
                          if [dd/mm/yyyy:] up to max date
         '''
         title=kwargs.get('title')
-        tile = AllVisu.convert_tile(kwargs.get('tile',self.dvisu_default['tile']), 'folium')
-        maplabel = kwargs.get('maplabel',self.dvisu_default['maplabel'])
-        plot_width = kwargs.get('plot_width',self.dfigure_default['plot_width'])
-        plot_height = kwargs.get('plot_height',self.dfigure_default['plot_height'])
+        tile = AllVisu.convert_tile(kwargs.get('tile',self.dicovisuargs['tile']), 'folium')
+        maplabel = kwargs.get('maplabel',self.dicovisuargs['maplabel'])
+        plot_width = kwargs.get('plot_width',self.dicofigureargs['plot_width'])
+        plot_height = kwargs.get('plot_height',self.dicofigureargs['plot_height'])
         geopdwd = kwargs.get('geopdwd')
         input_field = kwargs.get('input_field')
 
@@ -1906,14 +1902,13 @@ class AllVisu:
     def decomap(func):
         @wraps(func)
         def innerdecomap(self, geopdwd, geopdwd_filtered,**kwargs):
-            vis = self.optionvisattr()
-            kwargs=dict(list(vis.items()) + list(kwargs.items()))
+            #vis = self.optionvisattr()
+            #kwargs=dict(list(vis.items()) + list(kwargs.items()))
 
-            title = kwargs.get('title')
-            maplabel = kwargs.get('maplabel')
-            tile = self.get_tile()
-            if tile:
-                tile = AllVisu.convert_tile(tile, 'bokeh')
+            title = kwargs.get('title',self.dicovisuargs['title'])
+            maplabel = kwargs.get('maplabel',list(self.dicovisuargs['maplabel'])[0])
+            tile = kwargs.get('tile',list(self.dicovisuargs['tile'])[0])
+            tile = AllVisu.convert_tile(tile, 'bokeh')
             uniqloc = list(geopdwd_filtered.clustername.unique())
             dfLabel = pd.DataFrame()
             sourcemaplabel = ColumnDataSource(dfLabel)
@@ -1961,15 +1956,10 @@ class AllVisu:
                 sourcemaplabel = ColumnDataSource(dfLabel.drop(columns='geometry'))
             minx, miny, maxx, maxy =  geopdwd_filtered.total_bounds #self.boundary
 
-            kwargs['plot_height'] = self.dicokargs['plot_height']
-            kwargs['plot_width'] = kwargs['plot_height']
+
             x_range=(minx,maxx)
             y_range=(miny,maxy)
-            date_slider = kwargs['date_slider']
-            try:
-                kwargs.pop('date_slider')
-            except:
-                pass
+
             if func.__name__ == 'pycoa_pimpmap':
                 standardfig = self.standardfig(x_range=x_range, y_range=y_range, x_axis_type="mercator", y_axis_type="mercator",**kwargs,match_aspect=True)
             else:
@@ -1996,7 +1986,6 @@ class AllVisu:
             if self.dbld[self.database_name][0] == 'GBR' :
                 geopdwd = geopdwd.loc[~geopdwd.cases.isnull()]
                 geopdwd_filtered  = geopdwd_filtered.loc[~geopdwd_filtered.cases.isnull()]
-            kwargs['date_slider']=date_slider
             return func(self, geopdwd, geopdwd_filtered, sourcemaplabel, standardfig,**kwargs)
         return innerdecomap
 
@@ -2020,7 +2009,7 @@ class AllVisu:
             - title = None
             - textcopyright = default
             - mode = mouse
-            - cursor_date = None if True
+            - dateslider = None if True
                     - orientation = horizontal
             - when : default min and max according to the inpude DataFrame.
                          Dates are given under the format dd/mm/yyyy.
@@ -2029,11 +2018,11 @@ class AllVisu:
                          if [dd/mm/yyyy:] up to max date
             - maplabel: False
         '''
-        date_slider = kwargs['date_slider']
-        maplabel = kwargs.get('maplabel',self.dvisu_default['maplabel'])
+        dateslider = kwargs.get('dateslider',list(self.dicovisuargs['dateslider'])[0])
+        maplabel = kwargs.get('maplabel',list(self.dicovisuargs['maplabel'])[0])
         min_col, max_col, min_col_non0 = 3*[0.]
         try:
-            if date_slider:
+            if dateslider:
                 min_col, max_col = AllVisu.min_max_range(np.nanmin(geopdwd['cases']),
                                                          np.nanmax(geopdwd['cases']))
                 min_col_non0 = (np.nanmin(geopdwd.loc[geopdwd['cases']>0.]['cases']))
@@ -2063,7 +2052,7 @@ class AllVisu:
 
         standardfig.add_layout(color_bar, 'below')
         standardfig.add_layout(Title(text=self.subtitle, text_font_size="8pt", text_font_style="italic"), 'below')
-        if date_slider:
+        if dateslider:
             allcases_location, allcases_dates = pd.DataFrame(), pd.DataFrame()
             allcases_location = geopdwd.groupby('where')['cases'].apply(list)
             geopdwd_tmp = geopdwd.drop_duplicates(subset = ['where']).drop(columns = 'cases')
@@ -2074,11 +2063,11 @@ class AllVisu:
             sourcemaplabel.data['rolloverdisplay'] = sourcemaplabel.data['clustername']
 
             callback = CustomJS(args =  dict(source = geopdwd_tmp, source_filter = geopdwd_filtered,
-                                          date_sliderjs = date_slider, title=standardfig.title,
+                                          datesliderjs = dateslider, title=standardfig.title,
                                           color_mapperjs = color_mapper, maplabeljs = sourcemaplabel),
                         code = """
-                        var ind_date_max = (date_sliderjs.end-date_sliderjs.start)/(24*3600*1000);
-                        var ind_date = (date_sliderjs.value-date_sliderjs.start)/(24*3600*1000);
+                        var ind_date_max = (datesliderjs.end-datesliderjs.start)/(24*3600*1000);
+                        var ind_date = (datesliderjs.value-datesliderjs.start)/(24*3600*1000);
                         var new_cases = [];
                         var dict = {};
                         var iloop = source_filter.data['clustername'].length;
@@ -2115,7 +2104,7 @@ class AllVisu:
 
                         var tmp = title.text;
                         tmp = tmp.slice(0, -11);
-                        var dateconverted = new Date(date_sliderjs.value);
+                        var dateconverted = new Date(datesliderjs.value);
                         var dd = String(dateconverted.getDate()).padStart(2, '0');
                         var mm = String(dateconverted.getMonth() + 1).padStart(2, '0'); //January is 0!
                         var yyyy = dateconverted.getFullYear();
@@ -2130,14 +2119,14 @@ class AllVisu:
                         console.log(maplabeljs.data['cases']);
                         source_filter.change.emit();
                     """)
-            date_slider.js_on_change('value', callback)
+            dateslider.js_on_change('value', callback)
             # Set up Play/Pause button/toggle JS
             date_list = pd.date_range(geopdwd.date.min(),geopdwd.date.max()-dt.timedelta(days=1),freq='d').to_list()
             indexCDS = ColumnDataSource(dict(date=date_list))
-            toggl_js = CustomJS(args=dict(date_slider=date_slider,indexCDS=indexCDS),code="""
+            toggl_js = CustomJS(args=dict(dateslider=dateslider,indexCDS=indexCDS),code="""
             // A little lengthy but it works for me, for this problem, in this version.
                 var check_and_iterate = function(date){
-                    var slider_val = date_slider.value;
+                    var slider_val = dateslider.value;
                     var toggle_val = cb_obj.active;
                     if(toggle_val == false) {
                         cb_obj.label = '► Play';
@@ -2145,12 +2134,12 @@ class AllVisu:
                         }
                     else if(slider_val == date[date.length - 1]) {
                         cb_obj.label = '► Play';
-                        //date_slider.value = date[0];
+                        //dateslider.value = date[0];
                         cb_obj.active = false;
                         clearInterval(looop);
                         }
                     else if(slider_val !== date[date.length - 1]){
-                        date_slider.value = date.filter((item) => item > slider_val)[0];
+                        dateslider.value = date.filter((item) => item > slider_val)[0];
                         }
                     else {
                     clearInterval(looop);
@@ -2202,8 +2191,8 @@ class AllVisu:
         standardfig.add_tools(HoverTool(tooltips = tooltips,
         formatters = {'where': 'printf', 'cases': 'printf',},
         point_policy = "snap_to_data",callback=callback))  # ,PanTool())
-        if date_slider:
-            standardfig = column(date_slider, standardfig,toggl)
+        if dateslider:
+            standardfig = column(dateslider, standardfig,toggl)
         self.pycoageopandas = False
         return standardfig
 
@@ -2227,7 +2216,7 @@ class AllVisu:
             - title = None
             - textcopyright = default
             - mode = mouse
-            - cursor_date = None if True
+            - dateslider = None if True
                     - orientation = horizontal
             - when : default min and max according to the inpude DataFrame.
                          Dates are given under the format dd/mm/yyyy.
@@ -2587,12 +2576,14 @@ class AllVisu:
     def pycoa_mpltdate_plot(self,**kwargs):
         input = kwargs.get('input')
         input_field = kwargs.get('input_field')
+        title = kwargs.get('title')
         fig, ax = plt.subplots(1, 1,figsize=(12, 8))
         loc = input['where'].unique()[:MAXCOUNTRIESDISPLAYED]
         df = pd.pivot_table(input,index='date', columns='where', values=input_field)
         for col in loc:
             ax=plt.plot(df.index, df[col])
         plt.legend(loc)
+        plt.title(title)
         return ax
 
     @decowrapper
@@ -2672,10 +2663,10 @@ class AllVisu:
         from mpl_toolkits.axes_grid1 import make_axes_locatable
         fig, ax = plt.subplots(1, 1,figsize=(8, 12))
         plt.axis('off')
-        geopdwd=kwargs.get('geopdwd')
-        input_field=kwargs.get('input_field')
-        geopdwd = pd.merge(geopdwd, self.kindgeo, on='where')
-        geopdwd = gpd.GeoDataFrame(geopdwd)
+        geopdwd = kwargs.get('geopdwd')
+        input_field = kwargs.get('input_field')
+        #geopdwd = pd.merge(geopdwd, self.kindgeo, on='where')
+        geopdwd = gpd.GeoDataFrame(geopdwd.loc[geopdwd.date==geopdwd.date.max()])
         ax = geopdwd.plot(column=input_field, ax=ax,legend=True,
                                 legend_kwds={'label': input_field,
                                 'orientation': "horizontal","pad": 0.001})
@@ -2693,12 +2684,13 @@ class AllVisu:
         # On inclut que les premiers 24 pays uniques
         input = kwargs['input']
         input_field = kwargs['input_field']
+        title = kwargs.get('title')
         top_countries = input['where'].unique()[:MAXCOUNTRIESDISPLAYED]
         filtered_input = input[input['where'].isin(top_countries)]
         # Créer le graphique
         plt.figure(figsize=(10, 6))
         sns.lineplot(data=filtered_input, x='date', y=input_field, marker='o', hue='where')
-        plt.title(f"Graphique de {input_field} à {input['where'].iloc[0]}", )
+        plt.title(title)
         plt.xlabel('Date')
         plt.ylabel(input_field)
         plt.xticks(rotation=45)
@@ -2716,13 +2708,14 @@ class AllVisu:
         # On inclut que les premiers 24 pays uniques
         input = kwargs.get('input')
         input_field = kwargs.get('input_field')
+        title = kwargs.get('title')
         top_countries = input['where'].unique()[:MAXCOUNTRIESDISPLAYED]
         filtered_input = input[input['where'].isin(top_countries)]
         # Créer le graphique
         sns.set_theme(style="whitegrid")
         plt.figure(figsize=(14, 7))
         sns.barplot(data=filtered_input, x='where', y=input_field, palette="viridis")
-        plt.title(f"Histogramme vertical de {input_field} à {input['where'].iloc[0]}", )
+        plt.title(title)
         plt.xlabel('')  # Suppression de l'étiquette de l'axe x
         plt.ylabel(input_field)
         plt.xticks(rotation=45)
@@ -2738,13 +2731,14 @@ class AllVisu:
         # On inclut que les premiers 24 pays uniques
         input = kwargs.get('input')
         input_field = kwargs.get('input_field')
+        title = kwargs.get('title')
         top_countries = input['where'].unique()[:MAXCOUNTRIESDISPLAYED]
         filtered_input = input[input['where'].isin(top_countries)]
         # Créer le graphique
         sns.set_theme(style="whitegrid")
         plt.figure(figsize=(14, 7))
         sns.barplot(data=filtered_input, x=input_field, y='where', palette="viridis", ci=None)
-        plt.title(f"Histogramme horizontal de {input_field} à {kwargs['where']}", )
+        plt.title(title)
         plt.xlabel(input_field)
         plt.ylabel('')
         plt.xticks(rotation=45)

@@ -66,8 +66,6 @@ class Front:
     """
     def __init__(self,):
         self._listwhom = list(_db_list_dict.keys())
-        self._gi = coge.GeoInfo()
-        self._dict_bypop = {'no':0,'100':100,'1k':1e3,'100k':1e5,'1M':1e6,'pop':1.}
         self._listwhat = [ 'standard', 'daily', 'weekly']
         self._listoutput = ['pandas','geopandas','list', 'dict', 'array']  # first one is default for get
         self._listvisu = ['bokeh', 'folium', 'seaborn','mplt']
@@ -367,62 +365,6 @@ class Front:
         df = self._db.get_fulldb(**kwargs)
         return df
     # ----------------------------------------------------------------------
-    # --- Normalisation by pop input pandas return pandas whith by pop new column
-    # ---------------------------------------------------------------------
-    def normbypop(self, pandy, val2norm,bypop):
-        """
-            Return a pandas with a normalisation column add by population
-            * can normalize by '100', '1k', '100k' or '1M'
-        """
-        if pandy.empty:
-            raise CoaKeyError('Seems to be an empty field')
-        if isinstance(pandy['codelocation'].iloc[0],list):
-            pandy = pandy.explode('codelocation')
-
-        if self._db.db_world == True:
-            pop_field='population'
-            pandy = self._gi.add_field(input=pandy,field=pop_field,geofield='codelocation')
-        else:
-            if not isinstance(self._gi,coa.geo.GeoCountry):
-                self._gi=None
-            else:
-                if self._gi.get_country() != self._db.geo.get_country():
-                    self._gi=None
-
-            if self._gi == None :
-                self._gi = self._db.geo
-            pop_field='population_subregion'
-            if pop_field not in self._gi.get_list_properties():
-                raise CoaKeyError('The population information not available for this country. No normalization possible')
-
-            pandy=self._gi.add_field(input=pandy,field=pop_field,input_key='codelocation')
-
-        clust = pandy['clustername'].unique()
-        df = pd.DataFrame()
-        for i in clust:
-            pandyi = pandy.loc[ pandy['clustername'] == i ].copy()
-            pandyi.loc[:,pop_field] = pandyi.groupby('codelocation')[pop_field].first().sum()
-            if len(pandyi.groupby('codelocation')['codelocation'].first().tolist()) == 1:
-                cody = pandyi.groupby('codelocation')['codelocation'].first().tolist()*len(pandyi)
-            else:
-                cody = [pandyi.groupby('codelocation')['codelocation'].first().tolist()]*len(pandyi)
-            pandyi = pandyi.assign(codelocation=cody)
-            if df.empty:
-                df = pandyi
-            else:
-                df = pd.concat([df,pandyi])
-
-        df = df.drop_duplicates(['date','clustername'])
-        pandy = df
-
-        pandy=pandy.copy()
-        pandy[pop_field]=pandy[pop_field].replace(0., np.nan)
-        if bypop == 'pop':
-            pandy.loc[:,val2norm+' per total population']=pandy[val2norm]/pandy[pop_field]*self._dict_bypop[bypop]
-        else:
-            pandy.loc[:,val2norm+' per '+bypop + ' population']=pandy[val2norm]/pandy[pop_field]*self._dict_bypop[bypop]
-        return pandy
-    # ----------------------------------------------------------------------
     # --- chartsinput_deco(f)
     # ------  with wraps
     # ----------  wrapper(*args, **kwargs)
@@ -509,7 +451,7 @@ class Front:
                         pandy = pd.merge(pandy, tmp, on=['date','where'])
                     input_arg = pandy
                 if bypop != 'no':
-                    input_arg = self.normbypop(pandy,input_field,bypop)
+                    input_arg = self._db.normbypop(pandy,input_field,bypop)
                     if bypop=='pop':
                         input_field = input_field+' per total population'
                     else:
@@ -554,7 +496,7 @@ class Front:
                         val = what
                     else:
                         val = _listwhat[0]
-                    pandy = self.normbypop(pandy , val, bypop)
+                    pandy = self._db.normbypop(pandy , val, bypop)
                     if bypop=='pop':
                         input_field = input_field+' per total population'
                     else:

@@ -139,6 +139,8 @@ class AllVisu:
         self.listfigs = []
 
         self.setchartsfunctions = [method for method in dir(AllVisu) if callable(getattr(AllVisu, method)) and method.startswith("pycoa_") and not method.startswith("__")]
+        self._dict_bypop = {'no':0,'100':100,'1k':1e3,'100k':1e5,'1M':1e6,'pop':1.}
+
         self.dicochartargs  = {
                                 'where':None,\
                                 'option':['nonneg', 'nofillnan', 'smooth7', 'sumall'],\
@@ -148,10 +150,12 @@ class AllVisu:
                                 'input':None,\
                                 'input_field':None,\
                                 'typeofhist':['bylocation','byvalue','pie'],\
+                                'typeofplot':['date','menulocation','versus','spiral','yearly'],\
                                 'bins':10,\
                                 'resumetype':['spiral','spark'],\
-                                'bypop':['100', '1k', '100k', '1M'],\
-                                'dateslider':[False,True]
+                                'bypop':[self._dict_bypop.values()],\
+                                'dateslider':[False,True],\
+                                'output':['pandas','geopandas','list', 'dict', 'array']
                                 }
         self.listchartkargs = list(self.dicochartargs.keys())
 
@@ -214,17 +218,6 @@ class AllVisu:
       '''
       return self.dvisukargs
 
-    def optionvisattr(self,):
-        '''
-        Return a dict of list vis attr
-            if vis attr stipulated using setvisattr methode keep it
-        else add the default one
-        '''
-        for k,v in self.dicovisuargs.items():
-                self.dicovisuargs[k] = v
-        return self.dicovisuargs
-
-
     ''' WRAPPER COMMUN FOR ALL'''
     def decowrapper(func):
         '''
@@ -249,7 +242,7 @@ class AllVisu:
             which = kwargs.get('which', input.columns[2])
             when = kwargs.get('when', None)
             option = kwargs.get('option', None)
-            bins = kwargs.get('bins', self.dicochartargs['bins'])
+            #bins = kwargs.get('bins', self.dicochartargs['bins'])
 
             tile = kwargs.get('tile', self.dicovisuargs['tile'])
             titlesetted = kwargs.get('title', self.dicovisuargs['title'])
@@ -471,9 +464,6 @@ class AllVisu:
         def inner_plot(self ,**kwargs):
             input = kwargs.get('input')
             input_field = [kwargs.get('input_field')]
-            #vis = self.optionvisattr()
-            #kwargs=dict(list(vis.items()) + list(kwargs.items()))
-
             if 'where' in input.columns:
                 location_ordered_byvalues = list(
                     input.loc[input.date == self.when_end].sort_values(by=input_field, ascending=False)['clustername'].unique())
@@ -534,9 +524,6 @@ class AllVisu:
         '''
         input = kwargs.get('input')
         input_field = kwargs.get('input_field')
-
-        #vis = self.optionvisattr()
-        #kwargs=dict(list(vis.items()) + list(kwargs.items()))
 
         if len(input_field) != 2:
             raise CoaTypeError('Two variables are needed to plot a versus chart ... ')
@@ -607,8 +594,6 @@ class AllVisu:
 
         mode = kwargs.get('mode',list(self.dicovisuargs['mode'])[0])
         guideline = kwargs.get('guideline',list(self.dicovisuargs['guideline'])[0])
-        #vis = self.optionvisattr()
-        #kwargs=dict(list(vis.items()) + list(kwargs.items()))
 
         panels = []
         listfigs = []
@@ -690,8 +675,6 @@ class AllVisu:
     @decowrapper
     @decoplot
     def pycoa_spiral_plot(self, **kwargs):
-        #vis = self.optionvisattr()
-        #kwargs=dict(list(vis.items()) + list(kwargs.items()))
         panels = []
         listfigs = []
         input = kwargs.get('input')
@@ -1209,9 +1192,6 @@ class AllVisu:
             """
             input_field = kwargs['input_field']
             geopdwd['cases'] = geopdwd[input_field]
-
-            #vis = self.optionvisattr()
-            #kwargs=dict(list(vis.items()) + list(kwargs.items()))
 
             geopdwd_filter = geopdwd.loc[geopdwd.date == self.when_end]
             geopdwd_filter = geopdwd_filter.reset_index(drop = True)
@@ -1902,8 +1882,6 @@ class AllVisu:
     def decomap(func):
         @wraps(func)
         def innerdecomap(self, geopdwd, geopdwd_filtered,**kwargs):
-            #vis = self.optionvisattr()
-            #kwargs=dict(list(vis.items()) + list(kwargs.items()))
 
             title = kwargs.get('title',self.dicovisuargs['title'])
             maplabel = kwargs.get('maplabel',list(self.dicovisuargs['maplabel'])[0])

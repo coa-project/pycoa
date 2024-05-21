@@ -65,18 +65,19 @@ class Front:
     FrontEnd
     """
     def __init__(self,):
-        self._listwhom = list(_db_list_dict.keys())
-        self._listwhat = [ 'standard', 'daily', 'weekly']
-        self._listoutput = ['pandas','geopandas','list', 'dict', 'array']  # first one is default for get
-        self._listvisu = ['bokeh', 'folium', 'seaborn','mplt']
-        self._listhist = ['bylocation','byvalue','pie']
-        self._listplot = ['date','menulocation','versus','spiral','yearly']
-        self._listmaplabel = ['text','textinteger','spark','spiral','label%','log','unsorted','exploded','dense']
-        self._listoption = ['nonneg', 'nofillnan', 'smooth7', 'sumall']
-
         av = allvisu.AllVisu()
+        self._listwhom = list(_db_list_dict.keys())
+        self._listwhat = list(av.dicochartargs['what'])
+        self._listoutput = list(av.dicochartargs['output'])  # first one is default for get
+        self._listhist = list(av.dicochartargs['typeofhist'])
+        self._listplot = list(av.dicochartargs['typeofplot'])
+        self._listoption = list(av.dicochartargs['option'])
+
+        self._listmaplabel = list(av.dicovisuargs['maplabel'])
+        self._listvisu = list(av.dicovisuargs['vis'])
+
         self._listchartkargs = av.listchartkargs
-        self._listviskargs = av.listviskargs
+        self._dict_bypop = av._dict_bypop
 
         self._db = ''
         self._whom = ''
@@ -88,7 +89,6 @@ class Front:
         '''
             define visualation and associated option
         '''
-        kwargs_test(kwargs,self._listviskargs , 'Bad args used in the pycoa.saveoutput function.')
         vis = kwargs.get('vis','bokeh')
         tile = kwargs.get('tile','openstreet')
         dateslider = kwargs.get('dateslider',False)
@@ -103,7 +103,6 @@ class Front:
                 self.getkwargs().pop('output')
             if tile :
                 self._cocoplot.set_tile(tile)
-                print('Tile has been set to:',tile)
 
             for i in self._cocoplot.listchartkargs:
                 try:
@@ -393,7 +392,7 @@ class Front:
                 except:
                     pass
 
-            kwargs_test(kwargs,self._listchartkargs,'Bad args used ! please check ')
+            #kwargs_test(kwargs,self._listchartkargs,'Bad args used ! please check ')
             where = kwargs.get('where', None)
             which = kwargs.get('which', None)
             what = kwargs.get('what', None)
@@ -843,6 +842,8 @@ class Front:
                     fig = self._cocoplot.pycoa_hist_seaborn_hori( **kwargs)
                 elif typeofhist == 'pie':
                     fig = self._cocoplot.pycoa_pairplot_seaborn(**kwargs)
+                else:
+                    raise CoaKeyError(typeofhist + ' not implemented in ' + self.getdisplay())
             else:
                 raise CoaKeyError('Unknown typeofhist value. Available value : listhist().')
 

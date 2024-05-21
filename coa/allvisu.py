@@ -2674,15 +2674,30 @@ class AllVisu:
 
     ######SEABORN#########
     ######################
+    def decoplotseaborn(func):
+        """
+        decorator for seaborn plot
+        """
+        @wraps(func)
+        def inner_plot(self, **kwargs):
+            input = kwargs.get('input')
+            input_field = kwargs.get('input_field')
+
+            top_countries = input['where'].unique()[:MAXCOUNTRIESDISPLAYED]
+            kwargs['filtered_input'] = input[input['where'].isin(top_countries)]
+
+            return func(self, **kwargs)
+        return inner_plot
 
     ######SEABORN PLOT#########
     @decowrapper
+    @decoplotseaborn
     def pycoa_date_plot_seaborn(self, **kwargs):
         """
         Create a seaborn line plot with date on x-axis and input_field on y-axis.
         """
-        # On inclut que les premiers 24 pays uniques
         input = kwargs['input']
+        filtered_input = kwargs['filtered_input']
         input_field = kwargs['input_field']
         title = kwargs.get('title')
         top_countries = input['where'].unique()[:MAXCOUNTRIESDISPLAYED]
@@ -2694,23 +2709,28 @@ class AllVisu:
         plt.xlabel('Date')
         plt.ylabel(input_field)
         plt.xticks(rotation=45)
-        #permet de placer la légend 5% à gauche
-        plt.legend(bbox_to_anchor=(1.05, 1))
+        #permet de placer la légend 4% à gauche
+        plt.legend(bbox_to_anchor=(1.04, 1))
         plt.show()
 
     ######################
     ######SEABORN HIST VERTICALE#########
+
     @decowrapper
+    @decoplotseaborn
     def pycoa_hist_seaborn_verti(self, **kwargs):
         """
         Create a seaborn vertical histogram with input_field on y-axis.
         """
-        # On inclut que les premiers 24 pays uniques
-        input = kwargs.get('input')
-        input_field = kwargs.get('input_field')
-        title = kwargs.get('title')
-        top_countries = input['where'].unique()[:MAXCOUNTRIESDISPLAYED]
-        filtered_input = input[input['where'].isin(top_countries)]
+        filtered_input = kwargs['filtered_input']
+        input_field = kwargs['input_field']
+        #Trier les valeurs
+        filtered_input = (filtered_input.sort_values('date')
+                  .drop_duplicates('where', keep='last')    #garde le last en terme de date
+                  .drop_duplicates(['where', input_field])  #quand une ligne avec where et input est pareil on drop
+                  .sort_values(by=input_field, ascending=False) #trier
+                  .reset_index(drop=True))
+
         # Créer le graphique
         sns.set_theme(style="whitegrid")
         plt.figure(figsize=(14, 7))
@@ -2718,22 +2738,26 @@ class AllVisu:
         plt.title(title)
         plt.xlabel('')  # Suppression de l'étiquette de l'axe x
         plt.ylabel(input_field)
-        plt.xticks(rotation=45)
+        plt.xticks(rotation=70, ha='center')  # Rotation à 70 degrés et alignement central
         plt.show()
 
 
     ######SEABORN HIST HORIZONTALE#########
     @decowrapper
+    @decoplotseaborn
     def pycoa_hist_seaborn_hori(self, **kwargs):
         """
         Create a seaborn horizontal histogram with input_field on x-axis.
         """
-        # On inclut que les premiers 24 pays uniques
-        input = kwargs.get('input')
-        input_field = kwargs.get('input_field')
-        title = kwargs.get('title')
-        top_countries = input['where'].unique()[:MAXCOUNTRIESDISPLAYED]
-        filtered_input = input[input['where'].isin(top_countries)]
+        filtered_input = kwargs['filtered_input']
+        input_field = kwargs['input_field']
+        #Trier les valeurs
+        filtered_input = (filtered_input.sort_values('date')
+                  .drop_duplicates('where', keep='last')    #garde le last en terme de date
+                  .drop_duplicates(['where', input_field])  #quand une ligne avec where et input est pareil on drop
+                  .sort_values(by=input_field, ascending=False) #trier
+                  .reset_index(drop=True))
+
         # Créer le graphique
         sns.set_theme(style="whitegrid")
         plt.figure(figsize=(14, 7))
@@ -2746,15 +2770,13 @@ class AllVisu:
 
     ######SEABORN BOXPLOT#########
     @decowrapper
+    @decoplotseaborn
     def pycoa_pairplot_seaborn(self, **kwargs):
         """
         Create a seaborn pairplot
         """
-        # On inclut que les premiers 24 pays uniques
-        input = kwargs.get('input')
-        input_field = kwargs.get('input_field')
-        top_countries = input['where'].unique()[:MAXCOUNTRIESDISPLAYED]
-        filtered_input = input[input['where'].isin(top_countries)]
+        filtered_input = kwargs['filtered_input']
+        input_field = kwargs['input_field']
         # Créer le graphique
         sns.set_theme(style="whitegrid")
         plt.figure(figsize=(14, 7))
@@ -2766,10 +2788,12 @@ class AllVisu:
 
     ######SEABORN heatmap#########
     @decowrapper
+    @decoplotseaborn
     def pycoa_heatmap_seaborn(self, **kwargs):
         """
         Create a seaborn heatmap
         """
+        input_field = kwargs['input_field']
         # Convertir la colonne 'date' en datetime si nécessaire
         if not pd.api.types.is_datetime64_any_dtype(input['date']):
             input['date'] = pd.to_datetime(input['date'])

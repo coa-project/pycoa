@@ -843,7 +843,9 @@ class Front:
                 elif typeofhist == 'pie':
                     fig = self._cocoplot.pycoa_pairplot_seaborn(**kwargs)
                 else:
-                    raise CoaKeyError(typeofhist + ' not implemented in ' + self.getdisplay())
+                    print(typeofhist + ' not implemented in ' + self.getdisplay())
+                    fig = self._cocoplot.pycoa_horizonhisto(**kwargs)
+                    #raise CoaKeyError
             else:
                 raise CoaKeyError('Unknown typeofhist value. Available value : listhist().')
 

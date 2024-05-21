@@ -1196,9 +1196,8 @@ class AllVisu:
             geopdwd_filter = geopdwd.loc[geopdwd.date == self.when_end]
             geopdwd_filter = geopdwd_filter.reset_index(drop = True)
             geopdwd_filter['cases'] = geopdwd_filter[input_field]
-            dateslider = kwargs['dateslider']
-            dateslider = kwargs['dateslider']
-            maplabel = kwargs['maplabel']
+            dateslider = kwargs.get('dateslider',self.dicovisuargs['dateslider'][0])
+            maplabel = kwargs.get('maplabel',self.dicovisuargs['maplabel'][0])
             my_date = geopdwd.date.unique()
             dico_utc = {i: DateSlider(value=i).value for i in my_date}
             geopdwd['date_utc'] = [dico_utc[i] for i in geopdwd.date]
@@ -1241,11 +1240,12 @@ class AllVisu:
                 geopdwd_filter['bottom'] = [ymax*(n-i)/n - 0.5*ymax/n for i in range(n)]
                 geopdwd_filter['horihistotexty'] = geopdwd_filter['bottom'] + 0.5*ymax/n
                 geopdwd_filter['horihistotextx'] = geopdwd_filter['right']
-                if kwargs['maplabel'] and 'label%' in kwargs['maplabel']:
+
+                if 'label%' in maplabel:
                     geopdwd_filter['right'] = geopdwd_filter['right'].apply(lambda x: 100.*x)
                     geopdwd_filter['horihistotextx'] = geopdwd_filter['right']
                     geopdwd_filter['horihistotext'] = [str(round(i))+'%' for i in geopdwd_filter['right']]
-                if kwargs['maplabel'] and 'textinteger' in kwargs['maplabel']:
+                if 'textinteger' in maplabel:
                     geopdwd_filter['horihistotext'] = geopdwd_filter['right'].astype(float).astype(int).astype(str)
                 else:
                     geopdwd_filter['horihistotext'] = [ '{:.3g}'.format(float(i)) if float(i)>1.e4 or float(i)<0.01 else round(float(i),2) for i in geopdwd_filter['right'] ]
@@ -1583,7 +1583,6 @@ class AllVisu:
             fig.yaxis[0].formatter = NumeralTickFormatter(format="0.0")
             ytick_loc = [int(i) for i in srcfiltered.data['horihistotexty']]
             fig.yaxis.ticker  = ytick_loc
-            print(ytick_loc,"srcfiltered.data['permanentdisplay']",srcfiltered.data['permanentdisplay'])
             label_dict = dict(zip(ytick_loc,srcfiltered.data['permanentdisplay']))
             fig.yaxis.major_label_overrides = label_dict
 
@@ -2729,6 +2728,7 @@ class AllVisu:
         """
         filtered_input = kwargs['filtered_input']
         input_field = kwargs['input_field']
+        title = kwargs['title']
         #Trier les valeurs
         filtered_input = (filtered_input.sort_values('date')
                   .drop_duplicates('where', keep='last')    #garde le last en terme de date

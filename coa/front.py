@@ -50,7 +50,7 @@ from coa.tools import (
     info,
     flat_list,
 )
-import coa.display as display
+import coa.allvisu as allvisu
 import coa.covid19 as coco
 from coa.error import *
 import coa._version
@@ -75,31 +75,76 @@ class Front:
         self._listplot = ['date','menulocation','versus','spiral','yearly']
         self._listmaplabel = ['text','textinteger','spark','spiral','label%','log','unsorted','exploded','dense']
         self._listoption = ['nonneg', 'nofillnan', 'smooth7', 'sumall']
-        self._listallkargs = ['where', 'what', 'which', 'whom','reload','when', 'input', 'input_field','output',\
-             'title','typeofplot','typeofhist','bins','dateslider','maplabel','option',\
-             'mode','guideline','bypop', 'plot_width','plot_height','textcopyright','cursor_date']
+
+        av = allvisu.AllVisu()
+        self._listchartkargs = av.listchartkargs
+        self._listviskargs = av.listviskargs
+
         self._db = ''
         self._whom = ''
         self.vis = 'bokeh'
         self._cocoplot = None
+        self.namefunction = 'Charts Function Not Registered'
 
+    def setvisu(self,**kwargs):
+        '''
+            define visualation and associated option
+        '''
+        kwargs_test(kwargs,self._listviskargs , 'Bad args used in the pycoa.saveoutput function.')
+        vis = kwargs.get('vis','bokeh')
+        tile = kwargs.get('tile','openstreet')
+        dateslider = kwargs.get('dateslider',False)
+        maplabel =  kwargs.get('maplabel','text')
+        guideline = kwargs.get('guideline','False')
 
-    def setvisu(self,visu,tile=None):
-        vis=self._listvisu
-        if visu not in vis:
+        if vis not in self._listvisu:
             raise CoaError("Sorry but " + visu + " visualisation isn't implemented ")
         else:
-            self.vis = visu
-            if not self._cocoplot is None:
-                    self._cocoplot.setvisu(visu)
-            if  self.vis == 'bokeh':
-                if tile :
-                    self.tile = tile
-                    self._cocoplot.set_tile(tile)
-                    print('Tile has been set to:',tile)
-            print('Visu has been set to ', visu)
+            self.setdisplay(vis)
+            if 'output' in self.getkwargs():
+                self.getkwargs().pop('output')
+            if tile :
+                self._cocoplot.set_tile(tile)
+                print('Tile has been set to:',tile)
 
-    def getvisu(self,):
+            for i in self._cocoplot.listchartkargs:
+                try:
+                    kwargs.pop(i)
+                except:
+                    pass
+
+            self._cocoplot.setvisattr(kwargs)
+            f = self.gatenamefunction()
+            if f == 'Charts Function Not Registered':
+                raise CoaError("Sorry but " + f + ". Did you draw it ? ")
+            return f(**self.getkwargs())
+
+    def setnamefunction(self,name):
+        '''
+        Name chart function setter
+        '''
+        self.namefunction = name
+
+    def gatenamefunction(self,):
+        '''
+        Name chart function getter
+        '''
+        return self.namefunction
+
+
+    def setdisplay(self,vis):
+       '''
+        Visualization seter
+       '''
+       if vis not in self._listvisu:
+            raise CoaError("Visualisation "+ visu + " not implemented setting problem. Please contact support@pycoa.fr")
+       else:
+            self.vis = vis
+
+    def getdisplay(self,):
+        '''
+        getter visualization
+        '''
         return self.vis
     # ----------------------------------------------------------------------
     # --- getversion() -----------------------------------------------------
@@ -185,10 +230,10 @@ class Front:
     # ----------------------------------------------------------------------
     # --- listallkargs() -----------------------------------------------------
     # ----------------------------------------------------------------------
-    def listallkargs(self,):
-        """Return the list of currently avalailable kargs
+    def listchartkargs(self,):
+        """Return the list of avalailable kargs for chart functions
         """
-        return self._listallkargs
+        return self._listchartkargs
     # ----------------------------------------------------------------------
     # --- listtile() -------------------------------------------------------
     # ----------------------------------------------------------------------
@@ -196,7 +241,7 @@ class Front:
         """Return the list of currently avalailable tile option for map()
          Default is the first one.
         """
-        return self._cocoplot.getavailable_tiles()
+        return self._cocoplot.getallvisu().available_tiles
     # ----------------------------------------------------------------------
     # --- listwhich() ------------------------------------------------------
     # ----------------------------------------------------------------------
@@ -272,7 +317,7 @@ class Front:
         By default, the listbase()[0] is the default base used in other
         functions.
         """
-        #kwargs_test(kwargs, ['reload'], 'Bad args used in the pycoa.saveoutput function.')
+        kwargs_test(kwargs,self._listchartkargs,'Bad args used ! Please check ')
         reload = kwargs.get('reload', True)
         visu = True
         if reload not in [0,1]:
@@ -286,8 +331,8 @@ class Front:
             else:
                 self._db = coco.DataBase.readpekl('.cache/'+base+'.pkl')
                 pandy = self._db.getwheregeometrydescription()
-                self._cocoplot = display.Display(base, pandy)
-                self._cocoplot.setvisu(self.getvisu())
+                self._cocoplot = allvisu.AllVisu(base, pandy)
+                #self._cocoplot.setvisu(self.getdisplay())
                 coge.GeoManager('name')
         self._whom = base
     # ----------------------------------------------------------------------
@@ -386,6 +431,12 @@ class Front:
     # ----------  wrapper(*args, **kwargs)
     #---------------------------------------
     # ----------------------------------------------------------------------
+    def setkwargs(self,**kwargs):
+        self._setkwargs=kwargs
+
+    def getkwargs(self,):
+        return self._setkwargs
+
     def chartsinput_deco(f):
         '''
             Main decorator it mainly deals with arg testings
@@ -397,9 +448,7 @@ class Front:
             '''
             if self._db == '':
                 self._db, self._cocoplot = coco.DataBase.factory(db_name = self._whom)
-
-                kwargs_test(kwargs,self._listallkargs,'Bad args used ! please check your '+kwargs)
-
+            kwargs_test(kwargs,self._listchartkargs,'Bad args used ! please check ')
             where = kwargs.get('where', None)
             which = kwargs.get('which', None)
             what = kwargs.get('what', None)
@@ -559,6 +608,7 @@ class Front:
                 if not input_field or input_field == 'standard':
                     kwargs['input_field'] = pandy.columns[2]
             kwargs['input'] = pandy
+            self.setkwargs(**kwargs)
             return f(self,**kwargs)
         return wrapper
     # ----------------------------------------------------------------------
@@ -702,9 +752,9 @@ class Front:
             """
             input = kwargs.get('input')
             input_field = kwargs.get('input_field')
-            if not input.empty:
-                kwargs.pop('input')
-                kwargs.pop('input_field')
+            #if not input.empty:
+            #    kwargs.pop('input')
+            #    kwargs.pop('input_field')
             if 'output' in kwargs:
                 kwargs.pop('output')
             if 'bypop' in kwargs:
@@ -734,55 +784,55 @@ class Front:
                 #if all([ True if i in ['text','spark','label%','log'] else False for i in kwargs['maplabel'] ]) :
                 #    CoaKeyError('Waiting for a valide label visualisation: text, spark or label%')
                 input.loc[:,input_field]=input[input_field].fillna(0) #needed in the case where there are nan else js pb
-
-            return func(self,input,input_field,**kwargs)
+            return func(self,**kwargs)
         return inner
 
     @chartsinput_deco
     @decomap
-    def figuremap(self,input,input_field,**kwargs):
+    def figuremap(self,**kwargs):
         dateslider = kwargs.get('dateslider', None)
         maplabel = kwargs.get('maplabel', None)
+        visu = self.getdisplay()
         if visu == 'bokeh':
             if maplabel:
                 if 'spark' in maplabel or 'spiral' in maplabel:
-                    return self._cocoplot.pycoa_pimpmap(input,input_field,**kwargs)
+                    return self._cocoplot.pycoa_pimpmap(**kwargs)
                 elif 'text' or 'exploded' or 'dense' in maplabel:
-                    return self._cocoplot.pycoa_map(input,input_field,**kwargs)
+                    return self._cocoplot.pycoa_map(**kwargs)
                 else:
                     CoaError("What kind of pimp map you want ?!")
             else:
-                return self._cocoplot.pycoa_map(input,input_field,**kwargs)
+                return self._cocoplot.pycoa_map(**kwargs)
 
     @chartsinput_deco
     @decomap
-    def map(self,input,input_field,**kwargs):
+    def map(self,**kwargs):
+        self.setnamefunction(self.map)
         dateslider = kwargs.get('dateslider', None)
         maplabel = kwargs.get('maplabel', None)
-        visu = self.getvisu()
+        visu = self.getdisplay()
         if visu == 'bokeh':
             if maplabel:
                 if 'spark' in maplabel or 'spiral' in maplabel:
-                    fig = self._cocoplot.pycoa_pimpmap(input,input_field,**kwargs)
+                    fig = self._cocoplot.pycoa_pimpmap(**kwargs)
                 elif 'text' or 'exploded' or 'dense' in maplabel:
-                    fig = self._cocoplot.pycoa_map(input,input_field,**kwargs)
+                    fig = self._cocoplot.pycoa_map(**kwargs)
                 else:
                     CoaError("What kind of pimp map you want ?!")
             else:
-                fig = self._cocoplot.pycoa_map(input,input_field,**kwargs)
-            if self.getvisu()=='bokeh':
-                return show(fig)
-            else:
-                return fig
+                fig = self._cocoplot.pycoa_map(**kwargs)
+            return show(fig)
         elif visu == 'folium':
             if dateslider is not None :
                 raise CoaKeyError('Not available with folium map, you should considere to use bokeh map visu in this case')
             if  maplabel and set(maplabel) != set(['log']):
                 raise CoaKeyError('Not available with folium map, you should considere to use bokeh map visu in this case')
-            return self._cocoplot.pycoa_mapfolium(input,input_field,**kwargs)
+            return self._cocoplot.pycoa_mapfolium(**kwargs)
+        elif visu == 'mplt':
+            return self._cocoplot.pycoa_mpltmap(**kwargs)
         else:
-            raise CoaTypeError('Waiting for a valid visualisation. So far: \'bokeh\' or \'folium\'.See help.')
-
+            raise CoaTypeError('Waiting for a valid visualisation. So far: \'bokeh\', \'folium\' or \'mplt\' \
+            aka matplotlib .See help.')
     # ----------------------------------------------------------------------
     # --- hist(**kwargs) ---------------------------------------------------
     # ----------------------------------------------------------------------
@@ -825,26 +875,32 @@ class Front:
             kwargs.pop('output')
             if kwargs.get('bypop'):
               kwargs.pop('bypop')
+            if self.getdisplay() == 'bokeh':
+                if dateslider is not None:
+                    del kwargs['dateslider']
+                    kwargs['cursor_date'] = dateslider
 
-            if dateslider is not None:
-                del kwargs['dateslider']
-                kwargs['cursor_date'] = dateslider
+                if typeofhist == 'bylocation':
+                    if 'bins' in kwargs:
+                        raise CoaKeyError("The bins keyword cannot be set with histograms by location. See help.")
 
-            if typeofhist == 'bylocation':
-                if 'bins' in kwargs:
-                    raise CoaKeyError("The bins keyword cannot be set with histograms by location. See help.")
-
-                fig = self._cocoplot.pycoa_horizonhisto(**kwargs)
-            elif typeofhist == 'byvalue':
-                if dateslider:
-                    info('dateslider not implemented for typeofhist=\'byvalue\'.')
                     fig = self._cocoplot.pycoa_horizonhisto(**kwargs)
-                else:
-                    fig = self._cocoplot.pycoa_histo( **kwargs)
-            elif typeofhist == 'pie':
-                fig = self._cocoplot.pycoa_pie(**kwargs)
+                elif typeofhist == 'byvalue':
+                    if dateslider:
+                        info('dateslider not implemented for typeofhist=\'byvalue\'.')
+                        fig = self._cocoplot.pycoa_horizonhisto(**kwargs)
+                    else:
+                        fig = self._cocoplot.pycoa_histo( **kwargs)
+                elif typeofhist == 'pie':
+                    fig = self._cocoplot.pycoa_pie(**kwargs)
+            elif self.getdisplay() == 'seaborn':
+                if typeofhist == 'bylocation':
+                    fig = self._cocoplot.pycoa_hist_seaborn_hori( **kwargs)
+                elif typeofhist == 'pie':
+                    fig = self._cocoplot.pycoa_pairplot_seaborn(**kwargs)
             else:
                 raise CoaKeyError('Unknown typeofhist value. Available value : listhist().')
+
             return func(self,fig)
         return inner
 
@@ -858,7 +914,8 @@ class Front:
     @decohist
     def hist(self,fig):
         ''' show hist '''
-        if self._cocoplot.getvisu() == 'bokeh':
+        self.setnamefunction(self.hist)
+        if self.getdisplay() == 'bokeh':
             show(fig)
         else:
             fig
@@ -909,40 +966,49 @@ class Front:
             """
             input = kwargs.get('input')
             input_field = kwargs.get('input_field')
-            if not input.empty:
-                kwargs.pop('input')
-                kwargs.pop('input_field')
             typeofplot = kwargs.get('typeofplot',self.listplot()[0])
             kwargs.pop('output')
             if kwargs.get('bypop'):
                 kwargs.pop('bypop')
-
-            if 'typeofplot' in kwargs:
-                typeofplot = kwargs.pop('typeofplot')
-            if typeofplot == 'date':
-                fig = self._cocoplot.pycoa_date_plot(input, input_field,**kwargs)
-            elif typeofplot == 'spiral':
-                fig = self._cocoplot.pycoa_spiral_plot(input, input_field,**kwargs)
-            elif typeofplot == 'versus':
-                if isinstance(input_field,list) and len(input_field) == 2:
-                    fig = self._cocoplot.pycoa_plot(**kwargs)
+            if self.getdisplay() == 'bokeh':
+                if 'typeofplot' in kwargs:
+                    typeofplot = kwargs.pop('typeofplot')
+                if typeofplot == 'date':
+                    fig = self._cocoplot.pycoa_date_plot(**kwargs)
+                elif typeofplot == 'spiral':
+                    fig = self._cocoplot.pycoa_spiral_plot(**kwargs)
+                elif typeofplot == 'versus':
+                    if isinstance(input_field,list) and len(input_field) == 2:
+                        fig = self._cocoplot.pycoa_plot(**kwargs)
+                    else:
+                        print('typeofplot is versus but dim(input_field)!=2, versus has not effect ...')
+                        fig = self._cocoplot.pycoa_date_plot(**kwargs)
+                elif typeofplot == 'menulocation':
+                    if _db_list_dict[self._whom][1] == 'nation' and _db_list_dict[self._whom][2] != 'World':
+                        print('typeofplot is menulocation with a national DB granularity, use date plot instead ...')
+                        fig = self._cocoplot.pycoa_date_plot(*kwargs)
+                    else:
+                        if isinstance(input_field,list) and len(input_field) > 1:
+                            print('typeofplot is menulocation but dim(input_field)>1, menulocation has not effect ...')
+                        fig = self._cocoplot.pycoa_scrollingmenu(**kwargs)
+                elif typeofplot == 'yearly':
+                    if input.date.max()-input.date.min() <= dt.timedelta(days=365):
+                        print("Yearly will not be used since the time covered is less than 1 year")
+                        fig = self._cocoplot.pycoa_date_plot(**kwargs)
+                    else:
+                        fig = self._cocoplot.pycoa_yearly_plot(**kwargs)
+            elif self.getdisplay() == 'mplt':
+                if typeofplot == 'date':
+                    fig = self._cocoplot.pycoa_mpltdate_plot(**kwargs)
+                elif typeofplot == 'yearly':
+                    fig = self._cocoplot.pycoa_mpltyearly_plot(**kwargs)
                 else:
-                    print('typeofplot is versus but dim(input_field)!=2, versus has not effect ...')
-                    fig = self._cocoplot.pycoa_date_plot(input, input_field,**kwargs)
-            elif typeofplot == 'menulocation':
-                if _db_list_dict[self._whom][1] == 'nation' and _db_list_dict[self._whom][2] != 'World':
-                    print('typeofplot is menulocation with a national DB granularity, use date plot instead ...')
-                    fig = self._cocoplot.pycoa_date_plot(input, input_field,*kwargs)
+                    raise CoaKeyError('Unknown type of plot')
+            elif self.getdisplay() == 'seaborn':
+                if typeofplot == 'date':
+                    fig = self._cocoplot.pycoa_date_plot_seaborn(**kwargs)
                 else:
-                    if isinstance(input_field,list) and len(input_field) > 1:
-                        print('typeofplot is menulocation but dim(input_field)>1, menulocation has not effect ...')
-                    fig = self._cocoplot.pycoa_scrollingmenu(input, input_field,**kwargs)
-            elif typeofplot == 'yearly':
-                if input.date.max()-input.date.min() <= dt.timedelta(days=365):
-                    print("Yearly will not be used since the time covered is less than 1 year")
-                    fig = self._cocoplot.pycoa_date_plot(input, input_field,**kwargs)
-                else:
-                    fig = self._cocoplot.pycoa_yearly_plot(input, input_field,**kwargs)
+                    raise CoaKeyError('Unknown type of plot')
             else:
                 raise CoaKeyError('Unknown typeofplot value. Should be date, versus, menulocation, spiral or yearly.')
             return func(self,fig)
@@ -957,8 +1023,9 @@ class Front:
     @chartsinput_deco
     @decoplot
     def plot(self,fig):
+        self.setnamefunction(self.plot)
         ''' show plot '''
-        if self._cocoplot.getvisu() == 'bokeh':
+        if self.getdisplay() == 'bokeh':
             return show(fig)
         else:
             return fig

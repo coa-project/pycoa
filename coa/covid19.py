@@ -99,6 +99,58 @@ class DataBase(object):
    def getwheregeometrydescription(self):
         return self.where_geodescription
 
+   def permanentdisplay(self,input):
+    '''
+     when sumall option is used this method is usefull for the display
+     it returns an input with new columns
+    '''
+    input['permanentdisplay'] = input.codelocation
+    if 'codelocation' and 'clustername' not in input.columns:
+       input['codelocation'] = input['where']
+       input['clustername'] = input['where']
+       input['rolloverdisplay'] = input['where']
+       input['permanentdisplay'] = input['where']
+    else:
+       if self.granularity == 'nation' :
+           #input['codelocation'] = input['codelocation'].apply(lambda x: str(x).replace('[', '').replace(']', '') if len(x)< 10 else x[0]+'...'+x[-1] )
+           ##input['permanentdisplay'] = input.apply(lambda x: x.clustername if self.geo.get_GeoRegion().is_region(x.clustername) else str(x.codelocation), axis = 1)
+           input['permanentdisplay'] = input.codelocation
+       else:
+           if self.granularity == 'subregion' :
+               input = input.reset_index(drop=True)
+               if isinstance(input['codelocation'].iloc[0],list):
+                   input['codelocation'] = input['codelocation'].apply(lambda x: str(x).replace("'", '')\
+                                                if len(x)<5 else '['+str(x[0]).replace("'", '')+',...,'+str(x[-1]).replace("'", '')+']')
+
+               trad={}
+               cluster = input.clustername.unique()
+
+               if isinstance(input['where'].iloc[0],list):
+                  cluster = [i for i in cluster]
+               for i in cluster:
+                   if i == self.namecountry:
+                       input['permanentdisplay'] = input.clustername #[self.dbld[self.database_name][2]]*len(input)
+                   else:
+                       if self.geo.is_region(i):
+                           trad[i] = self.geo.is_region(i)
+                       elif self.geo.is_subregion(i):
+                           trad[i] = self.geo.is_subregion(i)#input.loc[input.clustername==i]['codelocation'].iloc[0]
+                       else:
+                           trad[i] = i
+                       trad={k:(v[:3]+'...'+v[-3:] if len(v)>8 else v) for k,v in trad.items()}
+                       if ',' in input.codelocation[0]:
+                           input['permanentdisplay'] = input.clustername
+                       else:
+                           input['permanentdisplay'] = input.codelocation#input.clustername.map(trad)
+           elif self.granularity == 'region' :
+               if all(i == self.namecountry for i in input.clustername.unique()):
+                   input['permanentdisplay'] = [self.namecountry]*len(input)
+               else:
+                   input['permanentdisplay'] = input.codelocation
+    input['rolloverdisplay'] = input['where']
+    return input
+
+
    @staticmethod
    def factory(**kwargs):
        '''
@@ -121,11 +173,12 @@ class DataBase(object):
        #   datab=DataBase.readpekl(filepkl)
        #   print("HERE")
        #if visu:
+       visu=True
        datab.set_display(db_name,datab.getwheregeometrydescription())
        if visu:
            return datab, datab.get_display()
        else:
-           return datab, None
+            return datab, None
 
    def set_display(self,db,wheregeometrydescription):
        ''' Set the Display '''
@@ -526,6 +579,7 @@ class DataBase(object):
             pdfiltered = pd.merge(pdfiltered, othersinputfieldpandas, on=['date','where'])
         if 'input_field' not in kwargs:
             verb("Here the information I\'ve got on ", kwargs['which']," : ",  self.dbfullinfo.get_keyword_definition(kwargs['which']))
+        pdfiltered = self.permanentdisplay(pdfiltered)
         return pdfiltered
 
    def merger(self,**kwargs):

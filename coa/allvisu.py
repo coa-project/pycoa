@@ -138,6 +138,12 @@ class AllVisu:
         self.geopan = gpd.GeoDataFrame()
         self.listfigs = []
 
+        self.listchartkargs = ['where', 'what', 'which','reload','when', 'input', 'input_field','output','typeofplot',\
+        'typeofhist','bins','option','bypop']
+
+        self.listviskargs = ['vis','tile','title','dateslider','maplabel','mode','guideline','plot_width','plot_height',\
+        'textcopyright','cursor_date']
+
         self.dicokargs = {
                             'textcopyright' : 'default',
                             'plot_width' : width_height_default[0],\
@@ -158,26 +164,67 @@ class AllVisu:
                             'typeofhist':['bylocation','byvalue','pie'],\
                             'maplabel':['text','textinteger','spark','spiral','label%','log','unsorted','exploded','dense'],
                          }
-        self.options_stats  = ['when','input','input_field']
+
+        self.setchartsfunctions = [method for method in dir(AllVisu) if callable(getattr(AllVisu, method)) and method.startswith("pycoa_") and not method.startswith("__")]
+
+        self.options_stats  = ['where','option','which','what','when','input','input_field']
         self.options_charts = [ 'bins']
-        self.options_front = ['where','option','which','what','visu']
+
         self.available_tiles = ['openstreet','esri','stamen']
         self.tile = self.available_tiles[0]
         self.available_modes = ['mouse','vline','hline']
         self.uptitle, self.subtitle = ' ',' '
 
         self.dfigure_default = {'plot_height':width_height_default[1] ,'plot_width':width_height_default[0],'title':None,'textcopyright':'default'}
-        self.dvisu_default = {'mode':'mouse','tile':self.available_tiles[0],'orientation':'horizontal','cursor_date':None,'maplabel':None,'guideline':False}
+        self.dvisu_default = {'vis':'bokeh','mode':'mouse','tile':self.available_tiles[0],\
+        'orientation':'horizontal','cursor_date':None,'maplabel':None,'guideline':False,'dateslider':False,'title':None}
+
 
         self.when_beg = dt.date(1, 1, 1)
         self.when_end = dt.date(1, 1, 1)
 
-        self.alloptions =  self.options_stats + self.options_charts + self.options_front + list(self.dfigure_default.keys()) +\
+        self.alloptions =  self.options_stats + self.options_charts + list(self.dfigure_default.keys()) +\
                            list(self.dvisu_default.keys()) + ['resumetype']
 
-        self.iso3country = self.dbld[self.database_name][0]
-        self.granularity = self.dbld[self.database_name][1]
-        self.namecountry = self.dbld[self.database_name][2]
+        try:
+            self.iso3country = self.dbld[self.database_name][0]
+            self.granularity = self.dbld[self.database_name][1]
+            self.namecountry = self.dbld[self.database_name][2]
+        except:
+            pass
+
+        self.dicovisattr = {}
+
+
+    def setvisattr(self,d_attr):
+        '''
+        set vis attribu getter, take a dico in input
+        return a dico vis attr element
+        '''
+        if isinstance(d_attr,dict):
+            for k,v in d_attr.items():
+                if k not in list(self.dicovisattr.keys()):
+                    self.dicovisattr[k]=v
+        else:
+            raise CoaTypeError(d_attr+" must be a dico")
+
+    def getvisattr(self):
+        '''
+        get vis attribu getter
+        '''
+        return self.dicovisattr
+
+    def optionvisattr(self,):
+        '''
+        Return a dict of list vis attr
+        if vis attr stipulated using setvisattr methode keep it
+        else add the default one
+        '''
+        if self.getvisattr():
+            for k,v in self.getvisattr().items():
+                self.dvisu_default[k] = v
+        return self.dvisu_default
+
 
     ''' WRAPPER COMMUN FOR ALL'''
     def decowrapper(func):
@@ -185,7 +232,7 @@ class AllVisu:
             Main decorator it mainly deals with arg testings
         '''
         @wraps(func)
-        def wrapper(self, input, input_field,**kwargs):
+        def wrapper(self,**kwargs):
             """
             Parse a standard input, return :
                 - pandas: with location keyword (eventually force a column named 'where' to 'where')
@@ -193,12 +240,15 @@ class AllVisu:
                     * keys = [plot_width, plot_width, title, when, title_temporal,bins, what, which]
             Note that method used only the needed variables, some of them are useless
             """
-            if not isinstance(input, pd.DataFrame):
+            if not isinstance(kwargs['input'], pd.DataFrame):
                 raise CoaTypeError(input + 'Must be a pandas, with pycoa structure !')
 
-            kwargs_test(kwargs, self.alloptions, 'Bad args used in the display function.')
+            kwargs_test(kwargs, self.listchartkargs, 'Bad args used in the display function.')
             when = kwargs.get('when', None)
+            input = kwargs.get('input')
             which = kwargs.get('which', input.columns[2])
+            input_field = kwargs.get('input_field')
+            tile = kwargs.get('tile', self.dvisu_default['tile'])
             if isinstance(which,list):
                 which = input.columns[2]
             if input_field and 'cur_' in input_field:
@@ -223,56 +273,8 @@ class AllVisu:
             option = kwargs.get('option', None)
             bins = kwargs.get('bins', 10)
             title = kwargs.get('title', None)
-            #textcopyright = kwargs.get('textcopyright', 'default')
-            kwargs['plot_width'] = kwargs.get('plot_width', self.dfigure_default['plot_width'])
-            kwargs['plot_height'] = kwargs.get('plot_height', self.dfigure_default['plot_height'])
-            input['permanentdisplay'] = input.codelocation
-            if 'codelocation' and 'clustername' not in input.columns:
-                input['codelocation'] = input['where']
-                input['clustername'] = input['where']
-                input['rolloverdisplay'] = input['where']
-                input['permanentdisplay'] = input['where']
-            else:
-                if self.granularity == 'nation' :
-                    #input['codelocation'] = input['codelocation'].apply(lambda x: str(x).replace('[', '').replace(']', '') if len(x)< 10 else x[0]+'...'+x[-1] )
-                    ##input['permanentdisplay'] = input.apply(lambda x: x.clustername if self.geo.get_GeoRegion().is_region(x.clustername) else str(x.codelocation), axis = 1)
-                    input['permanentdisplay'] = input.codelocation
-                else:
-                    if self.granularity == 'subregion' :
-                        input = input.reset_index(drop=True)
-                        if isinstance(input['codelocation'].iloc[0],list):
-                            input['codelocation'] = input['codelocation'].apply(lambda x: str(x).replace("'", '')\
-                                                         if len(x)<5 else '['+str(x[0]).replace("'", '')+',...,'+str(x[-1]).replace("'", '')+']')
-
-                        trad={}
-                        cluster = input.clustername.unique()
-                        '''
-                        if isinstance(input['where'].iloc[0],list):
-                           cluster = [i for i in cluster]
-                        for i in cluster:
-                            if i == self.namecountry:
-                                input['permanentdisplay'] = input.clustername #[self.dbld[self.database_name][2]]*len(input)
-                            else:
-                                if self.geo.is_region(i):
-                                    trad[i] = self.geo.is_region(i)
-                                elif self.geo.is_subregion(i):
-                                    trad[i] = self.geo.is_subregion(i)#input.loc[input.clustername==i]['codelocation'].iloc[0]
-                                else:
-                                    trad[i] = i
-                                trad={k:(v[:3]+'...'+v[-3:] if len(v)>8 else v) for k,v in trad.items()}
-                                if ',' in input.codelocation[0]:
-                                    input['permanentdisplay'] = input.clustername
-                                else:
-                                    input['permanentdisplay'] = input.codelocation#input.clustername.map(trad)
-                         '''
-                    elif self.granularity == 'region' :
-                        if all(i == self.namecountry for i in input.clustername.unique()):
-                            input['permanentdisplay'] = [self.namecountry]*len(input)
-                        else:
-                            input['permanentdisplay'] = input.codelocation
-                input['rolloverdisplay'] = input['where']
-
             maplabel = kwargs.get('maplabel', None)
+
             if maplabel and 'unsorted' in maplabel:
                 pass
             else:
@@ -379,7 +381,8 @@ class AllVisu:
 
             self.subtitle = textcopyright
             kwargs['title'] = title+title_temporal
-            return func(self,input, input_field, **kwargs)
+            kwargs['input'] = input
+            return func(self,**kwargs)
         return wrapper
 
     def set_tile(self,tile):
@@ -393,24 +396,32 @@ class AllVisu:
         """
          Create a standard Bokeh figure, with pycoa.fr copyright, used in all the bokeh charts
          """
-        plot_width = kwargs.get('plot_width', self.dfigure_default['plot_width'])
-        plot_height = kwargs.get('plot_height', self.dfigure_default['plot_height'])
-        textcopyright = kwargs.get('textcopyright', self.dfigure_default['textcopyright'])
+        for k,v in self.dfigure_default.items():
+             if k not in kwargs.keys():
+                 kwargs[k] = v
+        for i in list(self.dvisu_default.keys())+self.options_stats:
+            try:
+                kwargs.pop(i)
+            except:
+                pass
 
+        textcopyright = kwargs.get('textcopyright','default')
         if textcopyright  == 'default':
                 textcopyright = '©pycoa.fr (data from: {})'.format(self.database_name)
         else:
                 textcopyright = '©pycoa.fr ' + textcopyright
 
-        citation = Label(x=0.65 * plot_width - len(textcopyright), y=0.01 * plot_height,
+        citation = Label(x=0.65 * kwargs['plot_width'] - len(textcopyright), y=0.01 * kwargs['plot_height'],
                                           x_units='screen', y_units='screen',
                                           text_font_size='1.5vh', background_fill_color='white', background_fill_alpha=.75,
                                           text=textcopyright)
-
-        for i in list(self.dvisu_default.keys())  + self.options_front + self.options_charts + ['textcopyright'] + self.options_stats + ['date_slider']:
-            if i in kwargs.keys():
-                kwargs.pop(i)
-        kwargs.pop('title')
+        try:
+            kwargs.pop('textcopyright')
+            kwargs.pop('typeofplot')
+            kwargs.pop('typeofhist')
+            kwargs.pop('date_slider')
+        except:
+            pass
         fig = figure(**kwargs, tools=['save', 'box_zoom,reset'], toolbar_location="right")
         #fig.add_layout(citation)
         fig.add_layout(Title(text=self.uptitle, text_font_size="10pt"), 'above')
@@ -427,7 +438,7 @@ class AllVisu:
             self.listfigs = fig
 
     @decowrapper
-    def pycoa_resume_data(self, input, input_field,**kwargs):
+    def pycoa_resume_data(self,**kwargs):
         loc=list(input['clustername'].unique())
         input['cases'] = input[input_field]
         resumetype = kwargs.get('resumetype','spiral')
@@ -466,15 +477,11 @@ class AllVisu:
         decorator for plot purpose
         """
         @wraps(func)
-        def inner_plot(self,input, input_field ,**kwargs):
-            mode = kwargs.get('mode', None)
-            if mode:
-                mode = mode
-            else:
-                mode = self.dvisu_default['mode']
-            if mode not in self.available_modes:
-                raise CoaTypeError('Don\'t know the mode wanted. So far:' + str(self.available_modes))
-            kwargs['mode'] = mode
+        def inner_plot(self ,**kwargs):
+            vis = self.optionvisattr()
+            kwargs=dict(list(vis.items()) + list(kwargs.items()))
+            input = kwargs.get('input')
+            input_field = [kwargs.get('input_field')]
 
             if 'where' in input.columns:
                 location_ordered_byvalues = list(
@@ -504,13 +511,13 @@ class AllVisu:
                         input_field = input_field[0]
                     if self.dbld[self.database_name][1] == 'nation' and self.dbld[self.database_name][0] != 'WW':
                         func.__name__ = 'pycoa_date_plot'
-            return func(self, input, input_field, **kwargs)
+            return func(self, **kwargs)
         return inner_plot
 
     ''' PLOT VERSUS '''
     @decowrapper
     @decoplot
-    def pycoa_plot(self,input, input_field,**kwargs):
+    def pycoa_plot(self,**kwargs):
         '''
         -----------------
         Create a versus plot according to arguments.
@@ -534,6 +541,12 @@ class AllVisu:
                  if [:dd/mm/yyyy] min date up to
                  if [dd/mm/yyyy:] up to max date
         '''
+
+        input_field = kwargs.get('input_field')
+
+        vis = self.optionvisattr()
+        kwargs=dict(list(vis.items()) + list(kwargs.items()))
+
         if len(input_field) != 2:
             raise CoaTypeError('Two variables are needed to plot a versus chart ... ')
         panels = []
@@ -575,7 +588,7 @@ class AllVisu:
     ''' DATE PLOT '''
     @decowrapper
     @decoplot
-    def pycoa_date_plot(self,input, input_field,**kwargs):
+    def pycoa_date_plot(self,**kwargs):
         '''
         -----------------
         Create a date plot according to arguments. See help(pycoa_date_plot).
@@ -598,7 +611,10 @@ class AllVisu:
                  if [:dd/mm/yyyy] min date up to
                  if [dd/mm/yyyy:] up to max date
         '''
-        guideline = kwargs.get('guideline',self.dvisu_default['guideline'])
+        input = kwargs.get('input')
+        input_field = [kwargs.get('input_field')]
+        vis = self.optionvisattr()
+        kwargs=dict(list(vis.items()) + list(kwargs.items()))
         panels = []
         listfigs = []
         cases_custom = AllVisu.rollerJS()
@@ -648,7 +664,7 @@ class AllVisu:
                 formatters = {'where': 'printf', '@date': 'datetime', '@name': 'printf'}
                 hover=HoverTool(tooltips = tt, formatters = formatters, point_policy = "snap_to_data", mode = kwargs['mode'], renderers=[r])  # ,PanTool())
                 standardfig.add_tools(hover)
-                if guideline:
+                if vis['guideline']:
                     cross= CrosshairTool()
                     standardfig.add_tools(cross)
 
@@ -677,16 +693,19 @@ class AllVisu:
     ''' SPIRAL PLOT '''
     @decowrapper
     @decoplot
-    def pycoa_spiral_plot(self, input = None, input_field = None, **kwargs):
-        guideline = kwargs.get('guideline',self.dvisu_default['guideline'])
+    def pycoa_spiral_plot(self, **kwargs):
+        vis = self.optionvisattr()
+        kwargs=dict(list(vis.items()) + list(kwargs.items()))
         panels = []
         listfigs = []
+        input = kwargs.get('input')
+        input_field = kwargs.get('input_field')
+
         if isinstance(input['rolloverdisplay'].iloc[0],list):
             input['rolloverdisplay'] = input['clustername']
         borne = 300
-        kwargs.pop('plot_width')
-        standardfig = self.standardfig(y_axis_type = None, x_axis_type = None,
-        width=kwargs['plot_height'], x_range=[-borne, borne], y_range=[-borne, borne], match_aspect=True,**kwargs)
+
+        standardfig = self.standardfig(x_range=[-borne, borne], y_range=[-borne, borne], match_aspect=True,**kwargs)
 
         if len(input.clustername.unique()) > 1 :
             print('Can only display spiral for ONE location. I took the first one:', input.clustername[0])
@@ -779,8 +798,13 @@ class AllVisu:
                  if [:dd/mm/yyyy] min date up to
                  if [dd/mm/yyyy:] up to max date
         '''
-        mode = kwargs.get('mode',self.dvisu_default['mode'])
-        guideline = kwargs.get('guideline',self.dvisu_default['guideline'])
+
+        if self.getvisattr():
+            guideline = self.getvisattr()['guideline']
+            mode = self.getvisattr()['mode']
+        else:
+            guideline = self.dvisu_default['guideline']
+            mode = self.dvisu_default['mode']
 
         uniqloc = input.clustername.unique().to_list()
         uniqloc.sort()
@@ -869,7 +893,10 @@ class AllVisu:
                  if [:dd/mm/yyyy] min date up to
                  if [dd/mm/yyyy:] up to max date
         '''
-        guideline = kwargs.get('guideline',self.dvisu_default['guideline'])
+        if self.getvisattr():
+            guideline = self.getvisattr()['guideline']
+        else:
+            guideline = self.dvisu_default['guideline']
         if len(input.clustername.unique()) > 1 :
             print('Can only display yearly plot for ONE location. I took the first one:', input.clustername[0])
         input = input.loc[input.clustername == input.clustername[0]].copy()
@@ -957,14 +984,13 @@ class AllVisu:
         Decorator function used for histogram and map
         """
         @wraps(func)
-        def inner_hm(self, input = None, input_field = None, **kwargs):
-
-            tile = self.gettile()
-
+        def inner_hm(self, **kwargs):
+            input = kwargs.get('input')
+            input_field = kwargs.get('input_field')
             maplabel = kwargs.get('maplabel', None)
             if maplabel :
                 if not isinstance(maplabel,list):
-                    maplabel=[maplabel]
+                    maplabel = [maplabel]
             #if maplabel:
             #    maplabel = maplabel
             if 'map' in func.__name__:
@@ -1012,23 +1038,23 @@ class AllVisu:
                         geopdwd = pd.merge(geopdwd, self.kindgeo, on='where')
                     '''
                     if self.iso3country in ['FRA','USA']:
-                        geo = copy.deepcopy(self.geo)
-                        d = geo._list_translation
+                        self.geo = copy.deepcopy(self.geo)
+                        d = self.geo._list_translation
                         if func.__name__ != 'pycoa_mapfolium':
                             if any(i in list(geopdwd.codelocation.unique()) for i in d.keys()) \
                             or any(True for i in d.keys() if ''.join(list(geopdwd.codelocation.unique())).find(i)!=-1):
                                 if maplabel:
                                     if 'dense' in maplabel:
-                                        geo.set_dense_geometry()
+                                        self.geo.set_dense_geometry()
                                     elif 'exploded' in maplabel:
-                                        geo.set_exploded_geometry()
+                                        self.geo.set_exploded_geometry()
                                     else:
                                         print('don\'t know ')
                                 else:
                                     if any([len(i)==3 for i in geopdwd.codelocation.unique()]):
-                                        geo.set_dense_geometry()
+                                        self.geo.set_dense_geometry()
                             else:
-                                geo.set_main_geometry()
+                                self.geo.set_main_geometry()
                                 d = {}
                             new_geo = geo.get_data()[['name_'+self.granularity,'geometry']]
                             new_geo = new_geo.rename(columns={'name_'+self.granularity:'where'})
@@ -1056,7 +1082,8 @@ class AllVisu:
             else:
                 date_slider = None
             kwargs['date_slider'] = date_slider
-            return func(self,geopdwd, input_field, **kwargs)
+            kwargs['geopdwd'] = geopdwd.sort_values(by=input_field, ascending = False).reset_index()
+            return func(self, **kwargs)
         return inner_hm
 
     ''' VERTICAL HISTO '''
@@ -1146,6 +1173,10 @@ class AllVisu:
                 x_axis_type, y_axis_type = 'log', 'log'
                 axis_type_title = 'loglog'
 
+            try:
+                kwargs.pop('date_slider')
+            except:
+                pass
             standardfig = self.standardfig(x_axis_type=x_axis_type, y_axis_type=y_axis_type, **kwargs)
 
             standardfig.yaxis[0].formatter = PrintfTickFormatter(format = "%4.2e")
@@ -1175,21 +1206,23 @@ class AllVisu:
     ''' DECORATORS FOR HISTO VERTICAL, HISTO HORIZONTAL, PIE '''
     def decohistopie(func):
         @wraps(func)
-        def inner_decohistopie(self, geopdwd, input_field = None, **kwargs):
+        def inner_decohistopie(self, geopdwd, **kwargs):
             """
             Decorator for
             Horizontal histogram & Pie Chart
             """
+            input_field = kwargs['input_field']
             geopdwd['cases'] = geopdwd[input_field]
-            maplabel = kwargs.get('maplabel',None)
-            plot_width = kwargs.get('plot_width',self.dfigure_default['plot_width'])
-            plot_height = kwargs.get('plot_height',self.dfigure_default['plot_height'])
+
+            vis = self.optionvisattr()
+            kwargs=dict(list(vis.items()) + list(kwargs.items()))
 
             geopdwd_filter = geopdwd.loc[geopdwd.date == self.when_end]
             geopdwd_filter = geopdwd_filter.reset_index(drop = True)
             geopdwd_filter['cases'] = geopdwd_filter[input_field]
-            cursor_date = kwargs.get('cursor_date',self.dvisu_default['cursor_date'])
+            cursor_date = kwargs['cursor_date']
             date_slider = kwargs['date_slider']
+            maplabel = kwargs['maplabel']
             my_date = geopdwd.date.unique()
             dico_utc = {i: DateSlider(value=i).value for i in my_date}
             geopdwd['date_utc'] = [dico_utc[i] for i in geopdwd.date]
@@ -1226,18 +1259,17 @@ class AllVisu:
                 geopdwd_filter['right'] = geopdwd_filter['right'].apply(lambda x: 0 if x < 0 else x)
 
                 n = len(geopdwd_filter.index)
-                d =  plot_height / n
-                ymax = plot_height
+                ymax = self.dfigure_default['plot_height']
 
-                geopdwd_filter['top'] = [ymax*(n-i)/n + d/2   for i in range(n)]
-                geopdwd_filter['bottom'] = [ymax*(n-i)/n - d/2 for i in range(n)]
-                geopdwd_filter['horihistotexty'] = geopdwd_filter['bottom'] + d/2
+                geopdwd_filter['top'] = [ymax*(n-i)/n + 0.5*ymax/n   for i in range(n)]
+                geopdwd_filter['bottom'] = [ymax*(n-i)/n - 0.5*ymax/n for i in range(n)]
+                geopdwd_filter['horihistotexty'] = geopdwd_filter['bottom'] + 0.5*ymax/n
                 geopdwd_filter['horihistotextx'] = geopdwd_filter['right']
-                if maplabel and 'label%' in maplabel:
+                if kwargs['maplabel'] and 'label%' in kwargs['maplabel']:
                     geopdwd_filter['right'] = geopdwd_filter['right'].apply(lambda x: 100.*x)
                     geopdwd_filter['horihistotextx'] = geopdwd_filter['right']
                     geopdwd_filter['horihistotext'] = [str(round(i))+'%' for i in geopdwd_filter['right']]
-                if maplabel and 'textinteger' in maplabel:
+                if kwargs['maplabel'] and 'textinteger' in kwargs['maplabel']:
                     geopdwd_filter['horihistotext'] = geopdwd_filter['right'].astype(float).astype(int).astype(str)
                 else:
                     geopdwd_filter['horihistotext'] = [ '{:.3g}'.format(float(i)) if float(i)>1.e4 or float(i)<0.01 else round(float(i),2) for i in geopdwd_filter['right'] ]
@@ -1256,9 +1288,8 @@ class AllVisu:
             min_value = min(input_filter['cases'])
             min_value_gt0 = min(input_filter[input_filter['cases'] >= 0]['cases'])
             panels = []
+            kwargs.pop('date_slider')
             for axis_type in self.ax_type:
-                plot_width = kwargs['plot_width']
-                plot_height = kwargs['plot_height']
                 standardfig = self.standardfig( x_axis_type = axis_type,  x_range = (1.05*min_value, 1.05 * max_value),**kwargs)
                 if maplabel and 'label%' in maplabel:
                     standardfig.x_range = Range1d(0.01, 1.2 * max_value*100)
@@ -1285,8 +1316,9 @@ class AllVisu:
                 if func.__name__ == 'pycoa_pie':
                     if not input_filter[input_filter[input_field] < 0.].empty:
                         raise CoaKeyError('Some values are negative, can\'t display a Pie chart, try histo by location')
-                    standardfig.plot_width = plot_height
-                    standardfig.plot_height = plot_height
+                    kwargs['plot_height'] = self.dicokargs['plot_height']
+                    standardfig.plot_width = kwargs['plot_height']
+                    standardfig.plot_height = kwargs['plot_height']
 
                 if date_slider:
                     date_slider.width = int(0.8*plot_width)
@@ -1575,6 +1607,7 @@ class AllVisu:
             fig.yaxis[0].formatter = NumeralTickFormatter(format="0.0")
             ytick_loc = [int(i) for i in srcfiltered.data['horihistotexty']]
             fig.yaxis.ticker  = ytick_loc
+            print(ytick_loc,"srcfiltered.data['permanentdisplay']",srcfiltered.data['permanentdisplay'])
             label_dict = dict(zip(ytick_loc,srcfiltered.data['permanentdisplay']))
             fig.yaxis.major_label_overrides = label_dict
 
@@ -1683,7 +1716,7 @@ class AllVisu:
     ''' MAP FOLIUM '''
     @decowrapper
     @decohistomap
-    def pycoa_mapfolium(self, geopdwd, input_field, **kwargs):
+    def pycoa_mapfolium(self, **kwargs):
         '''
             -----------------
             Create a map folium to arguments.
@@ -1706,11 +1739,13 @@ class AllVisu:
                          if [:dd/mm/yyyy] min date up to
                          if [dd/mm/yyyy:] up to max date
         '''
-        title = kwargs.get('title', None)
-        tile = AllVisu.convert_tile(self.getitle(), 'folium')
+        title=kwargs.get('title')
+        tile = AllVisu.convert_tile(kwargs.get('tile',self.dvisu_default['tile']), 'folium')
         maplabel = kwargs.get('maplabel',self.dvisu_default['maplabel'])
         plot_width = kwargs.get('plot_width',self.dfigure_default['plot_width'])
         plot_height = kwargs.get('plot_height',self.dfigure_default['plot_height'])
+        geopdwd = kwargs.get('geopdwd')
+        input_field = kwargs.get('input_field')
 
         geopdwd['cases'] = geopdwd[input_field]
         geopdwd_filtered = geopdwd.loc[geopdwd.date == self.when_end]
@@ -1816,7 +1851,8 @@ class AllVisu:
     ''' DECORATOR FOR MAP BOKEH '''
     def decopycoageo(func):
         @wraps(func)
-        def innerdecopycoageo(self, geopdwd, input_field,**kwargs):
+        def innerdecopycoageo(self, geopdwd,**kwargs):
+            input_field = kwargs.get("input_field")
             geopdwd['cases'] = geopdwd[input_field]
             loca=geopdwd['where'].unique()
 
@@ -1870,9 +1906,12 @@ class AllVisu:
     def decomap(func):
         @wraps(func)
         def innerdecomap(self, geopdwd, geopdwd_filtered,**kwargs):
-            title = kwargs.get('title', None)
-            maplabel = kwargs.get('maplabel',self.dvisu_default['maplabel'])
-            tile=self.gettile()
+            vis = self.optionvisattr()
+            kwargs=dict(list(vis.items()) + list(kwargs.items()))
+
+            title = kwargs.get('title')
+            maplabel = kwargs.get('maplabel')
+            tile = self.get_tile()
             if tile:
                 tile = AllVisu.convert_tile(tile, 'bokeh')
             uniqloc = list(geopdwd_filtered.clustername.unique())
@@ -1922,9 +1961,15 @@ class AllVisu:
                 sourcemaplabel = ColumnDataSource(dfLabel.drop(columns='geometry'))
             minx, miny, maxx, maxy =  geopdwd_filtered.total_bounds #self.boundary
 
-            kwargs['plot_width']=kwargs['plot_height']
+            kwargs['plot_height'] = self.dicokargs['plot_height']
+            kwargs['plot_width'] = kwargs['plot_height']
             x_range=(minx,maxx)
             y_range=(miny,maxy)
+            date_slider = kwargs['date_slider']
+            try:
+                kwargs.pop('date_slider')
+            except:
+                pass
             if func.__name__ == 'pycoa_pimpmap':
                 standardfig = self.standardfig(x_range=x_range, y_range=y_range, x_axis_type="mercator", y_axis_type="mercator",**kwargs,match_aspect=True)
             else:
@@ -1951,6 +1996,7 @@ class AllVisu:
             if self.dbld[self.database_name][0] == 'GBR' :
                 geopdwd = geopdwd.loc[~geopdwd.cases.isnull()]
                 geopdwd_filtered  = geopdwd_filtered.loc[~geopdwd_filtered.cases.isnull()]
+            kwargs['date_slider']=date_slider
             return func(self, geopdwd, geopdwd_filtered, sourcemaplabel, standardfig,**kwargs)
         return innerdecomap
 
@@ -2213,7 +2259,7 @@ class AllVisu:
         standardfig.image_url(url='pimpmap', x='centroidx', y='centroidy',source=sourcemaplabel,anchor="center")
         return standardfig
     ######################
-    def gettile(self):
+    def get_tile(self):
         return self.tile
     ###################### BEGIN Static Methods ##################
     @staticmethod
@@ -2538,7 +2584,9 @@ class AllVisu:
     '''
 
     @decowrapper
-    def pycoa_mpltdate_plot(self,input,input_field,**kwargs):
+    def pycoa_mpltdate_plot(self,**kwargs):
+        input = kwargs.get('input')
+        input_field = kwargs.get('input_field')
         fig, ax = plt.subplots(1, 1,figsize=(12, 8))
         loc = input['where'].unique()[:MAXCOUNTRIESDISPLAYED]
         df = pd.pivot_table(input,index='date', columns='where', values=input_field)
@@ -2548,7 +2596,7 @@ class AllVisu:
         return ax
 
     @decowrapper
-    def pycoa_mpltyearly_plot(self,input,input_field,**kwargs):
+    def pycoa_mpltyearly_plot(self,**kwargs):
         '''
          matplotlib date yearly plot chart
          Max display defined by MAXCOUNTRIESDISPLAYED
@@ -2560,7 +2608,6 @@ class AllVisu:
         input.loc[:,'allyears']=input['date'].apply(lambda x : x.year)
         input['allyears'] = input['allyears'].astype(int)
         input.loc[:,'dayofyear']= input['date'].apply(lambda x : x.dayofyear)
-        print(input)
         fig, ax = plt.subplots(1, 1,figsize=(12, 8))
         loc = input['where'].unique()[:MAXCOUNTRIESDISPLAYED]
         df = pd.pivot_table(input,index='date', columns='where', values=input_field)
@@ -2570,7 +2617,7 @@ class AllVisu:
         return ax
 
     @decowrapper
-    def pycoa_mpltpie(self,input,input_field,**kwargs):
+    def pycoa_mpltpie(self,**kwargs):
         '''
          matplotlib pie chart
          Max display defined by MAXCOUNTRIESDISPLAYED
@@ -2584,7 +2631,7 @@ class AllVisu:
         return ax
 
     @decowrapper
-    def pycoa_mplthorizontalhisto(self,input,input_field,**kwargs):
+    def pycoa_mplthorizontalhisto(self,**kwargs):
         '''
         matplotlib horizon histo
         '''
@@ -2599,7 +2646,7 @@ class AllVisu:
         return ax
 
     @decowrapper
-    def pycoa_mplthisto(self,input,input_field,**kwargs):
+    def pycoa_mplthisto(self,**kwargs):
         '''
         matplotlib horizon histo
         '''
@@ -2615,7 +2662,8 @@ class AllVisu:
         return ax
 
     @decowrapper
-    def pycoa_mpltmap(self,input,input_field,**kwargs):
+    @decohistomap
+    def pycoa_mpltmap(self,**kwargs):
         '''
          matplotlib map display
         '''
@@ -2624,10 +2672,11 @@ class AllVisu:
         from mpl_toolkits.axes_grid1 import make_axes_locatable
         fig, ax = plt.subplots(1, 1,figsize=(8, 12))
         plt.axis('off')
-        input = pd.merge(input, self.kindgeo, on='where')
-        input = input.drop_duplicates('where')
-        input = gpd.GeoDataFrame(input)
-        ax = input.plot(column=input_field, ax=ax,legend=True,
+        geopdwd=kwargs.get('geopdwd')
+        input_field=kwargs.get('input_field')
+        geopdwd = pd.merge(geopdwd, self.kindgeo, on='where')
+        geopdwd = gpd.GeoDataFrame(geopdwd)
+        ax = geopdwd.plot(column=input_field, ax=ax,legend=True,
                                 legend_kwds={'label': input_field,
                                 'orientation': "horizontal","pad": 0.001})
         return ax
@@ -2637,11 +2686,13 @@ class AllVisu:
 
     ######SEABORN PLOT#########
     @decowrapper
-    def pycoa_date_plot_seaborn(self, input, input_field, **kwargs):
+    def pycoa_date_plot_seaborn(self, **kwargs):
         """
         Create a seaborn line plot with date on x-axis and input_field on y-axis.
         """
         # On inclut que les premiers 24 pays uniques
+        input = kwargs['input']
+        input_field = kwargs['input_field']
         top_countries = input['where'].unique()[:MAXCOUNTRIESDISPLAYED]
         filtered_input = input[input['where'].isin(top_countries)]
         # Créer le graphique
@@ -2658,11 +2709,13 @@ class AllVisu:
     ######################
     ######SEABORN HIST VERTICALE#########
     @decowrapper
-    def pycoa_hist_seaborn_verti(self, input, input_field, **kwargs):
+    def pycoa_hist_seaborn_verti(self, **kwargs):
         """
         Create a seaborn vertical histogram with input_field on y-axis.
         """
         # On inclut que les premiers 24 pays uniques
+        input = kwargs.get('input')
+        input_field = kwargs.get('input_field')
         top_countries = input['where'].unique()[:MAXCOUNTRIESDISPLAYED]
         filtered_input = input[input['where'].isin(top_countries)]
         # Créer le graphique
@@ -2678,11 +2731,13 @@ class AllVisu:
 
     ######SEABORN HIST HORIZONTALE#########
     @decowrapper
-    def pycoa_hist_seaborn_hori(self, input, input_field, **kwargs):
+    def pycoa_hist_seaborn_hori(self, **kwargs):
         """
         Create a seaborn horizontal histogram with input_field on x-axis.
         """
         # On inclut que les premiers 24 pays uniques
+        input = kwargs.get('input')
+        input_field = kwargs.get('input_field')
         top_countries = input['where'].unique()[:MAXCOUNTRIESDISPLAYED]
         filtered_input = input[input['where'].isin(top_countries)]
         # Créer le graphique
@@ -2697,11 +2752,13 @@ class AllVisu:
 
     ######SEABORN BOXPLOT#########
     @decowrapper
-    def pycoa_pairplot_seaborn(self, input, input_field, **kwargs):
+    def pycoa_pairplot_seaborn(self, **kwargs):
         """
         Create a seaborn pairplot
         """
         # On inclut que les premiers 24 pays uniques
+        input = kwargs.get('input')
+        input_field = kwargs.get('input_field')
         top_countries = input['where'].unique()[:MAXCOUNTRIESDISPLAYED]
         filtered_input = input[input['where'].isin(top_countries)]
         # Créer le graphique
@@ -2715,7 +2772,7 @@ class AllVisu:
 
     ######SEABORN heatmap#########
     @decowrapper
-    def pycoa_heatmap_seaborn(self, input, input_field, **kwargs):
+    def pycoa_heatmap_seaborn(self, **kwargs):
         """
         Create a seaborn heatmap
         """

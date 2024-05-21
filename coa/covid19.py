@@ -21,7 +21,6 @@ import numpy as np
 import pandas as pd
 import datetime as dt
 
-import coa.display as codisplay
 from coa.tools import (
     verb,
     kwargs_test,

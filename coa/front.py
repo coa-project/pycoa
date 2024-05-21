@@ -131,7 +131,6 @@ class Front:
         '''
         return self.namefunction
 
-
     def setdisplay(self,vis):
        '''
         Visualization seter
@@ -448,6 +447,12 @@ class Front:
             '''
             if self._db == '':
                 self._db, self._cocoplot = coco.DataBase.factory(db_name = self._whom)
+            for i in self._cocoplot.listviskargs:
+                try:
+                    kwargs.pop(i)
+                except:
+                    pass
+                    
             kwargs_test(kwargs,self._listchartkargs,'Bad args used ! please check ')
             where = kwargs.get('where', None)
             which = kwargs.get('which', None)

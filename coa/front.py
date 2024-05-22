@@ -100,6 +100,8 @@ class Front:
             raise CoaError("Sorry but " + visu + " visualisation isn't implemented ")
         else:
             self.setdisplay(vis)
+            print(f"The visualization has been set correctly to: {vis}")
+
 
             for i in self._cocoplot.listchartkargs:
                 try:
@@ -773,6 +775,8 @@ class Front:
             return self._cocoplot.pycoa_mapfolium(**kwargs)
         elif visu == 'mplt':
             return self._cocoplot.pycoa_mpltmap(**kwargs)
+        elif visu == 'seaborn':
+            return self._cocoplot.pycoa_heatmap_seaborn(**kwargs)
         else:
             self.setdisplay('bokeh')
             raise CoaTypeError('Waiting for a valid visualisation. So far: \'bokeh\', \'folium\' or \'mplt\' \
@@ -840,6 +844,9 @@ class Front:
                     fig = self._cocoplot.pycoa_hist_seaborn_hori( **kwargs)
                 elif typeofhist == 'pie':
                     fig = self._cocoplot.pycoa_pairplot_seaborn(**kwargs)
+                elif typeofhist == 'byvalue':
+                    fig = self._cocoplot.pycoa_hist_seaborn_verti( **kwargs)
+
                 else:
                     print(typeofhist + ' not implemented in ' + self.getdisplay())
                     self.setdisplay('bokeh')

@@ -35,7 +35,8 @@ from coa.error import *
 from scipy import stats as sps
 import pickle
 import os, time
-
+import coa.allvisu as allvisu
+import coa.geo as coge
 class DataBase(object):
    """
    DataBase class
@@ -61,7 +62,8 @@ class DataBase(object):
         self.iso3country = _db_list_dict[db_name][0]
         self.granularity = _db_list_dict[db_name][1]
         self.namecountry = _db_list_dict[db_name][2]
-
+        self._gi = coge.GeoInfo()
+        
         try:
             if self.granularity != 'nation':
                 self.geo = coge.GeoCountry(self.iso3country)
@@ -181,7 +183,7 @@ class DataBase(object):
 
    def set_display(self,db,wheregeometrydescription):
        ''' Set the Display '''
-       self.codisp = codisplay.Display(db, wheregeometrydescription)
+       self.codisp = allvisu.AllVisu(db, wheregeometrydescription)
 
    def get_display(self):
        ''' Return the instance of Display initialized by factory'''
@@ -580,6 +582,61 @@ class DataBase(object):
             verb("Here the information I\'ve got on ", kwargs['which']," : ",  self.dbfullinfo.get_keyword_definition(kwargs['which']))
         pdfiltered = self.permanentdisplay(pdfiltered)
         return pdfiltered
+
+
+   def normbypop(self, pandy, val2norm,bypop):
+    """
+        Return a pandas with a normalisation column add by population
+        * can normalize by '100', '1k', '100k' or '1M'
+    """
+    if pandy.empty:
+        raise CoaKeyError('Seems to be an empty field')
+    if isinstance(pandy['codelocation'].iloc[0],list):
+        pandy = pandy.explode('codelocation')
+
+    if self.db_world == True:
+        pop_field='population'
+        pandy = self._gi.add_field(input=pandy,field=pop_field,geofield='codelocation')
+    else:
+        if not isinstance(self._gi,coge.GeoCountry):
+            self._gi=None
+        else:
+            if self._gi.get_country() != self.geo.get_country():
+                self._gi=None
+
+        if self._gi == None :
+            self._gi = self.geo
+        pop_field='population_subregion'
+        if pop_field not in self._gi.get_list_properties():
+            raise CoaKeyError('The population information not available for this country. No normalization possible')
+
+        pandy=self._gi.add_field(input=pandy,field=pop_field,input_key='codelocation')
+
+    clust = pandy['clustername'].unique()
+    df = pd.DataFrame()
+    for i in clust:
+        pandyi = pandy.loc[ pandy['clustername'] == i ].copy()
+        pandyi.loc[:,pop_field] = pandyi.groupby('codelocation')[pop_field].first().sum()
+        if len(pandyi.groupby('codelocation')['codelocation'].first().tolist()) == 1:
+            cody = pandyi.groupby('codelocation')['codelocation'].first().tolist()*len(pandyi)
+        else:
+            cody = [pandyi.groupby('codelocation')['codelocation'].first().tolist()]*len(pandyi)
+        pandyi = pandyi.assign(codelocation=cody)
+        if df.empty:
+            df = pandyi
+        else:
+            df = pd.concat([df,pandyi])
+
+    df = df.drop_duplicates(['date','clustername'])
+    pandy = df
+
+    pandy=pandy.copy()
+    pandy[pop_field]=pandy[pop_field].replace(0., np.nan)
+    if bypop == 'pop':
+        pandy.loc[:,val2norm+' per total population']=pandy[val2norm]/pandy[pop_field]*self._dict_bypop[bypop]
+    else:
+        pandy.loc[:,val2norm+' per '+bypop + ' population']=pandy[val2norm]/pandy[pop_field]*self._dict_bypop[bypop]
+    return pandy
 
    def merger(self,**kwargs):
         '''

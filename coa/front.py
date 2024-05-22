@@ -326,7 +326,6 @@ class Front:
                 self._db = coco.DataBase.readpekl('.cache/'+base+'.pkl')
                 pandy = self._db.getwheregeometrydescription()
                 self._cocoplot = allvisu.AllVisu(base, pandy)
-                #self._cocoplot.setvisu(self.getdisplay())
                 coge.GeoManager('name')
         self._whom = base
     # ----------------------------------------------------------------------
@@ -843,9 +842,9 @@ class Front:
                 elif typeofhist == 'pie':
                     fig = self._cocoplot.pycoa_pairplot_seaborn(**kwargs)
                 else:
+                    self.setdisplay('bokeh')
                     print(typeofhist + ' not implemented in ' + self.getdisplay())
                     fig = self._cocoplot.pycoa_horizonhisto(**kwargs)
-                    #raise CoaKeyError
             else:
                 raise CoaKeyError('Unknown typeofhist value. Available value : listhist().')
 
@@ -916,11 +915,10 @@ class Front:
             input_field = kwargs.get('input_field')
             typeofplot = kwargs.get('typeofplot',self.listplot()[0])
             kwargs.pop('output')
+            fig = self._cocoplot
             if kwargs.get('bypop'):
                 kwargs.pop('bypop')
             if self.getdisplay() == 'bokeh':
-                if 'typeofplot' in kwargs:
-                    typeofplot = kwargs.pop('typeofplot')
                 if typeofplot == 'date':
                     fig = self._cocoplot.pycoa_date_plot(**kwargs)
                 elif typeofplot == 'spiral':
@@ -956,7 +954,9 @@ class Front:
                 if typeofplot == 'date':
                     fig = self._cocoplot.pycoa_date_plot_seaborn(**kwargs)
                 else:
-                    raise CoaKeyError('Unknown type of plot')
+                    self.setdisplay('bokeh')
+                    print(typeofplot + ' not implemented in ' + self.getdisplay())
+                    fig = self._cocoplot.pycoa_spiral_plot(**kwargs)
             else:
                 raise CoaKeyError('Unknown typeofplot value. Should be date, versus, menulocation, spiral or yearly.')
             return func(self,fig)

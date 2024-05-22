@@ -752,7 +752,7 @@ class AllVisu:
     ''' SCROLLINGMENU PLOT '''
     @decowrapper
     @decoplot
-    def pycoa_scrollingmenu(self, input = None, input_field = None, **kwargs):
+    def pycoa_scrollingmenu(self, **kwargs):
         '''
         -----------------
         Create a date plot, with a scrolling menu location, according to arguments.
@@ -778,14 +778,11 @@ class AllVisu:
                  if [dd/mm/yyyy:] up to max date
         '''
 
-        if self.getvisattr():
-            guideline = self.getvisattr()['guideline']
-            mode = self.getvisattr()['mode']
-        else:
-            guideline = self.dvisu_default['guideline']
-            mode = self.dvisu_default['mode']
-
-        uniqloc = input.clustername.unique().to_list()
+        input = kwargs.get('input')
+        input_field= kwargs.get('input_field')
+        guideline = kwargs.get('guideline',self.dicovisuargs['guideline'][0])
+        mode = kwargs.get('guideline',self.dicovisuargs['mode'][0])
+        uniqloc = list(input.clustername.unique())
         uniqloc.sort()
         if 'where' in input.columns:
             if len(uniqloc) < 2:
@@ -849,7 +846,7 @@ class AllVisu:
     ''' YEARLY PLOT '''
     @decowrapper
     @decoplot
-    def pycoa_yearly_plot(self, input = None, input_field = None, **kwargs):
+    def pycoa_yearly_plot(self,**kwargs):
         '''
         -----------------
         Create a date plot according to arguments. See help(pycoa_date_plot).
@@ -872,10 +869,10 @@ class AllVisu:
                  if [:dd/mm/yyyy] min date up to
                  if [dd/mm/yyyy:] up to max date
         '''
-        if self.getvisattr():
-            guideline = self.getvisattr()['guideline']
-        else:
-            guideline = self.dvisu_default['guideline']
+        input = kwargs['input']
+        input_field = [kwargs['input_field']]
+        guideline = kwargs.get('guideline',self.dicovisuargs['guideline'][0])
+        mode = kwargs.get('mode',self.dicovisuargs['mode'][0])
         if len(input.clustername.unique()) > 1 :
             print('Can only display yearly plot for ONE location. I took the first one:', input.clustername[0])
         input = input.loc[input.clustername == input.clustername[0]].copy()
@@ -919,7 +916,7 @@ class AllVisu:
             label = input_field
             tooltips = [('where', '@rolloverdisplay'), ('date', '@date{%F}'), ('Cases', '@cases{0,0.0}')]
             formatters = {'where': 'printf', '@date': 'datetime', '@name': 'printf'}
-            hover=HoverTool(tooltips = tooltips, formatters = formatters, point_policy = "snap_to_data", mode = kwargs['mode'])  # ,PanTool())
+            hover=HoverTool(tooltips = tooltips, formatters = formatters, point_policy = "snap_to_data", mode = mode)  # ,PanTool())
             standardfig.add_tools(hover)
             if guideline:
                 cross= CrosshairTool()
@@ -948,7 +945,7 @@ class AllVisu:
 
         tooltips = [('where', '@rolloverdisplay'), ('date', '@date{%F}'), (r.name, '@$name{0,0.0}')]
         formatters = {'where': 'printf', '@date': 'datetime', '@name': 'printf'}
-        hover=HoverTool(tooltips = tooltips, formatters = formatters, point_policy = "snap_to_data", mode = kwargs['mode'], renderers=[r])  # ,PanTool())
+        hover=HoverTool(tooltips = tooltips, formatters = formatters, point_policy = "snap_to_data", mode = mode, renderers=[r])  # ,PanTool())
         standardfig.add_tools(hover)
         if guideline:
             cross= CrosshairTool()

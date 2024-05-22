@@ -2571,20 +2571,28 @@ class AllVisu:
          matplotlib date yearly plot chart
          Max display defined by MAXCOUNTRIESDISPLAYED
         '''
+        input = kwargs.get('input')
+        input_field = kwargs.get('input_field')
         input['date']=pd.to_datetime(input["date"])
+        title = kwargs.get('title')
         #drop bissextile fine tuning in needed in the future
+
         input = input.loc[~(input['date'].dt.month.eq(2) & input['date'].dt.day.eq(29))].reset_index(drop=True)
         input = input.copy()
         input.loc[:,'allyears']=input['date'].apply(lambda x : x.year)
         input['allyears'] = input['allyears'].astype(int)
+
         input.loc[:,'dayofyear']= input['date'].apply(lambda x : x.dayofyear)
         fig, ax = plt.subplots(1, 1,figsize=(12, 8))
-        loc = input['where'].unique()[:MAXCOUNTRIESDISPLAYED]
-        df = pd.pivot_table(input,index='date', columns='where', values=input_field)
-        ax=plt.plot(df.dayofyear, df[col])
+        loc = input['where'][0]
+        d = input.allyears.unique()
+        for i in d:
+            df = pd.pivot_table(input.loc[input.allyears==i],index='dayofyear', columns='where', values=input_field)
+            ax = plt.plot(df.index, df[loc])
+        plt.legend(d)
+        plt.title(title)
         return ax
 
-        return ax
 
     @decowrapper
     def pycoa_mpltpie(self,**kwargs):

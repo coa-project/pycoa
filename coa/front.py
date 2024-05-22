@@ -83,7 +83,7 @@ class Front:
         self._whom = ''
         self.vis = 'bokeh'
         self._cocoplot = None
-        self.namefunction = 'Charts Function Not Registered'
+        self.namefunction = None
 
     def setvisu(self,**kwargs):
         '''
@@ -99,10 +99,6 @@ class Front:
             raise CoaError("Sorry but " + visu + " visualisation isn't implemented ")
         else:
             self.setdisplay(vis)
-            if 'output' in self.getkwargs():
-                self.getkwargs().pop('output')
-            if tile :
-                self._cocoplot.set_tile(tile)
 
             for i in self._cocoplot.listchartkargs:
                 try:
@@ -110,10 +106,13 @@ class Front:
                 except:
                     pass
             #self._cocoplot.setvisattr(kwargs)
-            f = self.gatenamefunction()
-            if f == 'Charts Function Not Registered':
-                raise CoaError("Sorry but " + f + ". Did you draw it ? ")
-            return f(**self.getkwargs())
+            try:
+                f = self.gatenamefunction()
+                if f == 'Charts Function Not Registered':
+                    raise CoaError("Sorry but " + f + ". Did you draw it ? ")
+                return f(**self.getkwargs())
+            except:
+                pass
 
     def setnamefunction(self,name):
         '''

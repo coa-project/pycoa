@@ -2601,6 +2601,8 @@ class AllVisu:
          Max display defined by MAXCOUNTRIESDISPLAYED
         '''
         #fig, ax = plt.subplots(1, 1,figsize=(12, 8))
+        input = kwargs.get('input')
+        input_field = kwargs.get('input_field')
         labels = input['where'].unique()[:MAXCOUNTRIESDISPLAYED]
         input = input.loc[input.date==input.date.max()][:MAXCOUNTRIESDISPLAYED].set_index('where')
         ax = input.plot(kind="pie",y=input_field, autopct='%1.1f%%', legend=True,
@@ -2615,6 +2617,8 @@ class AllVisu:
         '''
         import matplotlib as mpl
         from matplotlib.cm import get_cmap
+        input = kwargs.get('input')
+        input_field = kwargs.get('input_field')
         fig, ax = plt.subplots(1, 1,figsize=(12, 8))
         cmap = plt.get_cmap('Paired')
         input = input.loc[input.date==input.date.max()][:MAXCOUNTRIESDISPLAYED]
@@ -2630,6 +2634,8 @@ class AllVisu:
         '''
         import matplotlib as mpl
         from matplotlib.cm import get_cmap
+        input = kwargs.get('input')
+        input_field = kwargs.get('input_field')
         fig, ax = plt.subplots(1, 1,figsize=(12, 8))
         cmap = plt.get_cmap('Paired')
         input = input.loc[input.date==input.date.max()][:MAXCOUNTRIESDISPLAYED]

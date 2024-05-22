@@ -95,6 +95,7 @@ class Front:
         maplabel =  kwargs.get('maplabel','text')
         guideline = kwargs.get('guideline','False')
         title = kwargs.get('title',None)
+        print("TITLE",title)
         if vis not in self._listvisu:
             raise CoaError("Sorry but " + visu + " visualisation isn't implemented ")
         else:
@@ -822,11 +823,9 @@ class Front:
                 if dateslider is not None:
                     del kwargs['dateslider']
                     kwargs['cursor_date'] = dateslider
-
                 if typeofhist == 'bylocation':
                     if 'bins' in kwargs:
                         raise CoaKeyError("The bins keyword cannot be set with histograms by location. See help.")
-
                     fig = self._cocoplot.pycoa_horizonhisto(**kwargs)
                 elif typeofhist == 'byvalue':
                     if dateslider:
@@ -842,8 +841,19 @@ class Front:
                 elif typeofhist == 'pie':
                     fig = self._cocoplot.pycoa_pairplot_seaborn(**kwargs)
                 else:
-                    self.setdisplay('bokeh')
                     print(typeofhist + ' not implemented in ' + self.getdisplay())
+                    self.setdisplay('bokeh')
+                    fig = self._cocoplot.pycoa_horizonhisto(**kwargs)
+            elif self.getdisplay() == 'mplt':
+                if typeofhist == 'bylocation':
+                    fig = self._cocoplot.pycoa_mplthorizontalhisto( **kwargs)
+                elif typeofhist == 'byvalue':
+                    fig = self._cocoplot.pycoa_mplthisto( **kwargs)
+                elif typeofhist == 'pie':
+                    fig = self._cocoplot.pycoa_mpltpie(**kwargs)
+                else:
+                    print(typeofhist + ' not implemented in ' + self.getdisplay())
+                    self.setdisplay('bokeh')
                     fig = self._cocoplot.pycoa_horizonhisto(**kwargs)
             else:
                 self.setdisplay('bokeh')
@@ -949,7 +959,7 @@ class Front:
                 elif typeofplot == 'yearly':
                     fig = self._cocoplot.pycoa_mpltyearly_plot(**kwargs)
                 else:
-                    raise CoaKeyError('Unknown type of plot')
+                    raise CoaKeyError('For display: '+self.getdisplay() +' unknown type of plot '+typeofplot)
             elif self.getdisplay() == 'seaborn':
                 if typeofplot == 'date':
                     fig = self._cocoplot.pycoa_date_plot_seaborn(**kwargs)

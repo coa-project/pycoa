@@ -2675,12 +2675,39 @@ class AllVisu:
         def inner_plot(self, **kwargs):
             input = kwargs.get('input')
             input_field = kwargs.get('input_field')
+            title = f"Graphique de {input_field}"
+            if 'where' in kwargs:
+                title += f" - {kwargs.get('where')}"
+            kwargs['title'] = title
 
-            top_countries = input['where'].unique()[:MAXCOUNTRIESDISPLAYED]
-            kwargs['filtered_input'] = input[input['where'].isin(top_countries)]
+            top_countries = (input.groupby('where')[input_field].sum()
+                         .nlargest(MAXCOUNTRIESDISPLAYED).index.tolist())
+            filtered_input = input[input['where'].isin(top_countries)]
+
+            kwargs['filtered_input'] = filtered_input
 
             return func(self, **kwargs)
         return inner_plot
+
+    def decohistseaborn(func):
+        """
+        decorator for seaborn histogram
+        """
+        @wraps(func)
+        def inner_hist(self,**kwargs):
+            filtered_input = kwargs.get('filtered_input')
+            input_field = kwargs.get('input_field')
+
+            filtered_input = (filtered_input.sort_values('date')
+                  .drop_duplicates('where', keep='last')    #garde le last en terme de date
+                  .drop_duplicates(['where', input_field])  #quand une ligne avec where et input est pareil on drop
+                  .sort_values(by=input_field, ascending=False) #trier
+                  .reset_index(drop=True))
+            
+            kwargs['filtered_input'] = filtered_input
+            return func(self, **kwargs)
+        return inner_hist
+
 
     ######SEABORN PLOT#########
     @decowrapper
@@ -2693,11 +2720,9 @@ class AllVisu:
         filtered_input = kwargs['filtered_input']
         input_field = kwargs['input_field']
         title = kwargs.get('title')
-        top_countries = input['where'].unique()[:MAXCOUNTRIESDISPLAYED]
-        filtered_input = input[input['where'].isin(top_countries)]
         # Créer le graphique
         plt.figure(figsize=(10, 6))
-        sns.lineplot(data=filtered_input, x='date', y=input_field, marker='o', hue='where')
+        sns.lineplot(data=filtered_input, x='date', y=input_field, hue='where')
         plt.title(title)
         plt.xlabel('Date')
         plt.ylabel(input_field)
@@ -2711,18 +2736,14 @@ class AllVisu:
 
     @decowrapper
     @decoplotseaborn
+    @decohistseaborn
     def pycoa_hist_seaborn_verti(self, **kwargs):
         """
         Create a seaborn vertical histogram with input_field on y-axis.
         """
         filtered_input = kwargs['filtered_input']
         input_field = kwargs['input_field']
-        #Trier les valeurs
-        filtered_input = (filtered_input.sort_values('date')
-                  .drop_duplicates('where', keep='last')    #garde le last en terme de date
-                  .drop_duplicates(['where', input_field])  #quand une ligne avec where et input est pareil on drop
-                  .sort_values(by=input_field, ascending=False) #trier
-                  .reset_index(drop=True))
+        title = kwargs.get('title')
 
         # Créer le graphique
         sns.set_theme(style="whitegrid")
@@ -2738,20 +2759,15 @@ class AllVisu:
     ######SEABORN HIST HORIZONTALE#########
     @decowrapper
     @decoplotseaborn
+    @decohistseaborn
     def pycoa_hist_seaborn_hori(self, **kwargs):
         """
         Create a seaborn horizontal histogram with input_field on x-axis.
         """
         filtered_input = kwargs['filtered_input']
         input_field = kwargs['input_field']
-        title = kwargs['title']
-        #Trier les valeurs
-        filtered_input = (filtered_input.sort_values('date')
-                  .drop_duplicates('where', keep='last')    #garde le last en terme de date
-                  .drop_duplicates(['where', input_field])  #quand une ligne avec where et input est pareil on drop
-                  .sort_values(by=input_field, ascending=False) #trier
-                  .reset_index(drop=True))
-
+        title = kwargs.get('title')
+     
         # Créer le graphique
         sns.set_theme(style="whitegrid")
         plt.figure(figsize=(14, 7))

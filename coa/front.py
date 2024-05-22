@@ -840,6 +840,9 @@ class Front:
                     fig = self._cocoplot.pycoa_hist_seaborn_hori( **kwargs)
                 elif typeofhist == 'pie':
                     fig = self._cocoplot.pycoa_pairplot_seaborn(**kwargs)
+                elif typeofhist == 'byvalue':
+                    fig = self._cocoplot.pycoa_hist_seaborn_verti( **kwargs)
+
                 else:
                     print(typeofhist + ' not implemented in ' + self.getdisplay())
                     self.setdisplay('bokeh')

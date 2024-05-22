@@ -464,6 +464,7 @@ class AllVisu:
         def inner_plot(self ,**kwargs):
             input = kwargs.get('input')
             input_field = [kwargs.get('input_field')]
+            typeofplot = kwargs.get('typeofplot',self.dicochartargs['typeofplot'][0])
             if 'where' in input.columns:
                 location_ordered_byvalues = list(
                     input.loc[input.date == self.when_end].sort_values(by=input_field, ascending=False)['clustername'].unique())
@@ -1065,7 +1066,7 @@ class AllVisu:
     ''' VERTICAL HISTO '''
     @decowrapper
     @decohistomap
-    def pycoa_histo(self,  geopdwd, input_field = None, **kwargs):
+    def pycoa_histo(self, **kwargs):
         '''
             -----------------
             Create 1D histogramme by value according to arguments.
@@ -1085,11 +1086,13 @@ class AllVisu:
                      if [:dd/mm/yyyy] min date up to
                      if [dd/mm/yyyy:] up to max date
         '''
+        geopdwd=kwargs.get('geopdwd')
+        input_field=kwargs.get('input_field')
         geopdwd_filter = geopdwd.loc[geopdwd.date == self.when_end]
         geopdwd_filter = geopdwd_filter.reset_index(drop = True)
 
         input = geopdwd_filter.rename(columns = {'cases': input_field})
-        bins = kwargs.get('bins', None)
+        bins = kwargs.get('bins', self.dicochartargs['bins'])
 
         if 'where' in input.columns:
             uniqloc = list(input.clustername.unique())
@@ -1182,14 +1185,17 @@ class AllVisu:
     ''' DECORATORS FOR HISTO VERTICAL, HISTO HORIZONTAL, PIE '''
     def decohistopie(func):
         @wraps(func)
-        def inner_decohistopie(self, geopdwd, **kwargs):
+        def inner_decohistopie(self, **kwargs):
             """
             Decorator for
             Horizontal histogram & Pie Chart
             """
-            input_field = kwargs['input_field']
-            geopdwd['cases'] = geopdwd[input_field]
+            geopdwd = kwargs.get('geopdwd')
+            input_field = kwargs.get('input_field')
+            plot_width = kwargs.get('plot_width',self.dicofigureargs['plot_width'])
+            plot_height = kwargs.get('plot_height',self.dicofigureargs['plot_height'])
 
+            geopdwd['cases'] = geopdwd[input_field]
             geopdwd_filter = geopdwd.loc[geopdwd.date == self.when_end]
             geopdwd_filter = geopdwd_filter.reset_index(drop = True)
             geopdwd_filter['cases'] = geopdwd_filter[input_field]
@@ -1289,9 +1295,8 @@ class AllVisu:
                 if func.__name__ == 'pycoa_pie':
                     if not input_filter[input_filter[input_field] < 0.].empty:
                         raise CoaKeyError('Some values are negative, can\'t display a Pie chart, try histo by location')
-                    kwargs['plot_height'] = self.dicokargs['plot_height']
-                    standardfig.plot_width = kwargs['plot_height']
-                    standardfig.plot_height = kwargs['plot_height']
+                    standardfig.plot_width = plot_width
+                    standardfig.plot_height = plot_height
 
                 if dateslider:
                     dateslider.width = int(0.8*plot_width)

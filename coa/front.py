@@ -774,6 +774,7 @@ class Front:
         elif visu == 'mplt':
             return self._cocoplot.pycoa_mpltmap(**kwargs)
         else:
+            self.setdisplay('bokeh')
             raise CoaTypeError('Waiting for a valid visualisation. So far: \'bokeh\', \'folium\' or \'mplt\' \
             aka matplotlib .See help.')
     # ----------------------------------------------------------------------
@@ -846,8 +847,8 @@ class Front:
                     print(typeofhist + ' not implemented in ' + self.getdisplay())
                     fig = self._cocoplot.pycoa_horizonhisto(**kwargs)
             else:
+                self.setdisplay('bokeh')
                 raise CoaKeyError('Unknown typeofhist value. Available value : listhist().')
-
             return func(self,fig)
         return inner
 
@@ -954,10 +955,10 @@ class Front:
                 if typeofplot == 'date':
                     fig = self._cocoplot.pycoa_date_plot_seaborn(**kwargs)
                 else:
-                    self.setdisplay('bokeh')
                     print(typeofplot + ' not implemented in ' + self.getdisplay())
                     fig = self._cocoplot.pycoa_spiral_plot(**kwargs)
             else:
+                self.setdisplay('bokeh')
                 raise CoaKeyError('Unknown typeofplot value. Should be date, versus, menulocation, spiral or yearly.')
             return func(self,fig)
         return inner

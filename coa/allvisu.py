@@ -469,7 +469,7 @@ class AllVisu:
         """
         @wraps(func)
         def inner_plot(self ,**kwargs):
-            print("-->",self._cocoplot.getkwargsfront())
+            #print("-->",self._cocoplot.getkwargsfront())
             input = kwargs.get('input')
             input_field = [kwargs.get('input_field')]
             typeofplot = kwargs.get('typeofplot',self.dicochartargs['typeofplot'][0])
@@ -501,6 +501,7 @@ class AllVisu:
                         input_field = input_field[0]
                     if self.dbld[self.database_name][1] == 'nation' and self.dbld[self.database_name][0] != 'WW':
                         func.__name__ = 'pycoa_date_plot'
+                kwargs['input'] = input
             return func(self, **kwargs)
         return inner_plot
 
@@ -2711,7 +2712,7 @@ class AllVisu:
                   .drop_duplicates(['where', input_field])  #quand une ligne avec where et input est pareil on drop
                   .sort_values(by=input_field, ascending=False) #trier
                   .reset_index(drop=True))
-            
+
             kwargs['filtered_input'] = filtered_input
             return func(self, **kwargs)
         return inner_hist
@@ -2775,7 +2776,7 @@ class AllVisu:
         filtered_input = kwargs['filtered_input']
         input_field = kwargs['input_field']
         title = kwargs.get('title')
-     
+
         # Créer le graphique
         sns.set_theme(style="whitegrid")
         plt.figure(figsize=(14, 7))

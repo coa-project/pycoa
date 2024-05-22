@@ -95,7 +95,9 @@ class Front:
         maplabel =  kwargs.get('maplabel','text')
         guideline = kwargs.get('guideline','False')
         title = kwargs.get('title',None)
+
         self._cocoplot.setkwargsfront(kwargs)
+
         if vis not in self._listvisu:
             raise CoaError("Sorry but " + visu + " visualisation isn't implemented ")
         else:

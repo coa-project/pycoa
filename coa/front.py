@@ -95,11 +95,12 @@ class Front:
         maplabel =  kwargs.get('maplabel','text')
         guideline = kwargs.get('guideline','False')
         title = kwargs.get('title',None)
-        print("TITLE",title)
         if vis not in self._listvisu:
             raise CoaError("Sorry but " + visu + " visualisation isn't implemented ")
         else:
             self.setdisplay(vis)
+            print(f"The visualization has been set correctly to: {vis}")
+
 
             for i in self._cocoplot.listchartkargs:
                 try:
@@ -773,6 +774,8 @@ class Front:
             return self._cocoplot.pycoa_mapfolium(**kwargs)
         elif visu == 'mplt':
             return self._cocoplot.pycoa_mpltmap(**kwargs)
+        elif visu == 'seaborn':
+            return self._cocoplot.pycoa_heatmap_seaborn(**kwargs)
         else:
             self.setdisplay('bokeh')
             raise CoaTypeError('Waiting for a valid visualisation. So far: \'bokeh\', \'folium\' or \'mplt\' \

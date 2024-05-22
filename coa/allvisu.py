@@ -187,6 +187,7 @@ class AllVisu:
         except:
             pass
 
+        self.dicokfront = {}
         self.dchartkargs = {}
         self.dvisukargs = {}
         self.uptitle, self.subtitle = ' ',' '
@@ -387,6 +388,12 @@ class AllVisu:
         else:
             raise CoaTypeError('Don\'t know the tile you want. So far:' + str(list(self.dicovisuargs['tile'])))
 
+    def setkwargsfront(self,kw):
+        self.dicokfront = kw
+
+    def getkwargsfront(self):
+        return self.dicokfront
+
     ''' FIGURE COMMUN FOR ALL Bokeh Figure'''
     def standardfig(self, **kwargs):
         """
@@ -462,6 +469,7 @@ class AllVisu:
         """
         @wraps(func)
         def inner_plot(self ,**kwargs):
+            print("-->",self._cocoplot.getkwargsfront())
             input = kwargs.get('input')
             input_field = [kwargs.get('input_field')]
             typeofplot = kwargs.get('typeofplot',self.dicochartargs['typeofplot'][0])

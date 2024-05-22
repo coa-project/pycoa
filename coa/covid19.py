@@ -63,7 +63,7 @@ class DataBase(object):
         self.granularity = _db_list_dict[db_name][1]
         self.namecountry = _db_list_dict[db_name][2]
         self._gi = coge.GeoInfo()
-        
+
         try:
             if self.granularity != 'nation':
                 self.geo = coge.GeoCountry(self.iso3country)
@@ -95,6 +95,7 @@ class DataBase(object):
         except:
             raise CoaTypeError('What data base are you looking for ?')
         self.where_geodescription = where_kindgeo
+
         #self.set_display(db_name,where_kindgeo,vis)
 
    def getwheregeometrydescription(self):
@@ -632,10 +633,12 @@ class DataBase(object):
 
     pandy=pandy.copy()
     pandy[pop_field]=pandy[pop_field].replace(0., np.nan)
+    av = allvisu.AllVisu()
+    _dict_bypop =  av._dict_bypop
     if bypop == 'pop':
-        pandy.loc[:,val2norm+' per total population']=pandy[val2norm]/pandy[pop_field]*self._dict_bypop[bypop]
+        pandy.loc[:,val2norm+' per total population']=pandy[val2norm]/pandy[pop_field]*_dict_bypop[bypop]
     else:
-        pandy.loc[:,val2norm+' per '+bypop + ' population']=pandy[val2norm]/pandy[pop_field]*self._dict_bypop[bypop]
+        pandy.loc[:,val2norm+' per '+bypop + ' population']=pandy[val2norm]/pandy[pop_field]*_dict_bypop[bypop]
     return pandy
 
    def merger(self,**kwargs):

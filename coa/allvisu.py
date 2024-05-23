@@ -1555,15 +1555,19 @@ class AllVisu:
                         point_policy = "snap_to_data"))  # ,PanTool())
                 panel = Panel(child = standardfig, title = axis_type)
                 panels.append(panel)
-
-            return func(self,srcfiltered, panels, dateslider, toggl)
+                kwargs['srcfiltered']=srcfiltered
+                kwargs['panels']=panels
+                kwargs['dateslider']=dateslider
+                kwargs['toggl']=toggl
+                kwargs['geopdwd']=geopdwd
+            return func(self,**kwargs)
         return inner_decohistopie
 
     ''' VERTICAL HISTO '''
     @decowrapper
     @decohistomap
     @decohistopie
-    def pycoa_horizonhisto(self, srcfiltered, panels, dateslider,toggl):
+    def pycoa_horizonhisto(self, **kwargs):
         '''
             -----------------
             Create 1D histogramme by location according to arguments.
@@ -1586,6 +1590,10 @@ class AllVisu:
                          if [:dd/mm/yyyy] min date up to
                          if [dd/mm/yyyy:] up to max date
         '''
+        srcfiltered=kwargs.get('srcfiltered')
+        panels=kwargs.get('panels')
+        dateslider=kwargs.get('dateslider')
+        toggl=kwargs.get('toggl')
         n = len(panels)
         new_panels = []
         for i in range(n):
@@ -1655,7 +1663,7 @@ class AllVisu:
     @decowrapper
     @decohistomap
     @decohistopie
-    def pycoa_pie(self, srcfiltered, panels, dateslider,toggl):
+    def pycoa_pie(self, **kwargs):
         '''
             -----------------
             Create a pie chart according to arguments.
@@ -1673,6 +1681,10 @@ class AllVisu:
             - dateslider = None if True
                     - orientation = horizontal
         '''
+        srcfiltered=kwargs.get('srcfiltered')
+        panels=kwargs.get('panels')
+        dateslider=kwargs.get('dateslider')
+        toggl=kwargs.get('toggl')
         standardfig = panels[0].child
         standardfig.plot_height=400
         standardfig.plot_width=400
@@ -1837,7 +1849,8 @@ class AllVisu:
     ''' DECORATOR FOR MAP BOKEH '''
     def decopycoageo(func):
         @wraps(func)
-        def innerdecopycoageo(self, geopdwd,**kwargs):
+        def innerdecopycoageo(self,**kwargs):
+            geopdwd = kwargs.get('geopdwd')
             input_field = kwargs.get("input_field")
             geopdwd['cases'] = geopdwd[input_field]
             loca=geopdwd['where'].unique()
@@ -1885,14 +1898,17 @@ class AllVisu:
                 geopdwd_filtered = geopdwd_filtered.drop(columns='geometry')
                 geopdwd_filtered = pd.merge(geolistmodified, geopdwd_filtered, on='where')
 
-            return func(self,  geopdwd, geopdwd_filtered,**kwargs)
+                kwargs['geopdwd']=geopdwd
+                kwargs['geopdwd_filtered']=geopdwd_filtered
+            return func(self, **kwargs)
         return innerdecopycoageo
 
     ''' RETURN GEOMETRY, LOCATIO + CASES '''
     def decomap(func):
         @wraps(func)
-        def innerdecomap(self, geopdwd, geopdwd_filtered,**kwargs):
-
+        def innerdecomap(self,**kwargs):
+            geopdwd_filtered=kwargs.get('geopdwd_filtered')
+            geopdwd=kwargs.get('geopdwd')
             title = kwargs.get('title',self.dicovisuargs['title'])
             maplabel = kwargs.get('maplabel',list(self.dicovisuargs['maplabel'])[0])
             tile = kwargs.get('tile',list(self.dicovisuargs['tile'])[0])
@@ -1974,7 +1990,11 @@ class AllVisu:
             if self.dbld[self.database_name][0] == 'GBR' :
                 geopdwd = geopdwd.loc[~geopdwd.cases.isnull()]
                 geopdwd_filtered  = geopdwd_filtered.loc[~geopdwd_filtered.cases.isnull()]
-            return func(self, geopdwd, geopdwd_filtered, sourcemaplabel, standardfig,**kwargs)
+            kwargs['geopdwd']=geopdwd
+            kwargs['geopdwd_filtered']= geopdwd_filtered
+            kwargs['sourcemaplabel']=sourcemaplabel
+            kwargs['standardfig']=standardfig
+            return func(self,**kwargs)
         return innerdecomap
 
     ''' MAP BOKEH '''
@@ -1982,7 +2002,7 @@ class AllVisu:
     @decohistomap
     @decopycoageo
     @decomap
-    def pycoa_map(self, geopdwd, geopdwd_filtered, sourcemaplabel, standardfig,**kwargs):
+    def pycoa_map(self,**kwargs):
         '''
             -----------------
             Create a map bokeh with arguments.
@@ -2006,6 +2026,10 @@ class AllVisu:
                          if [dd/mm/yyyy:] up to max date
             - maplabel: False
         '''
+        geopdwd=kwargs.get('geopdwd')
+        geopdwd_filtered=kwargs.get('geopdwd_filtered')
+        sourcemaplabel=kwargs.get('sourcemaplabel')
+        standardfig=kwargs.get('standardfig')
         dateslider = kwargs.get('dateslider',list(self.dicovisuargs['dateslider'])[0])
         maplabel = kwargs.get('maplabel',list(self.dicovisuargs['maplabel'])[0])
         min_col, max_col, min_col_non0 = 3*[0.]
@@ -2189,7 +2213,7 @@ class AllVisu:
     @decohistomap
     @decopycoageo
     @decomap
-    def pycoa_pimpmap(self, geopdwd, geopdwd_filtered, sourcemaplabel, standardfig,**kwargs):
+    def pycoa_pimpmap(self,**kwargs):
         '''
             -----------------
             Create a bokeh map with pimpline label and with to arguments.
@@ -2213,6 +2237,11 @@ class AllVisu:
                          if [dd/mm/yyyy:] up to max date
             - maplabel: False
         '''
+        geopdwd=kwargs.get('geopdwd')
+        geopdwd_filtered=kwargs.get('geopdwd_filtered')
+        sourcemaplabel=kwargs.get('sourcemaplabel')
+        standardfig=kwargs.get('standardfig')
+
         standardfig.xaxis.visible = False
         standardfig.yaxis.visible = False
         standardfig.xgrid.grid_line_color = None
@@ -2561,12 +2590,14 @@ class AllVisu:
     '''
 
     @decowrapper
+    @decoplot
     def pycoa_mpltdate_plot(self,**kwargs):
         input = kwargs.get('input')
         input_field = kwargs.get('input_field')
         title = kwargs.get('title')
         fig, ax = plt.subplots(1, 1,figsize=(12, 8))
-        loc = input['where'].unique()[:MAXCOUNTRIESDISPLAYED]
+        loc = input['where'].unique()
+        print(loc)
         df = pd.pivot_table(input,index='date', columns='where', values=input_field)
         for col in loc:
             ax=plt.plot(df.index, df[col])
@@ -2575,6 +2606,7 @@ class AllVisu:
         return ax
 
     @decowrapper
+    @decoplot
     def pycoa_mpltyearly_plot(self,**kwargs):
         '''
          matplotlib date yearly plot chart
@@ -2604,36 +2636,38 @@ class AllVisu:
 
 
     @decowrapper
+    @decohistomap
+    @decohistopie
     def pycoa_mpltpie(self,**kwargs):
         '''
          matplotlib pie chart
          Max display defined by MAXCOUNTRIESDISPLAYED
         '''
         #fig, ax = plt.subplots(1, 1,figsize=(12, 8))
-        input = kwargs.get('input')
+        srcfiltered = kwargs.get('srcfiltered')
         input_field = kwargs.get('input_field')
-        labels = input['where'].unique()[:MAXCOUNTRIESDISPLAYED]
-        input = input.loc[input.date==input.date.max()][:MAXCOUNTRIESDISPLAYED].set_index('where')
-        ax = input.plot(kind="pie",y=input_field, autopct='%1.1f%%', legend=True,
+        labels = srcfiltered['where'].unique()
+        input = srcfiltered.loc[input.date==input.date.max()].set_index('where')
+        ax = srcfiltered.plot(kind="pie",y=input_field, autopct='%1.1f%%', legend=True,
         title=input_field, ylabel=input_field, labeldistance=None)
         ax.legend(bbox_to_anchor=(1, 1.02), loc='upper left')
         return ax
 
     @decowrapper
+    @decohistomap
+    @decohistopie
     def pycoa_mplthorizontalhisto(self,**kwargs):
         '''
         matplotlib horizon histo
         '''
         import matplotlib as mpl
         from matplotlib.cm import get_cmap
-        input = kwargs.get('input')
+        geopdwd_filtered = kwargs.get('geopdwd_filtered')
         input_field = kwargs.get('input_field')
+        #geopdwd = geopdwd.loc[geopdwd.date==geopdwd.date.max()]
         fig, ax = plt.subplots(1, 1,figsize=(12, 8))
         cmap = plt.get_cmap('Paired')
-        input = input.loc[input.date==input.date.max()][:MAXCOUNTRIESDISPLAYED]
-        loc = input['where'].unique()[:MAXCOUNTRIESDISPLAYED]
-        input = input[['where',input_field]].sort_values(by=input_field)
-        bar = ax.barh(input['where'], input[input_field],color=cmap.colors)
+        bar = ax.barh(geopdwd_filtered['where'], geopdwd_filtered[input_field],color=cmap.colors)
         return ax
 
     @decowrapper

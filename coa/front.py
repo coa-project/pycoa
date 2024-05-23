@@ -104,13 +104,6 @@ class Front:
             self.setdisplay(vis)
             print(f"The visualization has been set correctly to: {vis}")
 
-
-            for i in self._cocoplot.listchartkargs:
-                try:
-                    kwargs.pop(i)
-                except:
-                    pass
-            #self._cocoplot.setvisattr(kwargs)
             try:
                 f = self.gatenamefunction()
                 if f == 'Charts Function Not Registered':
@@ -826,9 +819,6 @@ class Front:
             if kwargs.get('bypop'):
               kwargs.pop('bypop')
             if self.getdisplay() == 'bokeh':
-                if dateslider is not None:
-                    del kwargs['dateslider']
-                    kwargs['cursor_date'] = dateslider
                 if typeofhist == 'bylocation':
                     if 'bins' in kwargs:
                         raise CoaKeyError("The bins keyword cannot be set with histograms by location. See help.")
@@ -848,16 +838,15 @@ class Front:
                     fig = self._cocoplot.pycoa_pairplot_seaborn(**kwargs)
                 elif typeofhist == 'byvalue':
                     fig = self._cocoplot.pycoa_hist_seaborn_verti( **kwargs)
-
                 else:
                     print(typeofhist + ' not implemented in ' + self.getdisplay())
                     self.setdisplay('bokeh')
                     fig = self._cocoplot.pycoa_horizonhisto(**kwargs)
             elif self.getdisplay() == 'mplt':
                 if typeofhist == 'bylocation':
-                    fig = self._cocoplot.pycoa_mplthorizontalhisto( **kwargs)
+                    fig = self._cocoplot.pycoa_mplthorizontalhisto(**kwargs)
                 elif typeofhist == 'byvalue':
-                    fig = self._cocoplot.pycoa_mplthisto( **kwargs)
+                    fig = self._cocoplot.pycoa_mplthisto(**kwargs)
                 elif typeofhist == 'pie':
                     fig = self._cocoplot.pycoa_mpltpie(**kwargs)
                 else:

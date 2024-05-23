@@ -292,6 +292,7 @@ class GeoManager():
                     "United States Virgin Islands":"VIR",\
                     "Iran":"IRN",\
                     "Micronesia (Country)":"FSM",\
+                    "Micronesia (country)":"FSM",\
                     "Northern Cyprus":"CYP",\
                     "Curacao":"CUW",\
                     "Faeroe Islands":"FRO",\
@@ -500,6 +501,9 @@ class GeoInfo():
                     #geojsondatafile = 'https://raw.githubusercontent.com/johan/world.geo.json/master/countries.geo.json'
                     #self._data_geometry = gpd.read_file(get_local_from_url(geojsondatafile,0,'.json'))[["id","geometry"]]
                     world_geometry_url_zipfile='http://thematicmapping.org/downloads/TM_WORLD_BORDERS_SIMPL-0.3.zip' # too much simplified version ?
+                    world_geometry_url_zipfile='https://github.com/coa-project/coadata/raw/main/coastore/TM_WORLD_BORDERS_SIMPL-0.3.zip'
+
+
                     # world_geometry_url_zipfile='http://thematicmapping.org/downloads/TM_WORLD_BORDERS-0.3.zip' # too precize version ?
                     self._data_geometry = gpd.read_file('zip://'+get_local_from_url(world_geometry_url_zipfile,0,'.zip'))[['ISO3','geometry']]
                     self._data_geometry.columns=["id_tmp","geometry"]
@@ -616,8 +620,9 @@ class GeoRegion():
         self._cw=[w.split('[')[0] for w in p_cw[0]['Country'].to_list()]   # removing wikipedia notes
 
         # --- filling celac information
-        p_celac=pd.read_html(get_local_from_url('https://en.wikipedia.org/wiki/Community_of_Latin_American_and_Caribbean_States'))
-        self._celac=[w.split(',')[0] for w in p_celac[4][p_celac[4].index<33]["Country"].to_list()]
+        p_celac=pd.read_html(get_local_from_url('https://en.wikipedia.org/wiki/Community_of_Latin_American_and_Caribbean_States'),\
+                    match='Country')
+        self._celac = [p_celac[0].Country.to_list()] 
 
         # --- filling cedeao information
         p_cedeao=pd.read_html(get_local_from_url('https://en.wikipedia.org/wiki/Economic_Community_of_West_African_States'))
@@ -774,11 +779,13 @@ class GeoCountry():
     # Assuming zip file here
     _country_info_dict = {'FRA':'https://data.opendatasoft.com/explore/dataset/georef-france-departement@public/download/?format=geojson&timezone=Europe/Berlin&lang=fr',\
                     #previously https://github.com/coa-project/coadata/raw/main/coastore/public.opendatasoft.com_912711563.zip',\
-                    'USA':'https://alicia.data.socrata.com/api/geospatial/jhnu-yfrj?method=export&format=Original',\
+                    #'USA':'https://alicia.data.socrata.com/api/geospatial/jhnu-yfrj?method=export&format=Original',\
+                    'USA':'https://github.com/coa-project/coadata/raw/main/coacache/alicia.data.socrata.com_3337537769.zip',\
                     'ITA':'https://raw.githubusercontent.com/openpolis/geojson-italy/master/geojson/limits_IT_provinces.geojson',\
                     'IND':'https://raw.githubusercontent.com/deldersveld/topojson/master/countries/india/india-states.json',\
                     'DEU':'https://github.com/jgehrcke/covid-19-germany-gae/raw/master/geodata/DE-counties.geojson',\
-                    'ESP':'https://public.opendatasoft.com/explore/dataset/provincias-espanolas/download/?format=shp&timezone=Europe/Berlin&lang=en',\
+                    #'ESP':'https://public.opendatasoft.com/explore/dataset/provincias-espanolas/download/?format=shp&timezone=Europe/Berlin&lang=en',\
+                    'ESP':'https://github.com/coa-project/coadata/raw/main/coacache/public.opendatasoft.com_598837822.zip',\
                     # missing some counties 'GBR':'https://opendata.arcgis.com/datasets/69dc11c7386943b4ad8893c45648b1e1_0.zip?geometry=%7B%22xmin%22%3A-44.36%2C%22ymin%22%3A51.099%2C%22xmax%22%3A39.487%2C%22ymax%22%3A59.78%2C%22type%22%3A%22extent%22%2C%22spatialReference%22%3A%7B%22wkid%22%3A4326%7D%7D&outSR=%7B%22latestWkid%22%3A27700%2C%22wkid%22%3A27700%7D',\
                     'GBR':'https://github.com/coa-project/coadata/raw/main/coastore/opendata.arcgis.com_3256063640',\
                     # previously (but broken) : https://opendata.arcgis.com/datasets/3a4fa2ce68f642e399b4de07643eeed3_0.geojson',\

@@ -2619,10 +2619,12 @@ class AllVisu:
         '''
         geopdwd_filter = kwargs.get('geopdwd_filter')
         input_field = kwargs.get('input_field')
+        title = kwargs.get('title')
         geopdwd_filter = geopdwd_filter.sort_values(by=[input_field]).set_index('where')
         ax = geopdwd_filter.plot(kind="pie",y=input_field, autopct='%1.1f%%', legend=True,
         title=input_field, ylabel=input_field, labeldistance=None)
         ax.legend(bbox_to_anchor=(1, 1.02), loc='upper left')
+        ax.set_title(title)
         return ax
 
     @decowrapper
@@ -2636,10 +2638,12 @@ class AllVisu:
         from matplotlib.cm import get_cmap
         geopdwd_filter = kwargs.get('geopdwd_filter')
         input_field = kwargs.get('input_field')
+        title = kwargs.get('title')
         geopdwd_filter = geopdwd_filter.sort_values(by=[input_field])
         fig, ax = plt.subplots(1, 1,figsize=(12, 8))
         cmap = plt.get_cmap('Paired')
         bar = ax.barh(geopdwd_filter['where'], geopdwd_filter[input_field],color=cmap.colors)
+        ax.set_title(title)
         return ax
 
     @decowrapper
@@ -2669,6 +2673,7 @@ class AllVisu:
         from matplotlib import cm
         from mpl_toolkits.axes_grid1 import make_axes_locatable
         fig, ax = plt.subplots(1, 1,figsize=(8, 12))
+        title = kwargs.get('title')
         plt.axis('off')
         geopdwd = kwargs.get('geopdwd')
         input_field = kwargs.get('input_field')
@@ -2677,6 +2682,7 @@ class AllVisu:
         ax = geopdwd.plot(column=input_field, ax=ax,legend=True,
                                 legend_kwds={'label': input_field,
                                 'orientation': "horizontal","pad": 0.001})
+        ax.set_title(title)                        
         return ax
 
     ######SEABORN#########

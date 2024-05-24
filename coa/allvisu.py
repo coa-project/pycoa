@@ -192,32 +192,6 @@ class AllVisu:
         self.dvisukargs = {}
         self.uptitle, self.subtitle = ' ',' '
 
-    def splitetattr(self,d_attr):
-        '''
-        split input dico into dico oriented chart and a dico oriented visu
-        '''
-        if isinstance(d_attr,dict):
-            for k,v in d_attr.items():
-                if k in self.listchartkargs:
-                    self.dchartkargs[k]=v
-                elif k in self.listvisukargs :
-                    self.dvisukargs[k]=v
-                else:
-                    CoaTypeError(" That's weird ... check your arugments")
-        else:
-            raise CoaTypeError(d_attr+" must be a dico")
-
-    def userchartskargs(self):
-        '''
-        get dico chart kargs
-        '''
-        return self.dchartkargs
-
-    def uservisukargs(self):
-      '''
-      get dico visu kargs
-      '''
-      return self.dvisukargs
 
     ''' WRAPPER COMMUN FOR ALL'''
     def decowrapper(func):
@@ -232,11 +206,13 @@ class AllVisu:
                 - kwargs:
                     * keys = [plot_width, plot_width, title, when, title_temporal,bins, what, which]
             Note that method used only the needed variables, some of them are useless
+            - add kwargs set in the setvisu front end to global kwargs variable : kwargs.update(self.getkwargsfront())
             """
             if not isinstance(kwargs['input'], pd.DataFrame):
                 raise CoaTypeError(input + 'Must be a pandas, with pycoa structure !')
 
             kwargs_test(kwargs, self.listchartkargs, 'Bad args used in the display function.')
+            kwargs.update(self.getkwargsfront())
 
             input = kwargs.get('input')
             input_field = kwargs.get('input_field')
@@ -248,7 +224,6 @@ class AllVisu:
             tile = kwargs.get('tile', self.dicovisuargs['tile'])
             titlesetted = kwargs.get('title', self.dicovisuargs['title'])
             maplabel = kwargs.get('maplabel', self.dicovisuargs['maplabel'])
-
             if isinstance(which,list):
                 which = input.columns[2]
             if input_field and 'cur_' in input_field:
@@ -389,6 +364,7 @@ class AllVisu:
             raise CoaTypeError('Don\'t know the tile you want. So far:' + str(list(self.dicovisuargs['tile'])))
 
     def setkwargsfront(self,kw):
+        kwargs_test(kw, list(self.dicovisuargs.keys()), 'Error with this resquest (not available in setvisu)')
         self.dicokfront = kw
 
     def getkwargsfront(self):
@@ -469,7 +445,7 @@ class AllVisu:
         """
         @wraps(func)
         def inner_plot(self ,**kwargs):
-            #print("-->",self._cocoplot.getkwargsfront())
+            print("-->",self._cocoplot.getkwargsfront())
             input = kwargs.get('input')
             input_field = [kwargs.get('input_field')]
             typeofplot = kwargs.get('typeofplot',self.dicochartargs['typeofplot'][0])
@@ -2675,14 +2651,13 @@ class AllVisu:
         from matplotlib.cm import get_cmap
         input = kwargs.get('input')
         input_field = kwargs.get('input_field')
+        title = kwargs.get('title')
         #fig, ax = plt.subplots(1, 1,figsize=(12, 8))
-        #cmap = plt.get_cmap('Paired')
         input = input.loc[input.date==input.date.max()][:MAXCOUNTRIESDISPLAYED]
         loc = input['where'].unique()[:MAXCOUNTRIESDISPLAYED]
-
         bins=len(input['where'])+1
         input= pd.pivot_table(input,index='date', columns='where', values=input_field)
-        return input.plot.hist(bins=bins, alpha=0.5)
+        return input.plot.hist(bins=bins, alpha=0.5,title = title)
 
     @decowrapper
     @decohistomap

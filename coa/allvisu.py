@@ -2675,14 +2675,14 @@ class AllVisu:
         from matplotlib.cm import get_cmap
         input = kwargs.get('input')
         input_field = kwargs.get('input_field')
-        fig, ax = plt.subplots(1, 1,figsize=(12, 8))
-        cmap = plt.get_cmap('Paired')
+        #fig, ax = plt.subplots(1, 1,figsize=(12, 8))
+        #cmap = plt.get_cmap('Paired')
         input = input.loc[input.date==input.date.max()][:MAXCOUNTRIESDISPLAYED]
         loc = input['where'].unique()[:MAXCOUNTRIESDISPLAYED]
-        input = input[['where',input_field]].sort_values(by=input_field)
-        bar = ax.bar(input['where'], input[input_field],color=cmap.colors)
-        plt.xticks(rotation=30,ha='right')
-        return ax
+
+        bins=len(input['where'])+1
+        input= pd.pivot_table(input,index='date', columns='where', values=input_field)
+        return input.plot.hist(bins=bins, alpha=0.5)
 
     @decowrapper
     @decohistomap

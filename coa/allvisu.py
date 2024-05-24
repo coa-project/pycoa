@@ -1196,8 +1196,11 @@ class AllVisu:
         @wraps(func)
         def inner_decohistopie(self, **kwargs):
             """
-            Decorator for
-            Horizontal histogram & Pie Chart
+            Decorator for Horizontal histogram & Pie Chart
+            It put in the kwargs:
+            kwargs['geopdwd']-> pandas for input_field asked (all dates)
+            kwargs['geopdwd_filter']-> pandas for input_field asked last dates
+            kwargs['srcfiltered']-> a ColumnDataSource base on kwargs['geopdwd_filter'] this is only used for Bokeh
             """
             geopdwd = kwargs.get('geopdwd')
             input_field = kwargs.get('input_field')
@@ -1262,13 +1265,12 @@ class AllVisu:
                 else:
                     geopdwd_filter['horihistotext'] = [ '{:.3g}'.format(float(i)) if float(i)>1.e4 or float(i)<0.01 else round(float(i),2) for i in geopdwd_filter['right'] ]
                     geopdwd_filter['horihistotext'] = [str(i) for i in geopdwd_filter['horihistotext']]
-            if func.__name__ == 'pycoa_pie' :
+            if func.__name__  in ['pycoa_pie','pycoa_mpltpie']  :
                 geopdwd_filter = self.add_columns_for_pie_chart(geopdwd_filter,input_field)
                 geopdwd = self.add_columns_for_pie_chart(geopdwd,input_field)
                 if maplabel and 'label%' in maplabel:
                     geopdwd_filter['textdisplayed2'] = geopdwd_filter['percentage']
                     geopdwd['textdisplayed2'] =  geopdwd['percentage']
-
             source = ColumnDataSource(data = geopdwd)
             input_filter = geopdwd_filter
             srcfiltered = ColumnDataSource(data = input_filter)
@@ -1555,11 +1557,12 @@ class AllVisu:
                         point_policy = "snap_to_data"))  # ,PanTool())
                 panel = Panel(child = standardfig, title = axis_type)
                 panels.append(panel)
-                kwargs['srcfiltered']=srcfiltered
-                kwargs['panels']=panels
-                kwargs['dateslider']=dateslider
-                kwargs['toggl']=toggl
-                kwargs['geopdwd']=geopdwd
+            kwargs['srcfiltered']=srcfiltered
+            kwargs['panels']=panels
+            kwargs['dateslider']=dateslider
+            kwargs['toggl']=toggl
+            kwargs['geopdwd']=geopdwd
+            kwargs['geopdwd_filter']=geopdwd_filter
             return func(self,**kwargs)
         return inner_decohistopie
 
@@ -1605,7 +1608,6 @@ class AllVisu:
             label_dict = dict(zip(ytick_loc,srcfiltered.data['permanentdisplay']))
             fig.yaxis.major_label_overrides = label_dict
 
-            #print(fig.y_range ,fig.yaxis.major_label_overrides)
             fig.quad(source = srcfiltered,
                 top='top', bottom = 'bottom', left = 'left', right = 'right', color = 'colors', line_color = 'black',
                 line_width = 1, hover_line_width = 2)
@@ -1631,6 +1633,7 @@ class AllVisu:
         df = df.copy()
         column_sum = df[column_name].sum()
         df['percentage'] = df[column_name]/column_sum
+
         percentages = [0]  + df['percentage'].cumsum().tolist()
         df['angle'] = (df[column_name]/column_sum)*2 * np.pi
         df['starts'] = [p * 2 * np.pi for p in percentages[:-1]]
@@ -1641,6 +1644,7 @@ class AllVisu:
         df['sin'] = np.sin(df['middle']) * 0.9
 
         df['text_size'] = '8pt'
+
         df['textdisplayed'] = df['permanentdisplay'].str.pad(36, side = "left")
         try:
             locale.setlocale(locale.LC_ALL, 'en_US')
@@ -1650,14 +1654,9 @@ class AllVisu:
             except:
                 raise CoaError("Locale setting problem. Please contact support@pycoa.fr")
 
-        df['textdisplayed2'] = [ locale.format("%d", i, grouping=True)\
-                for i in df[column_name]]
-        #df['textdisplayed2'] = df[column_name].astype(str) #[i.str for i in df[column_name]]
-        df['textdisplayed2'] = df['textdisplayed2'].str.pad(26, side = "left")
-        #df['textdisplayed2']  = df[column_name].str.pad(26, side = "left")
+        df['textdisplayed2'] =  ['      '+str(round(100*i,1))+'%' for i in df['percentage']]
         df.loc[df['diff'] <= np.pi/20,'textdisplayed']=''
         df.loc[df['diff'] <= np.pi/20,'textdisplayed2']=''
-        df['percentage'] = 100.*df['percentage']
         return df
 
     @decowrapper
@@ -1695,8 +1694,8 @@ class AllVisu:
         standardfig.ygrid.grid_line_color = None
 
         standardfig.wedge(x=0, y=0, radius=1.,line_color='#E8E8E8',
-        start_angle=cumsum('angle', include_zero=True), end_angle=cumsum('angle'),
-        fill_color='colors', legend_label='clustername', source=srcfiltered)
+        start_angle=cumsum('angle', include_zero=True), end_angle=cumsum('angle'), fill_color='colors',
+        legend_label='clustername', source=srcfiltered)
         standardfig.legend.visible = False
 
         labels = LabelSet(x=0, y=0,text='textdisplayed',angle=cumsum('angle', include_zero=True),
@@ -2597,7 +2596,6 @@ class AllVisu:
         title = kwargs.get('title')
         fig, ax = plt.subplots(1, 1,figsize=(12, 8))
         loc = input['where'].unique()
-        print(loc)
         df = pd.pivot_table(input,index='date', columns='where', values=input_field)
         for col in loc:
             ax=plt.plot(df.index, df[col])
@@ -2643,12 +2641,10 @@ class AllVisu:
          matplotlib pie chart
          Max display defined by MAXCOUNTRIESDISPLAYED
         '''
-        #fig, ax = plt.subplots(1, 1,figsize=(12, 8))
-        srcfiltered = kwargs.get('srcfiltered')
+        geopdwd_filter = kwargs.get('geopdwd_filter')
         input_field = kwargs.get('input_field')
-        labels = srcfiltered['where'].unique()
-        input = srcfiltered.loc[input.date==input.date.max()].set_index('where')
-        ax = srcfiltered.plot(kind="pie",y=input_field, autopct='%1.1f%%', legend=True,
+        geopdwd_filter = geopdwd_filter.sort_values(by=[input_field]).set_index('where')
+        ax = geopdwd_filter.plot(kind="pie",y=input_field, autopct='%1.1f%%', legend=True,
         title=input_field, ylabel=input_field, labeldistance=None)
         ax.legend(bbox_to_anchor=(1, 1.02), loc='upper left')
         return ax
@@ -2662,12 +2658,12 @@ class AllVisu:
         '''
         import matplotlib as mpl
         from matplotlib.cm import get_cmap
-        geopdwd_filtered = kwargs.get('geopdwd_filtered')
+        geopdwd_filter = kwargs.get('geopdwd_filter')
         input_field = kwargs.get('input_field')
-        #geopdwd = geopdwd.loc[geopdwd.date==geopdwd.date.max()]
+        geopdwd_filter = geopdwd_filter.sort_values(by=[input_field])
         fig, ax = plt.subplots(1, 1,figsize=(12, 8))
         cmap = plt.get_cmap('Paired')
-        bar = ax.barh(geopdwd_filtered['where'], geopdwd_filtered[input_field],color=cmap.colors)
+        bar = ax.barh(geopdwd_filter['where'], geopdwd_filter[input_field],color=cmap.colors)
         return ax
 
     @decowrapper

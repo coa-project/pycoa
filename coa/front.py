@@ -381,7 +381,8 @@ class Front:
                 wrapper dealing with arg testing
             '''
             if self._db == '':
-                self._db, self._cocoplot = coco.DataBase.factory(db_name = self._whom)
+                raise CoaKeyError('Something went wrong ... does a db has been loaded ? (setwhom)')
+                #self._db, self._cocoplot = coco.DataBase.factory(db_name = self._whom)
             for i in self._cocoplot.listviskargs:
                 try:
                     kwargs.pop(i)
@@ -603,6 +604,7 @@ class Front:
                     * by default, 'no' normalization
                     * can normalize by '100', '1k', '100k' or '1M'
         """
+
         output = kwargs.get('output')
         pandy = kwargs.get('input')
         input_field  = kwargs.get('input_field')

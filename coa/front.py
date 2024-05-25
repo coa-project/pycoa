@@ -97,7 +97,7 @@ class Front:
             return m
         pd1 = df(dico1,'map, plot, hist & get')
         pd2 = df(dico2,'setvisu')
-        pd1=pd1.append(pd2)
+        pd1=pd.concat([pd1,pd2])
         pd1.index = pd1.index.rename('Methods')
         return pd1
 
@@ -922,7 +922,7 @@ class Front:
 
             title       --  to force the title of the plot
 
-            textcopyright - to force the copyright lower left of the graph
+            copyright - to force the copyright lower left of the graph
 
             typeofplot  -- 'date' (default), 'menulocation' or 'versus'
                            'date':date plot

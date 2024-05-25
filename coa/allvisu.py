@@ -163,7 +163,7 @@ class AllVisu:
                                 'plot_height':width_height_default[1],\
                                 'plot_width':width_height_default[0],\
                                 'title':None,\
-                                'textcopyright':'default'
+                                'copyright': None
                                 }
         self.dicovisuargs =  {
                              'vis':['bokeh','folium','seaborn','mplt'],
@@ -336,14 +336,14 @@ class AllVisu:
                 else:
                     titlefig = whichtitle + ', cumulative'+ title_option
 
-            textcopyright = kwargs.get('textcopyright', None)
-            if textcopyright:
-                textcopyright = '©pycoa.fr ' + textcopyright + title_temporal
-                kwargs.pop('textcopyright')
+            copyright = kwargs.get('copyright', None)
+            if copyright:
+                copyright = '©pycoa.fr ' + copyright + title_temporal
             else:
-                textcopyright = '©pycoa.fr data from: {}'.format(self.database_name)+' '+title_temporal
-
-            self.subtitle = textcopyright
+                copyright = '©pycoa.fr data from: {}'.format(self.database_name)+' '+title_temporal
+            kwargs['copyright'] = copyright
+              
+            self.subtitle = copyright
             if titlesetted:
                 title = titlesetted + title_temporal
                 self.uptitle = title
@@ -364,7 +364,7 @@ class AllVisu:
             raise CoaTypeError('Don\'t know the tile you want. So far:' + str(list(self.dicovisuargs['tile'])))
 
     def setkwargsfront(self,kw):
-        kwargs_test(kw, list(self.dicovisuargs.keys()), 'Error with this resquest (not available in setvisu)')
+        kwargs_test(kw, list(self.dicovisuargs.keys())+list(self.dicofigureargs.keys()), 'Error with this resquest (not available in setvisu)')
         self.dicokfront = kw
 
     def getkwargsfront(self):
@@ -375,19 +375,15 @@ class AllVisu:
         """
          Create a standard Bokeh figure, with pycoa.fr copyright, used in all the bokeh charts
          """
-        textcopyright = kwargs.get('textcopyright',self.dicofigureargs['textcopyright'])
+        copyright = kwargs.get('copyright',self.dicofigureargs['copyright'])
         plot_width = kwargs.get('plot_width',self.dicofigureargs['plot_width'])
         plot_height = kwargs.get('plot_height',self.dicofigureargs['plot_height'])
+        copyright = kwargs.get('copyright')
 
-        if textcopyright  == 'default':
-                textcopyright = '©pycoa.fr (data from: {})'.format(self.database_name)
-        else:
-                textcopyright = '©pycoa.fr ' + textcopyright
-
-        citation = Label(x=0.65 * plot_width - len(textcopyright), y=0.01 *plot_height,
+        citation = Label(x=0.65 * plot_width - len(copyright), y=0.01 *plot_height,
                                           x_units='screen', y_units='screen',
                                           text_font_size='1.5vh', background_fill_color='white', background_fill_alpha=.75,
-                                          text=textcopyright)
+                                          text=copyright)
 
         fig = figure(plot_width=plot_width,plot_height=plot_height, tools=['save', 'box_zoom,reset'], toolbar_location="right")
         #fig.add_layout(citation)
@@ -497,7 +493,7 @@ class AllVisu:
         - plot_heigh = width_height_default[1]
         - plot_width = width_height_default[0]
         - title = None
-        - textcopyright = default
+        - copyright = default
         - mode = mouse
         - dateslider = None if True
                 - orientation = horizontal
@@ -563,7 +559,7 @@ class AllVisu:
         - plot_heigh= width_height_default[1]
         - plot_width = width_height_default[0]
         - title = None
-        - textcopyright = default
+        - copyright = default
         - mode = mouse
         - guideline = False
         - dateslider = None if True
@@ -751,7 +747,7 @@ class AllVisu:
         - plot_heigh= width_height_default[1]
         - plot_width = width_height_default[0]
         - title = None
-        - textcopyright = default
+        - copyright = default
         - mode = mouse
         - guideline = False
         - dateslider = None if True
@@ -843,7 +839,7 @@ class AllVisu:
         - plot_heigh= width_height_default[1]
         - plot_width = width_height_default[0]
         - title = None
-        - textcopyright = default
+        - copyright = default
         - mode = mouse
         - guideline = False
         - dateslider = None if True
@@ -1063,7 +1059,7 @@ class AllVisu:
             - plot_heigh= width_height_default[1]
             - plot_width = width_height_default[0]
             - title = None
-            - textcopyright = default
+            - copyright = default
             - when : default min and max according to the inpude DataFrame.
                      Dates are given under the format dd/mm/yyyy.
                      when format [dd/mm/yyyy : dd/mm/yyyy]
@@ -1558,7 +1554,7 @@ class AllVisu:
             - plot_heigh= width_height_default[1]
             - plot_width = width_height_default[0]
             - title = None
-            - textcopyright = default
+            - copyright = default
             - mode = mouse
             - dateslider = None if True
                     - orientation = horizontal
@@ -1650,7 +1646,7 @@ class AllVisu:
             - plot_heigh= width_height_default[1]
             - plot_width = width_height_default[0]
             - title = None
-            - textcopyright = default
+            - copyright = default
             - mode = mouse
             - dateslider = None if True
                     - orientation = horizontal
@@ -1701,7 +1697,7 @@ class AllVisu:
             - plot_heigh= width_height_default[1]
             - plot_width = width_height_default[0]
             - title = None
-            - textcopyright = default
+            - copyright = default
             - mode = mouse
             - dateslider = None if True
                     - orientation = horizontal
@@ -1989,7 +1985,7 @@ class AllVisu:
             - plot_heigh= width_height_default[1]
             - plot_width = width_height_default[0]
             - title = None
-            - textcopyright = default
+            - copyright = default
             - mode = mouse
             - dateslider = None if True
                     - orientation = horizontal
@@ -2200,7 +2196,7 @@ class AllVisu:
             - plot_heigh= width_height_default[1]
             - plot_width = width_height_default[0]
             - title = None
-            - textcopyright = default
+            - copyright = default
             - mode = mouse
             - dateslider = None if True
                     - orientation = horizontal

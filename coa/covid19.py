@@ -52,7 +52,6 @@ class DataBase(object):
         """
         verb("Init of covid19.DataBase()")
         self.database_type = dbparser._db_list_dict
-        self.available_options = ['nonneg', 'nofillnan', 'smooth7', 'sumall']
         self.db = db_name
         self.dbfullinfo = dbparser.DBInfo(db_name)
         self.slocation = self.dbfullinfo.get_locations()
@@ -252,6 +251,8 @@ class DataBase(object):
                 location-i      |    2      |  vali-1           |  daily1i-2         |  diffi-2
                 location-i      |    3      |  vali-1           |  daily1i-3         |  diffi-3
                     ...
+
+        - a clustername variable is computed
 
         '''
         option = None

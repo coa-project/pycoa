@@ -65,7 +65,8 @@ class Front:
     FrontEnd
     """
     def __init__(self,):
-        av = allvisu.AllVisu()
+        self.av = allvisu.AllVisu()
+        av = self.av
         self._listwhom = list(_db_list_dict.keys())
         self._listwhat = list(av.dicochartargs['what'])
         self._listoutput = list(av.dicochartargs['output'])  # first one is default for get
@@ -84,6 +85,21 @@ class Front:
         self.vis = 'bokeh'
         self._cocoplot = None
         self.namefunction = None
+
+    def whattodo(self,):
+        dico1 = {k:str(v) for k,v in self.av.dicochartargs.items()}
+        dico2 = {k:str(v) for k,v in self.av.dicofigureargs.items()}
+        def df(d,k):
+            m = pd.DataFrame.from_dict(d.items())
+            m['index'] = len(m)*[k]
+            m=m.set_index('index')
+            m.columns = ['Arguments', 'Options']
+            return m
+        pd1 = df(dico1,'map, plot, hist & get')
+        pd2 = df(dico2,'setvisu')
+        pd1=pd1.append(pd2)
+        pd1.index = pd1.index.rename('Methods')
+        return pd1
 
     def setvisu(self,**kwargs):
         '''

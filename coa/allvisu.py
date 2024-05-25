@@ -445,7 +445,6 @@ class AllVisu:
         """
         @wraps(func)
         def inner_plot(self ,**kwargs):
-            print("-->",self._cocoplot.getkwargsfront())
             input = kwargs.get('input')
             input_field = [kwargs.get('input_field')]
             typeofplot = kwargs.get('typeofplot',self.dicochartargs['typeofplot'][0])
@@ -2571,8 +2570,8 @@ class AllVisu:
         input_field = kwargs.get('input_field')
         title = kwargs.get('title')
         fig, ax = plt.subplots(1, 1,figsize=(12, 8))
-        loc = input['where'].unique()
-        df = pd.pivot_table(input,index='date', columns='where', values=input_field)
+        loc = input['clustername'].unique()
+        df = pd.pivot_table(input,index='date', columns='clustername', values=input_field)
         for col in loc:
             ax=plt.plot(df.index, df[col])
         plt.legend(loc)
@@ -2599,10 +2598,10 @@ class AllVisu:
 
         input.loc[:,'dayofyear']= input['date'].apply(lambda x : x.dayofyear)
         fig, ax = plt.subplots(1, 1,figsize=(12, 8))
-        loc = input['where'][0]
+        loc = input['clustername'][0]
         d = input.allyears.unique()
         for i in d:
-            df = pd.pivot_table(input.loc[input.allyears==i],index='dayofyear', columns='where', values=input_field)
+            df = pd.pivot_table(input.loc[input.allyears==i],index='dayofyear', columns='clustername', values=input_field)
             ax = plt.plot(df.index, df[loc])
         plt.legend(d)
         plt.title(title)
@@ -2620,7 +2619,7 @@ class AllVisu:
         geopdwd_filter = kwargs.get('geopdwd_filter')
         input_field = kwargs.get('input_field')
         title = kwargs.get('title')
-        geopdwd_filter = geopdwd_filter.sort_values(by=[input_field]).set_index('where')
+        geopdwd_filter = geopdwd_filter.sort_values(by=[input_field]).set_index('clustername')
         ax = geopdwd_filter.plot(kind="pie",y=input_field, autopct='%1.1f%%', legend=True,
         title=input_field, ylabel=input_field, labeldistance=None)
         ax.legend(bbox_to_anchor=(1, 1.02), loc='upper left')
@@ -2642,7 +2641,7 @@ class AllVisu:
         geopdwd_filter = geopdwd_filter.sort_values(by=[input_field])
         fig, ax = plt.subplots(1, 1,figsize=(12, 8))
         cmap = plt.get_cmap('Paired')
-        bar = ax.barh(geopdwd_filter['where'], geopdwd_filter[input_field],color=cmap.colors)
+        bar = ax.barh(geopdwd_filter['clustername'], geopdwd_filter[input_field],color=cmap.colors)
         ax.set_title(title)
         return ax
 
@@ -2682,7 +2681,7 @@ class AllVisu:
         ax = geopdwd.plot(column=input_field, ax=ax,legend=True,
                                 legend_kwds={'label': input_field,
                                 'orientation': "horizontal","pad": 0.001})
-        ax.set_title(title)                        
+        ax.set_title(title)
         return ax
 
     ######SEABORN#########

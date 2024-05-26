@@ -89,6 +89,9 @@ class Front:
     def whattodo(self,):
         dico1 = {k:str(v) for k,v in self.av.dicochartargs.items()}
         dico2 = {k:str(v) for k,v in self.av.dicofigureargs.items()}
+        dico3 = {k:str(v) for k,v in self.av.dicovisuargs.items()}
+        dv = dict(list(dico2.items()) + list(dico3.items()))
+
         def df(d,k):
             m = pd.DataFrame.from_dict(d.items())
             m['index'] = len(m)*[k]
@@ -96,7 +99,7 @@ class Front:
             m.columns = ['Arguments', 'Options']
             return m
         pd1 = df(dico1,'map, plot, hist & get')
-        pd2 = df(dico2,'setvisu')
+        pd2 = df(dv,'setvisu')
         pd1=pd.concat([pd1,pd2])
         pd1.index = pd1.index.rename('Methods')
         return pd1

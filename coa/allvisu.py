@@ -342,17 +342,17 @@ class AllVisu:
             else:
                 copyright = '©pycoa.fr data from: {}'.format(self.database_name)+' '+title_temporal
             kwargs['copyright'] = copyright
-              
+
             self.subtitle = copyright
             if titlesetted:
                 title = titlesetted + title_temporal
                 self.uptitle = title
                 titlefig = titlesetted
             else:
-                title = title_temporal
+                title = which + title_temporal
                 self.uptitle = title
                 titlefig = title
-            kwargs['title'] = title
+            kwargs['title'] = titlefig
             kwargs['input'] = input
             return func(self,**kwargs)
         return wrapper

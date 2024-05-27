@@ -87,6 +87,10 @@ class Front:
         self.namefunction = None
 
     def whattodo(self,):
+        '''
+        list all the keys, values from kwargs
+        avalailable with the chart methods et setvisu
+        '''
         dico1 = {k:str(v) for k,v in self.av.dicochartargs.items()}
         dico2 = {k:str(v) for k,v in self.av.dicofigureargs.items()}
         dico3 = {k:str(v) for k,v in self.av.dicovisuargs.items()}
@@ -98,7 +102,11 @@ class Front:
             m=m.set_index('index')
             m.columns = ['Arguments', 'Options']
             return m
-        pd1 = df(dico1,'map, plot, hist & get')
+        pd1 = df(dico1,'get, hist, map, plot, ')
+        pd1.index = np.where(pd1.Arguments=='dateslider','hist, map', pd1.index)
+        pd1.index = np.where(pd1.Arguments=='output','get', pd1.index)
+        pd1.index = np.where(pd1.Arguments=='typeofhist','hist',pd1.index)
+        pd1.index = np.where(pd1.Arguments=='typeofplot','plot', pd1.index)
         pd2 = df(dv,'setvisu')
         pd1=pd.concat([pd1,pd2])
         pd1.index = pd1.index.rename('Methods')
@@ -106,7 +114,7 @@ class Front:
 
     def setvisu(self,**kwargs):
         '''
-            define visualation and associated option
+            define visualization and associated options
         '''
         vis = kwargs.get('vis','bokeh')
         tile = kwargs.get('tile','openstreet')

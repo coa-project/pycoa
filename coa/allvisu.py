@@ -378,7 +378,7 @@ class AllVisu:
         copyright = kwargs.get('copyright',self.dicofigureargs['copyright'])
         plot_width = kwargs.get('plot_width',self.dicofigureargs['plot_width'])
         plot_height = kwargs.get('plot_height',self.dicofigureargs['plot_height'])
-        copyright = kwargs.get('copyright')
+        copyright = kwargs.get('copyright',self.dicofigureargs['copyright'])
 
         citation = Label(x=0.65 * plot_width - len(copyright), y=0.01 *plot_height,
                                           x_units='screen', y_units='screen',

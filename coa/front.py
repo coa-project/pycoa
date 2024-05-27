@@ -100,7 +100,7 @@ class Front:
             m = pd.DataFrame.from_dict(d.items())
             m['index'] = len(m)*[k]
             m=m.set_index('index')
-            m.columns = ['Arguments', 'Options']
+            m.columns = ['Arguments', 'Available options']
             return m
         pd1 = df(dico1,'get, hist, map, plot, ')
         pd1.index = np.where(pd1.Arguments=='dateslider','hist, map', pd1.index)
@@ -110,7 +110,7 @@ class Front:
         pd2 = df(dv,'setvisu')
         pd1=pd.concat([pd1,pd2])
         pd1.index = pd1.index.rename('Methods')
-        pd1 = pd1.sort_values(by='Arguments')
+        pd1 = pd1.sort_values(by='Arguments',ascending = False)
         return pd1
 
     def setvisu(self,**kwargs):

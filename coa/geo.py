@@ -56,7 +56,7 @@ class GeoManager():
             'name',           # Standard name ( != Official, caution )
             'num']            # Numeric standard
 
-    _list_db=[None,'jhu','worldometers','owid','opencovid19national','spfnational','mpoxgh'] # first is default
+    _list_db=[None,'jhu','worldometers','owid','opencovid19national','spfnational','mpoxgh','olympics'] # first is default
     _list_output=['list','dict','pandas'] # first is default
 
     _standard = None # currently used normalisation standard
@@ -298,6 +298,12 @@ class GeoManager():
                     "Faeroe Islands":"FRO",\
                     "Vatican":"VAT"
                 })
+        elif db == 'olympics':
+            translation = pd.read_csv('https://raw.githubusercontent.com/NoamXD8/olympics/main/Liste_des_codes_pays_du_CIO_2.csv')
+            translation.rename(columns={"Code\nCIO": "CIO", "ISO 3166-1\nalpha-3": "ISO3"}, inplace='True')
+            translation_dict.update(
+                {i:j for i,j in zip(translation["CIO"], translation["ISO3"]) if i !=j }
+                )
         return [translation_dict.get(k,k) for k in w]
 
 # ---------------------------------------------------------------------

@@ -152,7 +152,6 @@ class AllVisu:
                                 'typeofhist':['bylocation','byvalue','pie'],\
                                 'typeofplot':['date','menulocation','versus','spiral','yearly'],\
                                 'bins':10,\
-                                'resumetype':['spiral','spark'],\
                                 'bypop':[self._dict_bypop.values()],\
                                 'dateslider':[False,True],\
                                 'output':['pandas','geopandas','list', 'dict', 'array']
@@ -171,7 +170,7 @@ class AllVisu:
                              'tile' : ['openstreet','esri','stamen'],\
                              'orientation':['horizontal','vertical'],\
                              'dateslider':[False,True],\
-                             'maplabel':['text','textinteger','spark','spiral','label%','log','unsorted','exploded','dense'],\
+                             'maplabel':['text','textinteger','spark','label%','log','unsorted','exploded','dense'],\
                              'guideline':[False,True],\
                              'title': None
                              }

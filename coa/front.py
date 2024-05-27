@@ -110,6 +110,7 @@ class Front:
         pd2 = df(dv,'setvisu')
         pd1=pd.concat([pd1,pd2])
         pd1.index = pd1.index.rename('Methods')
+        pd1 = pd1.sort_values(by='Arguments')
         return pd1
 
     def setvisu(self,**kwargs):
@@ -1010,7 +1011,7 @@ class Front:
     def plot(self,fig):
         self.setnamefunction(self.plot)
         ''' show plot '''
-        if self.getdisplay() == 'bokeh':
+        if self.getdisplay() == 'bokeh' and self.plot != '':
             return show(fig)
         else:
             return fig

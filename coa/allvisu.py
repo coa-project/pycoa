@@ -2748,6 +2748,7 @@ class AllVisu:
     ######################
     ######SEABORN HIST VERTICALE#########
 
+    ###NOT USED####
     @decowrapper
     @decoplotseaborn
     @decohistseaborn
@@ -2767,6 +2768,26 @@ class AllVisu:
         plt.xlabel('')  # Suppression de l'étiquette de l'axe x
         plt.ylabel(input_field)
         plt.xticks(rotation=70, ha='center')  # Rotation à 70 degrés et alignement central
+        plt.show()
+
+    ###BY_VALUE###
+    @decowrapper
+    @decoplotseaborn
+    @decohistseaborn
+    def pycoa_hist_seaborn_value(self, **kwargs):
+        """
+        Create a seaborn vertical histogram where the x-axis represents a numerical field.
+        """
+        filtered_input = kwargs['filtered_input']
+        input_field = kwargs['input_field']
+        title = kwargs.get('title')
+
+        sns.set_theme(style="whitegrid")
+        plt.figure(figsize=(14, 7))
+        sns.histplot(data=filtered_input, x=input_field, bins=24, color='blue', kde=True)
+        plt.title(title)
+        plt.xlabel(input_field)
+        plt.ylabel('Fréquence')
         plt.show()
 
 

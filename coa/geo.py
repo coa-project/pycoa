@@ -297,13 +297,7 @@ class GeoManager():
                     "Curacao":"CUW",\
                     "Faeroe Islands":"FRO",\
                     "Vatican":"VAT"
-                })
-        elif db == 'olympics':
-            translation = pd.read_csv('https://raw.githubusercontent.com/NoamXD8/olympics/main/Liste_des_codes_pays_du_CIO_2.csv')
-            translation.rename(columns={"Code\nCIO": "CIO", "ISO 3166-1\nalpha-3": "ISO3"}, inplace='True')
-            translation_dict.update(
-                {i:j for i,j in zip(translation["CIO"], translation["ISO3"]) if i !=j }
-                )
+                })   
         return [translation_dict.get(k,k) for k in w]
 
 # ---------------------------------------------------------------------
@@ -626,7 +620,7 @@ class GeoRegion():
         # --- filling celac information
         p_celac=pd.read_html(get_local_from_url('https://en.wikipedia.org/wiki/Community_of_Latin_American_and_Caribbean_States'),\
                     match='Country')
-        self._celac = [p_celac[0].Country.to_list()] 
+        self._celac = [p_celac[0].Country.to_list()]
 
         # --- filling cedeao information
         p_cedeao=pd.read_html(get_local_from_url('https://en.wikipedia.org/wiki/Economic_Community_of_West_African_States'))

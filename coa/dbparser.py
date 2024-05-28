@@ -765,7 +765,7 @@ class DBInfo:
               '''
           elif namedb == 'olympics':
                 info('Olympics data selected ...')
-
+                #url='https://raw.githubusercontent.com/NoamXD8/olympics/main/athlete_events1.csv'
                 url='https://raw.githubusercontent.com/NoamXD8/olympics/main/athlete_events-1.csv'
                 #url1='https://raw.githubusercontent.com/NoamXD8/olympics/main/athlete_events-2.csv'
                 #url2='https://raw.githubusercontent.com/NoamXD8/olympics/main/athlete_events-3.csv'
@@ -773,74 +773,45 @@ class DBInfo:
                 olympics = {
                 'ID': ['ID', 'Athletes ID'],
                 'Name': ['Name', 'Athletes Name' ],
-                'Sex': ['Sex', 'Athletes Gender'], 
+                'Sex': ['Sex', 'Athletes Gender'],
                 'Age': ['Age', 'Athletes Age'],
                 'Height': ['Height', 'Athletes Height (cm)'],
                 'Weight': ['Weight', 'Athletes Weight (kg)'],
-                'Team': ['Team', 'Athletes country'], 
-                'NOC': ['NOC', 'Country code with 3 letters (USA, FRA...)'],  # 3-letter country code
-                #'Games': ['Games', 'Olympic year and summer or winter (2012 Summer)'],
-                'Year': ['Year', 'Year of the Olympics'],
                 'Season': ['Season', 'Season (Summer or Winter)'],
                 'City': ['City', 'Host City'],
-                'Sport': ['Sport', 'Sport name (Football, Judo...)'], 
-                'Event': ['Event', 'Olympics event (Football Mens Football)'], 
-                'Medal': ['Medal', 'Medal Type (Gold, Silver, Bronze)'],  
+                'Sport': ['Sport', 'Sport name (Football, Judo...)'],
+                'Event': ['Event', 'Olympics event (Football Mens Football)'],
+                'Medal': ['Medal', 'Medal Type (Gold, Silver, Bronze)'],
                 }
-                def get_valid_countries():
-                    return [country.name for country in pycountry.countries]
-                valid_countries = get_valid_countries()
 
-                # urls = [
-                #     'https://raw.githubusercontent.com/NoamXD8/olympics/main/athlete_events-1.csv',
-                #     'https://raw.githubusercontent.com/NoamXD8/olympics/main/athlete_events-2.csv',
-                #     'https://raw.githubusercontent.com/NoamXD8/olympics/main/athlete_events-3.csv'
-                # ]
-                # #self.pandasdb = pd.DataFrame(olympics,index=['Original name','Description','URL','Homepage'])
-
-                # list_olympics = []
-                # for url in urls:
-                #     df = pd.read_csv(url)          
-                #     rename = {'City': 'where','Year': 'date'}
-                    
-                #     df.rename(columns=rename, inplace=True)
-
-
-                #     for col in ['Age', 'Height', 'Weight']:
-                #         if col in df.columns:
-                #             if df[col].dtype == float:
-                #                 df[col] = df[col].apply(lambda x: f"{x:.0f}" if pd.notnull(x) else x)
-
-                #     list_olympics.append(df)
-                
-                # olympics_data = pd.concat(list_olympics, ignore_index=True)
-                # for col in olympics_data.columns:
-                #     print(f"Colonne : {col}: {df[col].dtype}")      
-                # print(olympics_data.head())
-                
-                # self.dbparsed = olympics_data
-
-                # print("Olympics data processed and loaded successfully.")
-                
                 self.separator = {url:','}
                 masterurl = "https://github.com/NoamXD8/olympics"
                 for k,v in olympics.items():
                     olympics[k].append(url)
                     olympics[k].append(masterurl)
-                    
+                mydico = olympics
                 self.pandasdb = pd.DataFrame(olympics,index=['Original name','Description','URL', 'Homepage'])
+
                 lurl=list(dict.fromkeys(self.get_url()))
                 url=lurl[0]
-                #list_olympics = [x]
-                cast = {'Age': 'string','Height': 'string','Weight': 'string', 'City': 'string', 'Team':'string'}
-                rename = {'NOC': 'where','Year': 'date'}
+                rename = {'Year':'date','Team':'where','NOC':'iso_code'}
                 rename.update(self.original_to_available_keywords_dico())
                 separator=self.get_url_separator(url)
-                keep = ['NOC','Year'] + self.get_url_original_keywords()[url]
-                olympics = self.row_where_csv_parser(url=url,rename_columns = rename, separator = separator, cast = cast) #keep_field = keep)
-                valid_countries = [country.name for country in pycountry.countries]
-                #olympics = olympics[olympics['where'].isin(valid_countries)]    #enleve tous les warnings
+                keep = ['date','where','iso_code'] + self.get_url_original_keywords()[url]
+                cast = {'Age': 'string','Height': 'string','Weight': 'string', 'City': 'string', 'Team':'string'}
+                olympics = self.row_where_csv_parser(url=url, rename_columns = rename, separator = separator, cast = cast) #keep_field = keep)
+                translation = pd.read_csv('https://raw.githubusercontent.com/NoamXD8/olympics/main/Liste_des_codes_pays_du_CIO_2.csv')
+                translation.rename(columns={"Code\nCIO": "CIO", "ISO 3166-1\nalpha-3": "ISO3"}, inplace='True')
+                dic_iso = {i:j for i,j in zip(translation["CIO"], translation["ISO3"]) if i !=j}
+                dic_iso.update({'CRT':'GRC','GDR':'DEU','NFL':'NLD','SCG':'SRB','YMD':'YEM','FRG':'DEU'})
+                olympics = olympics.replace({'iso_code': dic_iso})
+                olympics = olympics.loc[~olympics.iso_code.isin(['WIF'])]
                 self.dbparsed = olympics
+                def convert(pan,l):
+                    for i in l:
+                        pan[i]=pan[i].str.replace('NA','0').astype('float')
+                    return pan
+                self.dbparsed = convert(self.dbparsed,['Age','Height','Weight'])
       else:
           raise CoaKeyError('Error in the database selected: '+db+'.Please check !')
       if namedb not in ['jhu','jhu-usa','imed','rki']:
@@ -1068,6 +1039,7 @@ class DBInfo:
      quoting=0
      pandas_db = pd.read_csv(get_local_from_url(url,10000), sep=separator, encoding = encoding,
           keep_default_na=False,na_values='',header=0,quoting=quoting, dtype=cast,low_memory=False) # cached for 2 hours
+
      if constraints:
          for key,val in constraints.items():
              if key in pandas_db.columns:
@@ -1075,6 +1047,7 @@ class DBInfo:
                  pandas_db = pandas_db.drop(columns=key)
      if rename_columns:
              pandas_db = pandas_db.rename(columns=rename_columns)
+
      if drop_field:
          for key,val in drop_field.items():
              pandas_db =  pandas_db[~pandas_db[key].isin(val)]
@@ -1083,17 +1056,16 @@ class DBInfo:
          pandas_db = pandas_db.rename(columns={'semaine':'date'})
      if keep_field:
          pandas_db =  pandas_db[keep_field]
-
      if self.db == "govcy":
         pandas_db['date'] = pd.to_datetime(pandas_db['date'], errors='coerce', format="%d/%m/%Y").dt.date
      elif self.db == "olympics":
-        pandas_db['date'] = pd.to_datetime(pandas_db['Year'], format='%Y', errors='coerce').dt.date
+        pandas_db['date'] = pd.to_datetime(pandas_db['date'], format='%Y', errors='coerce').dt.date
      else:
         pandas_db['date'] = pd.to_datetime(pandas_db['date'], errors='coerce', infer_datetime_format=True).dt.date
-    
+
      #pandas_db['date'] = pd.to_datetime(pandas_db['date'],errors='coerce',infer_datetime_format=True).dt.date
-     if self.db == "olympics":
-         pandas_db['where'] = pandas_db['NOC']  # Copieg valeurs de 'NOC' dans 'where'
+     #if self.db == "olympics":
+     #       pandas_db['where'] = pandas_db['NOC']  # Copieg valeurs de 'NOC' dans 'where'
      if self.get_dblistdico(self.db)[1] == 'nation' and self.get_dblistdico(self.db)[0] in ['FRA','CYP'] or \
          self.db=="spfnational":
          pandas_db['where'] = self.get_dblistdico(self.db)[2]
@@ -1107,19 +1079,23 @@ class DBInfo:
       kwargs_test(kwargs,['columns_skipped'],
           'Bad args used in the restructured_pandas function.')
       columns_skipped = kwargs.get('columns_skipped', None)
-         
-      if self.db_world and self.db not in ['govcy','spfnational','mpoxgh',"olympics"]:
-          print("bug serbia 2")
-          not_UN_nation_dict=['Kosovo','Serbia']
-          tmp=(mypandas.loc[mypandas['where'].isin(not_UN_nation_dict)].groupby('date').sum(numeric_only=True)).reset_index()
-          tmp['where'] = 'Serbia'
-          tmp['iso_code'] = 'SRB'
+
+      if self.db_world and self.db not in ['govcy','spfnational','mpoxgh']:
+          if self.db == 'olympics':
+                not_UN_nation_dict=['KSO','SRB']
+                tmp=(mypandas.loc[mypandas['where'].isin(not_UN_nation_dict)].groupby('date').sum(numeric_only=True)).reset_index()
+                tmp['where'] = 'Serbia'
+                tmp['iso_code'] = 'SRB'
+          else:
+              not_UN_nation_dict=['Kosovo','Serbia']
+              tmp=(mypandas.loc[mypandas['where'].isin(not_UN_nation_dict)].groupby('date').sum(numeric_only=True)).reset_index()
+              tmp['where'] = 'Serbia'
+              tmp['iso_code'] = 'SRB'
           cols = tmp.columns.tolist()
           cols = cols[0:1] + cols[-1:] + cols[1:-1]
           tmp = tmp[cols]
           mypandas = mypandas.loc[~mypandas['where'].isin(not_UN_nation_dict)]
-          mypandas = pd.concat([tmp,mypandas])
-          
+          mypandas = pd.concat([mypandas,tmp])
       if 'iso_code' in mypandas.columns:
           mypandas['iso_code'] = mypandas['iso_code'].dropna().astype(str)
           mypandasori=mypandas.copy()
@@ -1158,11 +1134,11 @@ class DBInfo:
           uniqloc = list(mypandas['where'].unique())
           name2code = collections.OrderedDict(zip(uniqloc,list(gd.loc[gd.name_region.isin(uniqloc)]['code_region'])))
           mypandas = mypandas.loc[~mypandas['where'].isnull()]
-         
+
       codename = None
       location_is_code = False
       uniqloc = list(mypandas['where'].unique()) # if possible location from csv are codelocationv
-      
+
       if self.db_world:
           #uniqloc = [s for s in uniqloc if 'OWID_' not in s]
           uniqloc = [s for s in uniqloc if isinstance(s, str) and 'OWID_' not in s]
@@ -1170,10 +1146,7 @@ class DBInfo:
           db=self.get_db()
           if self.db in ['govcy','europa']:#,olympics]:
               db=None
-          for i in uniqloc:
-            print(i,"==============",self.geo.to_standard([i],output='list',db=db,interpret_region=True)) 
           codename = collections.OrderedDict(zip(uniqloc,self.geo.to_standard(uniqloc,output='list',db=db,interpret_region=True)))
-          
           location_is_code = True
           self.slocation = list(codename.values())
       else:
@@ -1181,7 +1154,6 @@ class DBInfo:
               temp = self.geo.get_region_list()[['name_region','code_region']]
               codename=dict(temp.values)
               self.slocation = uniqloc
-              print("self.slocation = uniqloc",self.slocation )
           elif self.get_dblistdico(self.db)[1] == 'subregion':
               temp = self.geo_all[['code_subregion','name_subregion']]
               codename=dict(temp.loc[temp.code_subregion.isin(uniqloc)].values)
@@ -1196,12 +1168,13 @@ class DBInfo:
               CoaDbError('Granularity problem , neither region nor sub_region ...')
       if self.db == 'dgs':
           mypandas = mypandas.reset_index(drop=True)
-       
-      mypandas = mypandas.groupby(['where','date']).sum(min_count=1).reset_index() # summing in case of multiple dates (e.g. in opencovid19 data). But keep nan if any
+
+      if self.db != 'olympics':
+          mypandas = mypandas.groupby(['where','date']).sum(min_count=1).reset_index() # summing in case of multiple dates (e.g. in opencovid19 data). But keep nan if any
       if self.db == 'govcy' or self.db == 'jpnmhlw':
           location_is_code=False
-       
-      mypandas = fill_missing_dates(mypandas)
+
+      #mypandas = fill_missing_dates(mypandas)
       if location_is_code:
           if self.db != 'dgs':
               mypandas['codelocation'] =  mypandas['where'].astype(str)
@@ -1216,7 +1189,11 @@ class DBInfo:
       if self.db == 'owid':
           onlyowid['codelocation'] = onlyowid['where']
           mypandas = pd.concat([mypandas,onlyowid])
-      self.mainpandas = fill_missing_dates(mypandas)
+
+      if self.db != 'olympics':
+          self.mainpandas = fill_missing_dates(mypandas)
+      else:
+          self.mainpandas=mypandas
       self.dates  = self.mainpandas['date']
 
   def get_mainpandas(self,**kwargs):

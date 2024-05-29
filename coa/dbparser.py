@@ -791,7 +791,6 @@ class DBInfo:
                     olympics[k].append(masterurl)
                 mydico = olympics
                 self.pandasdb = pd.DataFrame(olympics,index=['Original name','Description','URL', 'Homepage'])
-
                 lurl=list(dict.fromkeys(self.get_url()))
                 url=lurl[0]
                 rename = {'Year':'date','Team':'where','NOC':'iso_code'}
@@ -808,7 +807,12 @@ class DBInfo:
                 olympics = olympics.loc[~olympics.iso_code.isin(['WIF'])]
 
                 
-                olympics_data = olympics[['date', 'iso_code', 'Medal']]
+                olympics_data = olympics[['date', 'iso_code', 'Medal', 'Event', 'Season']]
+                #only summer medal for the moment
+                olympics_data = olympics_data[olympics_data['Season'] == 'Summer']
+
+                #Evite de compter plusieurs medailles pour le meme event si plusieurs athletes.
+                olympics_data = olympics_data.drop_duplicates(subset=['iso_code', 'date', 'Event', 'Medal'])
                 
                 pivot_olympics = olympics_data.pivot_table(index=['iso_code', 'date'], columns='Medal', aggfunc='size')
 
@@ -816,9 +820,11 @@ class DBInfo:
 
                 pivot_olympics = pivot_olympics.groupby(level=0).cumsum().reset_index()
 
+                print(pivot_olympics)
+                #pivot_olympics.to_csv('pivot_olympics.csv')
+
                 olympics = olympics.merge(pivot_olympics, on=['iso_code', 'date'], how='left')
 
-      
                 self.dbparsed = olympics
                 def convert(pan,l):
                     for i in l:

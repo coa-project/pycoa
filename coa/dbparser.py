@@ -803,15 +803,28 @@ class DBInfo:
                 translation = pd.read_csv('https://raw.githubusercontent.com/NoamXD8/olympics/main/Liste_des_codes_pays_du_CIO_2.csv')
                 translation.rename(columns={"Code\nCIO": "CIO", "ISO 3166-1\nalpha-3": "ISO3"}, inplace='True')
                 dic_iso = {i:j for i,j in zip(translation["CIO"], translation["ISO3"]) if i !=j}
-                dic_iso.update({'CRT':'GRC','GDR':'DEU','NFL':'NLD','SCG':'SRB','YMD':'YEM','FRG':'DEU'})
+                dic_iso.update({'CRT':'GRC','GDR':'DEU','NFL':'NLD','SCG':'SRB','YMD':'YEM','FRG':'DEU', 'IOA':''})
                 olympics = olympics.replace({'iso_code': dic_iso})
                 olympics = olympics.loc[~olympics.iso_code.isin(['WIF'])]
+
+                
+                olympics_data = olympics[['date', 'iso_code', 'Medal']]
+                
+                pivot_olympics = olympics_data.pivot_table(index=['iso_code', 'date'], columns='Medal', aggfunc='size')
+
+                pivot_olympics = pivot_olympics[['Gold', 'Silver', 'Bronze']].fillna(0).astype(int)
+
+                pivot_olympics = pivot_olympics.groupby(level=0).cumsum().reset_index()
+
+                olympics = olympics.merge(pivot_olympics, on=['iso_code', 'date'], how='left')
+
+      
                 self.dbparsed = olympics
                 def convert(pan,l):
                     for i in l:
                         pan[i]=pan[i].str.replace('NA','0').astype('float')
                     return pan
-                self.dbparsed = convert(self.dbparsed,['Age','Height','Weight'])
+                #self.dbparsed = convert(self.dbparsed,['Age','Height','Weight'])
       else:
           raise CoaKeyError('Error in the database selected: '+db+'.Please check !')
       if namedb not in ['jhu','jhu-usa','imed','rki']:
@@ -1192,6 +1205,7 @@ class DBInfo:
 
       if self.db != 'olympics':
           self.mainpandas = fill_missing_dates(mypandas)
+          print(mypandas)
       else:
           self.mainpandas=mypandas
       self.dates  = self.mainpandas['date']

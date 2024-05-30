@@ -66,8 +66,6 @@ class DBInfo:
                 - url of the csv where the epidemiological variable is
                 - url of the master i.e where some general description could be located. By default is an empty string ''
         '''
-        self.dbparsed = pd.DataFrame()
-        mydico = {}
         self.separator = {}
         self.db = namedb
         self.db_world = False
@@ -771,17 +769,10 @@ class DBInfo:
                 #url2='https://raw.githubusercontent.com/NoamXD8/olympics/main/athlete_events-3.csv'
 
                 olympics = {
-                'ID': ['ID', 'Athletes ID'],
-                'Name': ['Name', 'Athletes Name' ],
-                'Sex': ['Sex', 'Athletes Gender'],
-                'Age': ['Age', 'Athletes Age'],
-                'Height': ['Height', 'Athletes Height (cm)'],
-                'Weight': ['Weight', 'Athletes Weight (kg)'],
-                'Season': ['Season', 'Season (Summer or Winter)'],
-                'City': ['City', 'Host City'],
-                'Sport': ['Sport', 'Sport name (Football, Judo...)'],
-                'Event': ['Event', 'Olympics event (Football Mens Football)'],
-                'Medal': ['Medal', 'Medal Type (Gold, Silver, Bronze)'],
+                #'Medal': ['Medal', 'Medal Type (Gold, Silver, Bronze)'],
+                'Gold':['Gold','Or Medal (PYCOA computed, absent in the orignal)'],
+                'Silver':['Silver','Silver Medal (PYCOA computed, absent in the orignal)'],
+                'Bronze':['Bronze','Bronze Medal (PYCOA computed, absent in the orignal)']
                 }
 
                 self.separator = {url:','}
@@ -796,7 +787,8 @@ class DBInfo:
                 rename = {'Year':'date','Team':'where','NOC':'iso_code'}
                 rename.update(self.original_to_available_keywords_dico())
                 separator=self.get_url_separator(url)
-                keep = ['date','where','iso_code'] + self.get_url_original_keywords()[url]
+
+                keep = ['date','where','iso_code'] +  ['Medal'] #self.get_url_original_keywords()[url]
                 cast = {'Age': 'string','Height': 'string','Weight': 'string', 'City': 'string', 'Team':'string'}
                 olympics = self.row_where_csv_parser(url=url, rename_columns = rename, separator = separator, cast = cast) #keep_field = keep)
                 translation = pd.read_csv('https://raw.githubusercontent.com/NoamXD8/olympics/main/Liste_des_codes_pays_du_CIO_2.csv')
@@ -806,35 +798,31 @@ class DBInfo:
                 olympics = olympics.replace({'iso_code': dic_iso})
                 olympics = olympics.loc[~olympics.iso_code.isin(['WIF'])]
 
-                
                 olympics_data = olympics[['date', 'iso_code', 'Medal', 'Event', 'Season']]
                 #only summer medal for the moment
                 olympics_data = olympics_data[olympics_data['Season'] == 'Summer']
 
                 #Evite de compter plusieurs medailles pour le meme event si plusieurs athletes.
+
                 olympics_data = olympics_data.drop_duplicates(subset=['iso_code', 'date', 'Event', 'Medal'])
-                
+
                 pivot_olympics = olympics_data.pivot_table(index=['iso_code', 'date'], columns='Medal', aggfunc='size')
 
-                pivot_olympics = pivot_olympics[['Gold', 'Silver', 'Bronze']].fillna(0).astype(int)
+                addmedals=['Gold', 'Silver', 'Bronze']
+                pivot_olympics = pivot_olympics[addmedals].fillna(0).astype(int)
 
                 pivot_olympics = pivot_olympics.groupby(level=0).cumsum().reset_index()
 
-                print(pivot_olympics)
-                #pivot_olympics.to_csv('pivot_olympics.csv')
-
                 olympics = olympics.merge(pivot_olympics, on=['iso_code', 'date'], how='left')
-
                 self.dbparsed = olympics
-                def convert(pan,l):
-                    for i in l:
-                        pan[i]=pan[i].str.replace('NA','0').astype('float')
-                    return pan
-                #self.dbparsed = convert(self.dbparsed,['Age','Height','Weight'])
+                self.dbparsed = self.dbparsed[['date','where','iso_code']+addmedals]
+                self.set_available_keywords(addmedals)
+
       else:
           raise CoaKeyError('Error in the database selected: '+db+'.Please check !')
       if namedb not in ['jhu','jhu-usa','imed','rki']:
             self.restructured_pandas(self.dbparsed)
+
 
   def get_dblistdico(self,key=None):
       '''
@@ -878,6 +866,9 @@ class DBInfo:
            Return all the available keyswords for the database selected
       '''
       return list(self.pandasdb.columns)
+
+  def set_available_keywords(self,keysupated):
+          return list(keysupated)
 
   def get_url(self):
       '''
@@ -1211,7 +1202,6 @@ class DBInfo:
 
       if self.db != 'olympics':
           self.mainpandas = fill_missing_dates(mypandas)
-          print(mypandas)
       else:
           self.mainpandas=mypandas
       self.dates  = self.mainpandas['date']

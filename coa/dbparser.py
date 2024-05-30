@@ -804,20 +804,22 @@ class DBInfo:
 
                 #Evite de compter plusieurs medailles pour le meme event si plusieurs athletes.
 
-                olympics_data = olympics_data.drop_duplicates(subset=['iso_code', 'date', 'Event', 'Medal'])
-
+                olympics_data = olympics_data.drop_duplicates(subset=['iso_code', 'date', 'Medal'])
+                olympics_data = olympics_data.loc[~olympics_data.Medal.isin(['NA'])]
+                olympics_data = olympics_data.ffill()
                 pivot_olympics = olympics_data.pivot_table(index=['iso_code', 'date'], columns='Medal', aggfunc='size')
-
+                pivot_olympics = pivot_olympics.fillna(method = 'bfill')
                 addmedals=['Gold', 'Silver', 'Bronze']
-                pivot_olympics = pivot_olympics[addmedals].fillna(0).astype(int)
+                for i in addmedals:
+                    pivot_olympics[i] = pivot_olympics[i].fillna(method = 'bfill')
 
                 pivot_olympics = pivot_olympics.groupby(level=0).cumsum().reset_index()
 
                 olympics = olympics.merge(pivot_olympics, on=['iso_code', 'date'], how='left')
                 self.dbparsed = olympics
                 self.dbparsed = self.dbparsed[['date','where','iso_code']+addmedals]
-                self.set_available_keywords(addmedals)
 
+                self.set_available_keywords(addmedals)
       else:
           raise CoaKeyError('Error in the database selected: '+db+'.Please check !')
       if namedb not in ['jhu','jhu-usa','imed','rki']:

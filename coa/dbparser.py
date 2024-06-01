@@ -774,9 +774,14 @@ class DBInfo:
                 'Silver':['Silver','Silver Medal (PYCOA computed, absent in the orignal)'],
                 'Bronze':['Bronze','Bronze Medal (PYCOA computed, absent in the orignal)']
                 }
+                translation = pd.read_csv('https://raw.githubusercontent.com/NoamXD8/olympics/main/Liste_des_codes_pays_du_CIO_2.csv')
+                translation.rename(columns={"Code\nCIO": "CIO", "ISO 3166-1\nalpha-3": "ISO3"}, inplace='True')
+                dic_iso = {i:j for i,j in zip(translation["CIO"], translation["ISO3"]) if i !=j}
+                dic_iso.update({'CRT':'GRC','GDR':'DEU','NFL':'NLD','SCG':'SRB','YMD':'YEM','FRG':'DEU', 'IOA':''})
 
                 self.separator = {url:','}
                 masterurl = "https://github.com/NoamXD8/olympics"
+
                 for k,v in olympics.items():
                     olympics[k].append(url)
                     olympics[k].append(masterurl)
@@ -791,13 +796,24 @@ class DBInfo:
                 keep = ['date','where','iso_code'] +  ['Medal'] #self.get_url_original_keywords()[url]
                 cast = {'Age': 'string','Height': 'string','Weight': 'string', 'City': 'string', 'Team':'string'}
                 olympics = self.row_where_csv_parser(url=url, rename_columns = rename, separator = separator, cast = cast) #keep_field = keep)
-                translation = pd.read_csv('https://raw.githubusercontent.com/NoamXD8/olympics/main/Liste_des_codes_pays_du_CIO_2.csv')
-                translation.rename(columns={"Code\nCIO": "CIO", "ISO 3166-1\nalpha-3": "ISO3"}, inplace='True')
-                dic_iso = {i:j for i,j in zip(translation["CIO"], translation["ISO3"]) if i !=j}
-                dic_iso.update({'CRT':'GRC','GDR':'DEU','NFL':'NLD','SCG':'SRB','YMD':'YEM','FRG':'DEU', 'IOA':''})
+
                 olympics = olympics.replace({'iso_code': dic_iso})
                 olympics = olympics.loc[~olympics.iso_code.isin(['WIF'])]
 
+                df=olympics.copy()
+                df = df[df['Season'] == 'Summer']
+                df['count']=df.groupby(['date','iso_code','Medal']).Medal.transform('count')
+                df=df.drop_duplicates(subset=['date', 'iso_code','Medal'])
+                df=df.loc[~df.Medal.isin(['NA'])]
+
+                df=df.pivot_table(index=['iso_code','date'], columns='Medal', values='count')
+                df=df.fillna(0)
+
+                addmedals=['Gold', 'Silver', 'Bronze']
+                df=df.sort_values(by=['date'])
+                df=df.groupby(level=0).cumsum().reset_index()
+                df['where']=df['iso_code']
+                '''
                 olympics_data = olympics[['date', 'iso_code', 'Medal', 'Event', 'Season']]
                 #only summer medal for the moment
                 olympics_data = olympics_data[olympics_data['Season'] == 'Summer']
@@ -818,8 +834,9 @@ class DBInfo:
                 olympics.sort_values(by=['iso_code', 'date'], inplace=True)
 
                 olympics = olympics[olympics['Gold'] > 0]
-
                 self.dbparsed = olympics
+                '''
+                self.dbparsed = df
                 self.dbparsed = self.dbparsed[['date','where','iso_code']+addmedals]
 
                 self.set_available_keywords(addmedals)

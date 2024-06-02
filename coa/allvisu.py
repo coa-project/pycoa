@@ -663,7 +663,9 @@ class AllVisu:
         listfigs = []
         input = kwargs.get('input')
         input_field = kwargs.get('input_field')
-
+        if isinstance(input_field,list):
+            input_field=input_field[0]
+            CoaWarning('Can only display spiral for one WHICH value. I took the first one: '+ input_field)
         if isinstance(input['rolloverdisplay'].iloc[0],list):
             input['rolloverdisplay'] = input['clustername']
         borne = 300
@@ -671,7 +673,7 @@ class AllVisu:
         standardfig = self.standardfig(x_range=[-borne, borne], y_range=[-borne, borne], match_aspect=True,**kwargs)
 
         if len(input.clustername.unique()) > 1 :
-            print('Can only display spiral for ONE location. I took the first one:', input.clustername[0])
+            CoaWarning('Can only display spiral for ONE location. I took the first one: ' + input.clustername[0])
             input = input.loc[input.clustername == input.clustername[0]].copy()
         input['date']=pd.to_datetime(input["date"])
         input["dayofyear"]=input.date.dt.dayofyear
@@ -764,6 +766,9 @@ class AllVisu:
 
         input = kwargs.get('input')
         input_field= kwargs.get('input_field')
+        if isinstance(input_field,list):
+            input_field=input_field[0]
+            CoaWarning('Can only display spiral for one WHICH value. I took the first one: '+ input_field)
         guideline = kwargs.get('guideline',self.dicovisuargs['guideline'][0])
         mode = kwargs.get('guideline',self.dicovisuargs['mode'][0])
         uniqloc = list(input.clustername.unique())
@@ -854,11 +859,15 @@ class AllVisu:
                  if [dd/mm/yyyy:] up to max date
         '''
         input = kwargs['input']
-        input_field = [kwargs['input_field']]
+        #input_field = [kwargs['input_field']]
+        input_field = kwargs['input_field']
+        if isinstance(input_field,list):
+            input_field = input_field[0]
+            CoaWarning('Can only display spiral for one WHICH value. I took the first one: ' + input_field)
         guideline = kwargs.get('guideline',self.dicovisuargs['guideline'][0])
         mode = kwargs.get('mode',self.dicovisuargs['mode'][0])
         if len(input.clustername.unique()) > 1 :
-            print('Can only display yearly plot for ONE location. I took the first one:', input.clustername[0])
+            CoaWarning('Can only display yearly plot for ONE location. I took the first one:' + input.clustername[0])
         input = input.loc[input.clustername == input.clustername[0]].copy()
 
         panels = []
@@ -875,7 +884,7 @@ class AllVisu:
         if isinstance(input['rolloverdisplay'].iloc[0],list):
             input['rolloverdisplay'] = input['clustername']
         if len(input_field)>1:
-            CoaError('Only one variable could be displayed')
+            CoaWarning('Only one variable could be displayed')
         else:
             input_field=input_field[0]
         for axis_type in self.ax_type:

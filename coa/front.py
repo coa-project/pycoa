@@ -431,10 +431,12 @@ class Front:
             if (option != None or what != None) and (isinstance(input_field,list) or isinstance(which,list)):
                 raise CoaKeyError('option/what not compatible when input_fied/which is a list')
 
-            if 'input_field' not in kwargs:
+            #if 'input_field' not in kwargs:
+            #    which = input_field
+            #else:
+            #    which = kwargs['input_field']
+            if input_field:
                 which = input_field
-            else:
-                which = kwargs['input_field']
 
             if what:
                 if what not in self.listwhat():
@@ -459,6 +461,7 @@ class Front:
 
             if bypop not in self.listbypop():
                 raise CoaKeyError('The bypop arg should be selected in '+str(self.listbypop())+' only.')
+
             if isinstance(input_arg, pd.DataFrame) or isinstance(which, list):
                 if input_arg is not None and not input_arg.empty:
                     pandy = input_arg
@@ -471,8 +474,8 @@ class Front:
                         if pandy.empty:
                             pandy = tmp
                         else:
-                            tmp = tmp.drop(columns=['daily','weekly','codelocation','clustername'])
-                        pandy = pd.merge(pandy, tmp, on=['date','where'])
+                            tmp = tmp[[i,'date','where']]
+                            pandy = pd.merge(pandy, tmp, on=['date','where'],how='inner')
                     input_arg = pandy
                 if bypop != 'no':
                     input_arg = self._db.normbypop(pandy,input_field,bypop)
@@ -481,14 +484,12 @@ class Front:
                     else:
                         input_field = input_field+' per '+ bypop + ' population'
                     pandy = input_arg
-
                 if isinstance(input_field,list):
                     which = input_field[0]
                 #else:
                 #    which = input_field
                 #if which is None:
                 #    which = pandy.columns[2]
-
                 pandy.loc[:,'standard'] = pandy[which]
                 if 'input_field' not in kwargs:
                     kwargs['input_field'] = input_field

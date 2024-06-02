@@ -441,11 +441,13 @@ class AllVisu:
         @wraps(func)
         def inner_plot(self ,**kwargs):
             input = kwargs.get('input')
-            input_field = [kwargs.get('input_field')]
+            input_field = kwargs.get('input_field')
+            if not isinstance(input_field,list):
+                input_field = [input_field]
             typeofplot = kwargs.get('typeofplot',self.dicochartargs['typeofplot'][0])
             if 'where' in input.columns:
                 location_ordered_byvalues = list(
-                    input.loc[input.date == self.when_end].sort_values(by=input_field, ascending=False)['clustername'].unique())
+                    input.loc[input.date == self.when_end].sort_values(by=input_field[0], ascending=False)['clustername'].unique())
                 input = input.copy()  # needed to avoid warning
                 #input[inputtmp['clustername']] = pd.Categorical(input.clustername,
                 #                                        categories=location_ordered_byvalues, ordered=True)

@@ -297,7 +297,7 @@ class AllVisu:
 
             if func.__name__ not in ['pycoa_date_plot', 'pycoa_plot', 'pycoa_scrollingmenu', 'pycoa_spiral_plot','pycoa_yearly_plot']:
                 if len(input_field) > 1:
-                    print(str(input_field) + ' is dim = ' + str(len(input_field)) + '. No effect with ' + func.__name__ + '! Take the first input: ' + input_field[0])
+                    CoaWarning(str(input_field) + ' is dim = ' + str(len(input_field)) + '. No effect with ' + func.__name__ + '! Take the first input: ' + input_field[0])
                 input_field = input_field[0]
 
             if when_end_change != when_end:
@@ -353,6 +353,7 @@ class AllVisu:
                 titlefig = title
             kwargs['title'] = titlefig
             kwargs['input'] = input
+            kwargs['input_field'] = input_field
             return func(self,**kwargs)
         return wrapper
 
@@ -469,7 +470,7 @@ class AllVisu:
                 if func.__name__ == 'pycoa_scrollingmenu' :
                     if isinstance(input_field,list):
                         if len(input_field) > 1:
-                            print(str(input_field) + ' is dim = ' + str(len(input_field)) + '. No effect with ' + func.__name__ + '! Take the first input: ' + input_field[0])
+                            CoaWarning(str(input_field) + ' is dim = ' + str(len(input_field)) + '. No effect with ' + func.__name__ + '! Take the first input: ' + input_field[0])
                         input_field = input_field[0]
                     if self.dbld[self.database_name][1] == 'nation' and self.dbld[self.database_name][0] != 'WW':
                         func.__name__ = 'pycoa_date_plot'
@@ -1179,7 +1180,6 @@ class AllVisu:
             input_field = kwargs.get('input_field')
             plot_width = kwargs.get('plot_width',self.dicofigureargs['plot_width'])
             plot_height = kwargs.get('plot_height',self.dicofigureargs['plot_height'])
-
             geopdwd['cases'] = geopdwd[input_field]
             geopdwd_filter = geopdwd.loc[geopdwd.date == self.when_end]
             geopdwd_filter = geopdwd_filter.reset_index(drop = True)

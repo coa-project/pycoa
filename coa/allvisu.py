@@ -624,7 +624,7 @@ class AllVisu:
                 label = r.name
                 tt = tooltips[i]
                 formatters = {'where': 'printf', '@date': 'datetime', '@name': 'printf'}
-                hover=HoverTool(tooltips = tt, formatters = formatters, point_policy = "snap_to_data", mode = mode, renderers=[r])  # ,PanTool())
+                hover = HoverTool(tooltips = tt, formatters = formatters, point_policy = "snap_to_data", mode = mode, renderers=[r])  # ,PanTool())
                 standardfig.add_tools(hover)
 
                 if guideline:
@@ -644,6 +644,7 @@ class AllVisu:
             standardfig.legend.click_policy="hide"
             standardfig.legend.label_text_font_size = '8pt'
             if len(input_field) > 1 and len(input_field)*len(input.clustername.unique())>16:
+                CoaWarning(" Too much text in the legend to be displayed correctly ... ")
                 standardfig.legend.visible=False
             standardfig.xaxis.formatter = DatetimeTickFormatter(
                 days = ["%d/%m/%y"], months = ["%d/%m/%y"], years = ["%b %Y"])

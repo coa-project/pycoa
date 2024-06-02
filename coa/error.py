@@ -13,7 +13,19 @@ About :
 Main class definitions for error management within the pycoa framework.
 All Coa exceptions should derive from the main CoaError class.
 """
+class CoaWarning(Exception):
+    """Base class for exceptions in PyCoa."""
 
+    def __init__(self, message):
+        #self.message = message
+        message = '  ' + message + '  '
+        pycoatexterror = 'PYCOA Warning ! '
+        center=int((len(message)-len(pycoatexterror))/2)
+        self.message = ' '*len(message)+'\n'\
+        + ' '*center+pycoatexterror+' '*center+'\n'\
+        + message.center(30)+'\n'+' '*len(message)
+        print('\033[45m'+self.message)
+        Exception(message)
 
 class CoaError(Exception):
     """Base class for exceptions in PyCoa."""

@@ -121,6 +121,7 @@ def fill_missing_dates(p, date_field='date', loc_field='where', d1=None, d2=None
     idx = idx.date
 
     all_loc=list(p[loc_field].unique())
+
     pfill=pd.DataFrame()
     for l in all_loc:
         pp=p.loc[p[loc_field]==l]

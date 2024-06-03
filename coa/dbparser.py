@@ -77,7 +77,7 @@ class DBInfo:
                 if self.get_dblistdico(namedb)[1] == 'nation': # world wide dba
                     self.db_world = True
                     self.geo = coge.GeoManager('name')
-                    self.geo_all = 'wold'
+                    self.geo_all = 'world'
                 else: # local db
                     self.db_world = False
                     self.geo = coge.GeoCountry(self.get_dblistdico(namedb)[0])
@@ -777,7 +777,7 @@ class DBInfo:
                 translation = pd.read_csv('https://raw.githubusercontent.com/NoamXD8/olympics/main/Liste_des_codes_pays_du_CIO_2.csv')
                 translation.rename(columns={"Code\nCIO": "CIO", "ISO 3166-1\nalpha-3": "ISO3"}, inplace='True')
                 dic_iso = {i:j for i,j in zip(translation["CIO"], translation["ISO3"]) if i !=j}
-                dic_iso.update({'CRT':'GRC','GDR':'DEU','NFL':'NLD','SCG':'SRB','YMD':'YEM','FRG':'DEU', 'IOA':''})
+                dic_iso.update({'CRT':'GRC','GDR':'DEU','NFL':'NLD','SCG':'SRB','YMD':'YEM','FRG':'DEU', 'IOA':'Athlètes olympiques internationaux'})
 
                 self.separator = {url:','}
                 masterurl = "https://github.com/NoamXD8/olympics"
@@ -798,11 +798,11 @@ class DBInfo:
                 olympics = self.row_where_csv_parser(url=url, rename_columns = rename, separator = separator, cast = cast) #keep_field = keep)
 
                 olympics = olympics.replace({'iso_code': dic_iso})
-                olympics = olympics.loc[~olympics.iso_code.isin(['WIF'])]
+                olympics = olympics.loc[~olympics.iso_code.isin(['WIF','IOA'])]
 
                 df=olympics.copy()
                 df = df[df['Season'] == 'Summer']
-                df['count']=df.groupby(['date','iso_code','Medal']).Medal.transform('count')
+                df['count']=df.groupby(['date','iso_code','Medal','Event']).Medal.transform('count')
                 df=df.drop_duplicates(subset=['date', 'iso_code','Medal'])
                 df=df.loc[~df.Medal.isin(['NA'])]
 
@@ -1272,7 +1272,6 @@ class DBInfo:
              clist=clist+self.geo.get_subregions_from_list_of_region_names(clist)
              if clist in ['FRA','USA','ITA'] :
                  clist=self.geo_all['code_subregion'].to_list()
-
          clist=list(set(clist)) # to suppress duplicate countries
          diff_locations = list(set(clist) - set(self.get_locations()))
          clist = [i for i in clist if i not in diff_locations]

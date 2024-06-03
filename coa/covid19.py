@@ -94,7 +94,6 @@ class DataBase(object):
         except:
             raise CoaTypeError('What data base are you looking for ?')
         self.where_geodescription = where_kindgeo
-
         #self.set_display(db_name,where_kindgeo,vis)
 
    def getwheregeometrydescription(self):
@@ -386,7 +385,6 @@ class DataBase(object):
                 listloc = explosion(listloc,self.dbfullinfo.get_dblistdico(self.db)[1])
                 listloc = flat_list(listloc)
                 location_exploded = listloc
-
         def sticky(lname):
             if len(lname)>0:
                 tmp=''
@@ -522,6 +520,7 @@ class DataBase(object):
 
                codescluster = {i:list(pdfiltered.loc[pdfiltered.clustername==i]['codelocation'].unique()) for i in uniqcluster}
                namescluster = {i:list(pdfiltered.loc[pdfiltered.clustername==i]['where'].unique()) for i in uniqcluster}
+
                tmp['codelocation'] = tmp['clustername'].map(codescluster)
                tmp['where'] = tmp['clustername'].map(namescluster)
 
@@ -559,6 +558,7 @@ class DataBase(object):
             if fillnan:
                 pdfiltered.loc[:,'cumul'] =\
                 pdfiltered.groupby('clustername')['cumul'].apply(lambda x: x.ffill())
+
         pdfiltered['daily'] = pdfiltered.groupby('clustername')['cumul'].diff()
         pdfiltered['weekly'] = pdfiltered.groupby('clustername')['cumul'].diff(7)
         inx = pdfiltered.groupby('clustername').head(1).index
@@ -572,9 +572,11 @@ class DataBase(object):
             inx=pdfiltered.groupby('clustername').head(7).index
             pdfiltered.loc[inx, 'daily'] = pdfiltered['daily'].fillna(method="bfill")
         unifiedposition=['where', 'date', kwargs['which'], 'daily', 'cumul', 'weekly', 'codelocation','clustername']
+
         if kwargs['which'] in ['standard','daily','weekly','cumul']:
             unifiedposition.remove(kwargs['which'])
         pdfiltered = pdfiltered[unifiedposition]
+
         if wallname != None and sumall == True:
                pdfiltered.loc[:,'clustername'] = wallname
         pdfiltered = pdfiltered.drop(columns='cumul')

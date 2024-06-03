@@ -532,7 +532,6 @@ class Front:
                 raise CoaTypeError('Waiting input as valid pycoa pandas '
                                    'dataframe. See help.')
             when_beg, when_end = extract_dates(when)
-
             if pandy[[which,'date']].isnull().values.all():
                 info('--------------------------------------------')
                 info('All values for '+ which + ' is nan nor empty')
@@ -974,7 +973,7 @@ class Front:
                         fig = self._cocoplot.pycoa_date_plot(*kwargs)
                     else:
                         if isinstance(input_field,list) and len(input_field) > 1:
-                            print('typeofplot is menulocation but dim(input_field)>1, menulocation has not effect ...')
+                            CoaWarning('typeofplot is menulocation but dim(input_field)>1, take first one '+input_field[0])
                         fig = self._cocoplot.pycoa_scrollingmenu(**kwargs)
                 elif typeofplot == 'yearly':
                     if input.date.max()-input.date.min() <= dt.timedelta(days=365):

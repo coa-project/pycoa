@@ -297,7 +297,7 @@ class AllVisu:
 
             if func.__name__ not in ['pycoa_date_plot', 'pycoa_plot', 'pycoa_scrollingmenu', 'pycoa_spiral_plot','pycoa_yearly_plot']:
                 if len(input_field) > 1:
-                    CoaWarning(str(input_field) + ' is dim = ' + str(len(input_field)) + '. No effect with ' + func.__name__ + '! Take the first input: ' + input_field[0])
+                    print(str(input_field) + ' is dim = ' + str(len(input_field)) + '. No effect with ' + func.__name__ + '! Take the first input: ' + input_field[0])
                 input_field = input_field[0]
 
             if when_end_change != when_end:
@@ -353,7 +353,6 @@ class AllVisu:
                 titlefig = title
             kwargs['title'] = titlefig
             kwargs['input'] = input
-            kwargs['input_field'] = input_field
             return func(self,**kwargs)
         return wrapper
 
@@ -442,19 +441,20 @@ class AllVisu:
         @wraps(func)
         def inner_plot(self ,**kwargs):
             input = kwargs.get('input')
-            input_field = kwargs.get('input_field')
-            if not isinstance(input_field,list):
-                input_field = [input_field]
+            input_field = [kwargs.get('input_field')]
+            if isinstance(input_field[0],list):
+                input_field = input_field[0]
             typeofplot = kwargs.get('typeofplot',self.dicochartargs['typeofplot'][0])
             if 'where' in input.columns:
                 location_ordered_byvalues = list(
-                    input.loc[input.date == self.when_end].sort_values(by=input_field[0], ascending=False)['clustername'].unique())
+                    input.loc[input.date == self.when_end].sort_values(by=input_field, ascending=False)['clustername'].unique())
                 input = input.copy()  # needed to avoid warning
                 #input[inputtmp['clustername']] = pd.Categorical(input.clustername,
                 #                                        categories=location_ordered_byvalues, ordered=True)
-                input.loc[:,'clustername'] = pd.Categorical(input.clustername,
-                                                       categories=location_ordered_byvalues, ordered=True)
-
+                #print("------------>>>input.clustername.unique()",input.clustername.unique(),input.clustername.isna().any())
+                #input.loc[:,'clustername'] = pd.Categorical(input.clustername,
+                #                                       categories=location_ordered_byvalues, ordered=True)
+                #print("------------>>>input.clustername.unique()",input.clustername.unique(),input.clustername.isna().any())
                 input = input.sort_values(by=['clustername', 'date']).reset_index(drop = True)
 
                 if func.__name__ != 'pycoa_scrollingmenu' :
@@ -463,6 +463,7 @@ class AllVisu:
                 list_max = []
                 for i in input_field:
                     list_max.append(max(input.loc[input.clustername.isin(location_ordered_byvalues)][i]))
+
                 if len([x for x in list_max if not np.isnan(x)]) > 0:
                     amplitude = (np.nanmax(list_max) - np.nanmin(list_max))
                     if amplitude > 10 ** 4:
@@ -470,7 +471,7 @@ class AllVisu:
                 if func.__name__ == 'pycoa_scrollingmenu' :
                     if isinstance(input_field,list):
                         if len(input_field) > 1:
-                            CoaWarning(str(input_field) + ' is dim = ' + str(len(input_field)) + '. No effect with ' + func.__name__ + '! Take the first input: ' + input_field[0])
+                            print(str(input_field) + ' is dim = ' + str(len(input_field)) + '. No effect with ' + func.__name__ + '! Take the first input: ' + input_field[0])
                         input_field = input_field[0]
                     if self.dbld[self.database_name][1] == 'nation' and self.dbld[self.database_name][0] != 'WW':
                         func.__name__ = 'pycoa_date_plot'
@@ -599,6 +600,7 @@ class AllVisu:
                     input_filter = input.loc[input.clustername == loc].reset_index(drop = True)
                     src = ColumnDataSource(input_filter)
                     leg = input_filter.clustername[0]
+
                     #leg = input_filter.permanentdisplay[0]
                     if len(input_field)>1:
                         leg = input_filter.permanentdisplay[0] + ', ' + val
@@ -625,7 +627,7 @@ class AllVisu:
                 label = r.name
                 tt = tooltips[i]
                 formatters = {'where': 'printf', '@date': 'datetime', '@name': 'printf'}
-                hover = HoverTool(tooltips = tt, formatters = formatters, point_policy = "snap_to_data", mode = mode, renderers=[r])  # ,PanTool())
+                hover=HoverTool(tooltips = tt, formatters = formatters, point_policy = "snap_to_data", mode = mode, renderers=[r])  # ,PanTool())
                 standardfig.add_tools(hover)
 
                 if guideline:
@@ -645,7 +647,7 @@ class AllVisu:
             standardfig.legend.click_policy="hide"
             standardfig.legend.label_text_font_size = '8pt'
             if len(input_field) > 1 and len(input_field)*len(input.clustername.unique())>16:
-                CoaWarning(" Too much text in the legend to be displayed correctly ... ")
+                CoaWarning('To much labels to be displayed ...')
                 standardfig.legend.visible=False
             standardfig.xaxis.formatter = DatetimeTickFormatter(
                 days = ["%d/%m/%y"], months = ["%d/%m/%y"], years = ["%b %Y"])
@@ -663,9 +665,7 @@ class AllVisu:
         listfigs = []
         input = kwargs.get('input')
         input_field = kwargs.get('input_field')
-        if isinstance(input_field,list):
-            input_field=input_field[0]
-            CoaWarning('Can only display spiral for one WHICH value. I took the first one: '+ input_field)
+
         if isinstance(input['rolloverdisplay'].iloc[0],list):
             input['rolloverdisplay'] = input['clustername']
         borne = 300
@@ -673,7 +673,7 @@ class AllVisu:
         standardfig = self.standardfig(x_range=[-borne, borne], y_range=[-borne, borne], match_aspect=True,**kwargs)
 
         if len(input.clustername.unique()) > 1 :
-            CoaWarning('Can only display spiral for ONE location. I took the first one: ' + input.clustername[0])
+            print('Can only display spiral for ONE location. I took the first one:', input.clustername[0])
             input = input.loc[input.clustername == input.clustername[0]].copy()
         input['date']=pd.to_datetime(input["date"])
         input["dayofyear"]=input.date.dt.dayofyear
@@ -766,11 +766,11 @@ class AllVisu:
 
         input = kwargs.get('input')
         input_field= kwargs.get('input_field')
-        if isinstance(input_field,list):
-            input_field=input_field[0]
-            CoaWarning('Can only display spiral for one WHICH value. I took the first one: '+ input_field)
         guideline = kwargs.get('guideline',self.dicovisuargs['guideline'][0])
         mode = kwargs.get('guideline',self.dicovisuargs['mode'][0])
+        if isinstance(input_field,list):
+            input_field=input_field[0]
+
         uniqloc = list(input.clustername.unique())
         uniqloc.sort()
         if 'where' in input.columns:
@@ -781,6 +781,7 @@ class AllVisu:
         input = input.sort_values(by='clustername', ascending = True).reset_index(drop=True)
 
         mypivot = pd.pivot_table(input, index='date', columns='clustername', values=input_field)
+        print(mypivot)
         column_order = uniqloc
         mypivot = mypivot.reindex(column_order, axis=1)
         source = ColumnDataSource(mypivot)
@@ -801,6 +802,8 @@ class AllVisu:
             standardfig = self.standardfig( y_axis_type = axis_type, x_axis_type = 'datetime', **kwargs)
 
             standardfig.yaxis[0].formatter = PrintfTickFormatter(format = "%4.2e")
+            standardfig.xaxis.formatter = DatetimeTickFormatter(
+                days = ["%d/%m/%y"], months = ["%d/%m/%y"], years = ["%b %Y"])
 
             standardfig.add_tools(hover_tool)
             if guideline:
@@ -859,15 +862,11 @@ class AllVisu:
                  if [dd/mm/yyyy:] up to max date
         '''
         input = kwargs['input']
-        #input_field = [kwargs['input_field']]
-        input_field = kwargs['input_field']
-        if isinstance(input_field,list):
-            input_field = input_field[0]
-            CoaWarning('Can only display spiral for one WHICH value. I took the first one: ' + input_field)
+        input_field = [kwargs['input_field']]
         guideline = kwargs.get('guideline',self.dicovisuargs['guideline'][0])
         mode = kwargs.get('mode',self.dicovisuargs['mode'][0])
         if len(input.clustername.unique()) > 1 :
-            CoaWarning('Can only display yearly plot for ONE location. I took the first one:' + input.clustername[0])
+            print('Can only display yearly plot for ONE location. I took the first one:', input.clustername[0])
         input = input.loc[input.clustername == input.clustername[0]].copy()
 
         panels = []
@@ -884,7 +883,7 @@ class AllVisu:
         if isinstance(input['rolloverdisplay'].iloc[0],list):
             input['rolloverdisplay'] = input['clustername']
         if len(input_field)>1:
-            CoaWarning('Only one variable could be displayed')
+            CoaError('Only one variable could be displayed')
         else:
             input_field=input_field[0]
         for axis_type in self.ax_type:
@@ -1189,6 +1188,7 @@ class AllVisu:
             input_field = kwargs.get('input_field')
             plot_width = kwargs.get('plot_width',self.dicofigureargs['plot_width'])
             plot_height = kwargs.get('plot_height',self.dicofigureargs['plot_height'])
+
             geopdwd['cases'] = geopdwd[input_field]
             geopdwd_filter = geopdwd.loc[geopdwd.date == self.when_end]
             geopdwd_filter = geopdwd_filter.reset_index(drop = True)

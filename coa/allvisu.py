@@ -781,7 +781,6 @@ class AllVisu:
         input = input.sort_values(by='clustername', ascending = True).reset_index(drop=True)
 
         mypivot = pd.pivot_table(input, index='date', columns='clustername', values=input_field)
-        print(mypivot)
         column_order = uniqloc
         mypivot = mypivot.reindex(column_order, axis=1)
         source = ColumnDataSource(mypivot)
@@ -794,8 +793,8 @@ class AllVisu:
 
         cases_custom = AllVisu.rollerJS()
         hover_tool = HoverTool(tooltips=[('Cases', '@cases{0,0.0}'), ('date', '@date{%F}')],
-                               formatters={'Cases': 'printf', '@{cases}': cases_custom, '@date': 'datetime'}, mode = mode,
-                               point_policy="snap_to_data")  # ,PanTool())
+                               formatters={'Cases': 'printf', '@{cases}': cases_custom, '@date': 'datetime'},
+                               mode = mode, point_policy="snap_to_data")  # ,PanTool())
 
         panels = []
         for axis_type in self.ax_type:

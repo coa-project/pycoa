@@ -777,7 +777,7 @@ class DBInfo:
                 translation = pd.read_csv('https://raw.githubusercontent.com/NoamXD8/olympics/main/Liste_des_codes_pays_du_CIO_2.csv')
                 translation.rename(columns={"Code\nCIO": "CIO", "ISO 3166-1\nalpha-3": "ISO3"}, inplace='True')
                 dic_iso = {i:j for i,j in zip(translation["CIO"], translation["ISO3"]) if i !=j}
-                dic_iso.update({'CRT':'GRC','GDR':'DEU','NFL':'NLD','SCG':'SRB','YMD':'YEM','FRG':'DEU', 'IOA':'Athlètes olympiques internationaux'})
+                dic_iso.update({'CRT':'GRC','GDR':'DEU','NFL':'NLD','SCG':'SRB','YMD':'YEM','FRG':'DEU', 'KOS':'KOS','IOA':'Athlètes olympiques internationaux'})
 
                 self.separator = {url:','}
                 masterurl = "https://github.com/NoamXD8/olympics"
@@ -798,7 +798,7 @@ class DBInfo:
                 olympics = self.row_where_csv_parser(url=url, rename_columns = rename, separator = separator, cast = cast) #keep_field = keep)
 
                 olympics = olympics.replace({'iso_code': dic_iso})
-                olympics = olympics.loc[~olympics.iso_code.isin(['WIF','IOA', 'AHO'])]
+                olympics = olympics.loc[~olympics.iso_code.isin(['Athlètes olympiques internationaux','WIF','IOA', 'AHO'])]
 
                 df=olympics.copy()
                 df = df[df['Season'] == 'Summer']

@@ -297,7 +297,19 @@ class GeoManager():
                     "Curacao":"CUW",\
                     "Faeroe Islands":"FRO",\
                     "Vatican":"VAT"
-                })   
+                })
+        elif db=='olympics':
+            translation_dict.update({\
+                'RHO':'ZWE',\
+                'ANZ':'AUS',\
+                'BOH':'CZE',\
+                'Tch':'CZE',\
+                'Yug':'SRB',\
+                'Urs':'RUS',\
+                'Lib':'LBN',\
+                'Uar':'EGY',\
+                'Eun':'RUS',\
+                })
         return [translation_dict.get(k,k) for k in w]
 
 # ---------------------------------------------------------------------

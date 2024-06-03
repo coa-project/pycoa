@@ -798,15 +798,15 @@ class DBInfo:
                 olympics = self.row_where_csv_parser(url=url, rename_columns = rename, separator = separator, cast = cast) #keep_field = keep)
 
                 olympics = olympics.replace({'iso_code': dic_iso})
-                olympics = olympics.loc[~olympics.iso_code.isin(['WIF','IOA'])]
+                olympics = olympics.loc[~olympics.iso_code.isin(['WIF','IOA', 'AHO'])]
 
                 df=olympics.copy()
                 df = df[df['Season'] == 'Summer']
                 df['count']=df.groupby(['date','iso_code','Medal','Event']).Medal.transform('count')
-                df=df.drop_duplicates(subset=['date', 'iso_code','Medal'])
+                df=df.drop_duplicates(subset=['iso_code', 'date', 'Event', 'Medal'])
                 df=df.loc[~df.Medal.isin(['NA'])]
 
-                df=df.pivot_table(index=['iso_code','date'], columns='Medal', values='count')
+                df=df.pivot_table(index=['iso_code','date'], columns='Medal', values='count',aggfunc='size')
                 df=df.fillna(0)
 
                 addmedals=['Gold', 'Silver', 'Bronze']

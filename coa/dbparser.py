@@ -777,16 +777,16 @@ class DBInfo:
                 dic_iso.update({
                     'CRT': 'GRC', 'GDR': 'DEU', 'NFL': 'NLD', 'SCG': 'SRB', 'YMD': 'YEM', 'FRG': 'DEU', 'IOA': 'Athlètes olympiques internationaux'
                 })
-                
 
+                addmedals = ['Gold', 'Silver', 'Bronze']
                 def process_olympic_data(url, dic_iso):
                     olympics = {
                     #'Medal': ['Medal', 'Medal Type (Gold, Silver, Bronze)'],
                     'Gold':['Gold','Or Medal (PYCOA computed, absent in the orignal)'],
                     'Silver':['Silver','Silver Medal (PYCOA computed, absent in the orignal)'],
                     'Bronze':['Bronze','Bronze Medal (PYCOA computed, absent in the orignal)']
-                }
-                
+                    }
+
                     self.separator = {url:','}
                     masterurl = "https://github.com/NoamXD8/olympics"
 
@@ -815,29 +815,19 @@ class DBInfo:
                     df = df.pivot_table(index=['iso_code', 'date'], columns='Medal', values='count', aggfunc='size')
                     df = df.fillna(0)
 
-                    addmedals = ['Gold', 'Silver', 'Bronze']
                     df = df.sort_values(by=['date'])
-                    df = df.groupby(level=0).cumsum().reset_index()
+                    df = df.groupby(level=0).cumsum().reset_index().rename_axis(None, axis=1)
                     df['where'] = df['iso_code']
-
-                    df = df[['date', 'where', 'iso_code'] + addmedals]
-                    print("DF :"'\n',df)
+                    df = df[['date', 'where', 'iso_code'] + addmedals].reset_index(drop=True)
                     return df
-                
+
                 all_olympics_data = pd.DataFrame()
-
-
                 for url in urls:
                     olympics_data = process_olympic_data(url, dic_iso)
                     all_olympics_data = pd.concat([all_olympics_data, olympics_data], ignore_index=True)
-                    print("All data"'\n',all_olympics_data)
+                all_olympics_data= all_olympics_data.groupby(['date','where','iso_code'])[addmedals].sum()
 
-                addmedals = ['Gold', 'Silver', 'Bronze']
-
-                all_olympics_data = all_olympics_data.groupby(['where', 'date', 'iso_code'])['Gold','Silver', 'Bronze'].sum().reset_index()
-
-                self.dbparsed = all_olympics_data
-
+                self.dbparsed = all_olympics_data.reset_index()
                 self.dbparsed = self.dbparsed[['date','where', 'iso_code']+addmedals]
 
                 self.set_available_keywords(addmedals)

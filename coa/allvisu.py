@@ -1191,6 +1191,8 @@ class AllVisu:
             """
             geopdwd = kwargs.get('geopdwd')
             input_field = kwargs.get('input_field')
+            if isinstance(input_field,list):
+                input_field = input_field[0]
             plot_width = kwargs.get('plot_width',self.dicofigureargs['plot_width'])
             plot_height = kwargs.get('plot_height',self.dicofigureargs['plot_height'])
 
@@ -1525,7 +1527,6 @@ class AllVisu:
                     toggl.js_on_change('active',toggl_js)
 
                 cases_custom = AllVisu.rollerJS()
-
                 if min(srcfiltered.data['cases'])<0.01:
                     tooltips=[('where', '@rolloverdisplay'), (input_field, '@cases'), ]
                 else:

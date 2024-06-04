@@ -761,12 +761,12 @@ class DBInfo:
               beldata['date'] = pandas.to_datetime(beldata['date'],errors='coerce').dt.date
               self.return_structured_pandas(beldata,columns_keeped=columns_keeped)
               '''
-          elif namedb == 'olympics':
+          elif namedb == 'olympicsss':
                 info('Olympics data selected ...')
                 #url='https://raw.githubusercontent.com/NoamXD8/olympics/main/athlete_events1.csv'
-                url='https://raw.githubusercontent.com/NoamXD8/olympics/main/athlete_events-1.csv'
+                #url='https://raw.githubusercontent.com/NoamXD8/olympics/main/athlete_events-1.csv'
                 #url1='https://raw.githubusercontent.com/NoamXD8/olympics/main/athlete_events-2.csv'
-                #url2='https://raw.githubusercontent.com/NoamXD8/olympics/main/athlete_events-3.csv'
+                url='https://raw.githubusercontent.com/NoamXD8/olympics/main/athlete_events-3.csv'
 
                 olympics = {
                 #'Medal': ['Medal', 'Medal Type (Gold, Silver, Bronze)'],
@@ -840,6 +840,88 @@ class DBInfo:
                 self.dbparsed = self.dbparsed[['date','where','iso_code']+addmedals]
 
                 self.set_available_keywords(addmedals)
+        #TEST OLYMPICS AVEC FONCTION
+          elif namedb == 'olympics':
+                info('Olympics data selected test with fonction...')
+
+                urls = [
+                    'https://raw.githubusercontent.com/NoamXD8/olympics/main/athlete_events-1.csv',
+                    'https://raw.githubusercontent.com/NoamXD8/olympics/main/athlete_events-2.csv',
+                    'https://raw.githubusercontent.com/NoamXD8/olympics/main/athlete_events-3.csv'
+                ]
+
+                translation = pd.read_csv('https://raw.githubusercontent.com/NoamXD8/olympics/main/Liste_des_codes_pays_du_CIO_2.csv')
+                translation.rename(columns={"Code\nCIO": "CIO", "ISO 3166-1\nalpha-3": "ISO3"}, inplace=True)
+                dic_iso = {i: j for i, j in zip(translation["CIO"], translation["ISO3"]) if i != j}
+                dic_iso.update({
+                    'CRT': 'GRC', 'GDR': 'DEU', 'NFL': 'NLD', 'SCG': 'SRB', 'YMD': 'YEM', 'FRG': 'DEU', 'IOA': 'Athlètes olympiques internationaux'
+                })
+                
+
+                def process_olympic_data(url, dic_iso):
+                    olympics = {
+                    #'Medal': ['Medal', 'Medal Type (Gold, Silver, Bronze)'],
+                    'Gold':['Gold','Or Medal (PYCOA computed, absent in the orignal)'],
+                    'Silver':['Silver','Silver Medal (PYCOA computed, absent in the orignal)'],
+                    'Bronze':['Bronze','Bronze Medal (PYCOA computed, absent in the orignal)']
+                }
+                
+                    self.separator = {url:','}
+                    masterurl = "https://github.com/NoamXD8/olympics"
+
+                    for k,v in olympics.items():
+                        olympics[k].append(url)
+                        olympics[k].append(masterurl)
+                    mydico = olympics
+                    self.pandasdb = pd.DataFrame(olympics,index=['Original name','Description','URL', 'Homepage'])
+                    rename = {'Year': 'date', 'Team': 'where', 'NOC': 'iso_code'}
+                    rename.update(self.original_to_available_keywords_dico())
+
+                    separator = self.get_url_separator(url)
+                    keep = ['date', 'where', 'iso_code'] + ['Medal']
+                    cast = {'Age': 'string', 'Height': 'string', 'Weight': 'string', 'City': 'string', 'Team': 'string'}
+
+                    olympics = self.row_where_csv_parser(url=url, rename_columns=rename, separator=separator, cast=cast)
+                    olympics = olympics.replace({'iso_code': dic_iso})
+                    olympics = olympics.loc[~olympics.iso_code.isin(['WIF', 'IOA', 'AHO'])]
+
+                    df = olympics.copy()
+                    df = df[df['Season'] == 'Summer']
+                    df['count'] = df.groupby(['date', 'iso_code', 'Medal', 'Event']).Medal.transform('count')
+                    df = df.drop_duplicates(subset=['iso_code', 'date', 'Event', 'Medal'])
+                    df = df.loc[~df.Medal.isin(['NA'])]
+
+                    df = df.pivot_table(index=['iso_code', 'date'], columns='Medal', values='count', aggfunc='size')
+                    df = df.fillna(0)
+
+                    addmedals = ['Gold', 'Silver', 'Bronze']
+                    df = df.sort_values(by=['date'])
+                    df = df.groupby(level=0).cumsum().reset_index()
+                    df['where'] = df['iso_code']
+
+                    df = df[['date', 'where', 'iso_code'] + addmedals]
+                    print("DF :"'\n',df)
+                    return df
+                
+                all_olympics_data = pd.DataFrame()
+
+
+                for url in urls:
+                    olympics_data = process_olympic_data(url, dic_iso)
+                    all_olympics_data = pd.concat([all_olympics_data, olympics_data], ignore_index=True)
+                    print("All data"'\n',all_olympics_data)
+
+                addmedals = ['Gold', 'Silver', 'Bronze']
+
+                all_olympics_data = all_olympics_data.groupby(['where', 'date', 'iso_code'])['Gold','Silver', 'Bronze'].sum().reset_index()
+
+                self.dbparsed = all_olympics_data
+
+                self.dbparsed = self.dbparsed[['date','where', 'iso_code']+addmedals]
+
+                self.set_available_keywords(addmedals)
+                info('Data processing completed and merged.')
+
 
       else:
           raise CoaKeyError('Error in the database selected: '+db+'.Please check !')

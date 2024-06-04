@@ -475,7 +475,7 @@ class AllVisu:
                         input_field = input_field[0]
                     if self.dbld[self.database_name][1] == 'nation' and self.dbld[self.database_name][0] != 'WW':
                         func.__name__ = 'pycoa_date_plot'
-                kwargs['input'] = input
+                kwargs['input'] = input.reset_index(drop=True)
             return func(self, **kwargs)
         return inner_plot
 
@@ -862,10 +862,16 @@ class AllVisu:
         '''
         input = kwargs['input']
         input_field = [kwargs['input_field']]
+
         guideline = kwargs.get('guideline',self.dicovisuargs['guideline'][0])
         mode = kwargs.get('mode',self.dicovisuargs['mode'][0])
+
         if len(input.clustername.unique()) > 1 :
-            print('Can only display yearly plot for ONE location. I took the first one:', input.clustername[0])
+            CoaWarning('Can only display yearly plot for ONE location. I took the first one:'+ input.clustername[0])
+        if isinstance(input_field[0],list):
+            input_field = input_field[0][0]
+            CoaWarning('Can only display yearly plot for ONE which value. I took the first one:'+ input_field)
+
         input = input.loc[input.clustername == input.clustername[0]].copy()
 
         panels = []
@@ -881,10 +887,10 @@ class AllVisu:
         allyears = list(input.allyears.unique())
         if isinstance(input['rolloverdisplay'].iloc[0],list):
             input['rolloverdisplay'] = input['clustername']
-        if len(input_field)>1:
-            CoaError('Only one variable could be displayed')
-        else:
-            input_field=input_field[0]
+        #if len(input_field)>1:
+        #    CoaError('Only one variable could be displayed')
+        #else:
+        #    input_field=input_field[0]
         for axis_type in self.ax_type:
             standardfig = self.standardfig( y_axis_type = axis_type,**kwargs)
             i = 0

@@ -808,6 +808,9 @@ class DBInfo:
 
                     df = olympics.copy()
                     df = df[df['Season'] == 'Summer']
+                    #The 1906 Olympic Games, known as the 'Games of the Decade', are not recognised by the IOC
+                    df = df[~df['date'].isin([datetime.date(1906, 1, 1)])]
+
                     df['count'] = df.groupby(['date', 'iso_code', 'Medal', 'Event']).Medal.transform('count')
                     df = df.drop_duplicates(subset=['iso_code', 'date', 'Event', 'Medal'])
                     df = df.loc[~df.Medal.isin(['NA'])]
@@ -817,6 +820,7 @@ class DBInfo:
 
                     df = df.sort_values(by=['date'])
                     df = df.groupby(['date','iso_code'])[addmedals].sum()
+
                     #df = df.groupby(level=1).cumsum().reset_index().rename_axis(None, axis=1)
                     df = df.reset_index(level=1).reset_index()
                     df['where'] = df['iso_code']

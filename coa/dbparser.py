@@ -815,16 +815,16 @@ class DBInfo:
                     df = df.drop_duplicates(subset=['iso_code', 'date', 'Event', 'Medal'])
                     df = df.loc[~df.Medal.isin(['NA'])]
 
-                    df = df.pivot_table(index=['iso_code', 'date'], columns='Medal', values='count', aggfunc='size')
+                    df = df.pivot_table(index=['iso_code', 'date','Event'], columns='Medal', values='count', aggfunc='size')
                     df = df.fillna(0)
 
                     df = df.sort_values(by=['date'])
-                    df = df.groupby(['date','iso_code'])[addmedals].sum()
+                    df = df.groupby(['date','iso_code','Event'])[addmedals].sum()
 
                     #df = df.groupby(level=1).cumsum().reset_index().rename_axis(None, axis=1)
                     df = df.reset_index(level=1).reset_index()
                     df['where'] = df['iso_code']
-                    df = df[['date', 'where', 'iso_code'] + addmedals].reset_index(drop=True)
+                    df = df[['date', 'where', 'iso_code','Event'] + addmedals].reset_index(drop=True)
                     return df
 
                 all_olympics_data = pd.DataFrame()
@@ -832,7 +832,9 @@ class DBInfo:
                     olympics_data = process_olympic_data(url, dic_iso)
                     all_olympics_data = pd.concat([all_olympics_data, olympics_data], ignore_index=True)
 
+                all_olympics_data= all_olympics_data.drop_duplicates(subset=['date','where','iso_code','Event'])
                 all_olympics_data = all_olympics_data.groupby(['date','where','iso_code'])[addmedals].sum()
+
                 all_olympics_data=all_olympics_data.reset_index()
 
                 oldRUS=['URS','RUS','EUN']

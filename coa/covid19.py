@@ -557,7 +557,8 @@ class DataBase(object):
             pdfiltered['cumul'] = pdfiltered_nofillnan.groupby('clustername')[kwargs['which']].cumsum()
             if fillnan:
                 pdfiltered.loc[:,'cumul'] =\
-                pdfiltered.groupby('clustername')['cumul'].apply(lambda x: x.ffill())      
+                pdfiltered.groupby('clustername')['cumul'].apply(lambda x: x.ffill())
+
         pdfiltered['daily'] = pdfiltered.groupby('clustername')['cumul'].diff()
         pdfiltered['weekly'] = pdfiltered.groupby('clustername')['cumul'].diff(7)
         inx = pdfiltered.groupby('clustername').head(1).index

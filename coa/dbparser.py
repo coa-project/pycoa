@@ -782,9 +782,9 @@ class DBInfo:
                 def process_olympic_data(url, dic_iso):
                     olympics = {
                     #'Medal': ['Medal', 'Medal Type (Gold, Silver, Bronze)'],
-                    'Gold':['Gold','Or Medal (PYCOA computed, absent in the orignal)'],
-                    'Silver':['Silver','Silver Medal (PYCOA computed, absent in the orignal)'],
-                    'Bronze':['Bronze','Bronze Medal (PYCOA computed, absent in the orignal)']
+                    'tot_Gold':['Gold','Or Medal (PYCOA computed, absent in the orignal)'],
+                    'tot_Silver':['Silver','Silver Medal (PYCOA computed, absent in the orignal)'],
+                    'tot_Bronze':['Bronze','Bronze Medal (PYCOA computed, absent in the orignal)']
                     }
 
                     self.separator = {url:','}
@@ -845,9 +845,9 @@ class DBInfo:
                 self.dbparsed = all_olympics_data.reset_index()
 
                 self.dbparsed = self.dbparsed[['date','where', 'iso_code']+addmedals]
-                self.set_available_keywords(addmedals)
+                dicnewmedals={i:'tot_'+i for i in addmedals}
+                self.dbparsed = self.dbparsed.rename(columns=dicnewmedals)
                 info('Data processing completed and merged.')
-
 
       else:
           raise CoaKeyError('Error in the database selected: '+db+'.Please check !')
@@ -897,9 +897,6 @@ class DBInfo:
            Return all the available keyswords for the database selected
       '''
       return list(self.pandasdb.columns)
-
-  def set_available_keywords(self,keysupated):
-          return list(keysupated)
 
   def get_url(self):
       '''

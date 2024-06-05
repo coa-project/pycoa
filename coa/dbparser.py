@@ -15,7 +15,7 @@ import json
 import datetime
 import collections
 import random
-
+from tqdm import tqdm
 from coa.error import *
 from coa.tools import (
     info,
@@ -666,30 +666,33 @@ class DBInfo:
               rename = {'jour': 'date', 'dep': 'where','extract_date': 'date', 'departement': 'where','date_de_passage':'date'}
               rename.update(self.original_to_available_keywords_dico())
               lurl=list(dict.fromkeys(self.get_url()))
-              for idx,url in enumerate(lurl):
-                  keep = ['date','where'] + self.get_url_original_keywords()[url]
-                  separator = self.get_url_separator(url)
-                  sp = self.row_where_csv_parser(url=url,rename_columns = rename, separator = separator, constraints = constraints, cast = cast, keep_field = keep)
-                  list_spf.append(sp)
-              result=pd.DataFrame()
-              for i in list_spf:
-                  if result.empty:
-                      result=i
-                  else:
-                      result=result.merge(i, how = 'outer', on=['where','date'])
-              del list_spf
-              result[['tot_T','tot_P']] = result[['tot_T','tot_P']].stack().str.replace(',','.').unstack()
-              result = result.loc[~result['where'].isin(['00'])]
-              result = result.sort_values(by=['where','date'])
-              result.loc[result['where'].isin(['975','977','978','986','987']),'where']='980'
-              result = result.drop_duplicates(subset=['where', 'date'], keep='last')
-              for w in list(result.columns):
-                  if w not in ['where', 'date']:
-                      result[w]=pd.to_numeric(result[w], errors = 'coerce')
-                      if w.startswith('incid_'):
-                          result[w] = result.groupby('where')[w].fillna(method = 'bfill')
-                      if w in ['tot_P','tot_T']:
-                          result[w]=result.groupby(['where'])[w].cumsum()
+              with tqdm(total=len(lurl)+1 ,desc='Chargement des données SPF') as pbar:
+                for idx, url in enumerate(lurl):
+                        keep = ['date','where'] + self.get_url_original_keywords()[url]
+                        separator = self.get_url_separator(url)
+                        sp = self.row_where_csv_parser(url=url,rename_columns = rename, separator = separator, constraints = constraints, cast = cast, keep_field = keep)
+                        list_spf.append(sp)
+                        pbar.update(1)
+                result=pd.DataFrame()
+                for i in list_spf:
+                    if result.empty:
+                        result=i
+                    else:
+                        result=result.merge(i, how = 'outer', on=['where','date'])
+                del list_spf
+                result[['tot_T','tot_P']] = result[['tot_T','tot_P']].stack().str.replace(',','.').unstack()
+                result = result.loc[~result['where'].isin(['00'])]
+                result = result.sort_values(by=['where','date'])
+                result.loc[result['where'].isin(['975','977','978','986','987']),'where']='980'
+                result = result.drop_duplicates(subset=['where', 'date'], keep='last')
+                for w in list(result.columns):
+                    if w not in ['where', 'date']:
+                        result[w]=pd.to_numeric(result[w], errors = 'coerce')
+                        if w.startswith('incid_'):
+                            result[w] = result.groupby('where')[w].fillna(method = 'bfill')
+                        if w in ['tot_P','tot_T']:
+                            result[w]=result.groupby(['where'])[w].cumsum()
+                pbar.update(1)
               self.dbparsed = result
           elif namedb == 'spfnational':
               info('SPFNational, aka Sante Publique France, database selected (France with no granularity) ...')
@@ -763,7 +766,7 @@ class DBInfo:
               '''
           #TEST OLYMPICS AVEC FONCTION
           elif namedb == 'olympics':
-                info('Olympics data selected test with fonction...')
+                info('Olympics data selected...')
 
                 urls = [
                     'https://raw.githubusercontent.com/NoamXD8/olympics/main/athlete_events_small.csv'
@@ -826,6 +829,7 @@ class DBInfo:
                     return df
 
                 all_olympics_data = pd.DataFrame()
+                
                 for url in urls:
                     olympics_data = process_olympic_data(url, dic_iso)
                     all_olympics_data = pd.concat([all_olympics_data, olympics_data], ignore_index=True)

@@ -816,7 +816,9 @@ class DBInfo:
                     df = df.fillna(0)
 
                     df = df.sort_values(by=['date'])
-                    df = df.groupby(level=0).cumsum().reset_index().rename_axis(None, axis=1)
+                    df = df.groupby(['date','iso_code'])[addmedals].sum()
+                    #df = df.groupby(level=1).cumsum().reset_index().rename_axis(None, axis=1)
+                    df = df.reset_index(level=1).reset_index()
                     df['where'] = df['iso_code']
                     df = df[['date', 'where', 'iso_code'] + addmedals].reset_index(drop=True)
                     return df
@@ -825,11 +827,24 @@ class DBInfo:
                 for url in urls:
                     olympics_data = process_olympic_data(url, dic_iso)
                     all_olympics_data = pd.concat([all_olympics_data, olympics_data], ignore_index=True)
-                all_olympics_data= all_olympics_data.groupby(['date','where','iso_code'])[addmedals].sum()
+
+                all_olympics_data = all_olympics_data.groupby(['date','where','iso_code'])[addmedals].sum()
+                all_olympics_data=all_olympics_data.reset_index()
+
+                oldRUS=['URS','RUS','EUN']
+                tmp = all_olympics_data.loc[all_olympics_data['iso_code'].isin(oldRUS)].\
+                                        groupby('date').sum(numeric_only=True).reset_index()
+                tmp['where'] = 'RUS'
+                tmp['iso_code'] = 'RUS'
+                all_olympics_data = all_olympics_data.loc[~all_olympics_data['where'].isin(oldRUS)]
+                all_olympics_data = pd.concat([all_olympics_data,tmp])
+
+                all_olympics_data[addmedals]=all_olympics_data.groupby(['where'])[addmedals].cumsum()
+                df=all_olympics_data
 
                 self.dbparsed = all_olympics_data.reset_index()
-                self.dbparsed = self.dbparsed[['date','where', 'iso_code']+addmedals]
 
+                self.dbparsed = self.dbparsed[['date','where', 'iso_code']+addmedals]
                 self.set_available_keywords(addmedals)
                 info('Data processing completed and merged.')
 
@@ -1089,9 +1104,6 @@ class DBInfo:
      else:
         pandas_db['date'] = pd.to_datetime(pandas_db['date'], errors='coerce', infer_datetime_format=True).dt.date
 
-     #pandas_db['date'] = pd.to_datetime(pandas_db['date'],errors='coerce',infer_datetime_format=True).dt.date
-     #if self.db == "olympics":
-     #       pandas_db['where'] = pandas_db['NOC']  # Copieg valeurs de 'NOC' dans 'where'
      if self.get_dblistdico(self.db)[1] == 'nation' and self.get_dblistdico(self.db)[0] in ['FRA','CYP'] or \
          self.db=="spfnational":
          pandas_db['where'] = self.get_dblistdico(self.db)[2]
@@ -1170,7 +1182,7 @@ class DBInfo:
           uniqloc = [s for s in uniqloc if isinstance(s, str) and 'OWID_' not in s]
           #print("UNIQLOC",uniqloc)
           db=self.get_db()
-          if self.db in ['govcy','europa']:#,olympics]:
+          if self.db in ['govcy','europa']:
               db=None
           codename = collections.OrderedDict(zip(uniqloc,self.geo.to_standard(uniqloc,output='list',db=db,interpret_region=True)))
           location_is_code = True
@@ -1195,8 +1207,7 @@ class DBInfo:
       if self.db == 'dgs':
           mypandas = mypandas.reset_index(drop=True)
 
-      if self.db != 'olympics':
-          mypandas = mypandas.groupby(['where','date']).sum(min_count=1).reset_index() # summing in case of multiple dates (e.g. in opencovid19 data). But keep nan if any
+      mypandas = mypandas.groupby(['where','date']).sum(min_count=1).reset_index() # summing in case of multiple dates (e.g. in opencovid19 data). But keep nan if any
       if self.db == 'govcy' or self.db == 'jpnmhlw':
           location_is_code=False
 
@@ -1217,6 +1228,7 @@ class DBInfo:
           mypandas = pd.concat([mypandas,onlyowid])
 
       if self.db != 'olympics':
+          # since olympics is 4 years it takes times if we fill nan ...
           self.mainpandas = fill_missing_dates(mypandas)
       else:
           self.mainpandas=mypandas

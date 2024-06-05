@@ -766,9 +766,7 @@ class DBInfo:
                 info('Olympics data selected test with fonction...')
 
                 urls = [
-                    'https://raw.githubusercontent.com/NoamXD8/olympics/main/athlete_events-1.csv',
-                    'https://raw.githubusercontent.com/NoamXD8/olympics/main/athlete_events-2.csv',
-                    'https://raw.githubusercontent.com/NoamXD8/olympics/main/athlete_events-3.csv'
+                    'https://raw.githubusercontent.com/NoamXD8/olympics/main/athlete_events_small.csv'
                 ]
 
                 translation = pd.read_csv('https://raw.githubusercontent.com/NoamXD8/olympics/main/Liste_des_codes_pays_du_CIO_2.csv')
@@ -832,7 +830,6 @@ class DBInfo:
                     olympics_data = process_olympic_data(url, dic_iso)
                     all_olympics_data = pd.concat([all_olympics_data, olympics_data], ignore_index=True)
 
-                all_olympics_data= all_olympics_data.drop_duplicates(subset=['date','where','iso_code','Event'])
                 all_olympics_data = all_olympics_data.groupby(['date','where','iso_code'])[addmedals].sum()
 
                 all_olympics_data=all_olympics_data.reset_index()
@@ -853,7 +850,6 @@ class DBInfo:
                 self.dbparsed = self.dbparsed[['date','where', 'iso_code']+addmedals]
                 dicnewmedals={i:'tot_'+i for i in addmedals}
                 self.dbparsed = self.dbparsed.rename(columns=dicnewmedals)
-                info('Data processing completed and merged.')
 
       else:
           raise CoaKeyError('Error in the database selected: '+db+'.Please check !')

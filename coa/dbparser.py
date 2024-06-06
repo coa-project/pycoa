@@ -147,8 +147,20 @@ class DBInfo:
               rename.update(self.original_to_available_keywords_dico())
               separator=self.get_url_separator(url)
               keep = ['date','where','iso_code'] + self.get_url_original_keywords()[url]
-              owid = self.row_where_csv_parser(url=url,rename_columns = rename, separator = separator,keep_field = keep)
-              self.dbparsed = owid
+
+              total_lines = 402794+100
+              chunk_size = 1000
+              owid_chunk = []
+              #takes time to start due to file size
+              with tqdm(total=total_lines,desc='Chargement des données OWID ', bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt} [{rate_fmt}]') as pbar:
+                for chunk in pd.read_csv(url, sep=separator, chunksize=chunk_size):
+                    owid_chunk.append(chunk)
+                    pbar.update(chunk.shape[0]) 
+
+                owid = self.row_where_csv_parser(url=url,rename_columns = rename, separator = separator,keep_field = keep)
+                self.dbparsed = owid
+                pbar.update(100)
+              
           elif namedb == 'dgs':
              info('PRT, Direcção Geral de Saúde - Ministério da Saúde Português data selected ...')
              dgs = {
@@ -167,6 +179,14 @@ class DBInfo:
              url=lurl[0]
              keep = ['date','where'] + self.get_url_original_keywords()[url]
              separator=self.get_url_separator(url)
+             #Loading bar 
+             total_lines = 20944
+             chunk_size = 50
+             dgs_chunks = []
+             with tqdm(total=total_lines, desc='Chargement des données DGS', bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt} [{rate_fmt}]') as pbar:
+                for chunk in pd.read_csv(url, sep=separator, chunksize=chunk_size):
+                    dgs_chunks.append(chunk)
+                    pbar.update(chunk.shape[0])
              self.dbparsed = self.row_where_csv_parser(url=url,rename_columns = rename, separator = separator,keep_field = keep)
              self.dbparsed['tot_cases'] = self.dbparsed.groupby(['where'])['tot_cases'].cumsum()
           elif namedb == 'dpc':
@@ -188,7 +208,16 @@ class DBInfo:
               url=lurl[0]
               separator=self.get_url_separator(url)
               keep = ['date','where'] + self.get_url_original_keywords()[url]
-              self.dbparsed = self.row_where_csv_parser(url=url,rename_columns = rename, separator = separator ,keep_field = keep)
+              total_lines = 32698+5
+              chunk_size = 50
+              dpc_chunks = []
+              with tqdm(total=total_lines, desc='Chargement des données DPC ', bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt} [{rate_fmt}]') as pbar:
+                for chunk in pd.read_csv(url, sep=separator, chunksize=chunk_size):
+                    dpc_chunks.append(chunk)
+                    pbar.update(chunk.shape[0])
+                self.dbparsed = self.row_where_csv_parser(url=url,rename_columns = rename, separator = separator ,keep_field = keep)
+                pbar.update(5)
+
           elif namedb == 'europa':
               info('EUR, Rationale for the JRC COVID-19 website - data monitoring and national measures ...')
               euro = {
@@ -214,7 +243,19 @@ class DBInfo:
                       'Mainland','NOT SPECIFIED','Obalno-kraške','Osrednjeslovenske','Podravske','Pomurske','Posavske','Primorsko-notranjske',\
                       'Repatriierte','Savinjske','West North','Zasavske']}
               drop_field['iso_code']=['WWW']
-              self.dbparsed = self.row_where_csv_parser(url=url,rename_columns = rename, separator = separator, drop_field=drop_field, keep_field = keep)
+              #+10 so that the loading baris at the same time as the end of the parser (Only for big database)
+              total_lines = 311129+10
+              chunk_size = 1000
+              europa_chunks = []
+              #takes time to start due to file size
+              with tqdm(total=total_lines, desc='Chargement des données Europa  ', bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt} [{rate_fmt}]') as pbar:
+                for chunk in pd.read_csv(url, sep=separator, chunksize=chunk_size):
+                    europa_chunks.append(chunk)
+                    pbar.update(chunk.shape[0])
+                self.dbparsed = self.row_where_csv_parser(url=url,rename_columns = rename, separator = separator, drop_field=drop_field, keep_field = keep)
+                #thanks to this, the bar goes to 100% just before the keyword display etc.
+                pbar.update(10)
+
           elif namedb == 'escovid19data':
             info('ESP, EsCovid19Data ...')
             esco = {
@@ -276,6 +317,13 @@ class DBInfo:
             url=lurl[0]
             separator=self.get_url_separator(url)
             keep = ['date'] + self.get_url_original_keywords()[url]
+            total_lines = 676
+            chunk_size = 5
+            govcy_chunks = []
+            with tqdm(total=total_lines, desc='Chargement des données Govcy ', bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt} [{rate_fmt}]') as pbar:
+                for chunk in pd.read_csv(url, sep=separator, chunksize=chunk_size):
+                    govcy_chunks.append(chunk)
+                    pbar.update(chunk.shape[0])
             self.dbparsed = self.row_where_csv_parser(url=url,rename_columns = rename, separator = separator,keep_field = keep)
           elif namedb == 'imed':
                   info('Greece, imed database selected ...')
@@ -294,7 +342,15 @@ class DBInfo:
                   rename={'county_normalized':'where'}
                   rename.update(self.original_to_available_keywords_dico())
                   drop_columns=['Γεωγραφικό Διαμέρισμα','Περιφέρεια','county','pop_11']
+                  total_lines = 56
+                  chunk_size = 2
+                  imed_chunks = []
+                  with tqdm(total=total_lines, desc='Chargement des données IMED ', bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt} [{rate_fmt}]') as pbar:
+                      for chunk in pd.read_csv(url, chunksize=chunk_size):
+                        imed_chunks.append(chunk)
+                        pbar.update(chunk.shape[0])
                   self.column_where_csv_parser(namedb, rename_columns = rename,drop_columns=drop_columns)
+
           elif namedb == 'insee':
                    info('FRA, INSEE global deaths statistics...')
                    url = "https://www.data.gouv.fr/fr/datasets/fichier-des-personnes-decedees/"
@@ -474,10 +530,17 @@ class DBInfo:
                      else :
                        df_var = pd.merge(df_var,df_import_and_reshape_jpn(k,v), on = ['date','where'])
                  return df_var
-             rename=self.original_to_available_keywords_dico()
-             df_japan = df_merge_jpn(rename) # use a function to obtain the df
-             df_japan['date'] = pd.to_datetime(df_japan['date'])
-             self.dbparsed = df_japan
+             total_lines = 1096
+             chunk_size = 5
+             jpn_chunks = []
+             with tqdm(total=total_lines, desc='Chargement des données jpnmhlw ', bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt} [{rate_fmt}]') as pbar:
+                for chunk in pd.read_csv(url, chunksize=chunk_size):
+                    jpn_chunks.append(chunk)
+                    pbar.update(chunk.shape[0])
+                rename=self.original_to_available_keywords_dico()
+                df_japan = df_merge_jpn(rename) # use a function to obtain the df
+                df_japan['date'] = pd.to_datetime(df_japan['date'])
+                self.dbparsed = df_japan
           elif namedb == 'moh':
             info('Malaysia moh covid19-public database selected ...')
             url0='https://raw.githubusercontent.com/MoH-Malaysia/covid19-public/main/epidemic/cases_state.csv'
@@ -505,19 +568,22 @@ class DBInfo:
             constraints = {'sexe': 0,'cl_age90': 0}
             rename = {'state':'where'}
             rename.update(self.original_to_available_keywords_dico())
-            for url in lurl:
-                keep = ['date','where'] + self.get_url_original_keywords()[url]
-                separator=self.get_url_separator(url)
-                list_moh.append(self.row_where_csv_parser(url=url,rename_columns = rename, separator = separator, constraints = constraints, cast = cast, keep_field = keep))
-            result=pd.DataFrame()
-            for i in list_moh:
-                if result.empty:
-                    result=i
-                else:
-                    result=result.merge(i, how = 'outer', on=['where','date'])
-            result = reduce(lambda left, right: left.merge(right, how = 'outer', on=['where','date']), list_moh)
-            result['tot_cases']=result.groupby(['where'])['tot_cases'].cumsum()
-            result['tot_deaths']=result.groupby(['where'])['tot_deaths'].cumsum()
+            with tqdm(total=len(lurl)+1 ,desc='Chargement des données MOH') as pbar:
+                for url in lurl:
+                    keep = ['date','where'] + self.get_url_original_keywords()[url]
+                    separator=self.get_url_separator(url)
+                    list_moh.append(self.row_where_csv_parser(url=url,rename_columns = rename, separator = separator, constraints = constraints, cast = cast, keep_field = keep))
+                    pbar.update(1)
+                result=pd.DataFrame()
+                for i in list_moh:
+                    if result.empty:
+                        result=i
+                    else:
+                        result=result.merge(i, how = 'outer', on=['where','date'])
+                result = reduce(lambda left, right: left.merge(right, how = 'outer', on=['where','date']), list_moh)
+                result['tot_cases']=result.groupby(['where'])['tot_cases'].cumsum()
+                result['tot_deaths']=result.groupby(['where'])['tot_deaths'].cumsum()
+                pbar.update(1)
             self.dbparsed=result
           elif namedb == 'mpoxgh':
             info('MonkeyPoxGlobalHealth selected...')
@@ -535,6 +601,13 @@ class DBInfo:
             rename = {'Date_confirmation':'date','iso_code':'where'}
             rename.update(self.original_to_available_keywords_dico())
             separator=self.get_url_separator(url)
+            total_lines = 73701
+            chunk_size = 75
+            mpoxgh_chunks = []
+            with tqdm(total=total_lines, desc='Chargement des données mpoxgh ', bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt} [{rate_fmt}]') as pbar:
+                for chunk in pd.read_csv(url, chunksize=chunk_size):
+                    mpoxgh_chunks.append(chunk)
+                    pbar.update(chunk.shape[0])
             self.dbparsed = self.row_where_csv_parser(url=url,rename_columns = rename, separator = separator, keep_field = keep)
           elif namedb == 'phe':
             info('GBR, Public Health England data ...')
@@ -595,6 +668,13 @@ class DBInfo:
               keep = ['date','where'] + self.get_url_original_keywords()[url]
               rename.update(self.original_to_available_keywords_dico())
               separator=self.get_url_separator(url)
+              total_lines = 598
+              chunk_size = 1
+              risklayer_chunks = []
+              with tqdm(total=total_lines, desc='Chargement des données risklayer ', bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt} [{rate_fmt}]') as pbar:
+                for chunk in pd.read_csv(url, chunksize=chunk_size):
+                    risklayer_chunks.append(chunk)
+                    pbar.update(chunk.shape[0])
               self.dbparsed = self.row_where_csv_parser(url=url,rename_columns = rename, separator = separator,keep_field = keep)
           elif namedb == 'rki':
               info('DEU, Robert Koch Institut data selected ...')
@@ -611,7 +691,15 @@ class DBInfo:
               self.pandasdb = pd.DataFrame(rki,index=['Original name','Description','URL','Homepage'])
               drop_field={'where':['sum_'+self.get_url_original_keywords()[url][0]]}
               rename={'index':'where'}
-              self.column_where_csv_parser(namedb, rename_columns = rename,drop_field=drop_field)
+              total_lines = 1061+1
+              chunk_size = 5
+              rki_chunks = []
+              with tqdm(total=total_lines, desc='Chargement des données RKI ', bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt} [{rate_fmt}]') as pbar:
+                for chunk in pd.read_csv(url, chunksize=chunk_size):
+                    rki_chunks.append(chunk)
+                    pbar.update(chunk.shape[0])
+                self.column_where_csv_parser(namedb, rename_columns = rename,drop_field=drop_field)
+                pbar.update(1)
           elif namedb == 'spf':
               info('SPF aka Sante Publique France database selected (France departement granularity) ...')
               info('... 5 SPF databases will be parsed ...')
@@ -666,7 +754,7 @@ class DBInfo:
               rename = {'jour': 'date', 'dep': 'where','extract_date': 'date', 'departement': 'where','date_de_passage':'date'}
               rename.update(self.original_to_available_keywords_dico())
               lurl=list(dict.fromkeys(self.get_url()))
-              with tqdm(total=len(lurl)+1 ,desc='Chargement des données SPF') as pbar:
+              with tqdm(total=len(lurl)+1 ,desc='Chargement des données SPF ') as pbar:
                 for idx, url in enumerate(lurl):
                         keep = ['date','where'] + self.get_url_original_keywords()[url]
                         separator = self.get_url_separator(url)
@@ -717,10 +805,17 @@ class DBInfo:
               rename=self.original_to_available_keywords_dico()
               separator=self.get_url_separator(url)
               keep = ['date'] + self.get_url_original_keywords()[url]
-              spfnat = self.row_where_csv_parser(url=url,rename_columns = rename, separator = separator,keep_field = keep)
-              colcast=[i for i in self.get_available_keywords()]
-              spfnat[colcast]=pd.to_numeric(spfnat[colcast].stack(),errors = 'coerce').unstack()
-              self.dbparsed = spfnat
+              total_lines = 1255
+              chunk_size = 2
+              spfnat_chunks = []
+              with tqdm(total=total_lines, desc='Chargement des données SPF National ', bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt} [{rate_fmt}]') as pbar:
+                for chunk in pd.read_csv(url, sep=separator, chunksize=chunk_size):
+                    spfnat_chunks.append(chunk)
+                    pbar.update(chunk.shape[0])
+                spfnat = self.row_where_csv_parser(url=url,rename_columns = rename, separator = separator,keep_field = keep)
+                colcast=[i for i in self.get_available_keywords()]
+                spfnat[colcast]=pd.to_numeric(spfnat[colcast].stack(),errors = 'coerce').unstack()
+                self.dbparsed = spfnat
           elif namedb == 'sciensano':
               info('BEL, Sciensano Belgian institute for health data  ...')
               sci = {
@@ -744,6 +839,13 @@ class DBInfo:
               rename.update(self.original_to_available_keywords_dico())
               separator=self.get_url_separator(url)
               keep = ['date','where'] + self.get_url_original_keywords()[url]
+              total_lines = 13256
+              chunk_size = 10
+              sciensano_chunks = []
+              with tqdm(total=total_lines, desc='Chargement des données Sciensano ', bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt} [{rate_fmt}]') as pbar:
+                for chunk in pd.read_csv(url, sep=separator, chunksize=chunk_size):
+                    sciensano_chunks.append(chunk)
+                    pbar.update(chunk.shape[0])
               beldata = self.row_where_csv_parser(url=url,rename_columns = rename, separator = separator,keep_field = keep)
               colcast=[i for i in self.get_available_keywords()]
               beldata[colcast]=pd.to_numeric(beldata[colcast].stack(),errors = 'coerce').unstack()
@@ -780,80 +882,89 @@ class DBInfo:
                 })
 
                 addmedals = ['Gold', 'Silver', 'Bronze']
-                def process_olympic_data(url, dic_iso):
-                    olympics = {
-                    #'Medal': ['Medal', 'Medal Type (Gold, Silver, Bronze)'],
-                    'tot_Gold':['Gold','Or Medal (PYCOA computed, absent in the orignal)'],
-                    'tot_Silver':['Silver','Silver Medal (PYCOA computed, absent in the orignal)'],
-                    'tot_Bronze':['Bronze','Bronze Medal (PYCOA computed, absent in the orignal)']
-                    }
+                total_lines = 271116+100
+                with tqdm(total=total_lines, desc='Chargement des données Olympics ', bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt} [{rate_fmt}]') as pbar:
+                    def process_olympic_data(url, dic_iso):
+                        olympics = {
+                        #'Medal': ['Medal', 'Medal Type (Gold, Silver, Bronze)'],
+                        'tot_Gold':['Gold','Or Medal (PYCOA computed, absent in the orignal)'],
+                        'tot_Silver':['Silver','Silver Medal (PYCOA computed, absent in the orignal)'],
+                        'tot_Bronze':['Bronze','Bronze Medal (PYCOA computed, absent in the orignal)']
+                        }
 
-                    self.separator = {url:','}
-                    masterurl = "https://github.com/NoamXD8/olympics"
+                        self.separator = {url:','}
+                        masterurl = "https://www.kaggle.com/datasets/heesoo37/120-years-of-olympic-history-athletes-and-results"
 
-                    for k,v in olympics.items():
-                        olympics[k].append(url)
-                        olympics[k].append(masterurl)
-                    mydico = olympics
-                    self.pandasdb = pd.DataFrame(olympics,index=['Original name','Description','URL', 'Homepage'])
-                    rename = {'Year': 'date', 'Team': 'where', 'NOC': 'iso_code'}
-                    rename.update(self.original_to_available_keywords_dico())
+                        for k,v in olympics.items():
+                            olympics[k].append(url)
+                            olympics[k].append(masterurl)
+                        mydico = olympics
+                        self.pandasdb = pd.DataFrame(olympics,index=['Original name','Description','URL', 'Homepage'])
+                        rename = {'Year': 'date', 'Team': 'where', 'NOC': 'iso_code'}
+                        rename.update(self.original_to_available_keywords_dico())
 
-                    separator = self.get_url_separator(url)
-                    keep = ['date', 'where', 'iso_code'] + ['Medal']
-                    cast = {'Age': 'string', 'Height': 'string', 'Weight': 'string', 'City': 'string', 'Team': 'string'}
+                        separator = self.get_url_separator(url)
+                        keep = ['date', 'where', 'iso_code'] + ['Medal']
+                        cast = {'Age': 'string', 'Height': 'string', 'Weight': 'string', 'City': 'string', 'Team': 'string'}
 
-                    olympics = self.row_where_csv_parser(url=url, rename_columns=rename, separator=separator, cast=cast)
-                    olympics = olympics.replace({'iso_code': dic_iso})
-                    olympics = olympics.loc[~olympics.iso_code.isin(['WIF', 'IOA', 'AHO'])]
+                        chunk_size = 100
+                        olympics_chunks = []
+                        #with tqdm(total=total_lines, desc='Chargement des données Olympics ', bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt} [{rate_fmt}]') as pbar:
+                        for chunk in pd.read_csv(url, sep=separator, chunksize=chunk_size):
+                                olympics_chunks.append(chunk)
+                                pbar.update(chunk.shape[0])
+                        olympics = self.row_where_csv_parser(url=url, rename_columns=rename, separator=separator, cast=cast)
+                        olympics = olympics.replace({'iso_code': dic_iso})
+                        olympics = olympics.loc[~olympics.iso_code.isin(['WIF', 'IOA', 'AHO'])]
 
-                    df = olympics.copy()
-                    df = df[df['Season'] == 'Summer']
-                    #The 1906 Olympic Games, known as the 'Games of the Decade', are not recognised by the IOC
-                    df = df[~df['date'].isin([datetime.date(1906, 1, 1)])]
+                        df = olympics.copy()
+                        df = df[df['Season'] == 'Summer']
+                        #The 1906 Olympic Games, known as the 'Games of the Decade', are not recognised by the IOC
+                        df = df[~df['date'].isin([datetime.date(1906, 1, 1)])]
 
-                    df['count'] = df.groupby(['date', 'iso_code', 'Medal', 'Event']).Medal.transform('count')
-                    df = df.drop_duplicates(subset=['iso_code', 'date', 'Event', 'Medal'])
-                    df = df.loc[~df.Medal.isin(['NA'])]
+                        df['count'] = df.groupby(['date', 'iso_code', 'Medal', 'Event']).Medal.transform('count')
+                        df = df.drop_duplicates(subset=['iso_code', 'date', 'Event', 'Medal'])
+                        df = df.loc[~df.Medal.isin(['NA'])]
 
-                    df = df.pivot_table(index=['iso_code', 'date','Event'], columns='Medal', values='count', aggfunc='size')
-                    df = df.fillna(0)
+                        df = df.pivot_table(index=['iso_code', 'date','Event'], columns='Medal', values='count', aggfunc='size')
+                        df = df.fillna(0)
 
-                    df = df.sort_values(by=['date'])
-                    df = df.groupby(['date','iso_code','Event'])[addmedals].sum()
+                        df = df.sort_values(by=['date'])
+                        df = df.groupby(['date','iso_code','Event'])[addmedals].sum()
 
-                    #df = df.groupby(level=1).cumsum().reset_index().rename_axis(None, axis=1)
-                    df = df.reset_index(level=1).reset_index()
-                    df['where'] = df['iso_code']
-                    df = df[['date', 'where', 'iso_code','Event'] + addmedals].reset_index(drop=True)
-                    return df
+                        #df = df.groupby(level=1).cumsum().reset_index().rename_axis(None, axis=1)
+                        df = df.reset_index(level=1).reset_index()
+                        df['where'] = df['iso_code']
+                        df = df[['date', 'where', 'iso_code','Event'] + addmedals].reset_index(drop=True)
+                        return df
 
-                all_olympics_data = pd.DataFrame()
+                    all_olympics_data = pd.DataFrame()
 
-                for url in urls:
-                    olympics_data = process_olympic_data(url, dic_iso)
-                    all_olympics_data = pd.concat([all_olympics_data, olympics_data], ignore_index=True)
+                    for url in urls:
+                        olympics_data = process_olympic_data(url, dic_iso)
+                        all_olympics_data = pd.concat([all_olympics_data, olympics_data], ignore_index=True)
 
-                all_olympics_data = all_olympics_data.groupby(['date','where','iso_code'])[addmedals].sum()
+                    all_olympics_data = all_olympics_data.groupby(['date','where','iso_code'])[addmedals].sum()
 
-                all_olympics_data=all_olympics_data.reset_index()
+                    all_olympics_data=all_olympics_data.reset_index()
 
-                oldRUS=['URS','RUS','EUN']
-                tmp = all_olympics_data.loc[all_olympics_data['iso_code'].isin(oldRUS)].\
-                                        groupby('date').sum(numeric_only=True).reset_index()
-                tmp['where'] = 'RUS'
-                tmp['iso_code'] = 'RUS'
-                all_olympics_data = all_olympics_data.loc[~all_olympics_data['where'].isin(oldRUS)]
-                all_olympics_data = pd.concat([all_olympics_data,tmp])
+                    oldRUS=['URS','RUS','EUN']
+                    tmp = all_olympics_data.loc[all_olympics_data['iso_code'].isin(oldRUS)].\
+                                            groupby('date').sum(numeric_only=True).reset_index()
+                    tmp['where'] = 'RUS'
+                    tmp['iso_code'] = 'RUS'
+                    all_olympics_data = all_olympics_data.loc[~all_olympics_data['where'].isin(oldRUS)]
+                    all_olympics_data = pd.concat([all_olympics_data,tmp])
 
-                all_olympics_data[addmedals]=all_olympics_data.groupby(['where'])[addmedals].cumsum()
-                df=all_olympics_data
+                    all_olympics_data[addmedals]=all_olympics_data.groupby(['where'])[addmedals].cumsum()
+                    df=all_olympics_data
 
-                self.dbparsed = all_olympics_data.reset_index()
+                    self.dbparsed = all_olympics_data.reset_index()
 
-                self.dbparsed = self.dbparsed[['date','where', 'iso_code']+addmedals]
-                dicnewmedals={i:'tot_'+i for i in addmedals}
-                self.dbparsed = self.dbparsed.rename(columns=dicnewmedals)
+                    self.dbparsed = self.dbparsed[['date','where', 'iso_code']+addmedals]
+                    dicnewmedals={i:'tot_'+i for i in addmedals}
+                    self.dbparsed = self.dbparsed.rename(columns=dicnewmedals)
+                    pbar.update(100)
 
       else:
           raise CoaKeyError('Error in the database selected: '+db+'.Please check !')

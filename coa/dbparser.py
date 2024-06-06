@@ -829,7 +829,7 @@ class DBInfo:
                     return df
 
                 all_olympics_data = pd.DataFrame()
-                
+
                 for url in urls:
                     olympics_data = process_olympic_data(url, dic_iso)
                     all_olympics_data = pd.concat([all_olympics_data, olympics_data], ignore_index=True)
@@ -858,7 +858,7 @@ class DBInfo:
       else:
           raise CoaKeyError('Error in the database selected: '+db+'.Please check !')
       if namedb not in ['jhu','jhu-usa','imed','rki']:
-            self.restructured_pandas(self.dbparsed)
+            self.pandasGeoUnified(self.dbparsed)
 
 
   def get_dblistdico(self,key=None):
@@ -1113,12 +1113,12 @@ class DBInfo:
      pandas_db = pandas_db.sort_values(['where','date'])
      return pandas_db
 
-  def restructured_pandas(self,mypandas,**kwargs):
+  def pandasGeoUnified(self,mypandas,**kwargs):
       '''
       Return the mainpandas core of the PyCoA structure
       '''
       kwargs_test(kwargs,['columns_skipped'],
-          'Bad args used in the restructured_pandas function.')
+          'Bad args used in the pandasGeoUnified function.')
       columns_skipped = kwargs.get('columns_skipped', None)
 
       if self.db_world and self.db not in ['govcy','spfnational','mpoxgh']:

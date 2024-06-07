@@ -148,11 +148,18 @@ class DBInfo:
               separator=self.get_url_separator(url)
               keep = ['date','where','iso_code'] + self.get_url_original_keywords()[url]
 
-              total_lines = 402794+100
+              def count_lines(url, sep=','):
+                total_lines = 0
+                with pd.read_csv(url, sep=sep, chunksize=1000) as reader:
+                    for chunk in reader:
+                        total_lines += len(chunk)
+                return total_lines
+
+              total_lines = count_lines(url, sep=separator)
               chunk_size = 1000
               owid_chunk = []
               #takes time to start due to file size
-              with tqdm(total=total_lines,desc='Chargement des données OWID ', bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt} [{rate_fmt}]') as pbar:
+              with tqdm(total=total_lines+100,desc='Chargement des données OWID ', bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt} [{rate_fmt}]') as pbar:
                 for chunk in pd.read_csv(url, sep=separator, chunksize=chunk_size):
                     owid_chunk.append(chunk)
                     pbar.update(chunk.shape[0]) 
@@ -180,7 +187,15 @@ class DBInfo:
              keep = ['date','where'] + self.get_url_original_keywords()[url]
              separator=self.get_url_separator(url)
              #Loading bar 
-             total_lines = 20944
+             #total_lines = 20944
+             def count_lines(url, sep=','):
+                total_lines = 0
+                with pd.read_csv(url, sep=sep, chunksize=1000) as reader:
+                    for chunk in reader:
+                        total_lines += len(chunk)
+                return total_lines
+
+             total_lines = count_lines(url, sep=separator)
              chunk_size = 50
              dgs_chunks = []
              with tqdm(total=total_lines, desc='Chargement des données DGS', bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt} [{rate_fmt}]') as pbar:
@@ -189,6 +204,7 @@ class DBInfo:
                     pbar.update(chunk.shape[0])
              self.dbparsed = self.row_where_csv_parser(url=url,rename_columns = rename, separator = separator,keep_field = keep)
              self.dbparsed['tot_cases'] = self.dbparsed.groupby(['where'])['tot_cases'].cumsum()
+
           elif namedb == 'dpc':
               info('ITA, Dipartimento della Protezione Civile database selected ...')
               ita = {
@@ -208,10 +224,17 @@ class DBInfo:
               url=lurl[0]
               separator=self.get_url_separator(url)
               keep = ['date','where'] + self.get_url_original_keywords()[url]
-              total_lines = 32698+5
+              #total_lines = 32698+5
+              def count_lines(url, sep=','):
+                total_lines = 0
+                with pd.read_csv(url, sep=sep, chunksize=1000) as reader:
+                    for chunk in reader:
+                        total_lines += len(chunk)
+                return total_lines
+              total_lines = count_lines(url, sep=separator)
               chunk_size = 50
               dpc_chunks = []
-              with tqdm(total=total_lines, desc='Chargement des données DPC ', bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt} [{rate_fmt}]') as pbar:
+              with tqdm(total=total_lines+5, desc='Chargement des données DPC ', bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt} [{rate_fmt}]') as pbar:
                 for chunk in pd.read_csv(url, sep=separator, chunksize=chunk_size):
                     dpc_chunks.append(chunk)
                     pbar.update(chunk.shape[0])
@@ -243,12 +266,20 @@ class DBInfo:
                       'Mainland','NOT SPECIFIED','Obalno-kraške','Osrednjeslovenske','Podravske','Pomurske','Posavske','Primorsko-notranjske',\
                       'Repatriierte','Savinjske','West North','Zasavske']}
               drop_field['iso_code']=['WWW']
-              #+10 so that the loading baris at the same time as the end of the parser (Only for big database)
-              total_lines = 311129+10
+              #total_lines = 311129+10
+              def count_lines(url, sep=','):
+                total_lines = 0
+                with pd.read_csv(url, sep=sep, chunksize=1000) as reader:
+                    for chunk in reader:
+                        total_lines += len(chunk)
+                return total_lines
+
+              total_lines = count_lines(url, sep=separator)
               chunk_size = 1000
               europa_chunks = []
               #takes time to start due to file size
-              with tqdm(total=total_lines, desc='Chargement des données Europa  ', bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt} [{rate_fmt}]') as pbar:
+              #+10 so that the loading bar is at the same time as the end of the parser (Only for big database)
+              with tqdm(total=total_lines+10, desc='Chargement des données Europa  ', bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt} [{rate_fmt}]') as pbar:
                 for chunk in pd.read_csv(url, sep=separator, chunksize=chunk_size):
                     europa_chunks.append(chunk)
                     pbar.update(chunk.shape[0])
@@ -317,7 +348,15 @@ class DBInfo:
             url=lurl[0]
             separator=self.get_url_separator(url)
             keep = ['date'] + self.get_url_original_keywords()[url]
-            total_lines = 676
+            #total_lines = 676
+            def count_lines(url, sep=','):
+                total_lines = 0
+                with pd.read_csv(url, sep=sep, chunksize=1000) as reader:
+                    for chunk in reader:
+                        total_lines += len(chunk)
+                return total_lines
+
+            total_lines = count_lines(url, sep=separator)
             chunk_size = 5
             govcy_chunks = []
             with tqdm(total=total_lines, desc='Chargement des données Govcy ', bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt} [{rate_fmt}]') as pbar:
@@ -342,7 +381,15 @@ class DBInfo:
                   rename={'county_normalized':'where'}
                   rename.update(self.original_to_available_keywords_dico())
                   drop_columns=['Γεωγραφικό Διαμέρισμα','Περιφέρεια','county','pop_11']
-                  total_lines = 56
+                  #total_lines = 56
+                  def count_lines(url, sep=','):
+                    total_lines = 0
+                    with pd.read_csv(url, sep=sep, chunksize=1000) as reader:
+                        for chunk in reader:
+                            total_lines += len(chunk)
+                    return total_lines
+
+                  total_lines = count_lines(url, sep=',')
                   chunk_size = 2
                   imed_chunks = []
                   with tqdm(total=total_lines, desc='Chargement des données IMED ', bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt} [{rate_fmt}]') as pbar:
@@ -530,7 +577,15 @@ class DBInfo:
                      else :
                        df_var = pd.merge(df_var,df_import_and_reshape_jpn(k,v), on = ['date','where'])
                  return df_var
-             total_lines = 1096
+             #total_lines = 1096
+             def count_lines(url, sep=','):
+                total_lines = 0
+                with pd.read_csv(url, sep=sep, chunksize=1000) as reader:
+                    for chunk in reader:
+                        total_lines += len(chunk)
+                return total_lines
+
+             total_lines = count_lines(url, sep=',')
              chunk_size = 5
              jpn_chunks = []
              with tqdm(total=total_lines, desc='Chargement des données jpnmhlw ', bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt} [{rate_fmt}]') as pbar:
@@ -601,7 +656,15 @@ class DBInfo:
             rename = {'Date_confirmation':'date','iso_code':'where'}
             rename.update(self.original_to_available_keywords_dico())
             separator=self.get_url_separator(url)
-            total_lines = 73701
+            #total_lines = 73701
+            def count_lines(url, sep=','):
+                total_lines = 0
+                with pd.read_csv(url, sep=sep, chunksize=1000) as reader:
+                    for chunk in reader:
+                        total_lines += len(chunk)
+                return total_lines
+
+            total_lines = count_lines(url, sep=separator)
             chunk_size = 75
             mpoxgh_chunks = []
             with tqdm(total=total_lines, desc='Chargement des données mpoxgh ', bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt} [{rate_fmt}]') as pbar:
@@ -668,7 +731,15 @@ class DBInfo:
               keep = ['date','where'] + self.get_url_original_keywords()[url]
               rename.update(self.original_to_available_keywords_dico())
               separator=self.get_url_separator(url)
-              total_lines = 598
+              #total_lines = 598
+              def count_lines(url, sep=','):
+                total_lines = 0
+                with pd.read_csv(url, sep=sep, chunksize=1000) as reader:
+                    for chunk in reader:
+                        total_lines += len(chunk)
+                return total_lines
+
+              total_lines = count_lines(url, sep=separator)
               chunk_size = 1
               risklayer_chunks = []
               with tqdm(total=total_lines, desc='Chargement des données risklayer ', bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt} [{rate_fmt}]') as pbar:
@@ -691,15 +762,23 @@ class DBInfo:
               self.pandasdb = pd.DataFrame(rki,index=['Original name','Description','URL','Homepage'])
               drop_field={'where':['sum_'+self.get_url_original_keywords()[url][0]]}
               rename={'index':'where'}
-              total_lines = 1061+1
-              chunk_size = 5
+              #total_lines = 1061+10
+              def count_lines(url, sep=','):
+                total_lines = 0
+                with pd.read_csv(url, sep=sep, chunksize=1000) as reader:
+                    for chunk in reader:
+                        total_lines += len(chunk)
+                return total_lines
+
+              total_lines = count_lines(url, sep=',')
+              chunk_size = 10
               rki_chunks = []
-              with tqdm(total=total_lines, desc='Chargement des données RKI ', bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt} [{rate_fmt}]') as pbar:
+              with tqdm(total=total_lines+10, desc='Chargement des données RKI ', bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt} [{rate_fmt}]') as pbar:
                 for chunk in pd.read_csv(url, chunksize=chunk_size):
                     rki_chunks.append(chunk)
                     pbar.update(chunk.shape[0])
                 self.column_where_csv_parser(namedb, rename_columns = rename,drop_field=drop_field)
-                pbar.update(1)
+                pbar.update(10)
           elif namedb == 'spf':
               info('SPF aka Sante Publique France database selected (France departement granularity) ...')
               info('... 5 SPF databases will be parsed ...')
@@ -805,7 +884,15 @@ class DBInfo:
               rename=self.original_to_available_keywords_dico()
               separator=self.get_url_separator(url)
               keep = ['date'] + self.get_url_original_keywords()[url]
-              total_lines = 1255
+              #total_lines = 1255
+              def count_lines(url, sep=','):
+                total_lines = 0
+                with pd.read_csv(url, sep=sep, chunksize=1000) as reader:
+                    for chunk in reader:
+                        total_lines += len(chunk)
+                return total_lines
+
+              total_lines = count_lines(url, sep=separator)
               chunk_size = 2
               spfnat_chunks = []
               with tqdm(total=total_lines, desc='Chargement des données SPF National ', bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt} [{rate_fmt}]') as pbar:
@@ -839,7 +926,15 @@ class DBInfo:
               rename.update(self.original_to_available_keywords_dico())
               separator=self.get_url_separator(url)
               keep = ['date','where'] + self.get_url_original_keywords()[url]
-              total_lines = 13256
+              #total_lines = 13256
+              def count_lines(url, sep=','):
+                total_lines = 0
+                with pd.read_csv(url, sep=sep, chunksize=1000) as reader:
+                    for chunk in reader:
+                        total_lines += len(chunk)
+                return total_lines
+
+              total_lines = count_lines(url, sep=separator)
               chunk_size = 10
               sciensano_chunks = []
               with tqdm(total=total_lines, desc='Chargement des données Sciensano ', bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt} [{rate_fmt}]') as pbar:
@@ -882,8 +977,16 @@ class DBInfo:
                 })
 
                 addmedals = ['Gold', 'Silver', 'Bronze']
-                total_lines = 271116+100
-                with tqdm(total=total_lines, desc='Chargement des données Olympics ', bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt} [{rate_fmt}]') as pbar:
+                #total_lines = 271116+100
+                def count_lines(url, sep=','):
+                    total_lines = 0
+                    with pd.read_csv(url, sep=sep, chunksize=1000) as reader:
+                        for chunk in reader:
+                            total_lines += len(chunk)
+                    return total_lines
+
+                total_lines = count_lines(urls[0], sep=',')
+                with tqdm(total=total_lines+100, desc='Chargement des données Olympics ', bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt} [{rate_fmt}]') as pbar:
                     def process_olympic_data(url, dic_iso):
                         olympics = {
                         #'Medal': ['Medal', 'Medal Type (Gold, Silver, Bronze)'],

@@ -107,6 +107,22 @@ class DBInfo:
         When available total deaths should be the first epidemiological variable
       '''
       if namedb in _db_list_dict.keys():
+          def count_lines(url, sep=','):
+                """
+                Compte le nombre de lignes dans un fichier CSV.
+                    
+                Parameters:
+                - url (str): L'URL du fichier CSV.
+                - sep (str): Le séparateur de colonnes du CSV.
+
+                Returns:
+                - int: Le nombre total de lignes dans le fichier CSV.
+                """
+                total_lines = 0
+                with pd.read_csv(url, sep=sep, chunksize=1000) as reader:
+                    for chunk in reader:
+                        total_lines += len(chunk)
+                return total_lines
           if namedb == 'owid':
               info('OWID aka \"Our World in Data\" database selected ...')
               owid={
@@ -148,13 +164,6 @@ class DBInfo:
               separator=self.get_url_separator(url)
               keep = ['date','where','iso_code'] + self.get_url_original_keywords()[url]
 
-              def count_lines(url, sep=','):
-                total_lines = 0
-                with pd.read_csv(url, sep=sep, chunksize=1000) as reader:
-                    for chunk in reader:
-                        total_lines += len(chunk)
-                return total_lines
-
               total_lines = count_lines(url, sep=separator)
               chunk_size = 1000
               owid_chunk = []
@@ -188,12 +197,6 @@ class DBInfo:
              separator=self.get_url_separator(url)
              #Loading bar 
              #total_lines = 20944
-             def count_lines(url, sep=','):
-                total_lines = 0
-                with pd.read_csv(url, sep=sep, chunksize=1000) as reader:
-                    for chunk in reader:
-                        total_lines += len(chunk)
-                return total_lines
 
              total_lines = count_lines(url, sep=separator)
              chunk_size = 50
@@ -224,13 +227,7 @@ class DBInfo:
               url=lurl[0]
               separator=self.get_url_separator(url)
               keep = ['date','where'] + self.get_url_original_keywords()[url]
-              #total_lines = 32698+5
-              def count_lines(url, sep=','):
-                total_lines = 0
-                with pd.read_csv(url, sep=sep, chunksize=1000) as reader:
-                    for chunk in reader:
-                        total_lines += len(chunk)
-                return total_lines
+              #total_lines = 32844+5
               total_lines = count_lines(url, sep=separator)
               chunk_size = 50
               dpc_chunks = []
@@ -267,13 +264,6 @@ class DBInfo:
                       'Repatriierte','Savinjske','West North','Zasavske']}
               drop_field['iso_code']=['WWW']
               #total_lines = 311129+10
-              def count_lines(url, sep=','):
-                total_lines = 0
-                with pd.read_csv(url, sep=sep, chunksize=1000) as reader:
-                    for chunk in reader:
-                        total_lines += len(chunk)
-                return total_lines
-
               total_lines = count_lines(url, sep=separator)
               chunk_size = 1000
               europa_chunks = []
@@ -349,13 +339,6 @@ class DBInfo:
             separator=self.get_url_separator(url)
             keep = ['date'] + self.get_url_original_keywords()[url]
             #total_lines = 676
-            def count_lines(url, sep=','):
-                total_lines = 0
-                with pd.read_csv(url, sep=sep, chunksize=1000) as reader:
-                    for chunk in reader:
-                        total_lines += len(chunk)
-                return total_lines
-
             total_lines = count_lines(url, sep=separator)
             chunk_size = 5
             govcy_chunks = []
@@ -382,13 +365,6 @@ class DBInfo:
                   rename.update(self.original_to_available_keywords_dico())
                   drop_columns=['Γεωγραφικό Διαμέρισμα','Περιφέρεια','county','pop_11']
                   #total_lines = 56
-                  def count_lines(url, sep=','):
-                    total_lines = 0
-                    with pd.read_csv(url, sep=sep, chunksize=1000) as reader:
-                        for chunk in reader:
-                            total_lines += len(chunk)
-                    return total_lines
-
                   total_lines = count_lines(url, sep=',')
                   chunk_size = 2
                   imed_chunks = []
@@ -577,14 +553,8 @@ class DBInfo:
                      else :
                        df_var = pd.merge(df_var,df_import_and_reshape_jpn(k,v), on = ['date','where'])
                  return df_var
+             
              #total_lines = 1096
-             def count_lines(url, sep=','):
-                total_lines = 0
-                with pd.read_csv(url, sep=sep, chunksize=1000) as reader:
-                    for chunk in reader:
-                        total_lines += len(chunk)
-                return total_lines
-
              total_lines = count_lines(url, sep=',')
              chunk_size = 5
              jpn_chunks = []
@@ -657,13 +627,6 @@ class DBInfo:
             rename.update(self.original_to_available_keywords_dico())
             separator=self.get_url_separator(url)
             #total_lines = 73701
-            def count_lines(url, sep=','):
-                total_lines = 0
-                with pd.read_csv(url, sep=sep, chunksize=1000) as reader:
-                    for chunk in reader:
-                        total_lines += len(chunk)
-                return total_lines
-
             total_lines = count_lines(url, sep=separator)
             chunk_size = 75
             mpoxgh_chunks = []
@@ -732,13 +695,6 @@ class DBInfo:
               rename.update(self.original_to_available_keywords_dico())
               separator=self.get_url_separator(url)
               #total_lines = 598
-              def count_lines(url, sep=','):
-                total_lines = 0
-                with pd.read_csv(url, sep=sep, chunksize=1000) as reader:
-                    for chunk in reader:
-                        total_lines += len(chunk)
-                return total_lines
-
               total_lines = count_lines(url, sep=separator)
               chunk_size = 1
               risklayer_chunks = []
@@ -763,13 +719,6 @@ class DBInfo:
               drop_field={'where':['sum_'+self.get_url_original_keywords()[url][0]]}
               rename={'index':'where'}
               #total_lines = 1061+10
-              def count_lines(url, sep=','):
-                total_lines = 0
-                with pd.read_csv(url, sep=sep, chunksize=1000) as reader:
-                    for chunk in reader:
-                        total_lines += len(chunk)
-                return total_lines
-
               total_lines = count_lines(url, sep=',')
               chunk_size = 10
               rki_chunks = []
@@ -885,13 +834,6 @@ class DBInfo:
               separator=self.get_url_separator(url)
               keep = ['date'] + self.get_url_original_keywords()[url]
               #total_lines = 1255
-              def count_lines(url, sep=','):
-                total_lines = 0
-                with pd.read_csv(url, sep=sep, chunksize=1000) as reader:
-                    for chunk in reader:
-                        total_lines += len(chunk)
-                return total_lines
-
               total_lines = count_lines(url, sep=separator)
               chunk_size = 2
               spfnat_chunks = []
@@ -927,13 +869,6 @@ class DBInfo:
               separator=self.get_url_separator(url)
               keep = ['date','where'] + self.get_url_original_keywords()[url]
               #total_lines = 13256
-              def count_lines(url, sep=','):
-                total_lines = 0
-                with pd.read_csv(url, sep=sep, chunksize=1000) as reader:
-                    for chunk in reader:
-                        total_lines += len(chunk)
-                return total_lines
-
               total_lines = count_lines(url, sep=separator)
               chunk_size = 10
               sciensano_chunks = []
@@ -978,13 +913,6 @@ class DBInfo:
 
                 addmedals = ['Gold', 'Silver', 'Bronze']
                 #total_lines = 271116+100
-                def count_lines(url, sep=','):
-                    total_lines = 0
-                    with pd.read_csv(url, sep=sep, chunksize=1000) as reader:
-                        for chunk in reader:
-                            total_lines += len(chunk)
-                    return total_lines
-
                 total_lines = count_lines(urls[0], sep=',')
                 with tqdm(total=total_lines+100, desc='Chargement des données Olympics ', bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt} [{rate_fmt}]') as pbar:
                     def process_olympic_data(url, dic_iso):

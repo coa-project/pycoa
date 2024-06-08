@@ -1,7 +1,7 @@
 import argparse
 from colorama import init, Fore, Style
 
-__version__ = '2.22.1'
+__version__ = '3.0.1'
 __author__ = 'Tristan Beau, Julien Browaeys, Olivier Dadoun'
 __github__ = 'https://github.com/coa-project/pycoa'
 __web__ = 'http://pycoa.fr/'

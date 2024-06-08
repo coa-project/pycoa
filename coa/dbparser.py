@@ -15,7 +15,7 @@ import json
 import datetime
 import collections
 import random
-
+from tqdm import tqdm
 from coa.error import *
 from coa.tools import (
     info,
@@ -28,6 +28,8 @@ from coa.tools import (
     flat_list
 )
 import coa.geo as coge
+import sys
+import pycountry
 # Known db
 
 _db_list_dict = {
@@ -50,6 +52,7 @@ _db_list_dict = {
     'sciensano':['BEL','region','Belgium'],
     'spf': ['FRA','subregion','France'],
     'spfnational': ['WW','nation','France'],
+    'olympics': ['WW','nation','World'],
     }
 class DBInfo:
   def __init__(self, namedb):
@@ -64,8 +67,6 @@ class DBInfo:
                 - url of the csv where the epidemiological variable is
                 - url of the master i.e where some general description could be located. By default is an empty string ''
         '''
-        self.dbparsed = pd.DataFrame()
-        mydico = {}
         self.separator = {}
         self.db = namedb
         self.db_world = False
@@ -107,6 +108,22 @@ class DBInfo:
         When available total deaths should be the first epidemiological variable
       '''
       if namedb in _db_list_dict.keys():
+          def count_lines(url, sep=','):
+                """
+                Compte le nombre de lignes dans un fichier CSV.
+
+                Parameters:
+                - url (str): L'URL du fichier CSV.
+                - sep (str): Le séparateur de colonnes du CSV.
+
+                Returns:
+                - int: Le nombre total de lignes dans le fichier CSV.
+                """
+                total_lines = 0
+                with pd.read_csv(url, sep=sep, chunksize=1000) as reader:
+                    for chunk in reader:
+                        total_lines += len(chunk)
+                return total_lines
           if namedb == 'owid':
             info('OWID aka \"Our World in Data\" database selected ...')
             owid={
@@ -294,32 +311,42 @@ class DBInfo:
             url=lurl[0]
             separator=self.get_url_separator(url)
             keep = ['date'] + self.get_url_original_keywords()[url]
+            #total_lines = 676
+            total_lines = count_lines(url, sep=separator)
+            chunk_size = 5
+            govcy_chunks = []
+            with tqdm(total=total_lines, desc='Chargement des données Govcy ', bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt} [{rate_fmt}]') as pbar:
+                for chunk in pd.read_csv(url, sep=separator, chunksize=chunk_size):
+                    govcy_chunks.append(chunk)
+                    pbar.update(chunk.shape[0])
             self.dbparsed = self.row_where_csv_parser(url=url,rename_columns = rename, separator = separator,keep_field = keep)
           elif namedb == 'imed':
-            info('Greece, imed database selected ...')
-            imed = {
-              'tot_deaths':['deaths','FILLIT'],
-              'tot_cases':['cases','FILLIT']
-            }
-            imed_zenodo = {
-              'tot_deaths':['deaths','https://zenodo.org/records/10082162/files/imed_greece_deaths_v2.csv'],
-              'tot_cases':['cases','https://zenodo.org/records/10082162/files/imed_greece_cases_v2.csv']
-            }
-            urlb = 'https://raw.githubusercontent.com/iMEdD-Lab/open-data/master/COVID-19/greece_'
-            masterurl='https://github.com/iMEdD-Lab/open-data/tree/master/COVID-19'
-            for k,v in imed.items():
-              url=urlb+v[0]+'_v2.csv'
-              if not exists_from_url(url):
-                url=imed_zenodo[k][1]
-                print('Original file unavailable, swtching to Zenodo backup ', url)
-              self.separator[url]=','
-              imed[k].append(url)
-              imed[k].append(masterurl)
-            self.pandasdb = pd.DataFrame(imed,index=['Original name','Description','URL','Homepage'])
-            rename={'county_normalized':'where'}
-            rename.update(self.original_to_available_keywords_dico())
-            drop_columns=['Γεωγραφικό Διαμέρισμα','Περιφέρεια','county','pop_11']
-            self.column_where_csv_parser(namedb, rename_columns = rename,drop_columns=drop_columns)
+                  info('Greece, imed database selected ...')
+                  imed = {
+                  'tot_deaths':['deaths','FILLIT'],
+                  'tot_cases':['cases','FILLIT']
+                  }
+                  urlb = 'https://raw.githubusercontent.com/iMEdD-Lab/open-data/master/COVID-19/greece_'
+                  masterurl='https://github.com/iMEdD-Lab/open-data/tree/master/COVID-19'
+                  for k,v in imed.items():
+                       url=urlb+v[0]+'_v2.csv'
+                       self.separator[url]=','
+                       imed[k].append(url)
+                       imed[k].append(masterurl)
+                  self.pandasdb = pd.DataFrame(imed,index=['Original name','Description','URL','Homepage'])
+                  rename={'county_normalized':'where'}
+                  rename.update(self.original_to_available_keywords_dico())
+                  drop_columns=['Γεωγραφικό Διαμέρισμα','Περιφέρεια','county','pop_11']
+                  #total_lines = 56
+                  total_lines = count_lines(url, sep=',')
+                  chunk_size = 2
+                  imed_chunks = []
+                  with tqdm(total=total_lines, desc='Chargement des données IMED ', bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt} [{rate_fmt}]') as pbar:
+                      for chunk in pd.read_csv(url, chunksize=chunk_size):
+                        imed_chunks.append(chunk)
+                        pbar.update(chunk.shape[0])
+                  self.column_where_csv_parser(namedb, rename_columns = rename,drop_columns=drop_columns)
+
           elif namedb == 'insee':
             info('FRA, INSEE global deaths statistics...')
             url = "https://www.data.gouv.fr/fr/datasets/fichier-des-personnes-decedees/"
@@ -459,7 +486,7 @@ class DBInfo:
             jhuusa_zenodo = {
                 'tot_deaths':['deaths','https://zenodo.org/records/10082396/files/jhu-usa_time_series_covid19_deaths_US.csv'],\
                 'tot_confirmed':['confirmed','https://zenodo.org/records/10082396/files/jhu-usa_time_series_covid19_confirmed_US.csv'],\
-            }            
+            }
             masterurl="https://github.com/CSSEGISandData/COVID-19"
             for k,v in jhuusa.items():
                 url=base_url+v[0]+"_US.csv"
@@ -562,7 +589,7 @@ class DBInfo:
                 'daily_partial':['daily_partial','FILLIT',url3],\
                 'daily_full':['daily_full','FILLIT',url3],\
             }
-            
+
             for k,v in moh.items():
                 moh[k].append("https://github.com/MoH-Malaysia/covid19-public")
             self.pandasdb = pd.DataFrame(moh,index=['Original name','Description','URL','Homepage'])
@@ -573,19 +600,22 @@ class DBInfo:
             constraints = {'sexe': 0,'cl_age90': 0}
             rename = {'state':'where'}
             rename.update(self.original_to_available_keywords_dico())
-            for url in lurl:
-                keep = ['date','where'] + self.get_url_original_keywords()[url]
-                separator=self.get_url_separator(url)
-                list_moh.append(self.row_where_csv_parser(url=url,rename_columns = rename, separator = separator, constraints = constraints, cast = cast, keep_field = keep))
-            result=pd.DataFrame()
-            for i in list_moh:
-                if result.empty:
-                    result=i
-                else:
-                    result=result.merge(i, how = 'outer', on=['where','date'])
-            result = reduce(lambda left, right: left.merge(right, how = 'outer', on=['where','date']), list_moh)
-            result['tot_cases']=result.groupby(['where'])['tot_cases'].cumsum()
-            result['tot_deaths']=result.groupby(['where'])['tot_deaths'].cumsum()
+            with tqdm(total=len(lurl)+1 ,desc='Chargement des données MOH') as pbar:
+                for url in lurl:
+                    keep = ['date','where'] + self.get_url_original_keywords()[url]
+                    separator=self.get_url_separator(url)
+                    list_moh.append(self.row_where_csv_parser(url=url,rename_columns = rename, separator = separator, constraints = constraints, cast = cast, keep_field = keep))
+                    pbar.update(1)
+                result=pd.DataFrame()
+                for i in list_moh:
+                    if result.empty:
+                        result=i
+                    else:
+                        result=result.merge(i, how = 'outer', on=['where','date'])
+                result = reduce(lambda left, right: left.merge(right, how = 'outer', on=['where','date']), list_moh)
+                result['tot_cases']=result.groupby(['where'])['tot_cases'].cumsum()
+                result['tot_deaths']=result.groupby(['where'])['tot_deaths'].cumsum()
+                pbar.update(1)
             self.dbparsed=result
           elif namedb == 'mpoxgh':
             info('MonkeyPoxGlobalHealth selected...')
@@ -606,6 +636,14 @@ class DBInfo:
             rename = {'Date_confirmation':'date','iso_code':'where'}
             rename.update(self.original_to_available_keywords_dico())
             separator=self.get_url_separator(url)
+            #total_lines = 73701
+            total_lines = count_lines(url, sep=separator)
+            chunk_size = 75
+            mpoxgh_chunks = []
+            with tqdm(total=total_lines, desc='Chargement des données mpoxgh ', bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt} [{rate_fmt}]') as pbar:
+                for chunk in pd.read_csv(url, chunksize=chunk_size):
+                    mpoxgh_chunks.append(chunk)
+                    pbar.update(chunk.shape[0])
             self.dbparsed = self.row_where_csv_parser(url=url,rename_columns = rename, separator = separator, keep_field = keep)
           elif namedb == 'phe':
             info('GBR, Public Health England data ...')
@@ -851,7 +889,8 @@ class DBInfo:
       else:
           raise CoaKeyError('Error in the database selected: '+db+'.Please check !')
       if namedb not in ['jhu','jhu-usa','imed','rki']:
-            self.restructured_pandas(self.dbparsed)
+            self.pandasGeoUnified(self.dbparsed)
+
 
   def get_dblistdico(self,key=None):
       '''
@@ -1075,6 +1114,7 @@ class DBInfo:
      quoting=0
      pandas_db = pd.read_csv(get_local_from_url(url,10000), sep=separator, encoding = encoding,
           keep_default_na=False,na_values='',header=0,quoting=quoting, dtype=cast,low_memory=False) # cached for 2 hours
+
      if constraints:
          for key,val in constraints.items():
              if key in pandas_db.columns:
@@ -1082,6 +1122,7 @@ class DBInfo:
                  pandas_db = pandas_db.drop(columns=key)
      if rename_columns:
              pandas_db = pandas_db.rename(columns=rename_columns)
+
      if drop_field:
          for key,val in drop_field.items():
              pandas_db =  pandas_db[~pandas_db[key].isin(val)]
@@ -1090,36 +1131,43 @@ class DBInfo:
          pandas_db = pandas_db.rename(columns={'semaine':'date'})
      if keep_field:
          pandas_db =  pandas_db[keep_field]
-
      if self.db == "govcy":
         pandas_db['date'] = pd.to_datetime(pandas_db['date'], errors='coerce', format="%d/%m/%Y").dt.date
+     elif self.db == "olympics":
+        pandas_db['date'] = pd.to_datetime(pandas_db['date'], format='%Y', errors='coerce').dt.date
      else:
         pandas_db['date'] = pd.to_datetime(pandas_db['date'], errors='coerce', infer_datetime_format=True).dt.date
 
-     #pandas_db['date'] = pd.to_datetime(pandas_db['date'],errors='coerce',infer_datetime_format=True).dt.date
      if self.get_dblistdico(self.db)[1] == 'nation' and self.get_dblistdico(self.db)[0] in ['FRA','CYP'] or \
          self.db=="spfnational":
          pandas_db['where'] = self.get_dblistdico(self.db)[2]
      pandas_db = pandas_db.sort_values(['where','date'])
      return pandas_db
 
-  def restructured_pandas(self,mypandas,**kwargs):
+  def pandasGeoUnified(self,mypandas,**kwargs):
       '''
       Return the mainpandas core of the PyCoA structure
       '''
       kwargs_test(kwargs,['columns_skipped'],
-          'Bad args used in the restructured_pandas function.')
+          'Bad args used in the pandasGeoUnified function.')
       columns_skipped = kwargs.get('columns_skipped', None)
+
       if self.db_world and self.db not in ['govcy','spfnational','mpoxgh']:
-          not_UN_nation_dict=['Kosovo','Serbia']
-          tmp=(mypandas.loc[mypandas['where'].isin(not_UN_nation_dict)].groupby('date').sum(numeric_only=True)).reset_index()
-          tmp['where'] = 'Serbia'
-          tmp['iso_code'] = 'SRB'
+          if self.db == 'olympics':
+                not_UN_nation_dict=['KSO','SRB']
+                tmp=(mypandas.loc[mypandas['where'].isin(not_UN_nation_dict)].groupby('date').sum(numeric_only=True)).reset_index()
+                tmp['where'] = 'Serbia'
+                tmp['iso_code'] = 'SRB'
+          else:
+              not_UN_nation_dict=['Kosovo','Serbia']
+              tmp=(mypandas.loc[mypandas['where'].isin(not_UN_nation_dict)].groupby('date').sum(numeric_only=True)).reset_index()
+              tmp['where'] = 'Serbia'
+              tmp['iso_code'] = 'SRB'
           cols = tmp.columns.tolist()
           cols = cols[0:1] + cols[-1:] + cols[1:-1]
           tmp = tmp[cols]
           mypandas = mypandas.loc[~mypandas['where'].isin(not_UN_nation_dict)]
-          mypandas = pd.concat([tmp,mypandas])
+          mypandas = pd.concat([mypandas,tmp])
       if 'iso_code' in mypandas.columns:
           mypandas['iso_code'] = mypandas['iso_code'].dropna().astype(str)
           mypandasori=mypandas.copy()
@@ -1162,8 +1210,11 @@ class DBInfo:
       codename = None
       location_is_code = False
       uniqloc = list(mypandas['where'].unique()) # if possible location from csv are codelocationv
+
       if self.db_world:
-          uniqloc = [s for s in uniqloc if 'OWID_' not in s]
+          #uniqloc = [s for s in uniqloc if 'OWID_' not in s]
+          uniqloc = [s for s in uniqloc if isinstance(s, str) and 'OWID_' not in s]
+          #print("UNIQLOC",uniqloc)
           db=self.get_db()
           if self.db in ['govcy','europa']:
               db=None
@@ -1189,10 +1240,12 @@ class DBInfo:
               CoaDbError('Granularity problem , neither region nor sub_region ...')
       if self.db == 'dgs':
           mypandas = mypandas.reset_index(drop=True)
+
       mypandas = mypandas.groupby(['where','date']).sum(min_count=1).reset_index() # summing in case of multiple dates (e.g. in opencovid19 data). But keep nan if any
       if self.db == 'govcy' or self.db == 'jpnmhlw':
           location_is_code=False
-      mypandas = fill_missing_dates(mypandas)
+
+      #mypandas = fill_missing_dates(mypandas)
       if location_is_code:
           if self.db != 'dgs':
               mypandas['codelocation'] =  mypandas['where'].astype(str)
@@ -1207,74 +1260,13 @@ class DBInfo:
       if self.db == 'owid':
           onlyowid['codelocation'] = onlyowid['where']
           mypandas = pd.concat([mypandas,onlyowid])
-      self.mainpandas = fill_missing_dates(mypandas)
+
+      if self.db != 'olympics':
+          # since olympics is 4 years it takes times if we fill nan ...
+          self.mainpandas = fill_missing_dates(mypandas)
+      else:
+          self.mainpandas=mypandas
       self.dates  = self.mainpandas['date']
 
-  def get_mainpandas(self,**kwargs):
-    '''
-         * defaut :
-              - location = None
-              - date = None
-              - selected_col = None
-             Return the csv file to the mainpandas structure
-             index | location              | date      | keywords1       |  keywords2    | ...| keywordsn
-             -----------------------------------------------------------------------------------------
-             0     |        location1      |    1      |  l1-val1-1      |  l1-val2-1    | ...|  l1-valn-1
-             1     |        location1      |    2      |  l1-val1-2      |  l1-val2-2    | ...|  l1-valn-2
-             2     |        location1      |    3      |  l1-val1-3      |  l1-val2-3    | ...|  l1-valn-3
-                              ...
-             p     |       locationp       |    1      |   lp-val1-1     |  lp-val2-1    | ...| lp-valn-1
-             ...
-         * location : list of location (None : all location)
-         * date : latest date to retrieve (None : max date)
-         * selected_col: column to keep according to get_available_keywords (None : all get_available_keywords)
-                         N.B. location column is added
-     '''
-    kwargs_test(kwargs,['where', 'date', 'selected_col'],
-                 'Bad args used in the get_stats() function.')
-
-    where = kwargs.get('where', None)
-    selected_col = kwargs.get('selected_col', None)
-    watch_date = kwargs.get('date', None)
-    if where:
-         if not isinstance(where, list):
-             clist = ([where]).copy()
-         else:
-             clist = (where).copy()
-         if not all(isinstance(c, str) for c in clist):
-             raise CoaWhereError("Location via the where keyword should be given as strings. ")
-         if self.db_world:
-             self.geo.set_standard('name')
-             if self.db == 'owid':
-                 owid_name = [c for c in clist if c.startswith('owid_')]
-                 clist = [c for c in clist if not c.startswith('owid_')]
-             clist=self.geo.to_standard(clist,output='list', interpret_region=True)
-         else:
-             clist=clist+self.geo.get_subregions_from_list_of_region_names(clist)
-             if clist in ['FRA','USA','ITA'] :
-                 clist=self.geo_all['code_subregion'].to_list()
-
-         clist=list(set(clist)) # to suppress duplicate countries
-         diff_locations = list(set(clist) - set(self.get_locations()))
-         clist = [i for i in clist if i not in diff_locations]
-         filtered_pandas = self.mainpandas.copy()
-         if len(clist) == 0 and len(owid_name) == 0:
-             raise CoaWhereError('Not a correct location found according to the where option given.')
-         if self.db == 'owid':
-             clist+=owid_name
-         filtered_pandas = filtered_pandas.loc[filtered_pandas['where'].isin(clist)]
-         if watch_date:
-             check_valid_date(watch_date)
-             mydate = pd.to_datetime(watch_date).date()
-         else :
-             mydate = filtered_pandas.date.max()
-         filtered_pandas = filtered_pandas.loc[filtered_pandas.date==mydate].reset_index(drop=True)
-         if selected_col:
-             l = selected_col
-         else:
-             l=list(self.get_available_keywords())
-         l.insert(0, 'where')
-         filtered_pandas = filtered_pandas[l]
-         return filtered_pandas
-    self.mainpandas = self.mainpandas.reset_index(drop=True)
-    return self.mainpandas
+  def get_mainpandas(self,):
+      return self.mainpandas

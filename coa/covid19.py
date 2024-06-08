@@ -21,7 +21,6 @@ import numpy as np
 import pandas as pd
 import datetime as dt
 
-import sys
 from coa.tools import (
     verb,
     kwargs_test,
@@ -30,12 +29,14 @@ from coa.tools import (
 )
 import coa.geo as coge
 import coa.dbparser as dbparser
-import coa.display as codisplay
+from coa.dbparser import _db_list_dict
+import geopandas as gpd
 from coa.error import *
 from scipy import stats as sps
 import pickle
 import os, time
-
+import coa.allvisu as allvisu
+import coa.geo as coge
 class DataBase(object):
    """
    DataBase class
@@ -44,45 +45,164 @@ class DataBase(object):
    """
    def __init__(self, db_name):
         """
-         Fill the pandas_datase
+            Main pycoa class:
+            - call the get_parser
+            - call the geo
+            - call the display
         """
         verb("Init of covid19.DataBase()")
         self.database_type = dbparser._db_list_dict
-        self.available_options = ['nonneg', 'nofillnan', 'smooth7', 'sumall']
         self.db = db_name
         self.dbfullinfo = dbparser.DBInfo(db_name)
         self.slocation = self.dbfullinfo.get_locations()
-        self.geo = self.dbfullinfo.get_geo()
+        #self.geo = self.dbfullinfo.get_geo()
         self.db_world = self.dbfullinfo.get_world_boolean()
-        self.set_display(db_name,self.geo)
+        self.codisp  = None
+        self.iso3country = _db_list_dict[db_name][0]
+        self.granularity = _db_list_dict[db_name][1]
+        self.namecountry = _db_list_dict[db_name][2]
+        self._gi = coge.GeoInfo()
+
+        try:
+            if self.granularity != 'nation':
+                self.geo = coge.GeoCountry(self.iso3country)
+                if self.granularity == 'region':
+                    where_kindgeo = self.geo.get_region_list()[['code_region', 'name_region', 'geometry']]
+                    where_kindgeo = where_kindgeo.rename(columns={'name_region': 'where'})
+                    if self.iso3country == 'PRT':
+                         tmp = where_kindgeo.rename(columns={'name_region': 'where'})
+                         tmp = tmp.loc[tmp.code_region=='PT.99']
+                         self.boundary_metropole =tmp['geometry'].total_bounds
+                    if self.iso3country == 'FRA':
+                         tmp = where_kindgeo.rename(columns={'name_region': 'where'})
+                         tmp = tmp.loc[tmp.code_region=='999']
+                         self.boundary_metropole =tmp['geometry'].total_bounds
+                elif self.granularity == 'subregion':
+                    list_dep_metro = None
+                    where_kindgeo = self.geo.get_subregion_list()[['code_subregion', 'name_subregion', 'geometry']]
+                    where_kindgeo = where_kindgeo.rename(columns={'name_subregion': 'where'})
+            else:
+                   self.geo = coge.GeoManager('name')
+                   geopan = gpd.GeoDataFrame()#crs="EPSG:4326")
+                   info = coge.GeoInfo()
+                   allcountries = self.geo.get_GeoRegion().get_countries_from_region('world')
+                   geopan['where'] = [self.geo.to_standard(c)[0] for c in allcountries]
+                   geopan = info.add_field(field=['geometry'],input=geopan ,geofield='where')
+                   geopan = gpd.GeoDataFrame(geopan, geometry=geopan.geometry, crs="EPSG:4326")
+                   geopan = geopan[geopan['where'] != 'Antarctica']
+                   where_kindgeo = geopan.dropna().reset_index(drop=True)
+        except:
+            raise CoaTypeError('What data base are you looking for ?')
+        self.where_geodescription = where_kindgeo
+        #self.set_display(db_name,where_kindgeo,vis)
+
+   def getwheregeometrydescription(self):
+        return self.where_geodescription
+
+   def permanentdisplay(self,input):
+    '''
+     when sumall option is used this method is usefull for the display
+     it returns an input with new columns
+    '''
+    input['permanentdisplay'] = input.codelocation
+    if 'codelocation' and 'clustername' not in input.columns:
+       input['codelocation'] = input['where']
+       input['clustername'] = input['where']
+       input['rolloverdisplay'] = input['where']
+       input['permanentdisplay'] = input['where']
+    else:
+       if self.granularity == 'nation' :
+           #input['codelocation'] = input['codelocation'].apply(lambda x: str(x).replace('[', '').replace(']', '') if len(x)< 10 else x[0]+'...'+x[-1] )
+           ##input['permanentdisplay'] = input.apply(lambda x: x.clustername if self.geo.get_GeoRegion().is_region(x.clustername) else str(x.codelocation), axis = 1)
+           input['permanentdisplay'] = input.codelocation
+       else:
+           if self.granularity == 'subregion' :
+               input = input.reset_index(drop=True)
+               if isinstance(input['codelocation'].iloc[0],list):
+                   input['codelocation'] = input['codelocation'].apply(lambda x: str(x).replace("'", '')\
+                                                if len(x)<5 else '['+str(x[0]).replace("'", '')+',...,'+str(x[-1]).replace("'", '')+']')
+
+               trad={}
+               cluster = input.clustername.unique()
+
+               if isinstance(input['where'].iloc[0],list):
+                  cluster = [i for i in cluster]
+               for i in cluster:
+                   if i == self.namecountry:
+                       input['permanentdisplay'] = input.clustername #[self.dbld[self.database_name][2]]*len(input)
+                   else:
+                       if self.geo.is_region(i):
+                           trad[i] = self.geo.is_region(i)
+                       elif self.geo.is_subregion(i):
+                           trad[i] = self.geo.is_subregion(i)#input.loc[input.clustername==i]['codelocation'].iloc[0]
+                       else:
+                           trad[i] = i
+                       trad={k:(v[:3]+'...'+v[-3:] if len(v)>8 else v) for k,v in trad.items()}
+                       if ',' in input.codelocation[0]:
+                           input['permanentdisplay'] = input.clustername
+                       else:
+                           input['permanentdisplay'] = input.codelocation#input.clustername.map(trad)
+           elif self.granularity == 'region' :
+               if all(i == self.namecountry for i in input.clustername.unique()):
+                   input['permanentdisplay'] = [self.namecountry]*len(input)
+               else:
+                   input['permanentdisplay'] = input.codelocation
+    input['rolloverdisplay'] = input['where']
+    return input
+
 
    @staticmethod
-   def factory(db_name,refresh=True):
+   def factory(**kwargs):
        '''
-        Return an instance to DataBase and to CocoDisplay methods
+        Return an instance to DataBase and to Display methods
         This is recommended to avoid mismatch in labeled figures
        '''
+       db_name = kwargs.get('db_name')
+       reload = kwargs.get('reload', True)
+
        path = ".cache/"
        if not os.path.exists(path):
            os.makedirs(path)
-       filepkl=path+db_name+'.pkl'
-       if refresh:
+       filepkl = path + db_name + '.pkl'
+
+       if reload:
            datab = DataBase(db_name)
            with open(filepkl, 'wb') as f:
                pickle.dump(datab,f)
+       #else:
+       #   datab=DataBase.readpekl(filepkl)
+       #   print("HERE")
+       #if visu:
+       visu=True
+       datab.set_display(db_name,datab.getwheregeometrydescription())
+       if visu:
+           return datab, datab.get_display()
        else:
-           if not os.path.isfile(filepkl):
-              print("Data from "+db_name + " isn't allready stored")
-              datab = DataBase(db_name)
-              with open(filepkl, 'wb') as f:
-                  pickle.dump(datab,f)
-           else:
-               with open(filepkl, 'rb') as f:
-                   print("Info of "+ db_name + " stored ")
-                   print("last update: %s" % time.ctime(os.path.getmtime(filepkl)))
-                   datab = pickle.load(f)
-                   datab.set_display(db_name,datab.getgeo())
-       return datab, datab.get_display()
+            return datab, None
+
+   def set_display(self,db,wheregeometrydescription):
+       ''' Set the Display '''
+       self.codisp = allvisu.AllVisu(db, wheregeometrydescription)
+
+   def get_display(self):
+       ''' Return the instance of Display initialized by factory'''
+       return self.codisp
+
+   @staticmethod
+   def readpekl(filepkl):
+      if not os.path.isfile(filepkl):
+         db_name=filepkl.replace('.cache/','').replace('.pkl','')
+         print("Data from "+db_name + " isn't allready stored")
+         datab = DataBase(db_name)
+         with open(filepkl, 'wb') as f:
+             pickle.dump(datab,f)
+      else:
+         with open(filepkl, 'rb') as f:
+             #print("Info of "+ db_name + " stored ")
+             print("last update: %s" % time.ctime(os.path.getmtime(filepkl)))
+             datab = pickle.load(f)
+             datab.get_parserdb().get_echoinfo()
+      return datab
 
    def setgeo(self,geo):
        self.geo = geo
@@ -95,15 +215,6 @@ class DataBase(object):
 
    def get_fulldb(self):
       return self.dbfullinfo.get_mainpandas()
-      #.style.set_table_styles([{'selector' : '','props' : [('border','5px solid green')]}])
-
-   def set_display(self,db,geo):
-       ''' Set the CocoDisplay '''
-       self.codisp = codisplay.CocoDisplay(db, geo)
-
-   def get_display(self):
-       ''' Return the instance of CocoDisplay initialized by factory'''
-       return self.codisp
 
    def get_available_database(self):
         '''
@@ -140,14 +251,14 @@ class DataBase(object):
                 location-i      |    3      |  vali-1           |  daily1i-3         |  diffi-3
                     ...
 
+        - a clustername variable is computed
+
         '''
         option = None
         sumall = None
         wallname = None
         optionskipped=False
         othersinputfieldpandas=pd.DataFrame()
-        kwargs_test(kwargs,['where','which','what','option','input','input_field','when','output',
-        'typeofplot','typeofhist','tile','visu','mode','maplabel','bypop','cursor_date','title'],'Bad args used in the get_stats() function.')
         if 'where' not in kwargs or kwargs['where'] is None.__class__ or kwargs['where'] == None:
             #if self.dbfullinfo.get_dblistdico(self.db)[0] == 'WW':
             #    kwargs['where'] = self.dbfullinfo.get_dblistdico(self.db)[2]
@@ -274,7 +385,6 @@ class DataBase(object):
                 listloc = explosion(listloc,self.dbfullinfo.get_dblistdico(self.db)[1])
                 listloc = flat_list(listloc)
                 location_exploded = listloc
-
         def sticky(lname):
             if len(lname)>0:
                 tmp=''
@@ -410,6 +520,7 @@ class DataBase(object):
 
                codescluster = {i:list(pdfiltered.loc[pdfiltered.clustername==i]['codelocation'].unique()) for i in uniqcluster}
                namescluster = {i:list(pdfiltered.loc[pdfiltered.clustername==i]['where'].unique()) for i in uniqcluster}
+
                tmp['codelocation'] = tmp['clustername'].map(codescluster)
                tmp['where'] = tmp['clustername'].map(namescluster)
 
@@ -447,6 +558,7 @@ class DataBase(object):
             if fillnan:
                 pdfiltered.loc[:,'cumul'] =\
                 pdfiltered.groupby('clustername')['cumul'].apply(lambda x: x.ffill())
+
         pdfiltered['daily'] = pdfiltered.groupby('clustername')['cumul'].diff()
         pdfiltered['weekly'] = pdfiltered.groupby('clustername')['cumul'].diff(7)
         inx = pdfiltered.groupby('clustername').head(1).index
@@ -460,9 +572,11 @@ class DataBase(object):
             inx=pdfiltered.groupby('clustername').head(7).index
             pdfiltered.loc[inx, 'daily'] = pdfiltered['daily'].fillna(method="bfill")
         unifiedposition=['where', 'date', kwargs['which'], 'daily', 'cumul', 'weekly', 'codelocation','clustername']
+
         if kwargs['which'] in ['standard','daily','weekly','cumul']:
             unifiedposition.remove(kwargs['which'])
         pdfiltered = pdfiltered[unifiedposition]
+
         if wallname != None and sumall == True:
                pdfiltered.loc[:,'clustername'] = wallname
         pdfiltered = pdfiltered.drop(columns='cumul')
@@ -470,7 +584,65 @@ class DataBase(object):
             pdfiltered = pd.merge(pdfiltered, othersinputfieldpandas, on=['date','where'])
         if 'input_field' not in kwargs:
             verb("Here the information I\'ve got on ", kwargs['which']," : ",  self.dbfullinfo.get_keyword_definition(kwargs['which']))
+        pdfiltered = self.permanentdisplay(pdfiltered)
         return pdfiltered
+
+
+   def normbypop(self, pandy, val2norm,bypop):
+    """
+        Return a pandas with a normalisation column add by population
+        * can normalize by '100', '1k', '100k' or '1M'
+    """
+    if pandy.empty:
+        raise CoaKeyError('Seems to be an empty field')
+    if isinstance(pandy['codelocation'].iloc[0],list):
+        pandy = pandy.explode('codelocation')
+
+    if self.db_world == True:
+        pop_field='population'
+        pandy = self._gi.add_field(input=pandy,field=pop_field,geofield='codelocation')
+    else:
+        if not isinstance(self._gi,coge.GeoCountry):
+            self._gi=None
+        else:
+            if self._gi.get_country() != self.geo.get_country():
+                self._gi=None
+
+        if self._gi == None :
+            self._gi = self.geo
+        pop_field='population_subregion'
+        if pop_field not in self._gi.get_list_properties():
+            raise CoaKeyError('The population information not available for this country. No normalization possible')
+
+        pandy=self._gi.add_field(input=pandy,field=pop_field,input_key='codelocation')
+
+    clust = pandy['clustername'].unique()
+    df = pd.DataFrame()
+    for i in clust:
+        pandyi = pandy.loc[ pandy['clustername'] == i ].copy()
+        pandyi.loc[:,pop_field] = pandyi.groupby('codelocation')[pop_field].first().sum()
+        if len(pandyi.groupby('codelocation')['codelocation'].first().tolist()) == 1:
+            cody = pandyi.groupby('codelocation')['codelocation'].first().tolist()*len(pandyi)
+        else:
+            cody = [pandyi.groupby('codelocation')['codelocation'].first().tolist()]*len(pandyi)
+        pandyi = pandyi.assign(codelocation=cody)
+        if df.empty:
+            df = pandyi
+        else:
+            df = pd.concat([df,pandyi])
+
+    df = df.drop_duplicates(['date','clustername'])
+    pandy = df
+
+    pandy=pandy.copy()
+    pandy[pop_field]=pandy[pop_field].replace(0., np.nan)
+    av = allvisu.AllVisu()
+    _dict_bypop =  av._dict_bypop
+    if bypop == 'pop':
+        pandy.loc[:,val2norm+' per total population']=pandy[val2norm]/pandy[pop_field]*_dict_bypop[bypop]
+    else:
+        pandy.loc[:,val2norm+' per '+bypop + ' population']=pandy[val2norm]/pandy[pop_field]*_dict_bypop[bypop]
+    return pandy
 
    def merger(self,**kwargs):
         '''

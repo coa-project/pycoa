@@ -56,7 +56,7 @@ class GeoManager():
             'name',           # Standard name ( != Official, caution )
             'num']            # Numeric standard
 
-    _list_db=[None,'jhu','worldometers','owid','opencovid19national','spfnational','mpoxgh'] # first is default
+    _list_db=[None,'jhu','worldometers','owid','opencovid19national','spfnational','mpoxgh','olympics'] # first is default
     _list_output=['list','dict','pandas'] # first is default
 
     _standard = None # currently used normalisation standard
@@ -298,6 +298,18 @@ class GeoManager():
                     "Faeroe Islands":"FRO",\
                     "Vatican":"VAT"
                 })
+        elif db=='olympics':
+            translation_dict.update({\
+                'RHO':'ZWE',\
+                'ANZ':'AUS',\
+                'BOH':'CZE',\
+                'Tch':'CZE',\
+                'Yug':'SRB',\
+                'Urs':'RUS',\
+                'Lib':'LBN',\
+                'Uar':'EGY',\
+                'Eun':'RUS',\
+                })
         return [translation_dict.get(k,k) for k in w]
 
 # ---------------------------------------------------------------------
@@ -500,10 +512,8 @@ class GeoInfo():
                 if self._data_geometry.empty:
                     #geojsondatafile = 'https://raw.githubusercontent.com/johan/world.geo.json/master/countries.geo.json'
                     #self._data_geometry = gpd.read_file(get_local_from_url(geojsondatafile,0,'.json'))[["id","geometry"]]
-                    world_geometry_url_zipfile='http://thematicmapping.org/downloads/TM_WORLD_BORDERS_SIMPL-0.3.zip' # too much simplified version ?
-                    world_geometry_url_zipfile='https://github.com/coa-project/coadata/raw/main/coastore/TM_WORLD_BORDERS_SIMPL-0.3.zip'
-
-
+                    #world_geometry_url_zipfile='http://thematicmapping.org/downloads/TM_WORLD_BORDERS_SIMPL-0.3.zip' # too much simplified version ?
+                    world_geometry_url_zipfile='https://github.com/coa-project/coadata/raw/main/coastore/TM_WORLD_BORDERS_SIMPL-0.3.zip' # too much simplified version ?
                     # world_geometry_url_zipfile='http://thematicmapping.org/downloads/TM_WORLD_BORDERS-0.3.zip' # too precize version ?
                     self._data_geometry = gpd.read_file('zip://'+get_local_from_url(world_geometry_url_zipfile,0,'.zip'))[['ISO3','geometry']]
                     self._data_geometry.columns=["id_tmp","geometry"]
@@ -622,7 +632,7 @@ class GeoRegion():
         # --- filling celac information
         p_celac=pd.read_html(get_local_from_url('https://en.wikipedia.org/wiki/Community_of_Latin_American_and_Caribbean_States'),\
                     match='Country')
-        self._celac = [p_celac[0].Country.to_list()] 
+        self._celac = [p_celac[0].Country.to_list()]
 
         # --- filling cedeao information
         p_cedeao=pd.read_html(get_local_from_url('https://en.wikipedia.org/wiki/Economic_Community_of_West_African_States'))

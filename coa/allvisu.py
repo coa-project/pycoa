@@ -152,7 +152,7 @@ class AllVisu:
                                 'typeofhist':['bylocation','byvalue','pie'],\
                                 'typeofplot':['date','menulocation','versus','spiral','yearly'],\
                                 'bins':10,\
-                                'bypop':[self._dict_bypop.values()],\
+                                'bypop':list(self._dict_bypop.keys()),\
                                 'dateslider':[False,True],\
                                 'output':['pandas','geopandas','list', 'dict', 'array']
                                 }

@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 """Project : PyCoA - Copyright ©pycoa.fr
-Date :    april 2020 - november 2023
+Date :    april 2020 - june 2024
 Authors : Olivier Dadoun, Julien Browaeys, Tristan Beau
 License: See joint LICENSE file
-Module : report
+Module : coa.dbparser
 Aboutself.db_world
 -----
 This is the PyCoA rapport module it gives all available information concerning a database key words

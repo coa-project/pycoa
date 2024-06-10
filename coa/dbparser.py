@@ -167,8 +167,20 @@ class DBInfo:
             rename.update(self.original_to_available_keywords_dico())
             separator=self.get_url_separator(url)
             keep = ['date','where','iso_code'] + self.get_url_original_keywords()[url]
-            owid = self.row_where_csv_parser(url=url,rename_columns = rename, separator = separator,keep_field = keep)
-            self.dbparsed = owid
+            total_lines = count_lines(url, sep=separator)
+            chunk_size = 1000
+            owid_chunk = []
+              #takes time to start due to file size
+            with tqdm(total=total_lines+100,desc='Chargement des données OWID ', bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt} [{rate_fmt}]') as pbar:
+                for chunk in pd.read_csv(url, sep=separator, chunksize=chunk_size):
+                    owid_chunk.append(chunk)
+                    pbar.update(chunk.shape[0]) 
+
+                owid = self.row_where_csv_parser(url=url,rename_columns = rename, separator = separator,keep_field = keep)
+                self.dbparsed = owid
+                pbar.update(100)
+              
+
           elif namedb == 'dgs':
             info('PRT, Direcção Geral de Saúde - Ministério da Saúde Português data selected ...')
             dgs = {
@@ -190,6 +202,16 @@ class DBInfo:
             url=lurl[0]
             keep = ['date','where'] + self.get_url_original_keywords()[url]
             separator=self.get_url_separator(url)
+            #Loading bar 
+            #total_lines = 20944
+            total_lines = count_lines(url, sep=separator)
+            chunk_size = 50
+            dgs_chunks = []
+            with tqdm(total=total_lines, desc='Chargement des données DGS', bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt} [{rate_fmt}]') as pbar:
+                for chunk in pd.read_csv(url, sep=separator, chunksize=chunk_size):
+                    dgs_chunks.append(chunk)
+                    pbar.update(chunk.shape[0])
+
             self.dbparsed = self.row_where_csv_parser(url=url,rename_columns = rename, separator = separator,keep_field = keep)
             self.dbparsed['tot_cases'] = self.dbparsed.groupby(['where'])['tot_cases'].cumsum()
           elif namedb == 'dpc':
@@ -214,7 +236,16 @@ class DBInfo:
             url=lurl[0]
             separator=self.get_url_separator(url)
             keep = ['date','where'] + self.get_url_original_keywords()[url]
-            self.dbparsed = self.row_where_csv_parser(url=url,rename_columns = rename, separator = separator ,keep_field = keep)
+            #total_lines = 32844+5
+            total_lines = count_lines(url, sep=separator)
+            chunk_size = 50
+            dpc_chunks = []
+            with tqdm(total=total_lines+5, desc='Chargement des données DPC ', bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt} [{rate_fmt}]') as pbar:
+                for chunk in pd.read_csv(url, sep=separator, chunksize=chunk_size):
+                    dpc_chunks.append(chunk)
+                    pbar.update(chunk.shape[0])
+                self.dbparsed = self.row_where_csv_parser(url=url,rename_columns = rename, separator = separator ,keep_field = keep)
+                pbar.update(5)
           elif namedb == 'europa':
             info('EUR, Rationale for the JRC COVID-19 website - data monitoring and national measures ...')
             euro = {
@@ -243,6 +274,20 @@ class DBInfo:
                   'Mainland','NOT SPECIFIED','Obalno-kraške','Osrednjeslovenske','Podravske','Pomurske','Posavske','Primorsko-notranjske',\
                   'Repatriierte','Savinjske','West North','Zasavske']}
             drop_field['iso_code']=['WWW']
+                          #total_lines = 311129+10
+            total_lines = count_lines(url, sep=separator)
+            chunk_size = 1000
+            europa_chunks = []
+            #takes time to start due to file size
+            #+10 so that the loading bar is at the same time as the end of the parser (Only for big database)
+            with tqdm(total=total_lines+10, desc='Chargement des données Europa  ', bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt} [{rate_fmt}]') as pbar:
+                for chunk in pd.read_csv(url, sep=separator, chunksize=chunk_size):
+                    europa_chunks.append(chunk)
+                    pbar.update(chunk.shape[0])
+                self.dbparsed = self.row_where_csv_parser(url=url,rename_columns = rename, separator = separator, drop_field=drop_field, keep_field = keep)
+                #thanks to this, the bar goes to 100% just before the keyword display etc.
+                pbar.update(10)
+
             self.dbparsed = self.row_where_csv_parser(url=url,rename_columns = rename, separator = separator, drop_field=drop_field, keep_field = keep)
           elif namedb == 'escovid19data':
             info('ESP, EsCovid19Data ...')
@@ -711,6 +756,14 @@ class DBInfo:
             keep = ['date','where'] + self.get_url_original_keywords()[url]
             rename.update(self.original_to_available_keywords_dico())
             separator=self.get_url_separator(url)
+            #total_lines = 598
+            total_lines = count_lines(url, sep=separator)
+            chunk_size = 1
+            risklayer_chunks = []
+            with tqdm(total=total_lines, desc='Chargement des données risklayer ', bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt} [{rate_fmt}]') as pbar:
+                for chunk in pd.read_csv(url, chunksize=chunk_size):
+                    risklayer_chunks.append(chunk)
+                    pbar.update(chunk.shape[0])
             self.dbparsed = self.row_where_csv_parser(url=url,rename_columns = rename, separator = separator,keep_field = keep)
           elif namedb == 'rki':
             info('DEU, Robert Koch Institut data selected ...')
@@ -730,7 +783,17 @@ class DBInfo:
             self.pandasdb = pd.DataFrame(rki,index=['Original name','Description','URL','Homepage'])
             drop_field={'where':['sum_'+self.get_url_original_keywords()[url][0]]}
             rename={'index':'where'}
-            self.column_where_csv_parser(namedb, rename_columns = rename,drop_field=drop_field)
+            #total_lines = 1061+10
+            total_lines = count_lines(url, sep=',')
+            chunk_size = 10
+            rki_chunks = []
+            with tqdm(total=total_lines+10, desc='Chargement des données RKI ', bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt} [{rate_fmt}]') as pbar:
+                for chunk in pd.read_csv(url, chunksize=chunk_size):
+                    rki_chunks.append(chunk)
+                    pbar.update(chunk.shape[0])
+                self.column_where_csv_parser(namedb, rename_columns = rename,drop_field=drop_field)
+                pbar.update(10)
+
           elif namedb == 'spf':
             info('SPF aka Sante Publique France database selected (France departement granularity) ...')
             info('... 5 SPF databases will be parsed ...')
@@ -785,31 +848,35 @@ class DBInfo:
             rename = {'jour': 'date', 'dep': 'where','extract_date': 'date', 'departement': 'where','date_de_passage':'date'}
             rename.update(self.original_to_available_keywords_dico())
             lurl=list(dict.fromkeys(self.get_url()))
-            for idx,url in enumerate(lurl):
-              keep = ['date','where'] + self.get_url_original_keywords()[url]
-              separator = self.get_url_separator(url)
-              sp = self.row_where_csv_parser(url=url,rename_columns = rename, separator = separator, constraints = constraints, cast = cast, keep_field = keep)
-              list_spf.append(sp)
-            result=pd.DataFrame()
-            for i in list_spf:
-              if result.empty:
-                  result=i
-              else:
-                  result=result.merge(i, how = 'outer', on=['where','date'])
-            del list_spf
-            result[['tot_T','tot_P']] = result[['tot_T','tot_P']].stack().str.replace(',','.').unstack()
-            result = result.loc[~result['where'].isin(['00'])]
-            result = result.sort_values(by=['where','date'])
-            result.loc[result['where'].isin(['975','977','978','986','987']),'where']='980'
-            result = result.drop_duplicates(subset=['where', 'date'], keep='last')
-            for w in list(result.columns):
-              if w not in ['where', 'date']:
-                  result[w]=pd.to_numeric(result[w], errors = 'coerce')
-                  if w.startswith('incid_'):
-                      result[w] = result.groupby('where')[w].fillna(method = 'bfill')
-                  if w in ['tot_P','tot_T']:
-                      result[w]=result.groupby(['where'])[w].cumsum()
+            with tqdm(total=len(lurl)+1 ,desc='Chargement des données SPF ') as pbar:
+                for idx, url in enumerate(lurl):
+                        keep = ['date','where'] + self.get_url_original_keywords()[url]
+                        separator = self.get_url_separator(url)
+                        sp = self.row_where_csv_parser(url=url,rename_columns = rename, separator = separator, constraints = constraints, cast = cast, keep_field = keep)
+                        list_spf.append(sp)
+                        pbar.update(1)
+                result=pd.DataFrame()
+                for i in list_spf:
+                    if result.empty:
+                        result=i
+                    else:
+                        result=result.merge(i, how = 'outer', on=['where','date'])
+                del list_spf
+                result[['tot_T','tot_P']] = result[['tot_T','tot_P']].stack().str.replace(',','.').unstack()
+                result = result.loc[~result['where'].isin(['00'])]
+                result = result.sort_values(by=['where','date'])
+                result.loc[result['where'].isin(['975','977','978','986','987']),'where']='980'
+                result = result.drop_duplicates(subset=['where', 'date'], keep='last')
+                for w in list(result.columns):
+                    if w not in ['where', 'date']:
+                        result[w]=pd.to_numeric(result[w], errors = 'coerce')
+                        if w.startswith('incid_'):
+                            result[w] = result.groupby('where')[w].fillna(method = 'bfill')
+                        if w in ['tot_P','tot_T']:
+                            result[w]=result.groupby(['where'])[w].cumsum()
+                pbar.update(1)
             self.dbparsed = result
+
           elif namedb == 'spfnational':
             info('SPFNational, aka Sante Publique France, database selected (France with no granularity) ...')
             spfn = {
@@ -836,6 +903,14 @@ class DBInfo:
             rename=self.original_to_available_keywords_dico()
             separator=self.get_url_separator(url)
             keep = ['date'] + self.get_url_original_keywords()[url]
+            #total_lines = 1255
+            total_lines = count_lines(url, sep=separator)
+            chunk_size = 2
+            spfnat_chunks = []
+            with tqdm(total=total_lines, desc='Chargement des données SPF National ', bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt} [{rate_fmt}]') as pbar:
+                for chunk in pd.read_csv(url, sep=separator, chunksize=chunk_size):
+                    spfnat_chunks.append(chunk)
+                    pbar.update(chunk.shape[0])
             spfnat = self.row_where_csv_parser(url=url,rename_columns = rename, separator = separator,keep_field = keep)
             colcast=[i for i in self.get_available_keywords()]
             spfnat[colcast]=pd.to_numeric(spfnat[colcast].stack(),errors = 'coerce').unstack()
@@ -866,6 +941,14 @@ class DBInfo:
             rename.update(self.original_to_available_keywords_dico())
             separator=self.get_url_separator(url)
             keep = ['date','where'] + self.get_url_original_keywords()[url]
+            #total_lines = 13256
+            total_lines = count_lines(url, sep=separator)
+            chunk_size = 10
+            sciensano_chunks = []
+            with tqdm(total=total_lines, desc='Chargement des données Sciensano ', bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt} [{rate_fmt}]') as pbar:
+                for chunk in pd.read_csv(url, sep=separator, chunksize=chunk_size):
+                    sciensano_chunks.append(chunk)
+                    pbar.update(chunk.shape[0])
             beldata = self.row_where_csv_parser(url=url,rename_columns = rename, separator = separator,keep_field = keep)
             colcast=[i for i in self.get_available_keywords()]
             beldata[colcast]=pd.to_numeric(beldata[colcast].stack(),errors = 'coerce').unstack()

@@ -886,6 +886,106 @@ class DBInfo:
             beldata['date'] = pandas.to_datetime(beldata['date'],errors='coerce').dt.date
             self.return_structured_pandas(beldata,columns_keeped=columns_keeped)
             '''
+          #TEST OLYMPICS AVEC FONCTION
+          elif namedb == 'olympics':
+                info('Olympics data selected...')
+
+                urls = [
+                    'https://raw.githubusercontent.com/NoamXD8/olympics/main/athlete_events_small.csv'
+                ]
+
+                translation = pd.read_csv('https://raw.githubusercontent.com/NoamXD8/olympics/main/Liste_des_codes_pays_du_CIO_2.csv')
+                translation.rename(columns={"Code\nCIO": "CIO", "ISO 3166-1\nalpha-3": "ISO3"}, inplace=True)
+                dic_iso = {i: j for i, j in zip(translation["CIO"], translation["ISO3"]) if i != j}
+                dic_iso.update({
+                    'CRT': 'GRC', 'GDR': 'DEU', 'NFL': 'NLD', 'SCG': 'SRB', 'YMD': 'YEM', 'FRG': 'DEU', 'IOA': 'Athlètes olympiques internationaux'
+                })
+
+                addmedals = ['Gold', 'Silver', 'Bronze']
+                #total_lines = 271116+100
+                total_lines = count_lines(urls[0], sep=',')
+                with tqdm(total=total_lines+100, desc='Chargement des données Olympics ', bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt} [{rate_fmt}]') as pbar:
+                    def process_olympic_data(url, dic_iso):
+                        olympics = {
+                        #'Medal': ['Medal', 'Medal Type (Gold, Silver, Bronze)'],
+                        'tot_Gold':['Gold','Or Medal (PYCOA computed, absent in the orignal)'],
+                        'tot_Silver':['Silver','Silver Medal (PYCOA computed, absent in the orignal)'],
+                        'tot_Bronze':['Bronze','Bronze Medal (PYCOA computed, absent in the orignal)']
+                        }
+
+                        self.separator = {url:','}
+                        masterurl = "https://www.kaggle.com/datasets/heesoo37/120-years-of-olympic-history-athletes-and-results"
+
+                        for k,v in olympics.items():
+                            olympics[k].append(url)
+                            olympics[k].append(masterurl)
+                        mydico = olympics
+                        self.pandasdb = pd.DataFrame(olympics,index=['Original name','Description','URL', 'Homepage'])
+                        rename = {'Year': 'date', 'Team': 'where', 'NOC': 'iso_code'}
+                        rename.update(self.original_to_available_keywords_dico())
+
+                        separator = self.get_url_separator(url)
+                        keep = ['date', 'where', 'iso_code'] + ['Medal']
+                        cast = {'Age': 'string', 'Height': 'string', 'Weight': 'string', 'City': 'string', 'Team': 'string'}
+
+                        chunk_size = 100
+                        olympics_chunks = []
+                        #with tqdm(total=total_lines, desc='Chargement des données Olympics ', bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt} [{rate_fmt}]') as pbar:
+                        for chunk in pd.read_csv(url, sep=separator, chunksize=chunk_size):
+                                olympics_chunks.append(chunk)
+                                pbar.update(chunk.shape[0])
+                        olympics = self.row_where_csv_parser(url=url, rename_columns=rename, separator=separator, cast=cast)
+                        olympics = olympics.replace({'iso_code': dic_iso})
+                        olympics = olympics.loc[~olympics.iso_code.isin(['WIF', 'IOA', 'AHO'])]
+
+                        df = olympics.copy()
+                        df = df[df['Season'] == 'Summer']
+                        #The 1906 Olympic Games, known as the 'Games of the Decade', are not recognised by the IOC
+                        df = df[~df['date'].isin([datetime.date(1906, 1, 1)])]
+
+                        df['count'] = df.groupby(['date', 'iso_code', 'Medal', 'Event']).Medal.transform('count')
+                        df = df.drop_duplicates(subset=['iso_code', 'date', 'Event', 'Medal'])
+                        df = df.loc[~df.Medal.isin(['NA'])]
+
+                        df = df.pivot_table(index=['iso_code', 'date','Event'], columns='Medal', values='count', aggfunc='size')
+                        df = df.fillna(0)
+
+                        df = df.sort_values(by=['date'])
+                        df = df.groupby(['date','iso_code','Event'])[addmedals].sum()
+
+                        #df = df.groupby(level=1).cumsum().reset_index().rename_axis(None, axis=1)
+                        df = df.reset_index(level=1).reset_index()
+                        df['where'] = df['iso_code']
+                        df = df[['date', 'where', 'iso_code','Event'] + addmedals].reset_index(drop=True)
+                        return df
+
+                    all_olympics_data = pd.DataFrame()
+
+                    for url in urls:
+                        olympics_data = process_olympic_data(url, dic_iso)
+                        all_olympics_data = pd.concat([all_olympics_data, olympics_data], ignore_index=True)
+
+                    all_olympics_data = all_olympics_data.groupby(['date','where','iso_code'])[addmedals].sum()
+
+                    all_olympics_data=all_olympics_data.reset_index()
+
+                    oldRUS=['URS','RUS','EUN']
+                    tmp = all_olympics_data.loc[all_olympics_data['iso_code'].isin(oldRUS)].\
+                                            groupby('date').sum(numeric_only=True).reset_index()
+                    tmp['where'] = 'RUS'
+                    tmp['iso_code'] = 'RUS'
+                    all_olympics_data = all_olympics_data.loc[~all_olympics_data['where'].isin(oldRUS)]
+                    all_olympics_data = pd.concat([all_olympics_data,tmp])
+
+                    all_olympics_data[addmedals]=all_olympics_data.groupby(['where'])[addmedals].cumsum()
+                    df=all_olympics_data
+
+                    self.dbparsed = all_olympics_data.reset_index()
+
+                    self.dbparsed = self.dbparsed[['date','where', 'iso_code']+addmedals]
+                    dicnewmedals={i:'tot_'+i for i in addmedals}
+                    self.dbparsed = self.dbparsed.rename(columns=dicnewmedals)
+                    pbar.update(100)
       else:
           raise CoaKeyError('Error in the database selected: '+db+'.Please check !')
       if namedb not in ['jhu','jhu-usa','imed','rki']:

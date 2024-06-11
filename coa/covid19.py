@@ -191,7 +191,10 @@ class DataBase(object):
    @staticmethod
    def readpekl(filepkl):
       if not os.path.isfile(filepkl):
-         db_name=filepkl.replace('.cache/','').replace('.pkl','')
+         path = ".cache/"
+         if not os.path.exists(path):
+              os.makedirs(path)
+         db_name=filepkl.replace(path,'').replace('.pkl','')
          print("Data from "+db_name + " isn't allready stored")
          datab = DataBase(db_name)
          with open(filepkl, 'wb') as f:

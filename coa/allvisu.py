@@ -2589,7 +2589,7 @@ class AllVisu:
             ax=plt.plot(df.index, df[col])
         plt.legend(loc)
         plt.title(title)
-        return ax
+        return fig
 
     @decowrapper
     @decoplot
@@ -2618,7 +2618,7 @@ class AllVisu:
             ax = plt.plot(df.index, df[loc])
         plt.legend(d)
         plt.title(title)
-        return ax
+        return fig
 
 
     @decowrapper
@@ -2633,11 +2633,12 @@ class AllVisu:
         input_field = kwargs.get('input_field')
         title = kwargs.get('title')
         geopdwd_filter = geopdwd_filter.sort_values(by=[input_field]).set_index('clustername')
+        fig, ax = plt.subplots(1, 1,figsize=(12, 8))
         ax = geopdwd_filter.plot(kind="pie",y=input_field, autopct='%1.1f%%', legend=True,
         title=input_field, ylabel=input_field, labeldistance=None)
         ax.legend(bbox_to_anchor=(1, 1.02), loc='upper left')
         ax.set_title(title)
-        return ax
+        return fig
 
     @decowrapper
     @decohistomap
@@ -2656,7 +2657,7 @@ class AllVisu:
         cmap = plt.get_cmap('Paired')
         bar = ax.barh(geopdwd_filter['clustername'], geopdwd_filter[input_field],color=cmap.colors)
         ax.set_title(title)
-        return ax
+        return fig
 
     @decowrapper
     def pycoa_mplthisto(self,**kwargs):
@@ -2669,11 +2670,14 @@ class AllVisu:
         input_field = kwargs.get('input_field')
         title = kwargs.get('title')
         #fig, ax = plt.subplots(1, 1,figsize=(12, 8))
+        fig, ax = plt.subplots(1, 1,figsize=(12, 8))
         input = input.loc[input.date==input.date.max()][:MAXCOUNTRIESDISPLAYED]
         loc = input['where'].unique()[:MAXCOUNTRIESDISPLAYED]
         bins=len(input['where'])+1
         input= pd.pivot_table(input,index='date', columns='where', values=input_field)
-        return input.plot.hist(bins=bins, alpha=0.5,title = title)
+        fig = input.plot.hist(bins=bins, alpha=0.5,title = title)
+        print('type',type(fig))
+        return fig
 
     @decowrapper
     @decohistomap
@@ -2695,7 +2699,7 @@ class AllVisu:
                                 legend_kwds={'label': input_field,
                                 'orientation': "horizontal","pad": 0.001})
         ax.set_title(title)
-        return ax
+        return fig
 
     ######SEABORN#########
     ######################

@@ -124,8 +124,9 @@ class Front:
         guideline = kwargs.get('guideline','False')
         title = kwargs.get('title',None)
 
+        if not self._cocoplot:
+            self._cocoplot = self.av
         self._cocoplot.setkwargsfront(kwargs)
-
         if vis not in self._listvisu:
             raise CoaError("Sorry but " + visu + " visualisation isn't implemented ")
         else:
@@ -729,7 +730,6 @@ class Front:
                 kwargs.pop('output')
             if 'bypop' in kwargs:
                 kwargs.pop('bypop')
-
             dateslider = kwargs.get('dateslider', None)
             maplabel = kwargs.get('maplabel', None)
             listmaplabel=self._listmaplabel
@@ -754,6 +754,7 @@ class Front:
                 #if all([ True if i in ['text','spark','label%','log'] else False for i in kwargs['maplabel'] ]) :
                 #    CoaKeyError('Waiting for a valide label visualisation: text, spark or label%')
                 input.loc[:,input_field]=input[input_field].fillna(0) #needed in the case where there are nan else js pb
+
             return func(self,**kwargs)
         return inner
 

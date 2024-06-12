@@ -107,6 +107,8 @@ import folium
 import shapely.geometry as sg
 from PIL import Image
 import matplotlib.pyplot as plt
+import matplotlib
+matplotlib.rcParams['backend'] 
 import datetime as dt
 import bisect
 from functools import wraps

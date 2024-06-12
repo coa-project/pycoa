@@ -49,6 +49,8 @@ setup(
         'openpyxl',\
         'lxml',\
         'colorama',\
+        'tqdm',\
+        'pytest',\
         ],
     dependency_links=['git+https://github.com/Toblerity/Fiona.git'],
     # The license can be anything you like 

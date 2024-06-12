@@ -57,6 +57,7 @@ jobs:
             openpyxl \
             lxml \
             colorama \
+            tqdm \
             pytest
 
 

@@ -61,8 +61,7 @@ output_notebook(hide_banner=True)
 
 class Front:
     """
-    Front class
-    FrontEnd
+        Front Class
     """
     def __init__(self,):
         self.av = allvisu.AllVisu()
@@ -76,6 +75,7 @@ class Front:
 
         self._listmaplabel = list(av.dicovisuargs['maplabel'])
         self._listvisu = list(av.dicovisuargs['vis'])
+        self._listtiles = list(av.dicovisuargs['tile'])
 
         self._listchartkargs = av.listchartkargs
         self._dict_bypop = av._dict_bypop
@@ -262,7 +262,7 @@ class Front:
         """Return the list of currently avalailable tile option for map()
          Default is the first one.
         """
-        return self._cocoplot.getallvisu().available_tiles
+        return self._listtiles
     # ----------------------------------------------------------------------
     # --- listwhich() ------------------------------------------------------
     # ----------------------------------------------------------------------

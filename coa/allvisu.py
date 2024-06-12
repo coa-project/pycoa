@@ -108,7 +108,7 @@ import shapely.geometry as sg
 from PIL import Image
 import matplotlib.pyplot as plt
 import matplotlib
-matplotlib.rcParams['backend'] 
+matplotlib.rcParams['backend']
 import datetime as dt
 import bisect
 from functools import wraps
@@ -297,7 +297,7 @@ class AllVisu:
                 else:
                     when_end_change = min(when_end_change,AllVisu.changeto_nonull_date(input, when_end, i))
 
-            if func.__name__ not in ['pycoa_date_plot', 'pycoa_plot', 'pycoa_scrollingmenu', 'pycoa_spiral_plot','pycoa_yearly_plot']:
+            if func.__name__ not in ['pycoa_date_plot', 'pycoa_plot', 'pycoa_menu_plat', 'pycoa_spiral_plot','pycoa_yearly_plot','pycoa_mpltdate_plot']:
                 if len(input_field) > 1:
                     print(str(input_field) + ' is dim = ' + str(len(input_field)) + '. No effect with ' + func.__name__ + '! Take the first input: ' + input_field[0])
                 input_field = input_field[0]
@@ -310,7 +310,7 @@ class AllVisu:
             input = input.loc[(input['date'] >=  self.when_beg) & (input['date'] <=  self.when_end)]
 
             title_temporal = ' (' + 'between ' + when_beg.strftime('%d/%m/%Y') + ' and ' + when_end.strftime('%d/%m/%Y') + ')'
-            if func.__name__ not in ['pycoa_date_plot', 'pycoa_plot', 'pycoa_scrollingmenu', 'pycoa_spiral_plot','pycoa_yearly_plot']:
+            if func.__name__ not in ['pycoa_date_plot', 'pycoa_plot', 'pycoa_menu_plat', 'pycoa_spiral_plot','pycoa_yearly_plot']:
                 title_temporal = ' (' + when_end.strftime('%d/%m/%Y')  + ')'
             title_option=''
             if option:
@@ -459,7 +459,7 @@ class AllVisu:
                 #print("------------>>>input.clustername.unique()",input.clustername.unique(),input.clustername.isna().any())
                 input = input.sort_values(by=['clustername', 'date']).reset_index(drop = True)
 
-                if func.__name__ != 'pycoa_scrollingmenu' :
+                if func.__name__ != 'pycoa_menu_plat' :
                     if len(location_ordered_byvalues) >= MAXCOUNTRIESDISPLAYED:
                         input = input.loc[input.clustername.isin(location_ordered_byvalues[:MAXCOUNTRIESDISPLAYED])]
                 list_max = []
@@ -470,7 +470,7 @@ class AllVisu:
                     amplitude = (np.nanmax(list_max) - np.nanmin(list_max))
                     if amplitude > 10 ** 4:
                         self.ax_type.reverse()
-                if func.__name__ == 'pycoa_scrollingmenu' :
+                if func.__name__ == 'pycoa_menu_plat' :
                     if isinstance(input_field,list):
                         if len(input_field) > 1:
                             print(str(input_field) + ' is dim = ' + str(len(input_field)) + '. No effect with ' + func.__name__ + '! Take the first input: ' + input_field[0])
@@ -602,7 +602,6 @@ class AllVisu:
                     input_filter = input.loc[input.clustername == loc].reset_index(drop = True)
                     src = ColumnDataSource(input_filter)
                     leg = input_filter.clustername[0]
-
                     #leg = input_filter.permanentdisplay[0]
                     if len(input_field)>1:
                         leg = input_filter.permanentdisplay[0] + ', ' + val
@@ -610,6 +609,7 @@ class AllVisu:
                         color = next(lcolors)
                     else:
                         color = input_filter.colors[0]
+
                     r = standardfig.line(x = 'date', y = val, source = src,
                                      color = color, line_width = 3,
                                      legend_label = leg,
@@ -740,11 +740,11 @@ class AllVisu:
     ''' SCROLLINGMENU PLOT '''
     @decowrapper
     @decoplot
-    def pycoa_scrollingmenu(self, **kwargs):
+    def pycoa_menu_plat(self, **kwargs):
         '''
         -----------------
         Create a date plot, with a scrolling menu location, according to arguments.
-        See help(pycoa_scrollingmenu).
+        See help(pycoa_menu_plat).
         Keyword arguments
         -----------------
         len(location) > 2
@@ -2585,11 +2585,16 @@ class AllVisu:
         input_field = kwargs.get('input_field')
         title = kwargs.get('title')
         fig, ax = plt.subplots(1, 1,figsize=(12, 8))
+
+        if not isinstance(input_field,list):
+            input_field=[input_field]
+
         loc = input['clustername'].unique()
-        df = pd.pivot_table(input,index='date', columns='clustername', values=input_field)
-        for col in loc:
-            ax=plt.plot(df.index, df[col])
-        plt.legend(loc)
+        for val in input_field:
+            df = pd.pivot_table(input,index='date', columns='clustername', values=val)
+            for col in loc:
+                ax=plt.plot(df.index, df[col])
+                plt.legend(loc+val)
         plt.title(title)
         return fig
 

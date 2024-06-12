@@ -141,6 +141,7 @@ class Front:
             except:
                 pass
 
+
     def setnamefunction(self,name):
         '''
         Name chart function setter
@@ -975,7 +976,7 @@ class Front:
                     else:
                         if isinstance(input_field,list) and len(input_field) > 1:
                             CoaWarning('typeofplot is menulocation but dim(input_field)>1, take first one '+input_field[0])
-                        fig = self._cocoplot.pycoa_scrollingmenu(**kwargs)
+                        fig = self._cocoplot.pycoa_menu_plat(**kwargs)
                 elif typeofplot == 'yearly':
                     if input.date.max()-input.date.min() <= dt.timedelta(days=365):
                         print("Yearly will not be used since the time covered is less than 1 year")

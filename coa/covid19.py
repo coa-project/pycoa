@@ -428,6 +428,9 @@ class DataBase(object):
             else:
                 pdfiltered = pdfiltered[['where','date','codelocation', kwargs['which']]]
             pdfiltered['clustername'] = pdfiltered['where'].copy()
+        # To prevent NAN    
+        pdfiltered.loc[:,'where'] = pdfiltered.groupby(['where','codelocation'],group_keys=False)['where'].apply(lambda x: x.bfill())
+        pdfiltered.loc[:,'codelocation'] = pdfiltered.groupby(['where','codelocation'],group_keys=False)['codelocation'].apply(lambda x: x.bfill())
 
         if not isinstance(option,list):
             option=[option]

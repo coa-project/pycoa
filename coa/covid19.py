@@ -118,6 +118,7 @@ class DataBase(object):
        else:
            if self.granularity == 'subregion' :
                input = input.reset_index(drop=True)
+
                if isinstance(input['codelocation'].iloc[0],list):
                    input['codelocation'] = input['codelocation'].apply(lambda x: str(x).replace("'", '')\
                                                 if len(x)<5 else '['+str(x[0]).replace("'", '')+',...,'+str(x[-1]).replace("'", '')+']')
@@ -147,6 +148,8 @@ class DataBase(object):
                    input['permanentdisplay'] = [self.namecountry]*len(input)
                else:
                    input['permanentdisplay'] = input.codelocation
+           else :
+               CoaError("Sorry but what's the granularity of you DB "+self.granularity)
     input['rolloverdisplay'] = input['where']
     return input
 
@@ -428,7 +431,7 @@ class DataBase(object):
             else:
                 pdfiltered = pdfiltered[['where','date','codelocation', kwargs['which']]]
             pdfiltered['clustername'] = pdfiltered['where'].copy()
-        # To prevent NAN    
+        # To prevent NAN
         pdfiltered.loc[:,'where'] = pdfiltered.groupby(['where','codelocation'],group_keys=False)['where'].apply(lambda x: x.bfill())
         pdfiltered.loc[:,'codelocation'] = pdfiltered.groupby(['where','codelocation'],group_keys=False)['codelocation'].apply(lambda x: x.bfill())
 
@@ -590,6 +593,7 @@ class DataBase(object):
             pdfiltered = pd.merge(pdfiltered, othersinputfieldpandas, on=['date','where'])
         if 'input_field' not in kwargs:
             verb("Here the information I\'ve got on ", kwargs['which']," : ",  self.dbfullinfo.get_keyword_definition(kwargs['which']))
+        pdfiltered = pdfiltered.loc[~(pdfiltered['where'].isna() |pdfiltered['codelocation'].isna())]
         pdfiltered = self.permanentdisplay(pdfiltered)
         return pdfiltered
 

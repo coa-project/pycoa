@@ -174,12 +174,12 @@ class DBInfo:
             with tqdm(total=total_lines+100,desc='Chargement des données OWID ', bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt} [{rate_fmt}]', file=sys.stdout) as pbar:
                 for chunk in pd.read_csv(url, sep=separator, chunksize=chunk_size):
                     owid_chunk.append(chunk)
-                    pbar.update(chunk.shape[0]) 
+                    pbar.update(chunk.shape[0])
 
                 owid = self.row_where_csv_parser(url=url,rename_columns = rename, separator = separator,keep_field = keep)
                 self.dbparsed = owid
                 pbar.update(100)
-              
+
 
           elif namedb == 'dgs':
             info('PRT, Direcção Geral de Saúde - Ministério da Saúde Português data selected ...')
@@ -202,7 +202,7 @@ class DBInfo:
             url=lurl[0]
             keep = ['date','where'] + self.get_url_original_keywords()[url]
             separator=self.get_url_separator(url)
-            #Loading bar 
+            #Loading bar
             #total_lines = 20944
             total_lines = count_lines(url, sep=separator)
             chunk_size = 50
@@ -872,7 +872,7 @@ class DBInfo:
                 del list_spf
                 result[['tot_T','tot_P']] = result[['tot_T','tot_P']].stack().str.replace(',','.').unstack()
                 result = result.loc[~result['where'].isin(['00'])]
-                result = result.sort_values(by=['where','date'])
+                result = result.sort_values(by=['where','date'])    
                 result.loc[result['where'].isin(['975','977','978','986','987']),'where']='980'
                 result = result.drop_duplicates(subset=['where', 'date'], keep='last')
                 for w in list(result.columns):

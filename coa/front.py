@@ -422,6 +422,8 @@ class Front:
             #kwargs_test(kwargs,self._listchartkargs,'Bad args used ! please check ')
             where = kwargs.get('where', None)
             which = kwargs.get('which', None)
+            if not isinstance(which,list):
+                which=[which]
             what = kwargs.get('what', None)
 
             whom = kwargs.get('whom', None)
@@ -430,8 +432,8 @@ class Front:
             input_arg = kwargs.get('input', None)
             input_field = kwargs.get('input_field',None)
 
-            if (option != None or what != None) and (isinstance(input_field,list) or isinstance(which,list)):
-                raise CoaKeyError('option/what not compatible when input_fied/which is a list')
+            if (option != None) and (isinstance(input_field,list) or isinstance(which,list)):
+                raise CoaKeyError('option not compatible when input_fied/which is a list')
 
             #if 'input_field' not in kwargs:
             #    which = input_field
@@ -442,7 +444,7 @@ class Front:
 
             if what:
                 if what not in self.listwhat():
-                    raise CoaKeyError('What option ' + what + ' not supported. '
+                    raise CoaKeyError('What = ' + what + ' not supported. '
                                                               'See listwhat() for full list.')
                 if 'what'=='sandard':
                     what = which
@@ -473,10 +475,12 @@ class Front:
                     input_field = which
                     for k,i in enumerate(which):
                         tmp = self._db.get_stats(input_field=input_field, which=i, where=where, option=option)
+                        if len(which)>1:
+                            tmp = tmp.rename(columns={'daily':'daily_'+i,'weekly':'weekly_'+i})
                         if pandy.empty:
                             pandy = tmp
                         else:
-                            tmp = tmp[[i,'date','where']]
+                            tmp = tmp[[i,'daily_'+i,'weekly_'+i,'date','where']]
                             pandy = pd.merge(pandy, tmp, on=['date','where'],how='inner')
                     input_arg = pandy
                 if bypop != 'no':

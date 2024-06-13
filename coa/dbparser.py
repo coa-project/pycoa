@@ -171,7 +171,7 @@ class DBInfo:
             chunk_size = 1000
             owid_chunk = []
               #takes time to start due to file size
-            with tqdm(total=total_lines+100,desc='Chargement des données OWID ', bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt} [{rate_fmt}]', file=sys.stdout) as pbar:
+            with tqdm(total=total_lines+100,desc='Upload data from OWID ', bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt} [{rate_fmt}]', file=sys.stdout) as pbar:
                 for chunk in pd.read_csv(url, sep=separator, chunksize=chunk_size):
                     owid_chunk.append(chunk)
                     pbar.update(chunk.shape[0])
@@ -207,7 +207,7 @@ class DBInfo:
             total_lines = count_lines(url, sep=separator)
             chunk_size = 50
             dgs_chunks = []
-            with tqdm(total=total_lines, desc='Chargement des données DGS', bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt} [{rate_fmt}]', file=sys.stdout) as pbar:
+            with tqdm(total=total_lines, desc='Upload data from DGS', bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt} [{rate_fmt}]', file=sys.stdout) as pbar:
                 for chunk in pd.read_csv(url, sep=separator, chunksize=chunk_size):
                     dgs_chunks.append(chunk)
                     pbar.update(chunk.shape[0])
@@ -240,7 +240,7 @@ class DBInfo:
             total_lines = count_lines(url, sep=separator)
             chunk_size = 50
             dpc_chunks = []
-            with tqdm(total=total_lines+5, desc='Chargement des données DPC ', bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt} [{rate_fmt}]', file=sys.stdout) as pbar:
+            with tqdm(total=total_lines+5, desc='Upload data from DPC ', bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt} [{rate_fmt}]', file=sys.stdout) as pbar:
                 for chunk in pd.read_csv(url, sep=separator, chunksize=chunk_size):
                     dpc_chunks.append(chunk)
                     pbar.update(chunk.shape[0])
@@ -280,7 +280,7 @@ class DBInfo:
             europa_chunks = []
             #takes time to start due to file size
             #+10 so that the loading bar is at the same time as the end of the parser (Only for big database)
-            with tqdm(total=total_lines+10, desc='Chargement des données Europa  ', bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt} [{rate_fmt}]', file=sys.stdout) as pbar:
+            with tqdm(total=total_lines+10, desc='Upload data from Europa  ', bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt} [{rate_fmt}]', file=sys.stdout) as pbar:
                 for chunk in pd.read_csv(url, sep=separator, chunksize=chunk_size):
                     europa_chunks.append(chunk)
                     pbar.update(chunk.shape[0])
@@ -360,7 +360,7 @@ class DBInfo:
             total_lines = count_lines(url, sep=separator)
             chunk_size = 5
             govcy_chunks = []
-            with tqdm(total=total_lines, desc='Chargement des données Govcy ', bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt} [{rate_fmt}]', file=sys.stdout) as pbar:
+            with tqdm(total=total_lines, desc='Upload data from Govcy ', bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt} [{rate_fmt}]', file=sys.stdout) as pbar:
                 for chunk in pd.read_csv(url, sep=separator, chunksize=chunk_size):
                     govcy_chunks.append(chunk)
                     pbar.update(chunk.shape[0])
@@ -386,7 +386,7 @@ class DBInfo:
                   total_lines = count_lines(url, sep=',')
                   chunk_size = 2
                   imed_chunks = []
-                  with tqdm(total=total_lines, desc='Chargement des données IMED ', bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt} [{rate_fmt}]', file=sys.stdout) as pbar:
+                  with tqdm(total=total_lines, desc='Upload data from IMED ', bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt} [{rate_fmt}]', file=sys.stdout) as pbar:
                       for chunk in pd.read_csv(url, chunksize=chunk_size):
                         imed_chunks.append(chunk)
                         pbar.update(chunk.shape[0])
@@ -601,7 +601,7 @@ class DBInfo:
             total_lines = count_lines(url, sep=',')
             chunk_size = 5
             jpn_chunks = []
-            with tqdm(total=total_lines, desc='Chargement des données jpnmhlw ', bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt} [{rate_fmt}]', file=sys.stdout) as pbar:
+            with tqdm(total=total_lines, desc='Upload data from jpnmhlw ', bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt} [{rate_fmt}]', file=sys.stdout) as pbar:
                 for chunk in pd.read_csv(url, chunksize=chunk_size):
                     jpn_chunks.append(chunk)
                     pbar.update(chunk.shape[0])
@@ -653,7 +653,7 @@ class DBInfo:
             constraints = {'sexe': 0,'cl_age90': 0}
             rename = {'state':'where'}
             rename.update(self.original_to_available_keywords_dico())
-            with tqdm(total=len(lurl)+1 ,desc='Chargement des données MOH') as pbar:
+            with tqdm(total=len(lurl)+1 ,desc='Upload data from MOH') as pbar:
                 for url in lurl:
                     keep = ['date','where'] + self.get_url_original_keywords()[url]
                     separator=self.get_url_separator(url)
@@ -693,7 +693,7 @@ class DBInfo:
             total_lines = count_lines(url, sep=separator)
             chunk_size = 75
             mpoxgh_chunks = []
-            with tqdm(total=total_lines, desc='Chargement des données mpoxgh ', bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt} [{rate_fmt}]', file=sys.stdout) as pbar:
+            with tqdm(total=total_lines, desc='Upload data from mpoxgh ', bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt} [{rate_fmt}]', file=sys.stdout) as pbar:
                 for chunk in pd.read_csv(url, chunksize=chunk_size):
                     mpoxgh_chunks.append(chunk)
                     pbar.update(chunk.shape[0])
@@ -768,7 +768,7 @@ class DBInfo:
             total_lines = count_lines(url, sep=separator)
             chunk_size = 1
             risklayer_chunks = []
-            with tqdm(total=total_lines, desc='Chargement des données risklayer ', bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt} [{rate_fmt}]', file=sys.stdout) as pbar:
+            with tqdm(total=total_lines, desc='Upload data from risklayer ', bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt} [{rate_fmt}]', file=sys.stdout) as pbar:
                 for chunk in pd.read_csv(url, chunksize=chunk_size):
                     risklayer_chunks.append(chunk)
                     pbar.update(chunk.shape[0])
@@ -795,7 +795,7 @@ class DBInfo:
             total_lines = count_lines(url, sep=',')
             chunk_size = 10
             rki_chunks = []
-            with tqdm(total=total_lines+10, desc='Chargement des données RKI ', bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt} [{rate_fmt}]', file=sys.stdout) as pbar:
+            with tqdm(total=total_lines+10, desc='Upload data from RKI ', bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt} [{rate_fmt}]', file=sys.stdout) as pbar:
                 for chunk in pd.read_csv(url, chunksize=chunk_size):
                     rki_chunks.append(chunk)
                     pbar.update(chunk.shape[0])
@@ -856,7 +856,7 @@ class DBInfo:
             rename = {'jour': 'date', 'dep': 'where','extract_date': 'date', 'departement': 'where','date_de_passage':'date'}
             rename.update(self.original_to_available_keywords_dico())
             lurl=list(dict.fromkeys(self.get_url()))
-            with tqdm(total=len(lurl)+1 ,desc='Chargement des données SPF ', file=sys.stdout) as pbar:
+            with tqdm(total=len(lurl)+1 ,desc='Upload data from SPF ', file=sys.stdout) as pbar:
                 for idx, url in enumerate(lurl):
                         keep = ['date','where'] + self.get_url_original_keywords()[url]
                         separator = self.get_url_separator(url)
@@ -872,7 +872,7 @@ class DBInfo:
                 del list_spf
                 result[['tot_T','tot_P']] = result[['tot_T','tot_P']].stack().str.replace(',','.').unstack()
                 result = result.loc[~result['where'].isin(['00'])]
-                result = result.sort_values(by=['where','date'])    
+                result = result.sort_values(by=['where','date'])
                 result.loc[result['where'].isin(['975','977','978','986','987']),'where']='980'
                 result = result.drop_duplicates(subset=['where', 'date'], keep='last')
                 for w in list(result.columns):
@@ -915,7 +915,7 @@ class DBInfo:
             total_lines = count_lines(url, sep=separator)
             chunk_size = 2
             spfnat_chunks = []
-            with tqdm(total=total_lines, desc='Chargement des données SPF National ', bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt} [{rate_fmt}]', file=sys.stdout) as pbar:
+            with tqdm(total=total_lines, desc='Upload data from SPF National ', bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt} [{rate_fmt}]', file=sys.stdout) as pbar:
                 for chunk in pd.read_csv(url, sep=separator, chunksize=chunk_size):
                     spfnat_chunks.append(chunk)
                     pbar.update(chunk.shape[0])
@@ -953,7 +953,7 @@ class DBInfo:
             total_lines = count_lines(url, sep=separator)
             chunk_size = 10
             sciensano_chunks = []
-            with tqdm(total=total_lines, desc='Chargement des données Sciensano ', bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt} [{rate_fmt}]', file=sys.stdout) as pbar:
+            with tqdm(total=total_lines, desc='Upload data from Sciensano ', bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt} [{rate_fmt}]', file=sys.stdout) as pbar:
                 for chunk in pd.read_csv(url, sep=separator, chunksize=chunk_size):
                     sciensano_chunks.append(chunk)
                     pbar.update(chunk.shape[0])
@@ -995,7 +995,7 @@ class DBInfo:
                 addmedals = ['Gold', 'Silver', 'Bronze']
                 #total_lines = 271116+100
                 total_lines = count_lines(urls[0], sep=',')
-                with tqdm(total=total_lines+100, desc='Chargement des données Olympics ', bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt} [{rate_fmt}]', file=sys.stdout) as pbar:
+                with tqdm(total=total_lines+100, desc='Upload data from Olympics ', bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt} [{rate_fmt}]', file=sys.stdout) as pbar:
                     def process_olympic_data(url, dic_iso):
                         olympics = {
                         #'Medal': ['Medal', 'Medal Type (Gold, Silver, Bronze)'],
@@ -1021,7 +1021,7 @@ class DBInfo:
 
                         chunk_size = 100
                         olympics_chunks = []
-                        #with tqdm(total=total_lines, desc='Chargement des données Olympics ', bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt} [{rate_fmt}]') as pbar:
+                        #with tqdm(total=total_lines, desc='Upload data from Olympics ', bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt} [{rate_fmt}]') as pbar:
                         for chunk in pd.read_csv(url, sep=separator, chunksize=chunk_size):
                                 olympics_chunks.append(chunk)
                                 pbar.update(chunk.shape[0])

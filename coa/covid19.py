@@ -431,9 +431,6 @@ class DataBase(object):
             else:
                 pdfiltered = pdfiltered[['where','date','codelocation', kwargs['which']]]
             pdfiltered['clustername'] = pdfiltered['where'].copy()
-        # To prevent NAN
-        pdfiltered.loc[:,'where'] = pdfiltered.groupby(['where','codelocation'],group_keys=False)['where'].apply(lambda x: x.bfill())
-        pdfiltered.loc[:,'codelocation'] = pdfiltered.groupby(['where','codelocation'],group_keys=False)['codelocation'].apply(lambda x: x.bfill())
 
         if not isinstance(option,list):
             option=[option]
@@ -593,7 +590,7 @@ class DataBase(object):
             pdfiltered = pd.merge(pdfiltered, othersinputfieldpandas, on=['date','where'])
         if 'input_field' not in kwargs:
             verb("Here the information I\'ve got on ", kwargs['which']," : ",  self.dbfullinfo.get_keyword_definition(kwargs['which']))
-        pdfiltered = pdfiltered.loc[~(pdfiltered['where'].isna() |pdfiltered['codelocation'].isna())]
+        pdfiltered = pdfiltered.loc[~(pdfiltered['where'].isna() | pdfiltered['codelocation'].isna())]
         pdfiltered = self.permanentdisplay(pdfiltered)
         return pdfiltered
 

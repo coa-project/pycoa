@@ -54,6 +54,7 @@ jobs:
             lxml \
             colorama \
             tqdm \
+            seaborn \
             pytest
 
 

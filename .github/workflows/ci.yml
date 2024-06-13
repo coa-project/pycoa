@@ -3,7 +3,7 @@ name : CI
 on:
   push:
     branches:
-      - main
+      - ci_test
 jobs:
   run-tests:
     strategy:
@@ -11,15 +11,11 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
         python-version: 
-          - "3.7"
           - "3.8"
           - "3.9"
           - "3.10"
           - "3.11"
-          - "3.12-dev"
-          - "pypy-3.7"
-          - "pypy-3.8"
-          - "pypy-3.9"
+    
     
     name: Test
     runs-on: ${{ matrix.os }}

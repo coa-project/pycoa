@@ -55,6 +55,7 @@ jobs:
             colorama \
             tqdm \
             seaborn \
+            IPython \
             pytest
 
 

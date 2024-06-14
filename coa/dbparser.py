@@ -53,6 +53,7 @@ _db_list_dict = {
     'spf': ['FRA','subregion','France'],
     'spfnational': ['WW','nation','France'],
     'olympics': ['WW','nation','World'],
+    'sumeau': ['WW','nation','France'],
     }
 class DBInfo:
   def __init__(self, namedb):
@@ -801,7 +802,21 @@ class DBInfo:
                     pbar.update(chunk.shape[0])
                 self.column_where_csv_parser(namedb, rename_columns = rename,drop_field=drop_field)
                 pbar.update(10)
-
+          elif namedb == 'sumeau':
+            info("sumeau, 'Surveillance du Sars-Cov-2 dans les eaux usées' selected" )
+            eau = {
+                'ratio':['National','Les indicateurs de suivi du SARS-CoV-2 dans les eaux usées sont calculés à partir du ratio entre la concentration virale de SARS-CoV-2 (exprimée en cg/L \
+                        et quantification réalisée à partir du gène E) et la concentration en azote ammoniacal (exprimée en mg de N/L)'],
+            }
+            url="https://www.data.gouv.fr/fr/datasets/r/2963ccb5-344d-4978-bdd3-08aaf9efe514"
+            masterurl='https://www.data.gouv.fr/fr/datasets/surveillance-du-sars-cov-2-dans-les-eaux-usees-sumeau/'
+            eau['ratio'].append(url)
+            eau['ratio'].append(masterurl)
+            self.pandasdb = pd.DataFrame(eau,index=['Original name','Description','URL','Homepage'])
+            keep_columns=['ratio']
+            cast = {'National': 'float'}
+            self.column_where_csv_parser(namedb, rename_columns = {'semaine':'date','National':'ratio'},keep_columns=keep_columns,\
+                                            cast=cast)
           elif namedb == 'spf':
             info('SPF aka Sante Publique France database selected (France departement granularity) ...')
             info('... 5 SPF databases will be parsed ...')
@@ -1079,7 +1094,7 @@ class DBInfo:
                     pbar.update(100)
       else:
           raise CoaKeyError('Error in the database selected: '+db+'.Please check !')
-      if namedb not in ['jhu','jhu-usa','imed','rki']:
+      if namedb not in ['jhu','jhu-usa','imed','rki','sumeau']:
             self.pandasGeoUnified(self.dbparsed)
 
 
@@ -1185,7 +1200,9 @@ class DBInfo:
     # previous are default for actual jhu db
     rename_columns = kwargs.get('rename_columns', None)
     drop_columns = kwargs.get('drop_columns', None)
+    keep_columns = kwargs.get('keep_columns', None)
     drop_field = kwargs.get('drop_field', None)
+    cast = kwargs.get('cast', None)
     self.available_keywords = []
     pandas_list = []
     lurl=list(dict.fromkeys(self.get_url()))
@@ -1202,10 +1219,17 @@ class DBInfo:
                 mypd = mypd.rename(columns=rename_columns)
         if drop_columns:
             mypd = mypd.drop(columns=drop_columns)
-        mypd = mypd.melt(id_vars=['where'],var_name="date",value_name=self.get_url_original_keywords()[url][0])
+        if db == 'sumeau':
+            mypd['where']='France'
+            mypd['ratio']=[float(i.replace(',', '.')) for i in mypd['ratio']]
+        else:
+            mypd = mypd.melt(id_vars=['where'],var_name="date",value_name=self.get_url_original_keywords()[url][0])
         if drop_field:
           for key,val in drop_field.items():
               mypd =  mypd[~mypd[key].isin(val)]
+        if keep_columns:
+              col=['date','where']+keep_columns
+              mypd =  mypd[col]
         mypd=mypd.groupby(['where','date']).sum().reset_index()
         pandas_list.append(mypd)
     self.available_keywords = flat_list(self.available_keywords)
@@ -1216,10 +1240,14 @@ class DBInfo:
     newloc = None
     location_is_code = False
     if self.db_world:
-      d_loc_s = collections.OrderedDict(zip(uniqloc,self.geo.to_standard(uniqloc,output='list',db=self.get_db(),interpret_region=True)))
-      self.slocation = list(d_loc_s.values())
-      g=coge.GeoManager('iso3')
-      codename = collections.OrderedDict(zip(self.slocation,g.to_standard(self.slocation,output='list',db=self.get_db(),interpret_region=True)))
+      if db == 'sumeau':
+          self.slocation = ['France']
+          codename={'France':'FRA'}
+      else:
+          d_loc_s = collections.OrderedDict(zip(uniqloc,self.geo.to_standard(uniqloc,output='list',db=self.get_db(),interpret_region=True)))
+          self.slocation = list(d_loc_s.values())
+          g=coge.GeoManager('iso3')
+          codename = collections.OrderedDict(zip(self.slocation,g.to_standard(self.slocation,output='list',db=self.get_db(),interpret_region=True)))
     else:
       if self.get_dblistdico(db)[1] == 'subregion':
           pdcodename = self.geo.get_subregion_list()
@@ -1245,8 +1273,8 @@ class DBInfo:
                       return a
                   codedupli={i:findkeywithvalue(d_loc_s,i) for i in duplicates_location}
       elif self.get_dblistdico(db)[1] == 'region':
-          codename = self.geo.get_data().set_index('name_region')['code_region'].to_dict()
-          self.slocation = list(codename.keys())
+              codename = self.geo.get_data().set_index('name_region')['code_region'].to_dict()
+              self.slocation = list(codename.keys())
       else:
           raise CoaTypeError('Not a region nors ubregion ... sorry but what is it ?')
 
@@ -1272,6 +1300,9 @@ class DBInfo:
       result = result.loc[~result['where'].isin(['Serbia'])]
       result = pd.concat([result,tmp])
 
+    if db == 'sumeau':
+        result['date'] = [ week_to_date(i) for i in result['date']]
+
     result = result.copy()
     result.loc[:,'date'] = pd.to_datetime(result['date'],errors='coerce',utc=True).dt.date
     result = result.sort_values(by=['where','date'])
@@ -1282,6 +1313,7 @@ class DBInfo:
       result=result[ncol]
       self.available_keywords+=['Population']
     self.mainpandas = fill_missing_dates(result)
+    self.mainpandas = self.mainpandas.fillna(method = 'bfill')
     self.dates  = self.mainpandas['date']
 
   def row_where_csv_parser(self,**kwargs):

@@ -867,8 +867,7 @@ class AllVisu:
                  if [dd/mm/yyyy:] up to max date
         '''
         input = kwargs['input']
-        input_field = [kwargs['input_field']]
-
+        input_field = kwargs['input_field']
         guideline = kwargs.get('guideline',self.dicovisuargs['guideline'][0])
         mode = kwargs.get('mode',self.dicovisuargs['mode'][0])
 
@@ -937,10 +936,11 @@ class AllVisu:
             standardfig.legend.location = "top_left"
             standardfig.legend.click_policy="hide"
 
-            labelspd=input.loc[(input.allyears.eq(2021)) & (input.date.dt.day.eq(1))]
+            minyear=input.date.min().year
+            labelspd=input.loc[(input.allyears.eq(2023)) & (input.date.dt.day.eq(1))]
             standardfig.xaxis.ticker = list(labelspd['dayofyear'].astype(int))
             replacelabelspd =  labelspd['date'].apply(lambda x: str(x.strftime("%b")))
-            #label_dict = dict(zip(input.loc[input.allyears.eq(2020)]['daymonth'],input.loc[input.allyears.eq(2020)]['date'].apply(lambda x: str(x.day)+'/'+str(x.month))))
+            #label_dict = dict(zip(input.loc[input.allyears.eq(minyear)]['daymonth'],input.loc[input.allyears.eq(minyear)]['date'].apply(lambda x: str(x.day)+'/'+str(x.month))))
             standardfig.xaxis.major_label_overrides = dict(zip(list(labelspd['dayofyear'].astype(int)),list(replacelabelspd)))
 
             AllVisu.bokeh_legend(standardfig)

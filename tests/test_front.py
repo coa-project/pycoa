@@ -18,7 +18,7 @@ from coa.dbparser import _db_list_dict
 def front_instance():
     return Front()
 
-# ------------------------- test whattoso ------------------------------
+# ------------------------- test whattodo ------------------------------
 def test_whattodo(front_instance):
     """Test the whattodo method."""
     result = front_instance.whattodo()

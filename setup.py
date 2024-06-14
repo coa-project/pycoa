@@ -50,6 +50,7 @@ setup(
         'lxml',\
         'colorama',\
         'tqdm',\
+        'seaborn',\
         'pytest',\
         ],
     dependency_links=['git+https://github.com/Toblerity/Fiona.git'],

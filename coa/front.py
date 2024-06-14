@@ -432,11 +432,11 @@ class Front:
             input_arg = kwargs.get('input', None)
             input_field = kwargs.get('input_field',None)
 
-            if (option != None) and (isinstance(input_field,list) or isinstance(which,list)):
-                raise CoaKeyError('option not compatible when input_fied/which is a list')
+            #if (option != None) and (isinstance(input_field,list) or isinstance(which,list)):
+            #    raise CoaKeyError('option not compatible when input_fied/which is a list')
 
-            #if 'input_field' not in kwargs:
-            #    which = input_field
+            if 'input_field' not in kwargs:
+                which = input_field
             #else:
             #    which = kwargs['input_field']
             if input_field:

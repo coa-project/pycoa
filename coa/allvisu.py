@@ -174,7 +174,6 @@ class AllVisu:
                              'dateslider':[False,True],\
                              'maplabel':['text','textinteger','spark','label%','log','unsorted','exploded','dense'],\
                              'guideline':[False,True],\
-                             'title': None
                              }
         self.listviskargs = list(self.dicovisuargs.keys())
 
@@ -223,7 +222,7 @@ class AllVisu:
             #bins = kwargs.get('bins', self.dicochartargs['bins'])
 
             tile = kwargs.get('tile', self.dicovisuargs['tile'])
-            titlesetted = kwargs.get('title', self.dicovisuargs['title'])
+            titlesetted = kwargs.get('title', self.dicofigureargs['title'])
             maplabel = kwargs.get('maplabel', self.dicovisuargs['maplabel'])
             if isinstance(which,list):
                 which = input.columns[2]
@@ -576,7 +575,9 @@ class AllVisu:
                  if [dd/mm/yyyy:] up to max date
         '''
         input = kwargs.get('input')
-        input_field = [kwargs.get('input_field')]
+        input_field = kwargs.get('input_field')
+        if not isinstance(kwargs.get('input_field'),list):
+            input_field = [input_field]
 
         mode = kwargs.get('mode',list(self.dicovisuargs['mode'])[0])
         guideline = kwargs.get('guideline',list(self.dicovisuargs['guideline'])[0])
@@ -584,8 +585,10 @@ class AllVisu:
         panels = []
         listfigs = []
         cases_custom = AllVisu.rollerJS()
-        if 'which' in kwargs and isinstance(kwargs['which'],list):
-            input_field=kwargs['which']
+        if 'which' in kwargs and not isinstance(kwargs['which'],list):
+            kwargs['which'] = [kwargs['which']]
+            input_field = kwargs['which']
+
         if isinstance(input['rolloverdisplay'].iloc[0],list):
             input['rolloverdisplay'] = input['clustername']
         for axis_type in self.ax_type:
@@ -597,6 +600,7 @@ class AllVisu:
             line_style = ['solid', 'dashed', 'dotted', 'dotdash','dashdot']
             maxou,minou=0,0
             tooltips=[]
+
             for val in input_field:
                 for loc in list(input.clustername.unique()):
                     input_filter = input.loc[input.clustername == loc].reset_index(drop = True)
@@ -2683,7 +2687,6 @@ class AllVisu:
         bins=len(input['where'])+1
         input= pd.pivot_table(input,index='date', columns='where', values=input_field)
         fig = input.plot.hist(bins=bins, alpha=0.5,title = title)
-        print('type',type(fig))
         return fig
 
     @decowrapper

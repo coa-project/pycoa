@@ -2,8 +2,11 @@ name : CI
 
 on:
   push:
+  pull_request:
     branches:
-      - ci_test
+      - main
+
+
 jobs:
   run-tests:
     strategy:

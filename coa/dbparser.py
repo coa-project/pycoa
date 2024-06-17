@@ -1014,9 +1014,9 @@ class DBInfo:
                     def process_olympic_data(url, dic_iso):
                         olympics = {
                         #'Medal': ['Medal', 'Medal Type (Gold, Silver, Bronze)'],
-                        'tot_Gold':['Gold','Or Medal (PYCOA computed, absent in the orignal)'],
-                        'tot_Silver':['Silver','Silver Medal (PYCOA computed, absent in the orignal)'],
-                        'tot_Bronze':['Bronze','Bronze Medal (PYCOA computed, absent in the orignal)']
+                        'tot_Gold':['Gold','Or Medal (PYCOA computed, absent in the original)'],
+                        'tot_Silver':['Silver','Silver Medal (PYCOA computed, absent in the original)'],
+                        'tot_Bronze':['Bronze','Bronze Medal (PYCOA computed, absent in the original)']
                         }
 
                         self.separator = {url:','}

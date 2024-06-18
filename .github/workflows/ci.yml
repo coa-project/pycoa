@@ -60,6 +60,7 @@ jobs:
             tqdm \
             seaborn \
             IPython \
+            tweepy \
             pytest
       
       - name: Install dependencies on Windows

@@ -21,8 +21,12 @@ pycoa.setvisu(vis='mplt')
 pycoa.setwhom('owid',reload=False)
 a=pycoa.plot(where='Europe')
 a.savefig(path+'plot.png')
+<<<<<<< HEAD
 pycoa.plot(where='Europe',which='total_vaccinations_per_hundred')
 a.savefig(path+'plot.png')
+=======
+'''
+>>>>>>> 9b711bfea68844b699cdf27247071cb03747189a
 a=pycoa.map(where='France')
 a.savefig(path+'map.png')
 a=pycoa.plot(where=[['Europe'],['Italy']],option='sumall')

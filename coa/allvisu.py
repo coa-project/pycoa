@@ -2592,14 +2592,16 @@ class AllVisu:
         if not isinstance(input_field,list):
             input_field=[input_field]
 
-        loc = input['clustername'].unique()
+        loc = list(input['clustername'].unique())
         for val in input_field:
             df = pd.pivot_table(input,index='date', columns='clustername', values=val)
+            leg=[]
             for col in loc:
                 ax=plt.plot(df.index, df[col])
-                plt.legend(loc+val)
+                leg.append(val+' '+col)
+            plt.legend(leg)
         plt.title(title)
-        return fig
+        return
 
     @decowrapper
     @decoplot
@@ -2628,7 +2630,7 @@ class AllVisu:
             ax = plt.plot(df.index, df[loc])
         plt.legend(d)
         plt.title(title)
-        return fig
+        return
 
 
     @decowrapper
@@ -2648,7 +2650,7 @@ class AllVisu:
         title=input_field, ylabel=input_field, labeldistance=None)
         ax.legend(bbox_to_anchor=(1, 1.02), loc='upper left')
         ax.set_title(title)
-        return fig
+        return
 
     @decowrapper
     @decohistomap
@@ -2686,7 +2688,7 @@ class AllVisu:
         bins=len(input['where'])+1
         input= pd.pivot_table(input,index='date', columns='where', values=input_field)
         fig = input.plot.hist(bins=bins, alpha=0.5,title = title)
-        return fig
+        return
 
     @decowrapper
     @decohistomap
@@ -2708,7 +2710,7 @@ class AllVisu:
                                 legend_kwds={'label': input_field,
                                 'orientation': "horizontal","pad": 0.001})
         ax.set_title(title)
-        return fig
+        return 
 
     ######SEABORN#########
     ######################

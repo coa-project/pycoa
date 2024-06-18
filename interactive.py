@@ -20,6 +20,7 @@ if not os.path.exists(path):
 pycoa.setvisu(vis='mplt')
 pycoa.setwhom('owid',reload=False)
 a=pycoa.plot(where='Europe')
+a.savefig(path+'plot.png')
 '''
 a=pycoa.map(where='France')
 a.savefig(path+'map.png')

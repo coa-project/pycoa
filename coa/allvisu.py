@@ -453,11 +453,10 @@ class AllVisu:
                 #input[inputtmp['clustername']] = pd.Categorical(input.clustername,
                 #                                        categories=location_ordered_byvalues, ordered=True)
                 #print("------------>>>input.clustername.unique()",input.clustername.unique(),input.clustername.isna().any())
-                #input.loc[:,'clustername'] = pd.Categorical(input.clustername,
-                #                                       categories=location_ordered_byvalues, ordered=True)
-                #print("------------>>>input.clustername.unique()",input.clustername.unique(),input.clustername.isna().any())
+                #input.loc[:,'clustername']
+                input['clustername']  = pd.Categorical(input.clustername,
+                                                       categories=location_ordered_byvalues, ordered=True)
                 input = input.sort_values(by=['clustername', 'date']).reset_index(drop = True)
-
                 if func.__name__ != 'pycoa_menu_plat' :
                     if len(location_ordered_byvalues) >= MAXCOUNTRIESDISPLAYED:
                         input = input.loc[input.clustername.isin(location_ordered_byvalues[:MAXCOUNTRIESDISPLAYED])]

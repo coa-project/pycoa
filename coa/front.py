@@ -123,7 +123,6 @@ class Front:
         maplabel =  kwargs.get('maplabel','text')
         guideline = kwargs.get('guideline','False')
         title = kwargs.get('title',None)
-
         if not self._cocoplot:
             self._cocoplot = self.av
         self._cocoplot.setkwargsfront(kwargs)
@@ -146,7 +145,8 @@ class Front:
         '''
         Name chart function setter
         '''
-        self.namefunction = name
+        # self.namefunction = name : it updates the visu + redraws the last chart
+        self.namefunction = name.__name__
 
     def gatenamefunction(self,):
         '''

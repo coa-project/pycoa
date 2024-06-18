@@ -51,6 +51,7 @@ setup(
         'colorama',\
         'tqdm',\
         'seaborn',\
+        'tweepy',\
         'pytest',\
         ],
     dependency_links=['git+https://github.com/Toblerity/Fiona.git'],

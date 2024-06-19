@@ -43,7 +43,7 @@ jobs:
             folium~=0.12.1 \
             geopandas==0.10.2 \
             matplotlib \
-            numpy==1.22.0 \
+            numpy==1.23.0 \
             pandas==1.4.2 \
             pycountry \
             pycountry_convert \
@@ -74,7 +74,7 @@ jobs:
           pip install folium~=0.12.1
           pip install geopandas==0.10.2
           pip install matplotlib
-          pip install numpy==1.22.0
+          pip install numpy==1.23.0
           pip install pandas==1.4.2
           pip install pycountry
           pip install pycountry_convert

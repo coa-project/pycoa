@@ -1901,7 +1901,7 @@ class AllVisu:
         def innerdecomap(self,**kwargs):
             geopdwd_filtered=kwargs.get('geopdwd_filtered')
             geopdwd=kwargs.get('geopdwd')
-            title = kwargs.get('title',self.dicovisuargs['title'])
+            title = kwargs.get('title',self.dicofigureargs['title'])
             maplabel = kwargs.get('maplabel',list(self.dicovisuargs['maplabel'])[0])
             tile = kwargs.get('tile',list(self.dicovisuargs['tile'])[0])
             tile = AllVisu.convert_tile(tile, 'bokeh')
@@ -2710,7 +2710,7 @@ class AllVisu:
                                 legend_kwds={'label': input_field,
                                 'orientation': "horizontal","pad": 0.001})
         ax.set_title(title)
-        return 
+        return
 
     ######SEABORN#########
     ######################

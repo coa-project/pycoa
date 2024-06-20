@@ -258,6 +258,29 @@ def test_get_where(front_instance):
     assert not result.empty, "Resulting DataFrame should not be empty"
     assert all(result['where'] == 'Paris'), "All rows should have where == 'Paris'"
 
+# ------------------------- test get with list of where ----------------------------------
+def test_get_list_where(front_instance):
+    """Test the get method with filtering by a list of 'where' values for the 'spf' database."""
+    front_instance.setwhom('spf', reload=False)
+    result = front_instance.get(where=['Paris', 'Nord'], output='pandas')
+    
+    assert isinstance(result, pd.DataFrame), "Output should be a pandas DataFrame"
+    assert not result.empty, "Resulting DataFrame should not be empty"
+    assert all(result['where'].isin(['Paris', 'Nord'])), "All rows should have where in Paris or Nord"
+
+# ------------------------- test get where with region ------------------------------------
+def test_get_where_departement(front_instance):
+    """Test the get method if where=Bretagne we are sent all the departments of the region Bretagne"""
+    front_instance.setwhom('spf', reload=False)
+    # Liste des dep de bretagne
+    bretagne_departments = ['Ille-et-Vilaine', 'Côtes-d\'Armor', 'Finistère', 'Morbihan']
+    
+    result = front_instance.get(where='Bretagne', output='pandas')
+    
+    assert isinstance(result, pd.DataFrame), "Output should be a pandas DataFrame"
+    assert not result.empty, "Resulting DataFrame should not be empty"
+    assert all(result['where'].isin(bretagne_departments)), "All rows should have where in Bretagne departments"
+
 # ------------------------- test get with which ------------------------------------------
 def test_get_which(front_instance):
     """Test the get method with filtering by 'which' for the 'spf' database."""
@@ -267,3 +290,47 @@ def test_get_which(front_instance):
     assert isinstance(result, pd.DataFrame), "Output should be a pandas DataFrame"
     assert not result.empty, "Resulting DataFrame should not be empty"
     assert 'cur_hosp' in result.columns, "The DataFrame should contain a 'cur_hosp' column"
+
+# ------------------------- test get with when ------------------------------------------
+def test_get_when(front_instance):
+    """Test the get method with filtering by 'when' for the 'spf' database."""
+    front_instance.setwhom('spf', reload=False)
+    result = front_instance.get(where='Paris', when='01/01/2023', output='pandas')
+    
+    assert isinstance(result, pd.DataFrame), "Output should be a pandas DataFrame"
+    assert not result.empty, "Resulting DataFrame should not be empty"
+    print(result['date'].unique())
+    assert all(result['date'] == dt.date(2023, 1, 1)), "All rows should have date == '01/01/2023'"
+
+# ------------------------- test get with option nofillnan ---------------------------------------
+def test_get_option_nofillnan(front_instance):
+    front_instance.setwhom('spf', reload=False) 
+    result = front_instance.get(which='tot_dchosp', where='Paris', option='nofillnan')
+    assert result['tot_dchosp'].notna().all(), "There should be no NaN values in the 'tot_dchosp' column"
+
+#Need to fix the sumall option on the get method
+# ------------------------- test get with option sumall ---------------------------------------
+# def test_get_option_sumall(front_instance):
+#     front_instance.setwhom('spf', reload=False)
+#     result = front_instance.get(which='tot_dchosp', where=['Paris', 'Nord'], option='sumall')
+#     result = result['tot_dchosp']
+#     #print(result)
+#     paris_data = front_instance.get(which='tot_dchosp', where='Paris', output='pandas')
+#     nord_data = front_instance.get(which='tot_dchosp', where='Nord', output='pandas')
+#     #print(paris_data)
+#     #print(nord_data)
+#     #we want expected result
+#     expected_result = paris_data['tot_dchosp'] + nord_data['tot_dchosp']
+#     #print(expected_result)
+#     assert not result.empty, "Resulting DataFrame should not be empty"
+#     # Vérifie que la somme totale dans 'result' correspond à la somme de Paris et Nord
+#     assert expected_result.equals(result), f"Summed values should be {expected_result}, but got {result}"
+
+
+# ------------------------- test get with invalid option -----------------------------------------
+def test_get_invalid_option(front_instance):
+    front_instance.setwhom('spf', reload=False)
+    with pytest.raises(CoaKeyError):
+        front_instance.get(which='tot_dchosp', where='Paris', option='invalid_option')  
+
+                             

@@ -642,7 +642,26 @@ class Front:
         output = kwargs.get('output')
         pandy = kwargs.get('input')
         input_field  = kwargs.get('input_field')
+        when = kwargs.get('when')
         pandy = pandy.drop(columns='standard')
+        if when:
+            try:
+                if ':' in when:
+                    start_date_str, end_date_str = when.split(':')
+                    start_date = dt.datetime.strptime(start_date_str.strip(), "%d/%m/%Y") if start_date_str else None
+                    end_date = dt.datetime.strptime(end_date_str.strip(), "%d/%m/%Y") if end_date_str else None
+                    if start_date and end_date:
+                        pandy = pandy[(pd.to_datetime(pandy['date']) >= start_date) & (pd.to_datetime(pandy['date']) <= end_date)]
+                    elif start_date:
+                        pandy = pandy[pd.to_datetime(pandy['date']) >= start_date]
+                    elif end_date:
+                        pandy = pandy[pd.to_datetime(pandy['date']) <= end_date]
+                else:
+                    target_date = dt.datetime.strptime(when.strip(), "%d/%m/%Y")
+                    pandy = pandy[pd.to_datetime(pandy['date']) == target_date]
+            except Exception as e:
+                raise CoaKeyError(f"Invalid date format in 'when' parameter: {when}. Expected format is dd/mm/yyyy or dd/mm/yyyy:dd/mm/yyyy. Error: {str(e)}")
+
         if output == 'pandas':
             def color_df(val):
                 if val.columns=='date':
@@ -657,6 +676,7 @@ class Front:
             #pandy = pandy.drop_duplicates(['date','clustername'])
             #pandy = pandy.drop(columns=['cumul'])
             #pandy['cumul'] = pandy[which]
+
             casted_data = pandy
             col=list(casted_data.columns)
             mem='{:,}'.format(casted_data[col].memory_usage(deep=True).sum())

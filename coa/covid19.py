@@ -439,7 +439,7 @@ class DataBase(object):
         if 'nonneg' in option:
             option.remove('nonneg')
             option.insert(0, 'nonneg')
-        if 'smooth7' and 'sumall' in option:
+        if 'smooth7' in option and 'sumall' in option:
             sumallandsmooth7=True
         for o in option:
             if o == 'nonneg':

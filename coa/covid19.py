@@ -284,8 +284,8 @@ class DataBase(object):
             mypycoapd = self.dbfullinfo.get_mainpandas()
             if 'which' not in kwargs:
                 kwargs['which'] = mypycoapd.columns[2]
-            if kwargs['which'] not in self.dbfullinfo.get_available_keywords():
-                raise CoaKeyError(kwargs['which']+' this value is not available in this db, please check !')
+            #if kwargs['which'] not in self.dbfullinfo.get_available_keywords():
+            #    raise CoaKeyError(kwargs['which']+' this value is not available in this db, please check !')
             mainpandas = return_nonan_dates_pandas(mypycoapd,kwargs['which'])
             #while for last date all values are nan previous date
         else:

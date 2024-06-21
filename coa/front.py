@@ -539,7 +539,7 @@ class Front:
                                    'dataframe. See help.')
             when_beg, when_end = extract_dates(when)
             onedate = False
-            if ':' not in when:
+            if when and ':' not in when:
                 onedate = True
             if pandy[[which,'date']].isnull().values.all():
                 info('--------------------------------------------')

@@ -339,12 +339,19 @@ def test_get_option_sumall_bretagne(front_instance):
 # ------------------------- test get with option sumall ---------------------------------------
 def test_get_option_sumall(front_instance):
     front_instance.setwhom('spf', reload=False)
-    result = front_instance.get(which='tot_dchosp', where=['Paris', 'Nord'], option='sumall')
+
+    where_list = front_instance.listwhere()
+    filtered_where_list = [where for where in where_list if 'Collectivités d\'outre-mer' not in where]
+    random_where_choices = random.sample(filtered_where_list, 2)
+    random_where_1, random_where_2 = random_where_choices
+
+    result = front_instance.get(which='tot_dchosp', where=[random_where_1, random_where_2], option='sumall')
     result = result['tot_dchosp']
-    paris_data = front_instance.get(which='tot_dchosp', where='Paris', output='pandas')
-    nord_data = front_instance.get(which='tot_dchosp', where='Nord', output='pandas')
+    
+    random_data_1 = front_instance.get(which='tot_dchosp', where=random_where_1, output='pandas')
+    random_data_2 = front_instance.get(which='tot_dchosp', where=random_where_2, output='pandas')
     #we want expected result
-    expected_result = paris_data['tot_dchosp'] + nord_data['tot_dchosp']
+    expected_result = random_data_1['tot_dchosp'] + random_data_2['tot_dchosp']
     assert not result.empty, "Resulting DataFrame should not be empty"
     assert expected_result.equals(result), f"Summed values should be {expected_result}, but got {result}"
 

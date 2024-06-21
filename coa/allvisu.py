@@ -508,6 +508,7 @@ class AllVisu:
         '''
         input = kwargs.get('input')
         input_field = kwargs.get('input_field')
+        mode = kwargs.get('mode',list(self.dicovisuargs['mode'])[0])
 
         if len(input_field) != 2:
             raise CoaTypeError('Two variables are needed to plot a versus chart ... ')

@@ -431,7 +431,6 @@ class DataBase(object):
             else:
                 pdfiltered = pdfiltered[['where','date','codelocation', kwargs['which']]]
             pdfiltered['clustername'] = pdfiltered['where'].copy()
-
         if not isinstance(option,list):
             option=[option]
         if 'fillnan' not in option and 'nofillnan' not in option:

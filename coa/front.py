@@ -436,12 +436,11 @@ class Front:
             #    raise CoaKeyError('option not compatible when input_fied/which is a list')
 
             if 'input_field' not in kwargs:
-                which = input_field
+                input_field = which
             #else:
             #    which = kwargs['input_field']
-            if input_field:
-                which = input_field
-
+            #if input_field:
+            #    which = input_field
             if what:
                 if what not in self.listwhat():
                     raise CoaKeyError('What = ' + what + ' not supported. '
@@ -473,15 +472,15 @@ class Front:
                 else:
                     pandy=pd.DataFrame()
                     input_field = which
-                    for k,i in enumerate(which):
+                    for i in which:
                         tmp = self._db.get_stats(input_field=input_field, which=i, where=where, option=option)
                         if len(which)>1:
                             tmp = tmp.rename(columns={'daily':'daily_'+i,'weekly':'weekly_'+i})
                         if pandy.empty:
                             pandy = tmp
                         else:
-                            tmp = tmp[[i,'daily_'+i,'weekly_'+i,'date','where']]
-                            pandy = pd.merge(pandy, tmp, on=['date','where'],how='inner')
+                            tmp = tmp[[i,'daily_'+i,'weekly_'+i,'date','clustername']]
+                            pandy = pd.merge(pandy, tmp, on=['date','clustername'],how='inner')
                     input_arg = pandy
                 if bypop != 'no':
                     input_arg = self._db.normbypop(pandy,input_field,bypop)

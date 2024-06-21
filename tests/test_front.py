@@ -4,6 +4,7 @@
 #pytest tests/test_front.py::test_listwhat
 
 import pytest
+import random
 import sys
 import os
 
@@ -252,21 +253,30 @@ def test_get_invalid_output(front_instance):
 def test_get_where(front_instance):
     """Test the get method with filtering by 'where' for the 'spf' database."""
     front_instance.setwhom('spf', reload=False)
-    result = front_instance.get(where='Paris', output='pandas')
+
+    where_list = front_instance.listwhere()
+    #remove 'Collectivités d'outre-mer' from where_list because of bug 
+    filtered_where_list = [where for where in where_list if 'Collectivités d\'outre-mer' not in where]
+    
+    random_where = random.choice(filtered_where_list)
+    result = front_instance.get(where=random_where, output='pandas')
     
     assert isinstance(result, pd.DataFrame), "Output should be a pandas DataFrame"
     assert not result.empty, "Resulting DataFrame should not be empty"
-    assert all(result['where'] == 'Paris'), "All rows should have where == 'Paris'"
+    assert all(result['where'] == random_where), f"All rows should have where == {random_where}"
 
 # ------------------------- test get with list of where ----------------------------------
 def test_get_list_where(front_instance):
     """Test the get method with filtering by a list of 'where' values for the 'spf' database."""
     front_instance.setwhom('spf', reload=False)
-    result = front_instance.get(where=['Paris', 'Nord'], output='pandas')
-    
+    where_list = front_instance.listwhere()
+    filtered_where_list = [where for where in where_list if 'Collectivités d\'outre-mer' not in where]
+    random_where_choices = random.sample(filtered_where_list, 2)
+    random_where_1, random_where_2 = random_where_choices
+    result = front_instance.get(where=[random_where_1, random_where_2], output='pandas')
     assert isinstance(result, pd.DataFrame), "Output should be a pandas DataFrame"
     assert not result.empty, "Resulting DataFrame should not be empty"
-    assert all(result['where'].isin(['Paris', 'Nord'])), "All rows should have where in Paris or Nord"
+    assert all(result['where'].isin([random_where_1, random_where_2])), f"All rows should have where in {random_where_1} or {random_where_2}"
 
 # ------------------------- test get where with region ------------------------------------
 def test_get_where_departement(front_instance):
@@ -285,11 +295,14 @@ def test_get_where_departement(front_instance):
 def test_get_which(front_instance):
     """Test the get method with filtering by 'which' for the 'spf' database."""
     front_instance.setwhom('spf', reload=False)
-    result = front_instance.get(where='Paris', which='cur_hosp', output='pandas')
+
+    list_which = front_instance.listwhich()
+    random_which = random.choice(list_which)
+    result = front_instance.get(where='Paris', which=random_which, output='pandas')
     
     assert isinstance(result, pd.DataFrame), "Output should be a pandas DataFrame"
     assert not result.empty, "Resulting DataFrame should not be empty"
-    assert 'cur_hosp' in result.columns, "The DataFrame should contain a 'cur_hosp' column"
+    assert random_which in result.columns, f"The DataFrame should contain a {random_which} column"
 
 # ------------------------- test get with when ------------------------------------------
 def test_get_when(front_instance):
@@ -308,24 +321,32 @@ def test_get_option_nofillnan(front_instance):
     result = front_instance.get(which='tot_dchosp', where='Paris', option='nofillnan')
     assert result['tot_dchosp'].notna().all(), "There should be no NaN values in the 'tot_dchosp' column"
 
-#Need to fix the sumall option on the get method
 # ------------------------- test get with option sumall ---------------------------------------
-# def test_get_option_sumall(front_instance):
-#     front_instance.setwhom('spf', reload=False)
-#     result = front_instance.get(which='tot_dchosp', where=['Paris', 'Nord'], option='sumall')
-#     result = result['tot_dchosp']
-#     #print(result)
-#     paris_data = front_instance.get(which='tot_dchosp', where='Paris', output='pandas')
-#     nord_data = front_instance.get(which='tot_dchosp', where='Nord', output='pandas')
-#     #print(paris_data)
-#     #print(nord_data)
-#     #we want expected result
-#     expected_result = paris_data['tot_dchosp'] + nord_data['tot_dchosp']
-#     #print(expected_result)
-#     assert not result.empty, "Resulting DataFrame should not be empty"
-#     # Vérifie que la somme totale dans 'result' correspond à la somme de Paris et Nord
-#     assert expected_result.equals(result), f"Summed values should be {expected_result}, but got {result}"
+def test_get_option_sumall_bretagne(front_instance):
+    front_instance.setwhom('spf', reload=False)
+    
+    result = front_instance.get(which='tot_dchosp', where='Bretagne', option='sumall')
+    result = result['tot_dchosp']
+    print(result)
+    
+    departements_bretagne = ['Morbihan', 'Côtes-d\'Armor', 'Finistère', 'Ille-et-Vilaine']
+    dept_data = [front_instance.get(which='tot_dchosp', where=dept, output='pandas') for dept in departements_bretagne]
+    expected_result = sum([data['tot_dchosp'] for data in dept_data])
 
+    assert not result.empty, "Resulting DataFrame should not be empty"
+    assert expected_result.equals(result), f"Summed values should be {expected_result}, but got {result}"
+
+# ------------------------- test get with option sumall ---------------------------------------
+def test_get_option_sumall(front_instance):
+    front_instance.setwhom('spf', reload=False)
+    result = front_instance.get(which='tot_dchosp', where=['Paris', 'Nord'], option='sumall')
+    result = result['tot_dchosp']
+    paris_data = front_instance.get(which='tot_dchosp', where='Paris', output='pandas')
+    nord_data = front_instance.get(which='tot_dchosp', where='Nord', output='pandas')
+    #we want expected result
+    expected_result = paris_data['tot_dchosp'] + nord_data['tot_dchosp']
+    assert not result.empty, "Resulting DataFrame should not be empty"
+    assert expected_result.equals(result), f"Summed values should be {expected_result}, but got {result}"
 
 # ------------------------- test get with invalid option -----------------------------------------
 def test_get_invalid_option(front_instance):

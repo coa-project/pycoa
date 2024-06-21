@@ -538,6 +538,9 @@ class Front:
                 raise CoaTypeError('Waiting input as valid pycoa pandas '
                                    'dataframe. See help.')
             when_beg, when_end = extract_dates(when)
+            onedate = False
+            if ':' not in when:
+                onedate = True
             if pandy[[which,'date']].isnull().values.all():
                 info('--------------------------------------------')
                 info('All values for '+ which + ' is nan nor empty')
@@ -564,7 +567,11 @@ class Front:
             # when cut
             if when_beg >  pandy[[which,'date']].date.max() or when_end >  pandy[[which,'date']].date.max():
                 raise CoaNoData("No available data after "+str( pandy[[which,'date']].date.max()))
-            pandy = pandy[(pandy.date >= when_beg) & (pandy.date <= when_end)]
+
+            if onedate:
+                pandy = pandy[pandy.date == when_end]
+            else:
+                pandy = pandy[(pandy.date >= when_beg) & (pandy.date <= when_end)]
             if bypop != 'no':
                 kwargs['input_field'] = [i for i in pandy.columns if ' per ' in i]
                 #name = [i for i in list(pandy.columns) if ' per ' in i]
@@ -642,25 +649,7 @@ class Front:
         output = kwargs.get('output')
         pandy = kwargs.get('input')
         input_field  = kwargs.get('input_field')
-        when = kwargs.get('when')
         pandy = pandy.drop(columns='standard')
-        if when:
-            try:
-                if ':' in when:
-                    start_date_str, end_date_str = when.split(':')
-                    start_date = dt.datetime.strptime(start_date_str.strip(), "%d/%m/%Y") if start_date_str else None
-                    end_date = dt.datetime.strptime(end_date_str.strip(), "%d/%m/%Y") if end_date_str else None
-                    if start_date and end_date:
-                        pandy = pandy[(pd.to_datetime(pandy['date']) >= start_date) & (pd.to_datetime(pandy['date']) <= end_date)]
-                    elif start_date:
-                        pandy = pandy[pd.to_datetime(pandy['date']) >= start_date]
-                    elif end_date:
-                        pandy = pandy[pd.to_datetime(pandy['date']) <= end_date]
-                else:
-                    target_date = dt.datetime.strptime(when.strip(), "%d/%m/%Y")
-                    pandy = pandy[pd.to_datetime(pandy['date']) == target_date]
-            except Exception as e:
-                raise CoaKeyError(f"Invalid date format in 'when' parameter: {when}. Expected format is dd/mm/yyyy or dd/mm/yyyy:dd/mm/yyyy. Error: {str(e)}")
 
         if output == 'pandas':
             def color_df(val):
@@ -676,7 +665,6 @@ class Front:
             #pandy = pandy.drop_duplicates(['date','clustername'])
             #pandy = pandy.drop(columns=['cumul'])
             #pandy['cumul'] = pandy[which]
-
             casted_data = pandy
             col=list(casted_data.columns)
             mem='{:,}'.format(casted_data[col].memory_usage(deep=True).sum())

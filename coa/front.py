@@ -346,6 +346,10 @@ class Front:
         if base not in self.listwhom():
             raise CoaDbError(base + ' is not a supported database. '
                                     'See pycoa.listbase() for the full list.')
+        # Check if the current base is already set to the requested base
+        if self._whom == base:
+            print(f"The database '{base}' is already set as the current database.")
+            return
         else:
             if reload:
                 self._db, self._cocoplot = coco.DataBase.factory(db_name=base,reload=reload)

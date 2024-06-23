@@ -296,7 +296,7 @@ class AllVisu:
                 else:
                     when_end_change = min(when_end_change,AllVisu.changeto_nonull_date(input, when_end, i))
 
-            if func.__name__ not in ['pycoa_date_plot', 'pycoa_plot', 'pycoa_menu_plat', 'pycoa_spiral_plot','pycoa_yearly_plot','pycoa_mpltdate_plot']:
+            if func.__name__ not in ['pycoa_date_plot', 'pycoa_plot', 'pycoa_menu_plat', 'pycoa_spiral_plot','pycoa_yearly_plot','pycoa_mpltdate_plot','pycoa_mpltversus_plot']:
                 if len(input_field) > 1:
                     print(str(input_field) + ' is dim = ' + str(len(input_field)) + '. No effect with ' + func.__name__ + '! Take the first input: ' + input_field[0])
                 input_field = input_field[0]
@@ -2601,6 +2601,26 @@ class AllVisu:
                 ax=plt.plot(df.index, df[col])
                 leg.append(val+' '+col)
             plt.legend(leg)
+        plt.title(title)
+        return
+
+    @decowrapper
+    @decoplot
+    def pycoa_mpltversus_plot(self,**kwargs):
+        input = kwargs.get('input')
+        input_field = kwargs.get('input_field')
+        title = kwargs.get('title')
+        fig, ax = plt.subplots(1, 1,figsize=(12, 8))
+        if len(input_field) != 2:
+            CoaError("Can't make versus plot in the condition len("+input_field+")!=2")
+
+        loc = list(input['clustername'].unique())
+        leg=[]
+        for col in loc:
+            pandy=input.loc[input.clustername.isin([col])]
+            ax=plt.plot(pandy[input_field[0]], pandy[input_field[1]])
+            leg.append(col)
+        plt.legend(leg)
         plt.title(title)
         return
 

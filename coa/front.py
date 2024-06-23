@@ -1001,6 +1001,8 @@ class Front:
             elif self.getdisplay() == 'mplt':
                 if typeofplot == 'date':
                     fig = self._cocoplot.pycoa_mpltdate_plot(**kwargs)
+                elif typeofplot == 'versus':
+                    fig = self._cocoplot.pycoa_mpltversus_plot(**kwargs)
                 elif typeofplot == 'yearly':
                     fig = self._cocoplot.pycoa_mpltyearly_plot(**kwargs)
                 else:

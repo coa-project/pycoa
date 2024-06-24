@@ -2747,7 +2747,6 @@ class AllVisu:
             if 'where' in kwargs:
                 title += f" - {kwargs.get('where')}"
             kwargs['title'] = title
-            print(input,input_field)
             top_countries = (input.groupby('where')[input_field].sum()
                          .nlargest(MAXCOUNTRIESDISPLAYED).index.tolist())
             filtered_input = input[input['where'].isin(top_countries)]

@@ -441,8 +441,8 @@ class Front:
 
             if 'input_field' not in kwargs:
                 input_field = which
-            #else:
-            #    which = kwargs['input_field']
+            else:
+                which = kwargs['input_field']
             #if input_field:
             #    which = input_field
             if what:

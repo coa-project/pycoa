@@ -425,7 +425,7 @@ class Front:
 
             #kwargs_test(kwargs,self._listchartkargs,'Bad args used ! please check ')
             where = kwargs.get('where', None)
-            which = kwargs.get('which', None)
+            which = kwargs.get('which', self.listwhich()[0])
             if not isinstance(which,list):
                 which=[which]
             what = kwargs.get('what', None)

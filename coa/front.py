@@ -423,7 +423,7 @@ class Front:
                 except:
                     pass
 
-            #kwargs_test(kwargs,self._listchartkargs,'Bad args used ! please check ')
+            kwargs_test(kwargs,self._listchartkargs,'ICI Bad args used ! please check ')
             where = kwargs.get('where', None)
             which = kwargs.get('which', self.listwhich()[0])
             if not isinstance(which,list):

@@ -2815,23 +2815,22 @@ class AllVisu:
             input_field = input_field
         if not isinstance(input_field, list) or len(input_field) != 2:
             raise ValueError("input_field should be a list of two variables.")
-        # Prepare the data
-        input['casesx'] = input[input_field[0]]
-        input['casesy'] = input[input_field[1]]
+        sns.set_theme(style="whitegrid")
+        plt.figure(figsize=(12, 8))
 
-        plt.figure(figsize=(10, 6))
+        loc = list(input['clustername'].unique())
+        leg = []
+        for col in loc:
+            pandy = input.loc[input.clustername == col]
+            sns.lineplot(data=pandy, x=input_field[0], y=input_field[1], label=col)
+            leg.append(col)
 
-        # Plotting each clustername separately
-        for loc in input['clustername'].unique():
-            data = input[input['clustername'] == loc]
-            sns.lineplot(data=data, x='casesx', y='casesy', label=f"{loc} - {input_field[0]} vs {input_field[1]}")
-
+        plt.legend()
+        plt.title(title)
         plt.xlabel(input_field[0])
         plt.ylabel(input_field[1])
-        plt.title(title)
-        plt.legend(title='Location')
-        plt.grid(True)
         plt.show()
+
 
 
     ######################

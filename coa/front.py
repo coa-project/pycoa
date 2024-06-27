@@ -1010,6 +1010,9 @@ class Front:
             elif self.getdisplay() == 'seaborn':
                 if typeofplot == 'date':
                     fig = self._cocoplot.pycoa_date_plot_seaborn(**kwargs)
+                elif typeofplot == 'versus':
+                    print('enter in a versus plot seaborn')
+                    fig = self._cocoplot.pycoa_versus_plot_seaborn(**kwargs)
                 else:
                     print(typeofplot + ' not implemented in ' + self.getdisplay())
                     fig = self._cocoplot.pycoa_spiral_plot(**kwargs)

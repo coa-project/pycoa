@@ -2747,11 +2747,15 @@ class AllVisu:
             if 'where' in kwargs:
                 title += f" - {kwargs.get('where')}"
             kwargs['title'] = title
-            top_countries = (input.groupby('where')[input_field].sum()
-                         .nlargest(MAXCOUNTRIESDISPLAYED).index.tolist())
-            filtered_input = input[input['where'].isin(top_countries)]
+            # top_countries = (input.groupby('where')[input_field].sum()
+            #              .nlargest(MAXCOUNTRIESDISPLAYED).index.tolist())
+            # filtered_input = input[input['where'].isin(top_countries)]
 
+            loc = list(input['clustername'].unique())
+            filtered_input = input[input['clustername'].isin(loc[:MAXCOUNTRIESDISPLAYED])]
             kwargs['filtered_input'] = filtered_input
+
+
 
             return func(self, **kwargs)
         return inner_plot
@@ -2776,7 +2780,7 @@ class AllVisu:
         return inner_hist
 
 
-    ######SEABORN PLOT#########
+    #####SEABORN PLOT#########
     @decowrapper
     @decoplotseaborn
     def pycoa_date_plot_seaborn(self, **kwargs):
@@ -2787,6 +2791,8 @@ class AllVisu:
         filtered_input = kwargs['filtered_input']
         input_field = kwargs['input_field']
         title = kwargs.get('title')
+        if isinstance(input_field, list):
+            input_field = input_field
         # Créer le graphique
         plt.figure(figsize=(10, 6))
         sns.lineplot(data=filtered_input, x='date', y=input_field, hue='where')
@@ -2797,6 +2803,36 @@ class AllVisu:
         #permet de placer la légend 4% à gauche
         plt.legend(bbox_to_anchor=(1.04, 1))
         plt.show()
+
+    @decowrapper
+    @decoplotseaborn
+    def pycoa_versus_plot_seaborn(self, **kwargs):
+        input = kwargs['input']
+        filtered_input = kwargs['filtered_input']
+        input_field = kwargs['input_field']
+        title = kwargs.get('title')
+        if isinstance(input_field, list):
+            input_field = input_field
+        if not isinstance(input_field, list) or len(input_field) != 2:
+            raise ValueError("input_field should be a list of two variables.")
+        # Prepare the data
+        input['casesx'] = input[input_field[0]]
+        input['casesy'] = input[input_field[1]]
+
+        plt.figure(figsize=(10, 6))
+
+        # Plotting each clustername separately
+        for loc in input['clustername'].unique():
+            data = input[input['clustername'] == loc]
+            sns.lineplot(data=data, x='casesx', y='casesy', label=f"{loc} - {input_field[0]} vs {input_field[1]}")
+
+        plt.xlabel(input_field[0])
+        plt.ylabel(input_field[1])
+        plt.title(title)
+        plt.legend(title='Location')
+        plt.grid(True)
+        plt.show()
+
 
     ######################
     ######SEABORN HIST VERTICALE#########

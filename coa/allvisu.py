@@ -2791,11 +2791,9 @@ class AllVisu:
         filtered_input = kwargs['filtered_input']
         input_field = kwargs['input_field']
         title = kwargs.get('title')
-        if isinstance(input_field, list):
-            input_field = input_field
-        # Créer le graphique
         plt.figure(figsize=(10, 6))
-        sns.lineplot(data=filtered_input, x='date', y=input_field, hue='where')
+        for i in input_field:
+            sns.lineplot(data=filtered_input, x='date', y=i, hue='where')
         plt.title(title)
         plt.xlabel('Date')
         plt.ylabel(input_field)

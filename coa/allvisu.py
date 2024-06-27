@@ -2768,6 +2768,8 @@ class AllVisu:
         def inner_hist(self,**kwargs):
             filtered_input = kwargs.get('filtered_input')
             input_field = kwargs.get('input_field')
+            if isinstance(input_field, list):
+                input_field = input_field[0]
 
             filtered_input = (filtered_input.sort_values('date')
                   .drop_duplicates('where', keep='last')    #garde le last en terme de date
@@ -2867,6 +2869,8 @@ class AllVisu:
         filtered_input = kwargs['filtered_input']
         input_field = kwargs['input_field']
         title = kwargs.get('title')
+        if isinstance(input_field, list):
+            input_field = input_field[0]
 
         sns.set_theme(style="whitegrid")
         plt.figure(figsize=(14, 7))
@@ -2888,6 +2892,8 @@ class AllVisu:
         filtered_input = kwargs['filtered_input']
         input_field = kwargs['input_field']
         title = kwargs.get('title')
+        if isinstance(input_field, list):
+            input_field = input_field[0]
 
         # Créer le graphique
         sns.set_theme(style="whitegrid")

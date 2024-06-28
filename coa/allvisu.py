@@ -2795,8 +2795,9 @@ class AllVisu:
         input_field = kwargs['input_field']
         title = kwargs.get('title')
         plt.figure(figsize=(10, 6))
-        for i in input_field:
-            sns.lineplot(data=filtered_input, x='date', y=i, hue='where')
+        st=['-','--',':']
+        for k, ele in enumerate(input_field):
+            sns.lineplot(data=filtered_input, x='date', y=ele, hue='clustername',linestyle=st[k%len(st)])
         plt.title(title)
         plt.xlabel('Date')
         plt.ylabel(input_field)

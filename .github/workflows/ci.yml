@@ -1,4 +1,4 @@
-name : CI
+name: CI
 
 on:
   push:
@@ -18,52 +18,23 @@ jobs:
           - "3.10"
           - "3.11"
     
-    
     name: Test
     runs-on: ${{ matrix.os }}
 
     steps:
-      - name : Checkout code
+      - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Set up Python 
-        uses: actions/setup-python@v4
+      - name: Set up Python
+        uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Install dependencies on Ubuntu and macOS
-        if: runner.os != 'Windows'
+      - name: Install dependencies on all platforms
         run: |
           python -m pip install --upgrade pip
-          pip install --only-binary :all: numpy==1.23.2
-          pip install bokeh==2.4.0 \
-            branca \
-            bs4 \
-            datascroller \
-            folium~=0.12.1 \
-            geopandas==0.10.2 \
-            matplotlib \
-            pandas==1.4.2 \
-            pycountry \
-            pycountry_convert \
-            requests \
-            scipy \
-            shapely \
-            pytest>=5.0 \
-            pandas-flavor \
-            openpyxl \
-            unidecode \
-            lxml \
-            colorama \
-            tqdm \
-            seaborn \
-            IPython
-
-      - name: Install dependencies on Windows
-        if: runner.os == 'Windows'
-        run: |
-          python -m pip install --upgrade pip
-          pip install numpy==1.23.2
+          pip install numpy==1.23.2 --no-binary :all:
+          pip install pandas==1.4.2 --no-binary :all:
           pip install bokeh==2.4.0
           pip install branca
           pip install bs4
@@ -71,7 +42,6 @@ jobs:
           pip install folium~=0.12.1
           pip install geopandas==0.10.2
           pip install matplotlib
-          pip install pandas==1.4.2
           pip install pycountry
           pip install pycountry_convert
           pip install requests
@@ -89,5 +59,3 @@ jobs:
 
       - name: Run tests
         run: pytest
-
-

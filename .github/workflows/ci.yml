@@ -27,7 +27,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Set up Python 
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
 
@@ -36,14 +36,14 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install --only-binary :all: numpy==1.23.2
-          pip install -bokeh==2.4.0 
-          pip install -branca \
+          pip install bokeh==2.4.0 \
+            branca \
             bs4 \
             datascroller \
             folium~=0.12.1 \
             geopandas==0.10.2 \
             matplotlib \
-            pandas==1.4.2 --no-binary :all:\
+            pandas==1.4.2 \
             pycountry \
             pycountry_convert \
             requests \
@@ -89,5 +89,4 @@ jobs:
 
       - name: Run tests
         run: pytest
-
 

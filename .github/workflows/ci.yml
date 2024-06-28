@@ -37,7 +37,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install --only-binary :all: numpy==1.23.2
           pip install -bokeh==2.4.0 
-          pip install branca \
+          pip install -branca \
             bs4 \
             datascroller \
             folium~=0.12.1 \

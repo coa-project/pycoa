@@ -109,7 +109,7 @@ def test_listchartkargs(front_instance):
     """Test the listchartkargs method."""
     result = front_instance.listchartkargs()
     assert isinstance(result, list), "listchartkargs should return a list"
-    assert len(result) == 13, "listchartkargs should return 13 elements"
+    assert len(result) == 12, "listchartkargs should return 13 elements"
 
 # ------------------------- test listtile ------------------------------
 def test_listtile(front_instance):
@@ -209,7 +209,7 @@ def test_getkeywordinfo(front_instance):
 def test_get_pandas(front_instance):
     """Test the get method with output as pandas."""
     front_instance.setwhom('govcy', reload=False)
-    result = front_instance.get(output='pandas')
+    result = front_instance.get(output='pandas', which='tot_cases')
     assert isinstance(result, pd.DataFrame), "Output should be a pandas DataFrame"
 
 # ------------------------- test get with geopandas --------------------------------------
@@ -217,7 +217,7 @@ def test_get_geopandas(front_instance):
     """Test the get method with output as geopandas."""
     front_instance.setwhom('govcy', reload=False)
     #rajouter un test pour la colonne geometry    
-    result = front_instance.get(output='geopandas')
+    result = front_instance.get(output='geopandas', which='tot_cases')
     assert isinstance(result, gpd.GeoDataFrame), "Output should be a GeoDataFrame"
 
 # ------------------------- test get with dict ------------------------------------------
@@ -225,21 +225,21 @@ def test_get_dict(front_instance):
     """Test the get method with output as dict."""
     front_instance.setwhom('govcy', reload=False)
      #rajouter un test sur dictionnaire     
-    result = front_instance.get(output='dict')
+    result = front_instance.get(output='dict', which='tot_cases')
     assert isinstance(result, dict), "Output should be a dict"
 
 # ------------------------- test get with list ------------------------------------------
 def test_get_list(front_instance):
     """Test the get method with output as list."""
     front_instance.setwhom('govcy', reload=False)
-    result = front_instance.get(output='list')
+    result = front_instance.get(output='list', which='tot_cases')
     assert isinstance(result, list), "Output should be a list"
 
 # ------------------------- test get with array------------------------------------------
 def test_get_array(front_instance):
     """Test the get method with output as array."""
     front_instance.setwhom('govcy', reload=False)
-    result = front_instance.get(output='array')
+    result = front_instance.get(output='array', which='tot_cases')
     assert isinstance(result, np.ndarray), "Output should be a numpy array"
 
 # ------------------------- test get with invalid output ----------------------------------

@@ -2795,28 +2795,17 @@ class AllVisu:
         input_field = kwargs['input_field']
         title = kwargs.get('title')
         plt.figure(figsize=(10, 6))
-        st = ['-', '--', ':']
+        st=['-','--',':']
         for k, ele in enumerate(input_field):
-            sns.lineplot(data=filtered_input, x='date', y=ele, hue='clustername', linestyle=st[k % len(st)])
-        #for the legend
-        handles, labels = plt.gca().get_legend_handles_labels()
-        added_labels = set()
-        updated_handles = []
-        for handle, label in zip(handles[1:], labels[1:]): 
-            cluster = label
-            for i, field in enumerate(input_field):
-                new_label = f"{cluster}, {field}"
-                if new_label not in added_labels:
-                    updated_handles.append(plt.Line2D([], [], color=handle.get_color(), linestyle=st[i], label=new_label))
-                    added_labels.add(new_label)
+            sns.lineplot(data=filtered_input, x='date', y=ele, hue='clustername',linestyle=st[k%len(st)])
 
-        plt.legend(handles=updated_handles, bbox_to_anchor=(1.04, 1))
         plt.title(title)
         plt.xlabel('Date')
-        plt.ylabel(', '.join(input_field))
+        plt.ylabel(input_field)
         plt.xticks(rotation=45)
+        #permet de placer la légend 4% à gauche
+        plt.legend(bbox_to_anchor=(1.04, 1))
         plt.show()
-
 
     @decowrapper
     @decoplotseaborn

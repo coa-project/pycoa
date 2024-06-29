@@ -423,7 +423,7 @@ class Front:
                 except:
                     pass
 
-            kwargs_test(kwargs,self._listchartkargs,'ICI Bad args used ! please check ')
+            kwargs_test(kwargs,self._listchartkargs,'Bad args used ! please check ')
             where = kwargs.get('where', None)
             which = kwargs.get('which', self.listwhich()[0])
             if not isinstance(which,list):
@@ -477,7 +477,7 @@ class Front:
                     pandy=pd.DataFrame()
                     input_field = which
                     for i in which:
-                        tmp = self._db.get_stats(input_field=input_field, which=i, where=where, option=option)
+                        tmp = self._db.get_stats(which=i,where=where, option=option)
                         if len(which)>1:
                             tmp = tmp.rename(columns={'daily':'daily_'+i,'weekly':'weekly_'+i})
                         if pandy.empty:
@@ -1010,9 +1010,6 @@ class Front:
             elif self.getdisplay() == 'seaborn':
                 if typeofplot == 'date':
                     fig = self._cocoplot.pycoa_date_plot_seaborn(**kwargs)
-                elif typeofplot == 'versus':
-                    print('enter in a versus plot seaborn')
-                    fig = self._cocoplot.pycoa_versus_plot_seaborn(**kwargs)
                 else:
                     print(typeofplot + ' not implemented in ' + self.getdisplay())
                     fig = self._cocoplot.pycoa_spiral_plot(**kwargs)

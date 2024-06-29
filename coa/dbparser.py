@@ -15,6 +15,7 @@ import json
 import datetime
 import collections
 import random
+import numpy as np
 from tqdm import tqdm
 from coa.error import *
 from coa.tools import (
@@ -365,7 +366,9 @@ class DBInfo:
                 for chunk in pd.read_csv(url, sep=separator, chunksize=chunk_size):
                     govcy_chunks.append(chunk)
                     pbar.update(chunk.shape[0])
-            self.dbparsed = self.row_where_csv_parser(url=url,rename_columns = rename, separator = separator,keep_field = keep)
+            cast={i: 'int32' for i in list(mi.keys())}
+            print(cast)
+            self.dbparsed = self.row_where_csv_parser(url=url,rename_columns = rename, separator = separator,keep_field = keep,cast=cast)
           elif namedb == 'imed':
                   info('Greece, imed database selected ...')
                   imed = {
@@ -1357,6 +1360,7 @@ class DBInfo:
          pandas_db =  pandas_db[keep_field]
      if self.db == "govcy":
         pandas_db['date'] = pd.to_datetime(pandas_db['date'], errors='coerce', format="%d/%m/%Y").dt.date
+        pandas_db = pandas_db.replace(':',np.nan)
      elif self.db == "olympics":
         pandas_db['date'] = pd.to_datetime(pandas_db['date'], format='%Y', errors='coerce').dt.date
      else:
@@ -1464,8 +1468,9 @@ class DBInfo:
               CoaDbError('Granularity problem , neither region nor sub_region ...')
       if self.db == 'dgs':
           mypandas = mypandas.reset_index(drop=True)
+      if self.db != 'govcy':
+          mypandas = mypandas.groupby(['where','date']).sum(min_count=1).reset_index() # summing in case of multiple dates (e.g. in opencovid19 data). But keep nan if any
 
-      mypandas = mypandas.groupby(['where','date']).sum(min_count=1).reset_index() # summing in case of multiple dates (e.g. in opencovid19 data). But keep nan if any
       if self.db == 'govcy' or self.db == 'jpnmhlw':
           location_is_code=False
 
@@ -1491,6 +1496,7 @@ class DBInfo:
       else:
           self.mainpandas=mypandas
       self.dates  = self.mainpandas['date']
+
 
   def get_mainpandas(self,):
       return self.mainpandas

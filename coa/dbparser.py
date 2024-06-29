@@ -367,7 +367,6 @@ class DBInfo:
                     govcy_chunks.append(chunk)
                     pbar.update(chunk.shape[0])
             cast={i: 'int32' for i in list(mi.keys())}
-            print(cast)
             self.dbparsed = self.row_where_csv_parser(url=url,rename_columns = rename, separator = separator,keep_field = keep,cast=cast)
           elif namedb == 'imed':
                   info('Greece, imed database selected ...')
@@ -1099,6 +1098,7 @@ class DBInfo:
           raise CoaKeyError('Error in the database selected: '+db+'.Please check !')
       if namedb not in ['jhu','jhu-usa','imed','rki','sumeau']:
             self.pandasGeoUnified(self.dbparsed)
+            print(self.dbparsed)
 
 
   def get_dblistdico(self,key=None):
@@ -1444,8 +1444,9 @@ class DBInfo:
           uniqloc = [s for s in uniqloc if isinstance(s, str) and 'OWID_' not in s]
           #print("UNIQLOC",uniqloc)
           db=self.get_db()
-          if self.db in ['govcy','europa']:
+          if self.db in ['europa','govcy']:
               db=None
+          self.geo=coge.GeoManager('iso3')
           codename = collections.OrderedDict(zip(uniqloc,self.geo.to_standard(uniqloc,output='list',db=db,interpret_region=True)))
           location_is_code = True
           self.slocation = list(codename.values())
@@ -1486,6 +1487,7 @@ class DBInfo:
               mypandas['codelocation'] =  mypandas['where'].map(reverse).astype(str)
           else:
               mypandas['codelocation'] =  mypandas['where'].map(codename).astype(str)
+              print("codename",codename)
       if self.db == 'owid':
           onlyowid['codelocation'] = onlyowid['where']
           mypandas = pd.concat([mypandas,onlyowid])

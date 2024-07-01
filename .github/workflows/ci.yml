@@ -1,4 +1,4 @@
-name : CI
+name: CI
 
 on:
   push:
@@ -17,16 +17,15 @@ jobs:
           - "3.9"
           - "3.10"
           - "3.11"
-    
-    
+
     name: Test
     runs-on: ${{ matrix.os }}
 
     steps:
-      - name : Checkout code
+      - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Set up Python 
+      - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
@@ -63,30 +62,29 @@ jobs:
         if: runner.os == 'Windows'
         run: |
           python -m pip install --upgrade pip
-          pip install numpy==1.23.2
-          pip install bokeh==2.4.0
-          pip install branca
-          pip install bs4
-          pip install datascroller
-          pip install folium~=0.12.1
-          pip install geopandas==0.10.2
-          pip install matplotlib
-          pip install pandas==1.4.2
-          pip install pycountry
-          pip install pycountry_convert
-          pip install requests
-          pip install scipy
-          pip install shapely
-          pip install pytest>=5.0
-          pip install pandas-flavor
-          pip install openpyxl
-          pip install unidecode
-          pip install lxml
-          pip install colorama
-          pip install tqdm
-          pip install seaborn
-          pip install IPython
+          pip install numpy==1.23.2 \
+            bokeh==2.4.0 \
+            branca \
+            bs4 \
+            datascroller \
+            folium~=0.12.1 \
+            geopandas==0.10.2 \
+            matplotlib \
+            pandas==1.4.2 \
+            pycountry \
+            pycountry_convert \
+            requests \
+            scipy \
+            shapely \
+            pytest>=5.0 \
+            pandas-flavor \
+            openpyxl \
+            unidecode \
+            lxml \
+            colorama \
+            tqdm \
+            seaborn \
+            IPython
 
       - name: Run tests
         run: pytest
-

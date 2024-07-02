@@ -435,10 +435,8 @@ class Front:
             when = kwargs.get('when', None)
             input_arg = kwargs.get('input', None)
             input_field = kwargs.get('input_field',None)
-
             #if (option != None) and (isinstance(input_field,list) or isinstance(which,list)):
             #    raise CoaKeyError('option not compatible when input_fied/which is a list')
-
             if 'input_field' not in kwargs:
                 input_field = which
             else:
@@ -469,7 +467,7 @@ class Front:
             if bypop not in self.listbypop():
                 raise CoaKeyError('The bypop arg should be selected in '+str(self.listbypop())+' only.')
 
-            if isinstance(input_arg, pd.DataFrame) or isinstance(which, list):
+            if isinstance(input_arg, pd.DataFrame):
                 if input_arg is not None and not input_arg.empty:
                     pandy = input_arg
                     pandy = self._db.get_stats(**kwargs)
@@ -486,6 +484,7 @@ class Front:
                             tmp = tmp[[i,'daily_'+i,'weekly_'+i,'date','clustername']]
                             pandy = pd.merge(pandy, tmp, on=['date','clustername'],how='inner')
                     input_arg = pandy
+
                 if bypop != 'no':
                     input_arg = self._db.normbypop(pandy,input_field,bypop)
                     if bypop=='pop':
@@ -499,7 +498,7 @@ class Front:
                 #    which = input_field
                 #if which is None:
                 #    which = pandy.columns[2]
-                pandy.loc[:,'standard'] = pandy[which]
+                pandy.loc[:,'standard'] = pandy[which[0]]
                 if 'input_field' not in kwargs:
                     kwargs['input_field'] = input_field
                 #if option:
@@ -508,13 +507,13 @@ class Front:
                 #kwargs.pop('input_field')
                 pandy = self._db.get_stats(**kwargs)
                 if which != None:
-                    pandy['standard'] = pandy[which]
+                    pandy['standard'] = pandy[which[0]]
                 else:
                     pandy['standard'] = pandy[pandy.columns[2]]
                     which = list(pandy.columns)[2]
                 input_field = what
 
-                if pandy[[which,'date']].isnull().values.all():
+                if pandy[[which[0],'date']].isnull().values.all():
                     info('--------------------------------------------')
                     info('All values for '+ which + ' is nan nor empty')
                     info('--------------------------------------------')
@@ -544,7 +543,7 @@ class Front:
             onedate = False
             if when and ':' not in when:
                 onedate = True
-            if pandy[[which,'date']].isnull().values.all():
+            if pandy[[which[0],'date']].isnull().values.all():
                 info('--------------------------------------------')
                 info('All values for '+ which + ' is nan nor empty')
                 info('--------------------------------------------')
@@ -556,8 +555,8 @@ class Front:
                 pandy=pandy.fillna(0)
                 bypop = 'no'
 
-            db_first_date = pandy[[which,'date']].date.min()
-            db_last_date = pandy[[which,'date']].date.max()
+            db_first_date = pandy[[which[0],'date']].date.min()
+            db_last_date = pandy[[which[0],'date']].date.max()
 
             if when_beg < db_first_date:
                 when_beg = db_first_date
@@ -568,8 +567,8 @@ class Front:
             if when_end < db_first_date:
                 raise CoaNoData("No available data before "+str(db_first_date))
             # when cut
-            if when_beg >  pandy[[which,'date']].date.max() or when_end >  pandy[[which,'date']].date.max():
-                raise CoaNoData("No available data after "+str( pandy[[which,'date']].date.max()))
+            if when_beg >  pandy[[which[0],'date']].date.max() or when_end >  pandy[[which[0],'date']].date.max():
+                raise CoaNoData("No available data after "+str( pandy[[which[0],'date']].date.max()))
 
             if onedate:
                 pandy = pandy[pandy.date == when_end]

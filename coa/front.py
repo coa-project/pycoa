@@ -425,8 +425,8 @@ class Front:
 
             kwargs_test(kwargs,self._listchartkargs,'Bad args used ! please check ')
             where = kwargs.get('where', None)
-            which = kwargs.get('which', self.listwhich()[0])
-            if not isinstance(which,list):
+            which = kwargs.get('which', None)
+            if which and not isinstance(which,list):
                 which=[which]
             what = kwargs.get('what', None)
 
@@ -498,7 +498,7 @@ class Front:
                 #    which = input_field
                 #if which is None:
                 #    which = pandy.columns[2]
-                pandy.loc[:,'standard'] = pandy[which[0]]
+                pandy.loc[:,'standard'] = pandy[pandy.columns[2]]
                 if 'input_field' not in kwargs:
                     kwargs['input_field'] = input_field
                 #if option:
@@ -506,14 +506,14 @@ class Front:
             elif input_arg == None :
                 #kwargs.pop('input_field')
                 pandy = self._db.get_stats(**kwargs)
-                if which != None:
+                if which :
                     pandy['standard'] = pandy[which[0]]
                 else:
                     pandy['standard'] = pandy[pandy.columns[2]]
                     which = list(pandy.columns)[2]
                 input_field = what
 
-                if pandy[[which[0],'date']].isnull().values.all():
+                if pandy[[pandy.columns[2],'date']].isnull().values.all():
                     info('--------------------------------------------')
                     info('All values for '+ which + ' is nan nor empty')
                     info('--------------------------------------------')
@@ -543,7 +543,7 @@ class Front:
             onedate = False
             if when and ':' not in when:
                 onedate = True
-            if pandy[[which[0],'date']].isnull().values.all():
+            if pandy[[pandy.columns[2],'date']].isnull().values.all():
                 info('--------------------------------------------')
                 info('All values for '+ which + ' is nan nor empty')
                 info('--------------------------------------------')
@@ -555,8 +555,8 @@ class Front:
                 pandy=pandy.fillna(0)
                 bypop = 'no'
 
-            db_first_date = pandy[[which[0],'date']].date.min()
-            db_last_date = pandy[[which[0],'date']].date.max()
+            db_first_date = pandy[[pandy.columns[2],'date']].date.min()
+            db_last_date = pandy[[pandy.columns[2],'date']].date.max()
 
             if when_beg < db_first_date:
                 when_beg = db_first_date
@@ -567,8 +567,8 @@ class Front:
             if when_end < db_first_date:
                 raise CoaNoData("No available data before "+str(db_first_date))
             # when cut
-            if when_beg >  pandy[[which[0],'date']].date.max() or when_end >  pandy[[which[0],'date']].date.max():
-                raise CoaNoData("No available data after "+str( pandy[[which[0],'date']].date.max()))
+            if when_beg >  pandy[[pandy.columns[2],'date']].date.max() or when_end >  pandy[[pandy.columns[2],'date']].date.max():
+                raise CoaNoData("No available data after "+str( pandy[[pandy.columns[2],'date']].date.max()))
 
             if onedate:
                 pandy = pandy[pandy.date == when_end]
@@ -990,7 +990,7 @@ class Front:
                     else:
                         if isinstance(input_field,list) and len(input_field) > 1:
                             CoaWarning('typeofplot is menulocation but dim(input_field)>1, take first one '+input_field[0])
-                        fig = self._cocoplot.pycoa_menu_plat(**kwargs)
+                        fig = self._cocoplot.pycoa_menu_plot(**kwargs)
                 elif typeofplot == 'yearly':
                     if input.date.max()-input.date.min() <= dt.timedelta(days=365):
                         print("Yearly will not be used since the time covered is less than 1 year")

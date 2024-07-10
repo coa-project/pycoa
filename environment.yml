@@ -23,7 +23,7 @@ dependencies:
     - pandas==1.4.2
     - geopandas==0.10.2
     - matplotlib
-    - numpy
+    - numpy==1.23.2
     - pycountry
     - pycountry_convert
     - requests

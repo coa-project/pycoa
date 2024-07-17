@@ -128,8 +128,8 @@ def fill_missing_dates(p, date_field='date', loc_field='where', d1=None, d2=None
         pp2.index = pd.DatetimeIndex(pp2.index)
         pp3 = pp2.reindex(idx,fill_value=pd.NA)#numpy.nan)#
         pp3[loc_field] = pp3[loc_field].fillna(l)  #pp3['location'].fillna(method='bfill')
-        #pp3['codelocation'] = pp3['codelocation'].fillna(method='bfill')
-        #pp3['codelocation'] = pp3['codelocation'].fillna(method='ffill')
+        #pp3['isowhere'] = pp3['isowhere'].fillna(method='bfill')
+        #pp3['isowhere'] = pp3['isowhere'].fillna(method='ffill')
         pfill=pd.concat([pfill, pp3])
     pfill.reset_index(inplace=True)
     return pfill

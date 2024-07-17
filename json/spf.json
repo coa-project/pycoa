@@ -1,0 +1,47 @@
+{
+	"header": "SPF aka Sante Publique France database selected (France departement granularity) ... 5 SPF databases will be parsed ...",
+	"geoinfo": {
+		"where": "France",
+		"isocode":"FRA",
+		"granularity": "subregion",
+		"locationmode":"isocode"
+	},
+	"replace":{
+			"975":"980",
+			"977":"980",
+			"978":"980",
+			"986":"980",
+			"987":"980"
+		 },
+	"datasets": [
+		{
+			"urldata":"https://www.data.gouv.fr/fr/datasets/r/ca490480-09a3-470f-8556-76d6fd291325",
+			"urlparent":"https://www.data.gouv.fr/fr/datasets/donnees-de-laboratoires-pour-le-depistage-a-compter-du-18-05-2022-si-dep/",
+			"selections" :
+				{
+				"cl_age90": 0
+				},
+			"decimal":",",
+			"columns" : [
+			{
+				"name":"tot_P",
+				"alias":"P",
+				"description":"Nombre total de tests positifs"
+			},
+			{
+				"name":"tot_T",
+				"alias":"T",
+				"description":"Nombre total de tests réalisés"
+			},
+			{
+				"name":"where",
+				"alias":"dep"
+			},
+			{
+				"name":"date",
+				"alias":"semaine"
+			}
+			]
+		}
+	]
+}

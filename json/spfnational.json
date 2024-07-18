@@ -2,9 +2,9 @@
   "header": "SPFNational",
   "geoinfo": {
     "granularity": "country",
-    "where": "France",
+    "where": "FRA",
     "isocode":"FRA",
-    "locationmode":"name"
+    "locationmode":"isocode"
   },
   "datasets": [
   	{	

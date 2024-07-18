@@ -222,7 +222,7 @@ class VirusStat(object):
        return self.currentdata
 
    def get_fulldb(self):
-      return self.currentdata.get_mainpandas()
+      return self.currentdata.get_maingeopandas()
 
    def get_available_VirusStat(self):
         '''
@@ -276,7 +276,7 @@ class VirusStat(object):
         sumall = False # default
         sumallandsmooth7 = False
         if 'input' not in kwargs:
-            mypycoapd = self.currentdata.get_mainpandas()
+            mypycoapd = self.currentdata.get_maingeopandas()
             if 'which' not in kwargs:
                 kwargs['which'] = self.currentdata.get_available_keywords()[0]
             #if kwargs['which'] not in self.currentdata.get_available_keywords():
@@ -387,6 +387,7 @@ class VirusStat(object):
                 listloc = explosion(listloc,self.currentmetadata['geoinfo']['granularity'])
                 listloc = flat_list(listloc)
                 location_exploded = listloc
+
         def sticky(lname):
             if len(lname)>0:
                 tmp=''
@@ -412,7 +413,6 @@ class VirusStat(object):
                 j+=1
             pdfiltered = pdcluster[['where','date','isocode',kwargs['which'],'clustername']]
         else:
-
             pdfiltered = mainpandas.loc[mainpandas['where'].isin(location_exploded)]
             if 'input_field' in kwargs or isinstance(kwargs['which'],list):
                 if 'which' in kwargs:
@@ -428,6 +428,7 @@ class VirusStat(object):
             else:
                 pdfiltered = pdfiltered[['where','date','isocode', kwargs['which']]]
             pdfiltered['clustername'] = pdfiltered['where'].copy()
+
         if not isinstance(option,list):
             option=[option]
         if 'fillnan' not in option and 'nofillnan' not in option:

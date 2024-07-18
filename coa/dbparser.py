@@ -226,19 +226,19 @@ class DataParser:
       '''
         Parse the json file load in the init fonction (self.metadata)
         it returns a pandas with this structure
-        |date|where|isocode| var-1 ... var-n
+        |date|where|isocode| var-1 ... var-n| geometry
         var-i are the variable selected in the json file
         To assure a good standardization "where" et "isocode" use geo metho
       '''
       if 'header' in list(self.metadata.keys()):
           self.dbdescription = self.metadata['header']
       else:
-          self.dbdescription = 'No descrition for DB = ' + self.db
+          self.dbdescription = 'No description for DB = ' + self.db
       pandas_db = pd.DataFrame()
       locationmode = self.metadata['geoinfo']['locationmode']
       granularity = self.metadata['geoinfo']['granularity']
       place = self.metadata['geoinfo']['where']
-
+      replace_field = False
       if 'replace' in list(self.metadata.keys()):
           replace_field = self.metadata['replace']
 
@@ -248,10 +248,12 @@ class DataParser:
       for datasets in self.metadata['datasets']:
           url = datasets['urldata']
           pdata = pd.DataFrame(datasets['columns'])
-          pdata['description'] = pdata['description'].fillna('No description')
           pdata.alias.fillna(pdata.name, inplace=True)
-          if 'description' not in list(pdata.columns):
+          if 'description' in list(pdata.columns):
+               pdata['description'] = pdata['description'].fillna(value='No description')
+          else:
               pdata['description'] = 'No description'
+
           usecols = pdata.alias.to_list()
           selections = None
           if 'selections' in list(datasets.keys()):
@@ -335,46 +337,52 @@ class DataParser:
       if 'where' in self.available_keywords:
          self.available_keywords.remove('where')
 
-      #return pandas_db
       locationdb = list(pandas_db['where'].unique())
       granularity = self.metadata['geoinfo']['granularity']
-      namecodedico = {}
-      if self.granu_country:
+      codenamedico = {}
+      geopd = pd.DataFrame()
+      if granularity == 'country':
+          info = coge.GeoInfo()
           if locationmode == "isocode":
             g = coge.GeoManager('name')
           else:
             g = coge.GeoManager('iso3')
           namecode  = g.to_standard(locationdb,output='dict',db = self.db)
-          namecodedico = {k.upper():v.capitalize() for k,v in namecode.items()}
-      else:
-          if granularity == 'subregion':
-              geopd = self.geo.get_subregion_list()
-              geocodename = geopd.loc[geopd.code_subregion.isin(locationdb)]
-              namecodedico = geocodename.set_index('name_subregion')['code_subregion'].to_dict()
-              db='toto'
-              if db == 'jhu-usa':
-                  pass
-              elif db == 'rki':
-                  pass
-              else:
-                  pass
-          elif granularity == 'region':
-                  namecodedico = self.geo.get_data().set_index('name_region')['code_region'].to_dict()
+          codenamedico = {k.upper():v.capitalize() for k,v in namecode.items()}
+          geopd=pd.DataFrame({'where':codenamedico.values(),'isocode':codenamedico.keys()})
+          geopd=info.add_field(input=geopd,field='geometry')
+         
+      elif granularity == 'subregion':
+          geopd = self.geo.get_subregion_list()
+          geopd = geopd.loc[geopd.code_subregion.isin(locationdb)]
+          codenamedico = geopd.set_index('code_subregion')['name_subregion'].to_dict()
+          geopd = geopd.rename(columns={"code_subregion": "isocode"})
+          db='toto'
+          if db == 'jhu-usa':
+              pass
+          elif db == 'rki':
+              pass
           else:
-              raise CoaTypeError('Not a region nors ubregion ... sorry but what is it ?')
+              pass
+      elif granularity == 'region':
+          codenamedico = self.geo.get_data().set_index('code')['name_region'].to_dict()
+      else:
+          raise CoaTypeError('Not a region nors ubregion ... sorry but what is it ?')
 
       if locationmode == "isocode":
           pandas_db = pandas_db.rename(columns={"where": "isocode"})
           pandas_db['isocode'] = pandas_db['isocode'].str.upper()
-          pandas_db['where'] = pandas_db['isocode'].map(namecodedico)
+          pandas_db['where'] = pandas_db['isocode'].map(codenamedico)
       elif locationmode == "name":
           pandas_db['where'] = pandas_db['where'].str.capitalize()
-          pandas_db['isocode'] = pandas_db['where'].map(namecodedico)
+          reverse={v:k for k,v in codenamedico.items()}
+          pandas_db['isocode'] = pandas_db['where'].map(reverse)
       else:
           CoaError("what locationmode in your json file is supposed to be ?")
 
       self.slocation = list(pandas_db['where'].unique())
       self.dates = list(pandas_db['date'].unique())
+      pandas_db = pandas_db.merge(geopd[['isocode','geometry']], how = 'outer', on='isocode')
       return pandas_db
 
   def get_db(self,):
@@ -432,5 +440,12 @@ class DataParser:
       '''
       return self.dbdescription
 
-  def get_mainpandas(self,):
+  def get_maingeopandas(self,):
+      '''
+      return the parsing of the data + the geometry description as a geopandas
+      '''
+      col = list(self.mainpandas.columns)
+      reorder = ['date','where','isocode']
+      reorder += [ i for i in col if i not in reorder ]
+      self.mainpandas = self.mainpandas[reorder]
       return self.mainpandas

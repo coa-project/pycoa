@@ -238,6 +238,9 @@ class DataParser:
       locationmode = self.metadata['geoinfo']['locationmode']
       granularity = self.metadata['geoinfo']['granularity']
       place = self.metadata['geoinfo']['where']
+      debug = None
+      if 'debug' in list(self.metadata.keys()):
+          debug = self.metadata['debug']
       replace_field = False
       if 'replace' in list(self.metadata.keys()):
           replace_field = self.metadata['replace']
@@ -262,9 +265,9 @@ class DataParser:
           separator = ';'
           if 'separator' in list(datasets.keys()):
               separator = datasets['separator']
-          drop = None
+          drop = {}
           if 'drop' in list(datasets.keys()):
-              drop = datasets['drop']
+              drop=datasets['drop']
           cast = None
           if 'cast' in list(datasets.keys()):
                cast = datasets['cast']
@@ -281,14 +284,16 @@ class DataParser:
               self.keyword_url[k]=url
           try:
               pandas_temp = pd.read_csv(get_local_from_url(url,10000), sep = separator, usecols = usecols,
-                keep_default_na = False, na_values = '' , header=0, dtype = cast, decimal = decimal, low_memory = False)
+                keep_default_na = False, na_values = '' , header=0, dtype = cast, decimal = decimal,
+                 low_memory = False, nrows = debug)
           except:
               raise CoaError('Something went wrong during the parsing')
           if drop:
               for key,val in drop.items():
                   if key in pandas_temp.columns:
-                      pandas_temp = pandas_temp[~pandas_temp[key].str.startswith(val)]
-                      #pandas_temp = pandas_temp.loc[~pandas_temp[key].isin([val])]
+                      for i in val:
+                            pandas_temp = pandas_temp[~pandas_temp[key].str.startswith(i)]
+                      #pandas_temp = pandas_temp.loc[~pandas_temp[key].isin(val)]
           if selections:
               for key,val in selections.items():
                   if key in pandas_temp.columns:
@@ -351,7 +356,7 @@ class DataParser:
           codenamedico = {k.upper():v.capitalize() for k,v in namecode.items()}
           geopd=pd.DataFrame({'where':codenamedico.values(),'isocode':codenamedico.keys()})
           geopd=info.add_field(input=geopd,field='geometry')
-         
+
       elif granularity == 'subregion':
           geopd = self.geo.get_subregion_list()
           geopd = geopd.loc[geopd.code_subregion.isin(locationdb)]

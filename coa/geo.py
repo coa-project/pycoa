@@ -56,7 +56,7 @@ class GeoManager():
             'name',           # Standard name ( != Official, caution )
             'num']            # Numeric standard
 
-    _list_db=[None,'jhu','worldometers','owid','opencovid19national','spfnational','mpoxgh','olympics'] # first is default
+    _list_db=[None,'jhu','worldometers','owid','opencovid19national','spfnational','mpoxgh','olympics','europa'] # first is default
     _list_output=['list','dict','pandas'] # first is default
 
     _standard = None # currently used normalisation standard

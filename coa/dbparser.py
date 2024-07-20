@@ -190,19 +190,18 @@ class DataParser:
         self.granu_country = False
         self.metadata = MetaInfo().getcurrentmetadata(namedb)
         granularity = self.metadata['geoinfo']['granularity']
+        isocode = self.metadata['geoinfo']['isocode']
         try:
             if granularity == 'country': # world wide dba
                 self.granu_country = True
                 self.geo = coge.GeoManager('name')
                 self.geo_all = 'world'
             else: # local db
-                self.geo = coge.GeoCountry('FRA')
+                self.geo = coge.GeoCountry(isocode)
                 if granularity == 'region':
                     self.geo_all = self.geo.get_region_list()
-                    granularityinfo = ['name_region','code_region']
                 elif granularity == 'subregion':
                     self.geo_all = self.geo.get_subregion_list()
-                    granularityinfo = ['name_subregion','code_subregion']
                 else:
                     CoaError('Granularity problem: neither country, region or subregion')
             # specific reading of data according to the db
@@ -211,10 +210,6 @@ class DataParser:
         except:
             raise CoaDbError("An error occured while parsing data of "+self.db+". This may be due to a data format modification. "
                 "You may contact support@pycoa.fr. Thanks.")
-        #self.addGeoDescription(self.mainpandas)
-            # some info
-            #self.get_echoinfo()
-            #print(self.geo_all)
 
   def get_echoinfo(self):
       info('Few information concernant the selected database : ', self.db)
@@ -262,6 +257,10 @@ class DataParser:
           if 'selections' in list(datasets.keys()):
               selections = datasets['selections']
               usecols += list(selections.keys())
+          dropcolumns = None
+          if 'dropcolumns' in list(datasets.keys()):
+              dropcolumns = datasets['dropcolumns']
+              usecols = None
           separator = ';'
           if 'separator' in list(datasets.keys()):
               separator = datasets['separator']
@@ -294,6 +293,7 @@ class DataParser:
                       for i in val:
                             pandas_temp = pandas_temp[~pandas_temp[key].str.startswith(i)]
                       #pandas_temp = pandas_temp.loc[~pandas_temp[key].isin(val)]
+
           if selections:
               for key,val in selections.items():
                   if key in pandas_temp.columns:
@@ -305,7 +305,16 @@ class DataParser:
              pandas_temp = pandas_temp.replace(replace_field)
 
           pandas_temp = pandas_temp.rename(columns = rename_columns)
-          if 'semaine' in usecols:
+          if dropcolumns:
+              pandas_temp = pandas_temp.drop(columns=dropcolumns)
+              value_name = None
+              if "namedata" in list(datasets.keys()):
+                  value_name = datasets['namedata']
+              else:
+                  raise CoaError("Seems to have date in columns format in yours csv file, so namedata has to be defined in your json file")
+              pandas_temp = pandas_temp.melt(id_vars='where',var_name='date',value_name=value_name)
+
+          if usecols and 'semaine' in usecols:
              pandas_temp['date'] = [ week_to_date(i) for i in pandas_temp['date']]
           if self.db == "govcy":
              pandas_temp['date'] = pd.to_datetime(pandas_temp['date'], errors='coerce', format="%d/%m/%Y").dt.date
@@ -332,7 +341,6 @@ class DataParser:
       pandas_db[notwhereanddate] = pandas_db[notwhereanddate].astype(float)
       pandas_db = pandas_db[whereanddate+notwhereanddate]
       pandas_db = pandas_db.groupby(whereanddate).sum(min_count=1).reset_index()
-      pandas_db['date'] = pd.to_datetime(pandas_db['date'], errors='coerce', infer_datetime_format=True)
       pandas_db = fill_missing_dates(pandas_db)
       pandas_db = pandas_db.sort_values(['where','date'])
 
@@ -353,22 +361,17 @@ class DataParser:
           else:
             g = coge.GeoManager('iso3')
           namecode  = g.to_standard(locationdb,output='dict',db = self.db)
-          codenamedico = {k.upper():v.capitalize() for k,v in namecode.items()}
+          codenamedico = {k.upper():v.title() for k,v in namecode.items()}
           geopd=pd.DataFrame({'where':codenamedico.values(),'isocode':codenamedico.keys()})
           geopd=info.add_field(input=geopd,field='geometry')
-
       elif granularity == 'subregion':
           geopd = self.geo.get_subregion_list()
-          geopd = geopd.loc[geopd.code_subregion.isin(locationdb)]
+          if locationmode == "isocode":
+              geopd = geopd.loc[geopd.code_subregion.isin(locationdb)]
+          else:
+              geopd = geopd.loc[geopd.name_subregion.isin(locationdb)]
           codenamedico = geopd.set_index('code_subregion')['name_subregion'].to_dict()
           geopd = geopd.rename(columns={"code_subregion": "isocode"})
-          db='toto'
-          if db == 'jhu-usa':
-              pass
-          elif db == 'rki':
-              pass
-          else:
-              pass
       elif granularity == 'region':
           codenamedico = self.geo.get_data().set_index('code')['name_region'].to_dict()
       else:
@@ -379,15 +382,16 @@ class DataParser:
           pandas_db['isocode'] = pandas_db['isocode'].str.upper()
           pandas_db['where'] = pandas_db['isocode'].map(codenamedico)
       elif locationmode == "name":
-          pandas_db['where'] = pandas_db['where'].str.capitalize()
+          pandas_db['where'] = pandas_db['where'].str.title()
+          print(pandas_db['where'].unique())
           reverse={v:k for k,v in codenamedico.items()}
           pandas_db['isocode'] = pandas_db['where'].map(reverse)
       else:
           CoaError("what locationmode in your json file is supposed to be ?")
-
+      print(pandas_db.loc[pandas_db['where']=='South Dakota'])
       self.slocation = list(pandas_db['where'].unique())
       self.dates = list(pandas_db['date'].unique())
-      pandas_db = pandas_db.merge(geopd[['isocode','geometry']], how = 'outer', on='isocode')
+      pandas_db = pandas_db.merge(geopd[['isocode','geometry']], how = 'inner', on='isocode')
       return pandas_db
 
   def get_db(self,):

@@ -2,9 +2,8 @@
   "header": "SPFNational",
   "geoinfo": {
     "granularity": "country",
-    "where": "FRA",
-    "isocode":"FRA",
-    "locationmode":"isocode"
+    "iso3": "FRA",
+    "locationmode":"code"
   },
   "datasets": [
   	{	
@@ -12,8 +11,7 @@
 	 "separator":",",
   	"columns": [
     		{
-                                "name":"date",
-                                "alias":"date"
+                         "name":"date"
                 },
 		{
       			"name": "tot_dc_hosp",

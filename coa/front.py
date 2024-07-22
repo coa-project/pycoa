@@ -69,7 +69,7 @@ class Front:
 
         self.av = allvisu.OptionVisu()
         self.lwhat = list(self.av.dicochartargs['what'])
-        self.lthist = list(self.av.dicochartargs['typeofhist'])
+        self.lhist = list(self.av.dicochartargs['typeofhist'])
         self.loption = list(self.av.dicochartargs['option'])
 
         self.lmaplabel = list(self.av.dicovisuargs['maplabel'])
@@ -185,7 +185,7 @@ class Front:
     # ----------------------------------------------------------------------
     # --- lvisu() -------------------------------------------------------
     # ----------------------------------------------------------------------
-    def lvisu(self,):
+    def listvisu(self,):
         """Return the list of currently available visualization for the
         map() function. The first one is the default output given if
         not specified.
@@ -229,11 +229,11 @@ class Front:
     # ----------------------------------------------------------------------
     # --- lthist() -------------------------------------------------------
     # ----------------------------------------------------------------------
-    def lthist(self,):
+    def listhist(self,):
         """Return the list of currently avalailable type of hist available.
          The first one is the default one.
         """
-        return self.lthist
+        return self.lhist
     # ----------------------------------------------------------------------
     # --- listplot() -------------------------------------------------------
     # ----------------------------------------------------------------------
@@ -245,7 +245,7 @@ class Front:
     # ----------------------------------------------------------------------
     # --- loption() -----------------------------------------------------
     # ----------------------------------------------------------------------
-    def loption(self,):
+    def listoption(self,):
         """Return the list of currently avalailable option apply to data.
          Default is no option.
         """
@@ -254,7 +254,7 @@ class Front:
     # ----------------------------------------------------------------------
     # --- listallkargs() -----------------------------------------------------
     # ----------------------------------------------------------------------
-    def lchartkargs(self,):
+    def listchartkargs(self,):
         """Return the list of avalailable kargs for chart functions
         """
         return self.lchartkargs
@@ -283,38 +283,41 @@ class Front:
     def listwhere(self,clustered = False):
         """Get the list of available regions/subregions managed by the current VirusStat
         """
+        granularity = self.meta.getcurrentmetadata(self.db)['geoinfo']['granularity']
+        code = self.meta.getcurrentmetadata(self.db)['geoinfo']['iso3']
         def clust():
-            if _db_list_dict[self.whom][1] == 'nation' and _db_list_dict[self.whom][2] not in ['World','Europe']:
-                return  self.db.geo.to_standard(_db_list_dict[_whom][0])
+            if granularity == 'country' and code not in ['WLD','EUR']:
+                return  self.virus.geo.to_standard(code)
             else:
-                r = self.db.geo.get_region_list()
+                r = self.virus.geo.get_region_list()
                 if not isinstance(r, list):
                     r=sorted(r['name_region'].to_list())
-                r.append(_db_list_dict[self.whom][2])
-                if _db_list_dict[self.whom][2] == 'Europe':
+                r.append(code)
+                if code  == 'EUR':
                     r.append('European Union')
                 return r
-        if _db_list_dict[self.whom][1] == 'nation' and _db_list_dict[self.whom][2] not in ['World','Europe']:
-            return [ _db_list_dict[self.whom][2] ]
+
+        if granularity == 'country' and code not in ['WLD','EUR']:
+            return code
         if clustered:
             return clust()
         else:
-            if self.db.db_world == True:
-                if _db_list_dict[self.whom][1] == 'nation' and _db_list_dict[self.whom][2] not in ['World','Europe']:
-                    r =  _db.geo.to_standard(_db_list_dict[self.whom][0])
+            if self.virus.db_world == True:
+                if granularity == 'country' and code not in ['WLD','EUR'] :
+                    r =  self.virus.to_standard(code)
                 else:
-                    if _db_list_dict[self.whom][2]=='World':
-                        r = self.db.geo.get_GeoRegion().get_countries_from_region('world')
+                    if code == 'WLD':
+                        r = self.virus.geo.get_GeoRegion().get_countries_from_region('World')
                     else:
-                        r = self.db.geo.get_GeoRegion().get_countries_from_region('europe')
-                    r = [self.db.geo.to_standard(c)[0] for c in r]
+                        r = self.virus.geo.get_GeoRegion().get_countries_from_region('Europe')
+                    r = [self.virus.geo.to_standard(c)[0] for c in r]
             else:
-                if _db_list_dict[self.whom][1] == 'subregion':
-                    pan = self.db.geo.get_subregion_list()
+                if granularity == 'subregion':
+                    pan = self.virus.geo.get_subregion_list()
                     r = list(pan.name_subregion.unique())
-                elif _db_list_dict[self.whom][1] == 'region':
+                elif granularity == 'country':
                     r = clust()
-                    r.append(_db_list_dict[self.whom][2])
+                    r.append(code)
                 else:
                     raise CoaKeyError('What is the granularity of your DB ?')
             return r
@@ -328,7 +331,7 @@ class Front:
     # ----------------------------------------------------------------------
     # --- lmaplabel() ------------------------------------------------------
     # ----------------------------------------------------------------------
-    def lmaplabel(self):
+    def listmaplabel(self):
         """Get the list of available population normalization
         """
         return self.lmaplabel
@@ -511,7 +514,7 @@ class Front:
                     lwhere=flat_list([[i,i] for i in where])
                     pandy['where']=lwhere
                     pandy['clustername']=lwhere
-                    pandy['isocode']=len(pandy)*['000']
+                    pandy['code']=len(pandy)*['000']
                     pandy=pandy.fillna(0)
                     bypop = 'no'
                 if bypop != 'no':
@@ -541,7 +544,7 @@ class Front:
                 lwhere=flat_list([[i,i] for i in where])
                 pandy['where']=lwhere
                 pandy['clustername']=lwhere
-                pandy['isocode']=len(pandy)*['000']
+                pandy['code']=len(pandy)*['000']
                 pandy=pandy.fillna(0)
                 bypop = 'no'
 
@@ -850,7 +853,7 @@ class Front:
             #input = kwargs.pop('input')
             #input_field = kwargs.pop('input_field')
             dateslider = kwargs.get('dateslider', None)
-            typeofhist = kwargs.pop('typeofhist',self.lthist()[0])
+            typeofhist = kwargs.get('typeofhist',self.listhist()[0])
             kwargs.pop('output')
             if kwargs.get('bypop'):
               kwargs.pop('bypop')

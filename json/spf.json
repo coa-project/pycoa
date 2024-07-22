@@ -2,9 +2,8 @@
 	"header": "SPF aka Sante Publique France database selected (France departement granularity) ... 5 SPF databases will be parsed ...",
 	"geoinfo": {
 		"granularity": "subregion",
-		"where": "France",
-		"isocode":"FRA",
-    		"locationmode":"isocode"
+		"iso3":"FRA",
+    		"locationmode":"code"
 	},
 	"replace":{
                         "975":"980",
@@ -21,17 +20,23 @@
 				{
 				"cl_age90": 0
 				},
+			"cast":{
+				"dep":"str"	
+			},
 			"decimal":",",
 			"columns" : [
 			{
 				"name":"tot_P",
 				"alias":"P",
-				"description":"Nombre total de tests positifs"
+				"description":"Nombre total de tests positifs",
+				"cumulative":true
+
 			},
 			{
 				"name":"tot_T",
 				"alias":"T",
-				"description":"Nombre total de tests réalisés"
+				"description":"Nombre total de tests réalisés",
+				"cumulative":true
 			},
 			{
 				"name":"where",
@@ -46,6 +51,9 @@
 		{
 			"urldata": "https://www.data.gouv.fr/fr/datasets/r/5c4e1452-3850-4b59-b11c-3dd51d7fb8b5",
 			"separator":",",
+			  "cast":{
+                                "dep":"str"
+                        },
 			"columns" : [
 			{
 					"name":"where",
@@ -57,7 +65,9 @@
 			},
 		    {
 				"name":"tot_dchosp",
-				"alias":"dchosp"
+				"alias":"dchosp",
+				"cumulative":true
+
 		    },
 		    {	   
 				"name":"cur_hosp",
@@ -102,6 +112,9 @@
 			"urldata":"https://www.data.gouv.fr/fr/datasets/r/4acad602-d8b1-4516-bc71-7d5574d5f33e",
 			"urlparent":"https://www.data.gouv.fr/fr/datasets/indicateurs-de-suivi-de-lepidemie-de-covid-19/",
 			"separator":",",	
+			  "cast":{
+                                "dep":"str"
+                        },
 			"columns" : [
 			{	
 				"name":"date",
@@ -129,6 +142,9 @@
 		{	
 			"urldata":"https://www.data.gouv.fr/fr/datasets/r/83cbbdb9-23cb-455e-8231-69fc25d58111",
 			"urlparent":"https://www.data.gouv.fr/fr/datasets/donnees-relatives-aux-personnes-vaccinees-contre-la-covid-19-1",
+			  "cast":{
+                                "dep":"str"
+                        },
 			"columns" : [
 			{
 			"name":"where",
@@ -160,9 +176,11 @@
 			"urldata":"https://www.data.gouv.fr/fr/datasets/r/bc318bc7-fb90-4e76-a6cb-5cdc0a4e5432",
 			"urlparent":"https://www.data.gouv.fr/fr/datasets/donnees-de-laboratoires-pour-le-depistage-indicateurs-sur-les-mutations",	
 			"drop" :{ 	 
-					"dep": "<NA>",
-					"date":"dd"
+					"dep": "<NA>"
 			},			
+			  "cast":{
+                                "dep":"str"
+                        },
 			"columns" : [
 				{
 					"name":"where",

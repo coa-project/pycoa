@@ -58,9 +58,9 @@ class VirusStat(object):
         #self.geo = self.currentdata.get_geo()
         self.db_world = self.currentdata.get_world_boolean()
         self.codisp  = None
-        self.isocode = self.currentmetadata['geoinfo']['isocode']
+        self.code = self.currentmetadata['geoinfo']['iso3']
         self.granularity = self.currentmetadata['geoinfo']['granularity']
-        self.namecountry = self.currentmetadata['geoinfo']['where']
+        self.namecountry = self.currentmetadata['geoinfo']['iso3']
         self._gi = coge.GeoInfo()
 
         try:
@@ -75,15 +75,15 @@ class VirusStat(object):
                    geopan = geopan[geopan['where'] != 'Antarctica']
                    where_kindgeo = geopan.dropna().reset_index(drop=True)
             else:
-                   self.geo = coge.GeoCountry(self.isocode)
+                   self.geo = coge.GeoCountry(self.code)
                    if self.granularity == 'region':
                         where_kindgeo = self.geo.get_region_list()[['code_region', 'name_region', 'geometry']]
                         where_kindgeo = where_kindgeo.rename(columns={'name_region': 'where'})
-                        if self.isocode == 'PRT':
+                        if self.code == 'PRT':
                              tmp = where_kindgeo.rename(columns={'name_region': 'where'})
                              tmp = tmp.loc[tmp.code_region=='PT.99']
                              self.boundary_metropole =tmp['geometry'].total_bounds
-                        if self.isocode == 'FRA':
+                        if self.code == 'FRA':
                              tmp = where_kindgeo.rename(columns={'name_region': 'where'})
                              tmp = tmp.loc[tmp.code_region=='999']
                              self.boundary_metropole =tmp['geometry'].total_bounds
@@ -106,23 +106,23 @@ class VirusStat(object):
      when sumall option is used this method is usefull for the display
      it returns an input with new columns
     '''
-    input['permanentdisplay'] = input.isocode
-    if 'isocode' and 'clustername' not in input.columns:
-       input['isocode'] = input['where']
+    input['permanentdisplay'] = input.code
+    if 'code' and 'clustername' not in input.columns:
+       input['code'] = input['where']
        input['clustername'] = input['where']
        input['rolloverdisplay'] = input['where']
        input['permanentdisplay'] = input['where']
     else:
        if self.granularity == 'country' :
-           #input['isocode'] = input['isocode'].apply(lambda x: str(x).replace('[', '').replace(']', '') if len(x)< 10 else x[0]+'...'+x[-1] )
-           ##input['permanentdisplay'] = input.apply(lambda x: x.clustername if self.geo.get_GeoRegion().is_region(x.clustername) else str(x.isocode), axis = 1)
-           input['permanentdisplay'] = input.isocode
+           #input['code'] = input['code'].apply(lambda x: str(x).replace('[', '').replace(']', '') if len(x)< 10 else x[0]+'...'+x[-1] )
+           ##input['permanentdisplay'] = input.apply(lambda x: x.clustername if self.geo.get_GeoRegion().is_region(x.clustername) else str(x.code), axis = 1)
+           input['permanentdisplay'] = input.code
        else:
            if self.granularity == 'subregion' :
                input = input.reset_index(drop=True)
 
-               if isinstance(input['isocode'].iloc[0],list):
-                   input['isocode'] = input['isocode'].apply(lambda x: str(x).replace("'", '')\
+               if isinstance(input['code'].iloc[0],list):
+                   input['code'] = input['code'].apply(lambda x: str(x).replace("'", '')\
                                                 if len(x)<5 else '['+str(x[0]).replace("'", '')+',...,'+str(x[-1]).replace("'", '')+']')
 
                trad={}
@@ -137,19 +137,19 @@ class VirusStat(object):
                        if self.geo.is_region(i):
                            trad[i] = self.geo.is_region(i)
                        elif self.geo.is_subregion(i):
-                           trad[i] = self.geo.is_subregion(i)#input.loc[input.clustername==i]['isocode'].iloc[0]
+                           trad[i] = self.geo.is_subregion(i)#input.loc[input.clustername==i]['code'].iloc[0]
                        else:
                            trad[i] = i
                        trad={k:(v[:3]+'...'+v[-3:] if len(v)>8 else v) for k,v in trad.items()}
-                       if ',' in input.isocode[0]:
+                       if ',' in input.code[0]:
                            input['permanentdisplay'] = input.clustername
                        else:
-                           input['permanentdisplay'] = input.isocode#input.clustername.map(trad)
+                           input['permanentdisplay'] = input.code#input.clustername.map(trad)
            elif self.granularity == 'region' :
                if all(i == self.namecountry for i in input.clustername.unique()):
                    input['permanentdisplay'] = [self.namecountry]*len(input)
                else:
-                   input['permanentdisplay'] = input.isocode
+                   input['permanentdisplay'] = input.code
            else :
                CoaError("Sorry but what's the granularity of you DB "+self.granularity)
     input['rolloverdisplay'] = input['where']
@@ -377,12 +377,12 @@ class VirusStat(object):
                 dicooriglist={}
 
                 for i in origlistlistloc:
-                    if i[0].upper() in [self.currentmetadata['geoinfo']['where'].upper(),self.currentmetadata['geoinfo']['isocode'].upper()]:
+                    if i[0].upper() in [self.currentmetadata['geoinfo']['where'].upper(),self.currentmetadata['geoinfo']['code'].upper()]:
                         dicooriglist[self.currentmetadata[self.db][0]] = explosion(flat_list(self.slocation),self.currentmetadata['geoinfo']['granularity'])
                     else:
                         dicooriglist[','.join(i)]=explosion(i,self.currentmetadata['geoinfo']['granularity'])
             else:
-                if any([i.upper() in [self.currentmetadata['geoinfo']['where'].upper(),self.currentmetadata['geoinfo']['isocode'].upper()] for i in listloc]):
+                if any([i.upper() in [self.currentmetadata['geoinfo']['iso3'].upper(),self.currentmetadata['geoinfo']['iso3'].upper()] for i in listloc]):
                     listloc=self.slocation
                 listloc = explosion(listloc,self.currentmetadata['geoinfo']['granularity'])
                 listloc = flat_list(listloc)
@@ -404,14 +404,14 @@ class VirusStat(object):
                 if any(isinstance(c, list) for c in v):
                     v=v[0]
                 tmp = tmp.loc[tmp['where'].isin(v)]
-                code = tmp.isocode.unique()
+                code = tmp.code.unique()
                 tmp['clustername'] = [k]*len(tmp)
                 if pdcluster.empty:
                     pdcluster = tmp
                 else:
                     pdcluster = pd.concat([pdcluster,tmp])
                 j+=1
-            pdfiltered = pdcluster[['where','date','isocode',kwargs['which'],'clustername']]
+            pdfiltered = pdcluster[['where','date','code',kwargs['which'],'clustername']]
         else:
             pdfiltered = mainpandas.loc[mainpandas['where'].isin(location_exploded)]
             if 'input_field' in kwargs or isinstance(kwargs['which'],list):
@@ -419,14 +419,14 @@ class VirusStat(object):
                     kwargs['input_field']=kwargs['which']
                 if isinstance(kwargs['input_field'],list):
                     pdfilteredoriginal = pdfiltered.copy()
-                    pdfiltered = pdfiltered[['where','date','isocode',kwargs['input_field'][0]]]
+                    pdfiltered = pdfiltered[['where','date','code',kwargs['input_field'][0]]]
                     othersinputfieldpandas = pdfilteredoriginal[['where','date']+kwargs['input_field'][1:]]
                     kwargs['which'] = kwargs['input_field'][0]
                 else:
-                    pdfiltered = pdfiltered[['where','date','isocode', kwargs['input_field']]]
+                    pdfiltered = pdfiltered[['where','date','code', kwargs['input_field']]]
                     kwargs['which'] = kwargs['input_field']
             else:
-                pdfiltered = pdfiltered[['where','date','isocode', kwargs['which']]]
+                pdfiltered = pdfiltered[['where','date','code', kwargs['which']]]
             pdfiltered['clustername'] = pdfiltered['where'].copy()
 
         if not isinstance(option,list):
@@ -523,10 +523,10 @@ class VirusStat(object):
                else:
                   tmp = pdfiltered.groupby(['clustername','date']).sum(numeric_only=True).reset_index()#.loc[pdfiltered.clustername.isin(uniqcluster)].\
 
-               codescluster = {i:list(pdfiltered.loc[pdfiltered.clustername==i]['isocode'].unique()) for i in uniqcluster}
+               codescluster = {i:list(pdfiltered.loc[pdfiltered.clustername==i]['code'].unique()) for i in uniqcluster}
                namescluster = {i:list(pdfiltered.loc[pdfiltered.clustername==i]['where'].unique()) for i in uniqcluster}
 
-               tmp['isocode'] = tmp['clustername'].map(codescluster)
+               tmp['code'] = tmp['clustername'].map(codescluster)
                tmp['where'] = tmp['clustername'].map(namescluster)
 
                pdfiltered = tmp
@@ -538,13 +538,13 @@ class VirusStat(object):
                 else:
                     tmp = pdfiltered.groupby(['date']).sum().reset_index()
                 uniqloc = list(pdfiltered['where'].unique())
-                uniqcodeloc = list(pdfiltered.isocode.unique())
+                uniqcodeloc = list(pdfiltered.code.unique())
                 tmp.loc[:,'where'] = ['dummy']*len(tmp)
-                tmp.loc[:,'isocode'] = ['dummy']*len(tmp)
+                tmp.loc[:,'code'] = ['dummy']*len(tmp)
                 tmp.loc[:,'clustername'] = ['dummy']*len(tmp)
                 for i in range(len(tmp)):
                     tmp.at[i,'where'] = uniqloc #sticky(uniqloc)
-                    tmp.at[i,'isocode'] = uniqcodeloc #sticky(uniqcodeloc)
+                    tmp.at[i,'code'] = uniqcodeloc #sticky(uniqcodeloc)
                     tmp.at[i,'clustername'] =  sticky(uniqloc)[0]
                 pdfiltered = tmp
             if sumallandsmooth7:
@@ -576,7 +576,7 @@ class VirusStat(object):
                                   .reset_index(level=0,drop=True).diff()
             inx=pdfiltered.groupby('clustername').head(7).index
             pdfiltered.loc[inx, 'daily'] = pdfiltered['daily'].fillna(method="bfill")
-        unifiedposition=['where', 'date', kwargs['which'], 'daily', 'cumul', 'weekly', 'isocode','clustername']
+        unifiedposition=['where', 'date', kwargs['which'], 'daily', 'cumul', 'weekly', 'code','clustername']
 
         if kwargs['which'] in ['standard','daily','weekly','cumul']:
             unifiedposition.remove(kwargs['which'])
@@ -588,7 +588,7 @@ class VirusStat(object):
         if not othersinputfieldpandas.empty:
             pdfiltered = pd.merge(pdfiltered, othersinputfieldpandas, on=['date','where'])
 
-        pdfiltered = pdfiltered.loc[~(pdfiltered['where'].isna() | pdfiltered['isocode'].isna())]
+        pdfiltered = pdfiltered.loc[~(pdfiltered['where'].isna() | pdfiltered['code'].isna())]
         pdfiltered = self.permanentdisplay(pdfiltered)
         return pdfiltered
 
@@ -600,12 +600,12 @@ class VirusStat(object):
     """
     if pandy.empty:
         raise CoaKeyError('Seems to be an empty field')
-    if isinstance(pandy['isocode'].iloc[0],list):
-        pandy = pandy.explode('isocode')
+    if isinstance(pandy['code'].iloc[0],list):
+        pandy = pandy.explode('code')
 
     if self.db_world == True:
         pop_field='population'
-        pandy = self._gi.add_field(input=pandy,field=pop_field,geofield='isocode')
+        pandy = self._gi.add_field(input=pandy,field=pop_field,geofield='code')
     else:
         if not isinstance(self._gi,coge.GeoCountry):
             self._gi=None
@@ -619,18 +619,18 @@ class VirusStat(object):
         if pop_field not in self._gi.get_list_properties():
             raise CoaKeyError('The population information not available for this country. No normalization possible')
 
-        pandy=self._gi.add_field(input=pandy,field=pop_field,input_key='isocode')
+        pandy=self._gi.add_field(input=pandy,field=pop_field,input_key='code')
 
     clust = pandy['clustername'].unique()
     df = pd.DataFrame()
     for i in clust:
         pandyi = pandy.loc[ pandy['clustername'] == i ].copy()
-        pandyi.loc[:,pop_field] = pandyi.groupby('isocode')[pop_field].first().sum()
-        if len(pandyi.groupby('isocode')['isocode'].first().tolist()) == 1:
-            cody = pandyi.groupby('isocode')['isocode'].first().tolist()*len(pandyi)
+        pandyi.loc[:,pop_field] = pandyi.groupby('code')[pop_field].first().sum()
+        if len(pandyi.groupby('code')['code'].first().tolist()) == 1:
+            cody = pandyi.groupby('code')['code'].first().tolist()*len(pandyi)
         else:
-            cody = [pandyi.groupby('isocode')['isocode'].first().tolist()]*len(pandyi)
-        pandyi = pandyi.assign(isocode=cody)
+            cody = [pandyi.groupby('code')['code'].first().tolist()]*len(pandyi)
+        pandyi = pandyi.assign(code=cody)
         if df.empty:
             df = pandyi
         else:
@@ -671,8 +671,8 @@ class VirusStat(object):
 
         j=1
         for p in coapandas[1:]:
-            [ p.drop([i],axis=1, inplace=True) for i in ['where','where','isocode'] if i in p.columns ]
-            #p.drop(['where','isocode'],axis=1, inplace=True)
+            [ p.drop([i],axis=1, inplace=True) for i in ['where','where','code'] if i in p.columns ]
+            #p.drop(['where','code'],axis=1, inplace=True)
             base = pd.merge(base,p,on=['date','clustername'],how="inner")#,suffixes=('', '_drop'))
             #base.drop([col for col in base.columns if 'drop' in col], axis=1, inplace=True)
         return base

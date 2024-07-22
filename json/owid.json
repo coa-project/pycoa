@@ -2,9 +2,8 @@
   "header": "owid",
     "geoinfo": {
     "granularity": "country",
-    "where": "World",
-    "isocode":"WW",
-    "locationmode":"isocode"
+    "iso3": "WLD",
+    "locationmode":"code"
   },
   "replace":{
 	  "GUF":"FRA",

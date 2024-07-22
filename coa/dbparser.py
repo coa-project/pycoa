@@ -60,7 +60,7 @@ class MetaInfo:
         "header": "Some Header",
         "geoinfo": {
                     "granularity": "country / region / subregion ",
-                    "where": "World / Europe /country name / ..."
+                    "iso3": "World / Europe /country name / ..."
                     },
         "columns / rows ": [ -> columns / rows : you want to keep from your database
                 {
@@ -171,7 +171,7 @@ class MetaInfo:
       jsonkeys0 = ['geoinfo','datasets']
       sig, msg = test(metastructure,jsonkeys0)
       if sig == 1:
-          geoinfokeys = ['where','isocode','granularity','locationmode']
+          geoinfokeys = ['granularity','iso3','locationmode']
           sig, msg = test(metastructure['geoinfo'],geoinfokeys)
           if sig == 1:
               datasetskeys = ['urldata','columns']
@@ -190,14 +190,14 @@ class DataParser:
         self.granu_country = False
         self.metadata = MetaInfo().getcurrentmetadata(namedb)
         granularity = self.metadata['geoinfo']['granularity']
-        isocode = self.metadata['geoinfo']['isocode']
+        code = self.metadata['geoinfo']['iso3']
         try:
             if granularity == 'country': # world wide dba
                 self.granu_country = True
                 self.geo = coge.GeoManager('name')
                 self.geo_all = 'world'
             else: # local db
-                self.geo = coge.GeoCountry(isocode)
+                self.geo = coge.GeoCountry(code)
                 if granularity == 'region':
                     self.geo_all = self.geo.get_region_list()
                 elif granularity == 'subregion':
@@ -206,7 +206,7 @@ class DataParser:
                     CoaError('Granularity problem: neither country, region or subregion')
             # specific reading of data according to the db
             self.mainpandas = self.get_parsing()
-
+            self.get_echoinfo()
         except:
             raise CoaDbError("An error occured while parsing data of "+self.db+". This may be due to a data format modification. "
                 "You may contact support@pycoa.fr. Thanks.")
@@ -214,16 +214,16 @@ class DataParser:
   def get_echoinfo(self):
       info('Few information concernant the selected database : ', self.db)
       info('Available key-words, which ∈', sorted(self.get_available_keywords()))
-      info('Example of where : ',  ', '.join(random.choices(self.get_locations(), k=min(5,len(self.get_locations() ))   )), ' ...')
+      info('Example of where : ', random.choices(self.get_locations(), k=min(5,len(self.get_locations()))),' ...')
       info('Last date data ', pd.to_datetime(max(self.get_dates())).strftime("%m/%d/%Y"))
 
   def get_parsing(self,):
       '''
         Parse the json file load in the init fonction (self.metadata)
         it returns a pandas with this structure
-        |date|where|isocode| var-1 ... var-n| geometry
+        |date|where|code| var-1 ... var-n| geometry
         var-i are the variable selected in the json file
-        To assure a good standardization "where" et "isocode" use geo metho
+        To assure a good standardization "where" et "code" use geo metho
       '''
       if 'header' in list(self.metadata.keys()):
           self.dbdescription = self.metadata['header']
@@ -232,7 +232,7 @@ class DataParser:
       pandas_db = pd.DataFrame()
       locationmode = self.metadata['geoinfo']['locationmode']
       granularity = self.metadata['geoinfo']['granularity']
-      place = self.metadata['geoinfo']['where']
+      place = self.metadata['geoinfo']['iso3']
       debug = None
       if 'debug' in list(self.metadata.keys()):
           debug = self.metadata['debug']
@@ -246,11 +246,18 @@ class DataParser:
       for datasets in self.metadata['datasets']:
           url = datasets['urldata']
           pdata = pd.DataFrame(datasets['columns'])
-          pdata.alias.fillna(pdata.name, inplace=True)
+          if 'alias' in list(pdata.columns):
+              pdata.alias.fillna(pdata.name, inplace=True)
+          else:
+              pdata['alias'] = pdata['name']
           if 'description' in list(pdata.columns):
                pdata['description'] = pdata['description'].fillna(value='No description')
           else:
               pdata['description'] = 'No description'
+          if 'cumulative' in list(pdata.columns):
+             pdata['cumulative'] = pdata['cumulative'].fillna(value=False)
+          else:
+            pdata['cumulative'] = False
 
           usecols = pdata.alias.to_list()
           selections = None
@@ -287,11 +294,21 @@ class DataParser:
                  low_memory = False, nrows = debug)
           except:
               raise CoaError('Something went wrong during the parsing')
-          if drop:
+
+          coltocumul = pdata.loc[pdata.cumulative]['alias'].to_list()
+          if coltocumul:
+            where_conditions = pdata.loc[pdata['name'] == 'where', 'alias']
+            if not where_conditions.empty:
+                wh = where_conditions.values[0]
+                pandas_temp[coltocumul] = pandas_temp.groupby(wh)[coltocumul].cumsum()
+            else:
+                pandas_temp[coltocumul] = pandas_temp[coltocumul].cumsum()
+
+          if drop and not debug:
               for key,val in drop.items():
                   if key in pandas_temp.columns:
                       for i in val:
-                            pandas_temp = pandas_temp[~pandas_temp[key].str.startswith(i)]
+                            pandas_temp = pandas_temp[~(pandas_temp[key].str.startswith(i))]
                       #pandas_temp = pandas_temp.loc[~pandas_temp[key].isin(val)]
 
           if selections:
@@ -302,6 +319,9 @@ class DataParser:
                   else:
                       raise CoaError("This is weird " + key + " selection went wrong ! ")
           if replace_field:
+             for k,v in replace_field.items():
+                 if v =='np.nan':
+                    replace_field[k]=np.nan
              pandas_temp = pandas_temp.replace(replace_field)
 
           pandas_temp = pandas_temp.rename(columns = rename_columns)
@@ -316,20 +336,18 @@ class DataParser:
 
           if usecols and 'semaine' in usecols:
              pandas_temp['date'] = [ week_to_date(i) for i in pandas_temp['date']]
-          if self.db == "govcy":
-             pandas_temp['date'] = pd.to_datetime(pandas_temp['date'], errors='coerce', format="%d/%m/%Y").dt.date
-             pandas_temp = pandas_temp.replace(':',np.nan)
-          elif self.db == "olympics":
-             pandas_temp['date'] = pd.to_datetime(pandas_temp['date'], format='%Y', errors='coerce').dt.date
-          else:
-             pandas_temp['date'] = pd.to_datetime(pandas_temp['date'], errors='coerce', infer_datetime_format=True).dt.date
+          # elif self.db == "olympics":
+          #     pandas_temp['date'] = pd.to_datetime(pandas_temp['date'], format='%Y', errors='coerce').dt.date
+          # else:
+          pandas_temp['date'] = pd.to_datetime(pandas_temp['date'], errors='coerce', infer_datetime_format=True).dt.date
 
           if granularity == 'country' and 'where' not in list(pdata.name):
               pandas_temp['where'] = place
-
+          pandas_temp['where'] = pandas_temp['where'].astype('string')      
           if pandas_db.empty:
               pandas_db = pandas_temp
           else:
+
               pandas_db = pandas_db.merge(pandas_temp, how = 'outer', on=['where','date'])
           self.url += [url]
 
@@ -337,7 +355,6 @@ class DataParser:
       notwhereanddate =  [ i  for i in list(pandas_db.columns) if i not in whereanddate ]
       self.available_keywords = notwhereanddate
 
-      pandas_db[notwhereanddate] = pandas_db[notwhereanddate].fillna(method = 'bfill').fillna(method = 'ffill')
       pandas_db[notwhereanddate] = pandas_db[notwhereanddate].astype(float)
       pandas_db = pandas_db[whereanddate+notwhereanddate]
       pandas_db = pandas_db.groupby(whereanddate).sum(min_count=1).reset_index()
@@ -356,42 +373,43 @@ class DataParser:
       geopd = pd.DataFrame()
       if granularity == 'country':
           info = coge.GeoInfo()
-          if locationmode == "isocode":
+          if locationmode == "code":
             g = coge.GeoManager('name')
           else:
             g = coge.GeoManager('iso3')
           namecode  = g.to_standard(locationdb,output='dict',db = self.db)
           codenamedico = {k.upper():v.title() for k,v in namecode.items()}
-          geopd=pd.DataFrame({'where':codenamedico.values(),'isocode':codenamedico.keys()})
+          geopd=pd.DataFrame({'where':codenamedico.values(),'code':codenamedico.keys()})
           geopd=info.add_field(input=geopd,field='geometry')
       elif granularity == 'subregion':
           geopd = self.geo.get_subregion_list()
-          if locationmode == "isocode":
+          if locationmode == "code":
               geopd = geopd.loc[geopd.code_subregion.isin(locationdb)]
           else:
               geopd = geopd.loc[geopd.name_subregion.isin(locationdb)]
           codenamedico = geopd.set_index('code_subregion')['name_subregion'].to_dict()
-          geopd = geopd.rename(columns={"code_subregion": "isocode"})
+          geopd = geopd.rename(columns={"code_subregion": "code"})
       elif granularity == 'region':
           codenamedico = self.geo.get_data().set_index('code')['name_region'].to_dict()
       else:
           raise CoaTypeError('Not a region nors ubregion ... sorry but what is it ?')
 
-      if locationmode == "isocode":
-          pandas_db = pandas_db.rename(columns={"where": "isocode"})
-          pandas_db['isocode'] = pandas_db['isocode'].str.upper()
-          pandas_db['where'] = pandas_db['isocode'].map(codenamedico)
+      if locationmode == "code":
+          pandas_db = pandas_db.rename(columns={"where": "code"})
+          pandas_db['code'] = pandas_db['code'].str.upper()
+          pandas_db['where'] = pandas_db['code'].map(codenamedico)
       elif locationmode == "name":
           pandas_db['where'] = pandas_db['where'].str.title()
-          print(pandas_db['where'].unique())
           reverse={v:k for k,v in codenamedico.items()}
-          pandas_db['isocode'] = pandas_db['where'].map(reverse)
+          pandas_db['code'] = pandas_db['where'].map(reverse)
       else:
           CoaError("what locationmode in your json file is supposed to be ?")
-      print(pandas_db.loc[pandas_db['where']=='South Dakota'])
+
+
       self.slocation = list(pandas_db['where'].unique())
       self.dates = list(pandas_db['date'].unique())
-      pandas_db = pandas_db.merge(geopd[['isocode','geometry']], how = 'inner', on='isocode')
+
+      pandas_db = pandas_db.merge(geopd[['code','geometry']], how = 'inner', on='code')
       return pandas_db
 
   def get_db(self,):
@@ -454,7 +472,7 @@ class DataParser:
       return the parsing of the data + the geometry description as a geopandas
       '''
       col = list(self.mainpandas.columns)
-      reorder = ['date','where','isocode']
+      reorder = ['date','where','code']
       reorder += [ i for i in col if i not in reorder ]
       self.mainpandas = self.mainpandas[reorder]
       return self.mainpandas

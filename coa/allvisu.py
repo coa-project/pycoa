@@ -190,9 +190,9 @@ class AllVisu:
         self.dchartkargs = {}
         self.dvisukargs = {}
         self.uptitle, self.subtitle = ' ',' '
-        self.isocode = self.currentmetadata['geoinfo']['isocode']
+        self.code = self.currentmetadata['geoinfo']['iso3']
         self.granularity = self.currentmetadata['geoinfo']['granularity']
-        self.namecountry = self.currentmetadata['geoinfo']['where']
+        self.namecountry = self.currentmetadata['geoinfo']['iso3']
 
 
     ''' WRAPPER COMMUN FOR ALL'''
@@ -428,7 +428,7 @@ class AllVisu:
         input=input.drop(columns=['permanentdisplay','rolloverdisplay','colors','cases'])
         input=input.apply(lambda x: x.round(2) if x.name in [input_field,'daily','weekly'] else x)
         if isinstance(input['where'][0], list):
-            col=[i for i in list(input.columns) if i not in ['clustername','where','isocode']]
+            col=[i for i in list(input.columns) if i not in ['clustername','where','code']]
             col.insert(0,'clustername')
             input = input[col]
             input=input.set_index('clustername')
@@ -474,7 +474,7 @@ class AllVisu:
                     if len(input_field) > 1:
                         print(str(input_field) + ' is dim = ' + str(len(input_field)) + '. No effect with ' + func.__name__ + '! Take the first input: ' + input_field[0])
                     input_field = input_field[0]
-                if self.granularity == 'country' and self.isocode != 'WW':
+                if self.granularity == 'country' and self.code != 'WW':
                     func.__name__ = 'pycoa_date_plot'
             kwargs['input'] = input.reset_index(drop=True)
             return func(self, **kwargs)
@@ -491,7 +491,7 @@ class AllVisu:
         Keyword arguments
         -----------------
         - input = None : if None take first element. A DataFrame with a Pycoa struture is mandatory
-        |location|date|Variable desired|daily|cumul|weekly|isocode|clustername|permanentdisplay|rolloverdisplay|
+        |location|date|Variable desired|daily|cumul|weekly|code|clustername|permanentdisplay|rolloverdisplay|
         - input_field = if None take second element. It should be a list dim=2. Moreover the 2 variables must be present
         in the DataFrame considered.
         - plot_heigh = width_height_default[1]
@@ -509,7 +509,7 @@ class AllVisu:
         '''
         input = kwargs.get('input')
         input_field = kwargs.get('input_field')
-        mode = kwargs.get('mode',list(self.dicovisuargs['mode'])[0])
+        mode = kwargs.get('mode',list(self.optionvisu.dicovisuargs['mode'])[0])
         if len(input_field) != 2:
             raise CoaTypeError('Two variables are needed to plot a versus chart ... ')
         panels = []
@@ -558,7 +558,7 @@ class AllVisu:
         Keyword arguments
         -----------------
         - input = None : if None take first element. A DataFrame with a Pycoa struture is mandatory
-        |location|date|Variable desired|daily|cumul|weekly|isocode|clustername|permanentdisplay|rolloverdisplay|
+        |location|date|Variable desired|daily|cumul|weekly|code|clustername|permanentdisplay|rolloverdisplay|
         - input_field = if None take second element could be a list
         - plot_heigh= width_height_default[1]
         - plot_width = width_height_default[0]
@@ -749,7 +749,7 @@ class AllVisu:
         -----------------
         len(location) > 2
         - input = None : if None take first element. A DataFrame with a Pycoa struture is mandatory
-        |location|date|Variable desired|daily|cumul|weekly|isocode|clustername|permanentdisplay|rolloverdisplay|
+        |location|date|Variable desired|daily|cumul|weekly|code|clustername|permanentdisplay|rolloverdisplay|
         - input_field = if None take second element could be a list
         - plot_heigh= width_height_default[1]
         - plot_width = width_height_default[0]
@@ -768,8 +768,8 @@ class AllVisu:
 
         input = kwargs.get('input')
         input_field= kwargs.get('input_field')
-        guideline = kwargs.get('guideline',self.dicovisuargs['guideline'][0])
-        mode = kwargs.get('guideline',self.dicovisuargs['mode'][0])
+        guideline = kwargs.get('guideline',self.optionvisu.dicovisuargs['guideline'][0])
+        mode = kwargs.get('guideline',self.optionvisu.dicovisuargs['mode'][0])
         if isinstance(input_field,list):
             input_field=input_field[0]
 
@@ -846,7 +846,7 @@ class AllVisu:
         Keyword arguments
         -----------------
         - input = None : if None take first element. A DataFrame with a Pycoa struture is mandatory
-        |location|date|Variable desired|daily|cumul|weekly|isocode|clustername|permanentdisplay|rolloverdisplay|
+        |location|date|Variable desired|daily|cumul|weekly|code|clustername|permanentdisplay|rolloverdisplay|
         - input_field = if None take second element could be a list
         - plot_heigh= width_height_default[1]
         - plot_width = width_height_default[0]
@@ -864,8 +864,8 @@ class AllVisu:
         '''
         input = kwargs['input']
         input_field = kwargs['input_field']
-        guideline = kwargs.get('guideline',self.dicovisuargs['guideline'][0])
-        mode = kwargs.get('mode',self.dicovisuargs['mode'][0])
+        guideline = kwargs.get('guideline',self.optionvisu.dicovisuargs['guideline'][0])
+        mode = kwargs.get('mode',self.optionvisu.dicovisuargs['mode'][0])
 
         if len(input.clustername.unique()) > 1 :
             CoaWarning('Can only display yearly plot for ONE location. I took the first one:'+ input.clustername[0])
@@ -1012,12 +1012,12 @@ class AllVisu:
                     else:
                         geopdwd = pd.merge(geopdwd, self.kindgeo, on='where')
                     '''
-                    if self.isocode in ['FRA','USA']:
+                    if self.code in ['FRA','USA']:
                         self.geo = copy.deepcopy(self.geo)
                         d = self.geo._list_translation
                         if func.__name__ != 'pycoa_mapfolium':
-                            if any(i in list(geopdwd.isocode.unique()) for i in d.keys()) \
-                            or any(True for i in d.keys() if ''.join(list(geopdwd.isocode.unique())).find(i)!=-1):
+                            if any(i in list(geopdwd.code.unique()) for i in d.keys()) \
+                            or any(True for i in d.keys() if ''.join(list(geopdwd.code.unique())).find(i)!=-1):
                                 if maplabel:
                                     if 'dense' in maplabel:
                                         self.geo.set_dense_geometry()
@@ -1026,7 +1026,7 @@ class AllVisu:
                                     else:
                                         print('don\'t know ')
                                 else:
-                                    if any([len(i)==3 for i in geopdwd.isocode.unique()]):
+                                    if any([len(i)==3 for i in geopdwd.code.unique()]):
                                         self.geo.set_dense_geometry()
                             else:
                                 self.geo.set_main_geometry()
@@ -1072,7 +1072,7 @@ class AllVisu:
             Keyword arguments
             -----------------
             - geopdwd : A DataFrame with a Pycoa struture is mandatory
-            |location|date|Variable desired|daily|cumul|weekly|isocode|clustername|permanentdisplay|rolloverdisplay|
+            |location|date|Variable desired|daily|cumul|weekly|code|clustername|permanentdisplay|rolloverdisplay|
             - input_field = if None take second element could be a list
             - plot_heigh= width_height_default[1]
             - plot_width = width_height_default[0]
@@ -1195,20 +1195,20 @@ class AllVisu:
             input_field = kwargs.get('input_field')
             if isinstance(input_field,list):
                 input_field = input_field[0]
-            plot_width = kwargs.get('plot_width',self.dicofigureargs['plot_width'])
-            plot_height = kwargs.get('plot_height',self.dicofigureargs['plot_height'])
+            plot_width = kwargs.get('plot_width',self.optionvisu.dicofigureargs['plot_width'])
+            plot_height = kwargs.get('plot_height',self.optionvisu.dicofigureargs['plot_height'])
 
             geopdwd['cases'] = geopdwd[input_field]
             geopdwd_filter = geopdwd.loc[geopdwd.date == self.when_end]
             geopdwd_filter = geopdwd_filter.reset_index(drop = True)
             geopdwd_filter['cases'] = geopdwd_filter[input_field]
-            dateslider = kwargs.get('dateslider',self.dicovisuargs['dateslider'][0])
-            maplabel = kwargs.get('maplabel',self.dicovisuargs['maplabel'][0])
+            dateslider = kwargs.get('dateslider',self.optionvisu.dicovisuargs['dateslider'][0])
+            maplabel = kwargs.get('maplabel',self.optionvisu.dicovisuargs['maplabel'][0])
             my_date = geopdwd.date.unique()
             dico_utc = {i: DateSlider(value=i).value for i in my_date}
             geopdwd['date_utc'] = [dico_utc[i] for i in geopdwd.date]
-            #geopdwd = geopdwd.drop_duplicates(["date", "isocode","clustername"])#for sumall avoid duplicate
-            #geopdwd_filter = geopdwd_filter.drop_duplicates(["date", "isocode","clustername"])
+            #geopdwd = geopdwd.drop_duplicates(["date", "code","clustername"])#for sumall avoid duplicate
+            #geopdwd_filter = geopdwd_filter.drop_duplicates(["date", "code","clustername"])
             geopdwd = geopdwd.drop_duplicates(["date","clustername"])#for sumall avoid duplicate
             geopdwd_filter = geopdwd_filter.drop_duplicates(["date","clustername"])
             locunique = geopdwd_filter.clustername.unique()#geopdwd_filtered['where'].unique()
@@ -1225,7 +1225,7 @@ class AllVisu:
                     geopdwd_filter_other = geopdwd_filter_other.groupby('date').sum()
                     geopdwd_filter_other['where'] = 'others'
                     geopdwd_filter_other['clustername'] = 'others'
-                    geopdwd_filter_other['isocode'] = 'others'
+                    geopdwd_filter_other['code'] = 'others'
                     geopdwd_filter_other['permanentdisplay'] = 'others'
                     geopdwd_filter_other['rolloverdisplay'] = 'others'
                     geopdwd_filter_other['colors'] = '#FFFFFF'
@@ -1240,7 +1240,7 @@ class AllVisu:
                 geopdwd_filter['right'] = geopdwd_filter['right'].apply(lambda x: 0 if x < 0 else x)
 
                 n = len(geopdwd_filter.index)
-                ymax = self.dicofigureargs['plot_height']
+                ymax = self.optionvisu.dicofigureargs['plot_height']
 
                 geopdwd_filter['top'] = [ymax*(n-i)/n + 0.5*ymax/n   for i in range(n)]
                 geopdwd_filter['bottom'] = [ymax*(n-i)/n - 0.5*ymax/n for i in range(n)]
@@ -1317,7 +1317,7 @@ class AllVisu:
                             var loc = source.data['clustername'];
                             //var loc = source.data['where'];
                             var subregion = source.data['name_subregion'];
-                            var codeloc = source.data['isocode'];
+                            var codeloc = source.data['code'];
                             var colors = source.data['colors'];
                             var colors = source.data['colors'];
 
@@ -1418,7 +1418,7 @@ class AllVisu:
                             }
 
                             source_filter.data['clustername'] = orderloc;
-                            source_filter.data['isocode'] = ordercodeloc;
+                            source_filter.data['code'] = ordercodeloc;
                             source_filter.data['colors'] = ordercolors;
 
                             if(typeof subregion !== 'undefined')
@@ -1568,7 +1568,7 @@ class AllVisu:
             Keyword arguments
             -----------------
             - srcfiltered : A DataFrame with a Pycoa struture is mandatory
-            |location|date|Variable desired|daily|cumul|weekly|isocode|clustername|permanentdisplay|rolloverdisplay|
+            |location|date|Variable desired|daily|cumul|weekly|code|clustername|permanentdisplay|rolloverdisplay|
             - input_field = if None take second element could be a list
             - plot_heigh= width_height_default[1]
             - plot_width = width_height_default[0]
@@ -1660,7 +1660,7 @@ class AllVisu:
             Keyword arguments
             -----------------
             - srcfiltered : A DataFrame with a Pycoa struture is mandatory
-            |location|date|Variable desired|daily|cumul|weekly|isocode|clustername|permanentdisplay|rolloverdisplay|
+            |location|date|Variable desired|daily|cumul|weekly|code|clustername|permanentdisplay|rolloverdisplay|
             - input_field = if None take second element could be a list
             - plot_heigh= width_height_default[1]
             - plot_width = width_height_default[0]
@@ -1711,7 +1711,7 @@ class AllVisu:
             Keyword arguments
             -----------------
             - srcfiltered : A DataFrame with a Pycoa struture is mandatory
-            |location|date|Variable desired|daily|cumul|weekly|isocode|clustername|permanentdisplay|rolloverdisplay|
+            |location|date|Variable desired|daily|cumul|weekly|code|clustername|permanentdisplay|rolloverdisplay|
             - input_field = if None take second element could be a list
             - plot_heigh= width_height_default[1]
             - plot_width = width_height_default[0]
@@ -1727,10 +1727,10 @@ class AllVisu:
                          if [dd/mm/yyyy:] up to max date
         '''
         title=kwargs.get('title')
-        tile = AllVisu.convert_tile(kwargs.get('tile',self.dicovisuargs['tile']), 'folium')
-        maplabel = kwargs.get('maplabel',self.dicovisuargs['maplabel'])
-        plot_width = kwargs.get('plot_width',self.dicofigureargs['plot_width'])
-        plot_height = kwargs.get('plot_height',self.dicofigureargs['plot_height'])
+        tile = AllVisu.convert_tile(kwargs.get('tile',self.optionvisu.dicovisuargs['tile']), 'folium')
+        maplabel = kwargs.get('maplabel',self.optionvisu.dicovisuargs['maplabel'])
+        plot_width = kwargs.get('plot_width',self.optionvisu.dicofigureargs['plot_width'])
+        plot_height = kwargs.get('plot_height',self.optionvisu.dicofigureargs['plot_height'])
         geopdwd = kwargs.get('geopdwd')
         input_field = kwargs.get('input_field')
 
@@ -1741,13 +1741,13 @@ class AllVisu:
         my_date = geopdwd.date.unique()
         dico_utc = {i: DateSlider(value=i).value for i in my_date}
         geopdwd['date_utc'] = [dico_utc[i] for i in geopdwd.date]
-        #geopdwd = geopdwd.drop_duplicates(["date", "isocode","clustername"])#for sumall avoid duplicate
+        #geopdwd = geopdwd.drop_duplicates(["date", "code","clustername"])#for sumall avoid duplicate
         #geopdwd_filtered = geopdwd_filtered.sort_values(by='cases', ascending = False).reset_index()
         #locunique = geopdwd_filtered.clustername.unique()#geopdwd_filtered['where'].unique()
         if self.database_name == 'risklayer':
             geopdwd_filtered = geopdwd_filtered.loc[geopdwd_filtered.geometry.notna()]
 
-        uniqloc = list(geopdwd_filtered.isocode.unique())
+        uniqloc = list(geopdwd_filtered.code.unique())
         geopdwd_filtered = geopdwd_filtered.drop(columns=['date', 'colors'])
 
         msg = "(data from: {})".format(self.database_name)
@@ -1965,18 +1965,18 @@ class AllVisu:
             else:
                 standardfig.background_fill_color = "lightgrey"
 
-            geopdwd_filtered = geopdwd_filtered[['cases','geometry','where','clustername','isocode','rolloverdisplay']]
+            geopdwd_filtered = geopdwd_filtered[['cases','geometry','where','clustername','code','rolloverdisplay']]
             if not dfLabel.empty:
                 geopdwd_filtered = geopdwd_filtered.drop(columns = 'geometry')
                 geopdwd_filtered = pd.merge(geopdwd_filtered, dfLabel[['clustername','geometry']], on = 'clustername')
                 geopdwd_filtered = geopdwd_filtered.drop_duplicates(subset = ['clustername'])
-            if self.isocode == 'BEL' :
+            if self.code == 'BEL' :
                 reorder = list(geopdwd_filtered['where'].unique())
                 geopdwd_filtered = geopdwd_filtered.set_index('where')
                 geopdwd_filtered = geopdwd_filtered.reindex(index = reorder)
                 geopdwd_filtered = geopdwd_filtered.reset_index()
 
-            if self.isocode == 'GBR' :
+            if self.code == 'GBR' :
                 geopdwd = geopdwd.loc[~geopdwd.cases.isnull()]
                 geopdwd_filtered  = geopdwd_filtered.loc[~geopdwd_filtered.cases.isnull()]
             kwargs['geopdwd']=geopdwd
@@ -1999,7 +1999,7 @@ class AllVisu:
             Keyword arguments
             -----------------
             - srcfiltered : A DataFrame with a Pycoa struture is mandatory
-            |location|date|Variable desired|daily|cumul|weekly|isocode|clustername|permanentdisplay|rolloverdisplay|
+            |location|date|Variable desired|daily|cumul|weekly|code|clustername|permanentdisplay|rolloverdisplay|
             - input_field = if None take second element could be a list
             - plot_heigh= width_height_default[1]
             - plot_width = width_height_default[0]
@@ -2210,7 +2210,7 @@ class AllVisu:
             Keyword arguments
             -----------------
             - srcfiltered : A DataFrame with a Pycoa struture is mandatory
-            |location|date|Variable desired|daily|cumul|weekly|isocode|clustername|permanentdisplay|rolloverdisplay|
+            |location|date|Variable desired|daily|cumul|weekly|code|clustername|permanentdisplay|rolloverdisplay|
             - input_field = if None take second element could be a list
             - plot_heigh= width_height_default[1]
             - plot_width = width_height_default[0]

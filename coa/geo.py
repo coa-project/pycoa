@@ -166,8 +166,8 @@ class GeoManager():
                 'as input of get_standard function member of GeoManager')
 
         fakeiso3={'WLD':'World','EUR':'Europe'} #Oliv add this for iso3 json description for World and Europe
-        #w=[ pd.Series(v).replace(fakeiso3).title() for v in w   ] # capitalize first letter of each name
-        w = (pd.Series(w).replace(fakeiso3).str.title()).to_list()
+        w=[ v.title() if v not in list(fakeiso3.keys()) else fakeiso3[v] for v in w   ] # capitalize first letter of each name
+        #w = (pd.Series(w).replace(fakeiso3).str.title()).to_list()
         w0=w.copy()
 
         if db:

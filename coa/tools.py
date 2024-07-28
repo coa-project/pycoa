@@ -35,6 +35,7 @@ import unidecode
 import datetime as dt
 from coa.error import CoaKeyError, CoaTypeError, CoaConnectionError, CoaNotManagedError
 
+
 # testing if coadata is available
 import importlib
 _coacache_folder=''
@@ -214,6 +215,11 @@ def week_to_date(whenstr):
     elif len(whenstr) == 10:
         firstday = datetime.date(int(whenstr.split('-')[0]),int(whenstr.split('-')[1]),int(whenstr.split('-')[2]))
         convertion = firstday+datetime.timedelta(days=3)
+    elif len(whenstr) == 6:
+        year = whenstr[:4]
+        week = '-S'+whenstr[4:]
+        whenstr = year + week
+        convertion = datetime.datetime.strptime(whenstr  + '-1' , "%G-S%V-%u")+datetime.timedelta(days = 7)
     else:
         convertion = datetime.datetime.strptime(whenstr  + '-1' , "%G-S%V-%u")+datetime.timedelta(days = 7)
     return convertion

@@ -56,7 +56,7 @@ class GeoManager():
             'name',           # Standard name ( != Official, caution )
             'num']            # Numeric standard
 
-    _list_db=[None,'jhu','worldometers','owid','opencovid19national','spfnational','mpoxgh','olympics','europa','govcy'] # first is default
+    _list_db=[None,'jhu','worldometers','owid','opencovid19national','spfnational','mpoxgh','olympics','europa','govcy','sumeau'] # first is default
     _list_output=['list','dict','pandas'] # first is default
 
     _standard = None # currently used normalisation standard
@@ -1157,6 +1157,7 @@ class GeoCountry():
                     self._country_data.loc[self._country_data.name_subregion.isin(ath)].dissolve(aggfunc='sum').values
             self._country_data = self._country_data.loc[~self._country_data.name_subregion.isin(ath[:-1])]
             changename={'Ο ΟΡΟΣ':'ΑΓΙΟ ΟΡΟΣ','ΑΘΗΝΩΝ':'ΑΤΤΙΚΗΣ'}
+
             self._country_data['name_subregion'].replace(changename, inplace=True)
             self._country_data['name_region'].replace(changename, inplace=True)
 

@@ -2,8 +2,7 @@
   "header": "United States of America",
     "geoinfo": {
     "granularity": "subregion",
-    "where": "United States of America",
-    "isocode":"USA",
+    "iso3":"USA",
     "locationmode":"name"
   },
   "datasets": [

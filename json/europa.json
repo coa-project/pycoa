@@ -1,10 +1,8 @@
 {
-  "header": "europa",
     "geoinfo": {
     "granularity": "country",
-    "where": "Europe",
-    "isocode":"EU",
-    "locationmode":"isocode"
+    "iso3":"EUR",
+    "locationmode":"code"
   },
   "datasets": [
   	{	
@@ -25,11 +23,13 @@
              	       },
 		      {		
 			"name":"tot_deaths",
-			"alias":"CumulativeDeceased"
+			"alias":"CumulativeDeceased",
+			"cumulative":true
 		       },
 			{
                 	"name":"tot_positive",
-			"alias":"CumulativePositive"
+			"alias":"CumulativePositive",
+			"cumulative":true
 			},
                 	{
 			"name":"cur_hosp",

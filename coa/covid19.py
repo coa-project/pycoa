@@ -120,7 +120,6 @@ class VirusStat(object):
        else:
            if self.granularity == 'subregion' :
                input = input.reset_index(drop=True)
-
                if isinstance(input['code'].iloc[0],list):
                    input['code'] = input['code'].apply(lambda x: str(x).replace("'", '')\
                                                 if len(x)<5 else '['+str(x[0]).replace("'", '')+',...,'+str(x[-1]).replace("'", '')+']')
@@ -359,7 +358,7 @@ class VirusStat(object):
                             tmp = list(tmp.loc[tmp.code_region==i]['name_region'])
                         elif self.geo.is_region(i):
                             tmp = self.geo.get_regions_from_macroregion(name=i,output='name')
-                            if dbparser.getcurrentmetadata()[self.db][0] in ['USA, FRA, ESP, PRT']:
+                            if self.currentmetadata['geoinfo']['iso3'] in ['USA, FRA, ESP, PRT']:
                                 tmp = tmp[:-1]
                         else:
                             if self.geo.is_subregion(i):
@@ -377,7 +376,7 @@ class VirusStat(object):
                 dicooriglist={}
 
                 for i in origlistlistloc:
-                    if i[0].upper() in [self.currentmetadata['geoinfo']['where'].upper(),self.currentmetadata['geoinfo']['code'].upper()]:
+                    if i[0].upper() in [self.currentmetadata['geoinfo']['iso3'].upper(),self.currentmetadata['geoinfo']['iso3'].upper()]:
                         dicooriglist[self.currentmetadata[self.db][0]] = explosion(flat_list(self.slocation),self.currentmetadata['geoinfo']['granularity'])
                     else:
                         dicooriglist[','.join(i)]=explosion(i,self.currentmetadata['geoinfo']['granularity'])
@@ -603,25 +602,34 @@ class VirusStat(object):
     if isinstance(pandy['code'].iloc[0],list):
         pandy = pandy.explode('code')
 
+    clust = list(pandy['clustername'].unique())
     if self.db_world == True:
         pop_field='population'
         pandy = self._gi.add_field(input=pandy,field=pop_field,geofield='code')
     else:
         if not isinstance(self._gi,coge.GeoCountry):
-            self._gi=None
+            self._gi = None
         else:
             if self._gi.get_country() != self.geo.get_country():
                 self._gi=None
 
         if self._gi == None :
             self._gi = self.geo
+
         pop_field='population_subregion'
-        if pop_field not in self._gi.get_list_properties():
-            raise CoaKeyError('The population information not available for this country. No normalization possible')
+        if self.granularity == 'region':
+            regsubreg={i:self.geo.get_subregions_from_region(name=i) for i in clust}
+            self._gi.add_field(input=pandy, field=pop_field, input_key='code')
+        elif self.granularity == 'subregion':
+            pandy=self._gi.add_field(input=pandy, field=pop_field, input_key='code')
+        else:
+            raise CoaKeyError('This is not region nor subregion what is it ?!')
 
-        pandy=self._gi.add_field(input=pandy,field=pop_field,input_key='code')
+        #if pop_field not in self._gi.get_list_properties():
+        #    raise CoaKeyError('The population information not available for this country. No normalization possible')
 
-    clust = pandy['clustername'].unique()
+
+
     df = pd.DataFrame()
     for i in clust:
         pandyi = pandy.loc[ pandy['clustername'] == i ].copy()
@@ -641,12 +649,12 @@ class VirusStat(object):
 
     pandy=pandy.copy()
     pandy[pop_field]=pandy[pop_field].replace(0., np.nan)
-    av = allvisu.AllVisu()
-    _dict_bypop =  av._dict_bypop
+    av = allvisu.OptionVisu()
+
     if bypop == 'pop':
-        pandy.loc[:,val2norm+' per total population']=pandy[val2norm]/pandy[pop_field]*_dict_bypop[bypop]
+        pandy.loc[:,val2norm+' per total population']=pandy[val2norm]/pandy[pop_field]*av._dict_bypop[bypop]
     else:
-        pandy.loc[:,val2norm+' per '+bypop + ' population']=pandy[val2norm]/pandy[pop_field]*_dict_bypop[bypop]
+        pandy.loc[:,val2norm+' per '+bypop + ' population']=pandy[val2norm]/pandy[pop_field]*av._dict_bypop[bypop]
     return pandy
 
    def merger(self,**kwargs):

@@ -99,6 +99,7 @@ class MetaInfo:
       List all the valide json file in the json folder
       return a dictionnary with db name as a key and the parsing json file as dictionnary or
       the error if the file do not exist or not valide
+      return only valid json
       '''
       pathmetadb = '../json/'
       onlyfiles = [f for f in listdir(pathmetadb) if isfile(join(pathmetadb, f)) and f.endswith('.json')]
@@ -111,10 +112,10 @@ class MetaInfo:
          metadata = MetaInfo.parsejson(pathmetadb+i)
          try:
              meta = metadata[1]
-             valide = "GOOD"
+             valide = 'GOOD'
          except:
              meta = metadata[0]
-             valide = "BAD"
+             valide = 'BAD'
          tmp=pd.DataFrame([[name,valide,meta]],columns=col)
          df = pd.concat([df,tmp],ignore_index=True)
       return df
@@ -123,15 +124,18 @@ class MetaInfo:
       '''
         Return current meta information from the json file i.e from "namedb".json
       '''
-      line = self.pdjson.loc[self.pdjson.name == namedb]
-      if line.validejson.values == 'GOOD':
-          try:
-              return line.parsingjson.values[0]
-          except:
-              raise CoaError('Database json description incompatible, please check')
+      if namedb:
+          line = self.pdjson.loc[self.pdjson.name == namedb]
+          if line.validejson.values == 'GOOD':
+              try:
+                  return line.parsingjson.values[0]
+              except:
+                  raise CoaError('Database json description incompatible, please check')
+          else:
+            error =  " Database json parsing error:\n" + line.parsingjson.values[0]
+            raise CoaError(error)
       else:
-        error =  " Database json parsing error:\n" + line.parsingjson.values[0]
-        raise CoaError(error)
+          raise CoaError("Does a Database has been selected ? 🤔")
 
   def getcurrentmetadatawhich(self,dico):
       '''
@@ -143,6 +147,8 @@ class MetaInfo:
         for j in i['columns']:
             if j['name']:
                 which.append(j['name'])
+        if 'namedata' in i:
+                which.append(i['namedata'])
       if 'date' in which:
             which.remove('date')
       if 'where' in which:
@@ -291,7 +297,7 @@ class DataParser:
           try:
               pandas_temp = pd.read_csv(get_local_from_url(url,10000), sep = separator, usecols = usecols,
                 keep_default_na = False, na_values = '' , header=0, dtype = cast, decimal = decimal,
-                 low_memory = False, nrows = debug)
+                 low_memory = False, nrows = debug, comment='#')
           except:
               raise CoaError('Something went wrong during the parsing')
 
@@ -334,8 +340,13 @@ class DataParser:
                   raise CoaError("Seems to have date in columns format in yours csv file, so namedata has to be defined in your json file")
               pandas_temp = pandas_temp.melt(id_vars='where',var_name='date',value_name=value_name)
 
-          if usecols and 'semaine' in usecols:
+
+          if usecols and ('semaine' in usecols or 'week' in usecols):
              pandas_temp['date'] = [ week_to_date(i) for i in pandas_temp['date']]
+             #cols=[i for i in pandas_temp.columns if i not in ['date','where']]
+             #pandas_temp[cols] = pandas_temp[cols].apply(lambda x: x/7.)
+
+
           # elif self.db == "olympics":
           #     pandas_temp['date'] = pd.to_datetime(pandas_temp['date'], format='%Y', errors='coerce').dt.date
           # else:
@@ -343,18 +354,15 @@ class DataParser:
 
           if granularity == 'country' and 'where' not in list(pdata.name):
               pandas_temp['where'] = place
-          pandas_temp['where'] = pandas_temp['where'].astype('string')      
+          pandas_temp['where'] = pandas_temp['where'].astype('string')
           if pandas_db.empty:
               pandas_db = pandas_temp
           else:
-
               pandas_db = pandas_db.merge(pandas_temp, how = 'outer', on=['where','date'])
           self.url += [url]
-
       whereanddate =  ['date','where']
       notwhereanddate =  [ i  for i in list(pandas_db.columns) if i not in whereanddate ]
       self.available_keywords = notwhereanddate
-
       pandas_db[notwhereanddate] = pandas_db[notwhereanddate].astype(float)
       pandas_db = pandas_db[whereanddate+notwhereanddate]
       pandas_db = pandas_db.groupby(whereanddate).sum(min_count=1).reset_index()
@@ -387,10 +395,15 @@ class DataParser:
               geopd = geopd.loc[geopd.code_subregion.isin(locationdb)]
           else:
               geopd = geopd.loc[geopd.name_subregion.isin(locationdb)]
+          geopd['name_subregion'] = geopd['name_subregion'].str.title()
           codenamedico = geopd.set_index('code_subregion')['name_subregion'].to_dict()
           geopd = geopd.rename(columns={"code_subregion": "code"})
       elif granularity == 'region':
-          codenamedico = self.geo.get_data().set_index('code')['name_region'].to_dict()
+          geopd = self.geo.get_region_list()
+          codenamedico = self.geo.get_data().set_index('code_region')['name_region'].to_dict()
+          #geopd['name_region'] = geopd['name_region'].str.title()
+          codenamedico = geopd.set_index('code_region')['name_region'].to_dict()
+          geopd = geopd.rename(columns={"code_region": "code"})
       else:
           raise CoaTypeError('Not a region nors ubregion ... sorry but what is it ?')
 
@@ -404,11 +417,8 @@ class DataParser:
           pandas_db['code'] = pandas_db['where'].map(reverse)
       else:
           CoaError("what locationmode in your json file is supposed to be ?")
-
-
       self.slocation = list(pandas_db['where'].unique())
       self.dates = list(pandas_db['date'].unique())
-
       pandas_db = pandas_db.merge(geopd[['code','geometry']], how = 'inner', on='code')
       return pandas_db
 

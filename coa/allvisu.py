@@ -899,12 +899,12 @@ class AllVisu:
             maxou=-1000
             input['cases']=input[input_field]
             line_style = ['solid', 'dashed', 'dotted', 'dotdash']
-            colors = itertools.cycle(self.lcolors)
+            colors = itertools.cycle(self.optionvisu.lcolors)
             for loc in list(input.clustername.unique()):
                 for year in allyears:
                     input_filter = input.loc[(input.clustername == loc) & (input['date'].dt.year.eq(year))].reset_index(drop = True)
                     src = ColumnDataSource(input_filter)
-                    leg = loc + ' ' + str(year)
+                    leg = str(year) + ' ' + loc
                     r = standardfig.line(x = 'dayofyear', y = input_field, source = src,
                                      color = next(colors), line_width = 3,
                                      legend_label = leg,
@@ -1117,7 +1117,7 @@ class AllVisu:
                     rank = bins
                 contributors[rank].append(allval.iloc[i]['clustername'])
 
-            colors = itertools.cycle(self.lcolors)
+            colors = itertools.cycle(self.optionvisu.lcolors)
             lcolors = [next(colors) for i in range(bins+1)]
             contributors = dict(sorted(contributors.items()))
             frame_histo = pd.DataFrame({

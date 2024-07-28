@@ -197,11 +197,35 @@ class Front:
     def listwhom(self, detailed = False):
         """Return the list of currently avalailable VirusStats for covid19
          data in PyCoA.
-         The first one is the default one.
-
+         Only GOOD json description database is returned !
          If detailed=True, gives information location of each given VirusStat.
         """
-        return self.meta.getallmetadata().name.to_list()
+        allpd  = self.meta.getallmetadata()
+        namedb = allpd.name.to_list()
+
+        if detailed:
+            dico = {}
+            namels, iso3ls, grls, varls = [],[],[],[]
+            for i in namedb:
+
+                mypd = allpd.loc[allpd.name.isin([i])]
+                if mypd.validejson.values  == 'GOOD':
+                    namels.append(i)
+                    iso3 = mypd.parsingjson.values[0]['geoinfo']['iso3']
+                    iso3ls.append(iso3)
+                    gr = mypd.parsingjson.values[0]['geoinfo']['granularity']
+                    grls.append(gr)
+                    for datasets in mypd.parsingjson.values[0]['datasets']:
+                        pdata = pd.DataFrame(datasets['columns'])
+                    varls.append(self.listwhich(i))
+
+            dico.update({'dbname': namels})
+            dico.update({'iso3': iso3ls})
+            dico.update({'granularity': grls})
+            dico.update({'variables': varls})
+            return pd.DataFrame.from_dict(dico, orient='index').T.reset_index(drop=True).set_index('dbname')
+        else:
+            return namedb
         '''
         db_list_dict = self.meta.getallmetadata()
         df = pd.DataFrame(db_list_dict)
@@ -269,13 +293,17 @@ class Front:
     # ----------------------------------------------------------------------
     # --- listwhich() ------------------------------------------------------
     # ----------------------------------------------------------------------
-    def listwhich(self,):
-        """Get which are the available fields for the current base.
+    def listwhich(self,dbname):
+        """Get which are the available fields for base 'dbname'
+        if dbname is omitted current dabatase used (i.e self.db)
         Output is a list of string.
         By default, the listwhich()[0] is the default which field in other
         functions.
         """
-        dic = self.meta.getcurrentmetadata(self.db)
+        if dbname:
+            dic = self.meta.getcurrentmetadata(dbname)
+        else:
+            dic = self.meta.getcurrentmetadata(self.db)
         return sorted(self.meta.getcurrentmetadatawhich(dic))
     # ----------------------------------------------------------------------
     # --- listwhere() ------------------------------------------------------
@@ -471,12 +499,12 @@ class Front:
             if isinstance(input_arg, pd.DataFrame):
                 if input_arg is not None and not input_arg.empty:
                     pandy = input_arg
-                    pandy = self.db.get_stats(**kwargs)
+                    pandy = self.virus.get_stats(**kwargs)
                 else:
                     pandy=pd.DataFrame()
                     input_field = which
                     for i in which:
-                        tmp = self.db.get_stats(which=i,where=where, option=option)
+                        tmp = self.virus.get_stats(which=i,where=where, option=option)
                         if len(which)>1:
                             tmp = tmp.rename(columns={'daily':'daily_'+i,'weekly':'weekly_'+i})
                         if pandy.empty:
@@ -486,7 +514,7 @@ class Front:
                             pandy = pd.merge(pandy, tmp, on=['date','clustername'],how='inner')
                     input_arg = pandy
                 if bypop != 'no':
-                    input_arg = self.db.normbypop(pandy,input_field,bypop)
+                    input_arg = self.virus.normbypop(pandy,input_field,bypop)
                     if bypop=='pop':
                         input_field = input_field+' per total population'
                     else:
@@ -522,7 +550,7 @@ class Front:
                         val = what
                     else:
                         val = _lwhat[0]
-                    pandy = self.db.normbypop(pandy , val, bypop)
+                    pandy = self.virus.normbypop(pandy , val, bypop)
                     if bypop=='pop':
                         input_field = input_field+' per total population'
                     else:

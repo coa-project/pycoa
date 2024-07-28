@@ -1,0 +1,23 @@
+{
+  "header": "Greece, imed database selected",
+    "geoinfo": {
+    "granularity": "subregion",
+    "iso3":"GRC",
+    "locationmode":"name"
+  },
+  "datasets": [
+  	{	
+	 "urldata":"https://raw.githubusercontent.com/iMEdD-Lab/open-data/master/COVID-19/greece_deaths_v2.csv",
+	 "urlparent":"https://github.com/iMEdD-Lab/open-data/tree/master/COVID-19",
+	 "namedata":"tot_deaths",
+	 "separator":",",
+	 "dropcolumns":["Γεωγραφικό Διαμέρισμα","Περιφέρεια","county","pop_11"],
+	 "columns": [
+		 {
+		    "name":"where",
+    		    "alias":"county_normalized"
+		}
+	           ]
+         }
+       ]
+}   

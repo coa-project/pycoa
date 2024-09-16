@@ -1,0 +1,226 @@
+{	
+	"header": "SPF aka Sante Publique France database selected (France departement granularity) ... 5 SPF databases will be parsed ...",
+	"geoinfo": {
+		"granularity": "subregion",
+		"iso3":"FRA",
+    		"locationmode":"code"
+	},
+	"replace":{
+                        "975":"980",
+                        "977":"980",
+                        "978":"980",
+                        "986":"980",
+                        "987":"980"
+                 },
+	"datasets": [
+		{
+			"urldata":"https://www.data.gouv.fr/fr/datasets/r/ca490480-09a3-470f-8556-76d6fd291325",
+			"urlparent":"https://www.data.gouv.fr/fr/datasets/donnees-de-laboratoires-pour-le-depistage-a-compter-du-18-05-2022-si-dep/",
+			"selections" : 
+				{
+				"cl_age90": 0
+				},
+			"cast":{
+				"dep":"str"	
+			},
+			"decimal":",",
+			"columns" : [
+			{
+				"name":"tot_P",
+				"alias":"P",
+				"description":"Nombre total de tests positifs",
+				"cumulative":true
+
+			},
+			{
+				"name":"tot_T",
+				"alias":"T",
+				"description":"Nombre total de tests réalisés",
+				"cumulative":true
+			},
+			{
+				"name":"where",
+				"alias":"dep"
+			},
+			{
+				"name":"date",
+				"alias":"semaine"
+			}
+			]
+		},
+		{
+			"urldata": "https://www.data.gouv.fr/fr/datasets/r/5c4e1452-3850-4b59-b11c-3dd51d7fb8b5",
+			"separator":",",
+			  "cast":{
+                                "dep":"str"
+                        },
+			"columns" : [
+			{
+					"name":"where",
+					"alias":"dep"
+			},
+			{
+					"name":"date",
+					"alias":"date"
+			},
+		    {
+				"name":"tot_dchosp",
+				"alias":"dchosp",
+				"cumulative":true
+
+		    },
+		    {	   
+				"name":"cur_hosp",
+				"alias":"hosp"
+		    },
+		    {
+				"name":"tot_rad",
+				"alias":"rad"
+		    },
+		    {
+			 	"name":"cur_rea",
+				"alias":"rea"
+		    },
+		    {
+				"name":"cur_idx_tx_incid",
+				"alias":"tx_incid",
+				"description":"Taux d'incidence (activité épidémique : Le taux d'incidence correspond au nombre de personnes testées positives (RT-PCR et test antigénique) pour la première fois depuis plus de 60 jours rapporté à la taille de la population.Il est exprimé pour 100 000 habitants"
+			},
+		    {
+				"name":"incid_hosp",
+				"alias":"incid_hosp",
+				"description":"Nombre total de personnes hospitalisées"
+			},
+		    {
+				"name":"incid_rea",
+				"alias":"incid_rea",
+				"description":"Nombre total d'admissions en réanimation"
+			},
+			{	
+				"name":"incid_rad",
+				"alias":"incid_rad",
+				"description":"Nombre total de  retours à domicile"
+			},
+			{
+				"name":"incid_dchosp",
+				"alias":"incid_dchosp",
+				"description":"Nombre total de personnes  décédées"
+			}
+			]
+		},
+		{
+			"urldata":"https://www.data.gouv.fr/fr/datasets/r/4acad602-d8b1-4516-bc71-7d5574d5f33e",
+			"urlparent":"https://www.data.gouv.fr/fr/datasets/indicateurs-de-suivi-de-lepidemie-de-covid-19/",
+			"separator":",",	
+			  "cast":{
+                                "dep":"str"
+                        },
+			"columns" : [
+			{	
+				"name":"date",
+				"alias":"extract_date"
+			},
+			{
+				"name":"where",
+				"alias":"departement"	
+			},
+			{
+				"name":"cur_idx_R",
+				"alias":"R"
+			},
+			{
+        		"name":"cur_idx_tx_occupation_sae",
+				"alias":"taux_occupation_sae"
+			},
+			{
+				"name":"cur_tx_pos",
+				"alias":"tx_pos",
+				"description":"Taux de positivité des tests virologiques (Le taux de positivité correspond au nombre de personnes testées positives (RT-PCR et test antigénique) pour la première fois depuis plus de 60 jours rapporté au nombre total de personnes testées positives ounégatives sur une période donnée ; et qui n‘ont jamais été testées positive dans les 60 jours précédents.)"
+			}
+			]
+		},
+		{	
+			"urldata":"https://www.data.gouv.fr/fr/datasets/r/83cbbdb9-23cb-455e-8231-69fc25d58111",
+			"urlparent":"https://www.data.gouv.fr/fr/datasets/donnees-relatives-aux-personnes-vaccinees-contre-la-covid-19-1",
+			  "cast":{
+                                "dep":"str"
+                        },
+			"columns" : [
+			{
+			"name":"where",
+			"alias":"dep"	
+			},
+			{
+			"name":"date",
+			"alias":"jour"		
+			},
+			{
+				"name":"tot_vacc1",
+				"alias":"n_cum_dose1"
+			},
+			{
+        		"name":"tot_vacc_complet",
+				"alias":"n_cum_complet"
+			},
+			{
+				"name":"tot_vacc_rappel",
+				"alias":"n_cum_rappel"
+			},
+			{
+				"name":"tot_vacc2_rappel",
+				"alias":"n_cum_2_rappel"
+			}
+			]
+		},
+		{
+			"urldata":"https://www.data.gouv.fr/fr/datasets/r/bc318bc7-fb90-4e76-a6cb-5cdc0a4e5432",
+			"urlparent":"https://www.data.gouv.fr/fr/datasets/donnees-de-laboratoires-pour-le-depistage-indicateurs-sur-les-mutations",	
+			"drop" :{ 	 
+					"dep": "<NA>"
+			},			
+			  "cast":{
+                                "dep":"str"
+                        },
+			"columns" : [
+				{
+					"name":"where",
+					"alias":"dep"
+				},
+				{
+					"name":"date",
+					"alias":"semaine"
+				},
+			    {
+				"name":"cur_nb_A0",
+				"alias":"nb_A0",
+				"description":"Nombre des tests positifs pour lesquels la recherche de mutation A est négatif (A = E484K)"	
+			 	},
+				{
+                "name":"cur_nb_A1",
+				"alias":"nb_A1",
+				"description":"Nombre des tests positifs pour lesquels la recherche de mutation A est positif (A = E484K)"
+			},
+			{
+                "name":"cur_tx_A1",
+				"alias":"tx_A1",
+				"description":"Taux de présence mutation A (A = E484K)"
+			},
+			{
+				"name":"cur_nb_C0",
+				"alias":"nb_C0",
+				"description":"Nombre des tests positifs pour lesquels la recherche de mutation C est négatif (C = L452R)"
+			},
+			{
+                "name":"cur_nb_C1",
+				"alias":"nb_C1",
+				"description":"Nombre des tests positifs pour lesquels la recherche de mutation C est positif (C = L452R)"
+			},
+			{
+                "name":"cur_tx_C1",
+				"alias":"tx_C1",
+				"description":"Taux de présence mutation C (C = L452R)"
+			}	
+	        ]
+		}
+	]
+}

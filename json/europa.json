@@ -1,0 +1,45 @@
+{
+    "geoinfo": {
+    "granularity": "country",
+    "iso3":"EUR",
+    "locationmode":"code"
+  },
+  "datasets": [
+  	{	
+	 "urldata": "https://raw.githubusercontent.com/ec-jrc/COVID-19/master/data-by-region/jrc-covid-19-all-days-by-regions.csv",
+	 "separator":",",
+	 "drop":
+		{
+			 "iso3":["WWW","XKX"]
+		},
+  	 "columns": [
+		 {
+		    "name":"where",
+    		    "alias":"iso3"	
+			},
+			{
+			"name":"date",
+			"alias":"Date"
+             	       },
+		      {		
+			"name":"tot_deaths",
+			"alias":"CumulativeDeceased",
+			"cumulative":true
+		       },
+			{
+                	"name":"tot_positive",
+			"alias":"CumulativePositive",
+			"cumulative":true
+			},
+                	{
+			"name":"cur_hosp",
+			"alias":"Hospitalized"
+		        },
+			{
+                	"name":"cur_icu",
+			"alias":"IntensiveCare"
+			}
+		  ]
+  		}
+	]
+}		

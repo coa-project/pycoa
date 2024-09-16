@@ -1,0 +1,125 @@
+{
+  "header": "owid",
+    "geoinfo": {
+    "granularity": "country",
+    "iso3": "WLD",
+    "locationmode":"code"
+  },
+  "replace":{
+	  "GUF":"FRA",
+	  "PYF":"FRA"
+  },
+  "datasets": [
+  	{	
+	 "urldata": "https://raw.githubusercontent.com/owid/covid-19-data/master/public/data/owid-covid-data.csv",
+	"drop":
+	    {   
+	    "iso_code": "OWID_"
+	    },  
+	 "separator":",",
+  	 "columns": [
+    			{
+		    "name":"where",
+    		   "alias":"iso_code"	
+			},
+			{
+			"name":"date"
+             	       },
+		    {			
+                    "name": "total_deaths",
+		   		 	"description":"Total deaths attributed to COVID-19"
+				},
+				{
+                	"name":"total_cases",
+					"description":"Total confirmed cases of COVID-19"
+                },
+				{
+					"name":"total_tests",
+					"description":"Total tests for COVID-19"	
+                },
+				{
+				"name":"total_tests_per_thousand",
+				"description":"Total tests for COVID-19 per thousand"
+				},
+				{
+					"name":"total_vaccinations",
+					"description":"Total number of COVID-19 vaccination doses administered"
+				},
+                {
+					"name":"total_boosters",
+					"description":"Total number of COVID-19 vaccination booster doses administered (doses administered beyond the number prescribed by the vaccination protocol"
+				},
+				{
+                	"name":"total_people_vaccinated",
+					"alias":"people_vaccinated",
+					"description":"Total number of people who received at least one vaccine dose"
+				},
+                {
+					"name":"total_people_fully_vaccinated",
+					"alias":"people_fully_vaccinated",
+					"description":"total_people_fully_vaccinated (original name people_fully_vaccinated): Total number of people who received all doses prescribed by the vaccination protocol"
+				},
+				{
+                	"name":"total_people_vaccinated_per_hundred",
+					"alias":"people_vaccinated_per_hundred",
+					"description":"total_people_vaccinated_per_hundred (original name people_vaccinated_per_hundred): total_people_vaccinated_per_hundred:Total number of people who received all doses prescribed by the vaccination protocol per 100 people in the total population"
+				},
+				{
+                "name":"total_cases_per_million",
+				"alias":"total_cases_per_million",
+				"description":"Total confirmed cases of COVID-19 per 1,000,000 people"
+                },
+				{
+					"name":"total_deaths_per_million",
+					"alias":"total_deaths_per_million",
+					"description":"Total deaths attributed to COVID-19 per 1,000,000 people"
+				},
+				{
+                	"name":"total_vaccinations_per_hundred",
+					"alias":"total_vaccinations_per_hundred",
+					"description":"COVID19 vaccine doses administered per 100 people"
+				},
+				{
+                	"name":"cur_reproduction_rate",
+					"alias":"reproduction_rate",
+					"description":"cur_reproduction_rate (original name reproduction_rate): Real-time estimate of the effective reproduction rate (R) of COVID-19. See https://github.com/crondonm/TrackingR/tree/main/Estimates-Database"
+				},
+				{
+               	 "name":"cur_icu_patients",
+				 "alias":"icu_patients",
+				 "description":"cur_icu_patients (orignal name icu_patients): Number of COVID-19 patients in intensive care units (ICUs) on a given day"
+                },
+				{
+				"name":"cur_hosp_patients",
+				"alias":"hosp_patients",
+				"description":"cur_hosp_patients (original name hosp_patients): Number of COVID-19 patients in hospital on a given day"
+				},
+				{
+				"name":"cur_weekly_hosp_admissions",
+				"alias":"weekly_hosp_admissions",
+				"description":"cur_weekly_hosp_admissions (original name weekly_hosp_admissions): Number of COVID-19 patients in hospital on a given week"
+                },
+				{
+				"name":"cur_idx_positive_rate",
+				"alias":"positive_rate",
+				"description":"cur_idx_positive_rate (original name positive_rate): The share of COVID-19 tests that are positive, given as a rolling 7-day average (this is the inverse of tests_per_case)"
+				},
+				{
+				"name":"total_gdp_per_capita",
+				"alias":"gdp_per_capita",
+				"description":"Gross domestic product at purchasing power parity (constant 2011 international dollars), most recent year available"
+                },
+				{
+				"name":"cur_excess_mortality",
+				"alias":"excess_mortality",
+				"description":"original name excess_mortality. Percentage difference between the reported number of weekly or monthly deaths in 2020–2021 and the projected number of deaths for the same period based on previous years"
+				},
+				{
+				"name":"cur_excess_mortality_cumulative_per_million",
+				"alias":"excess_mortality_cumulative_per_million",
+				"description":"cur_excess_mortality_cumulative_per_million:original name excess_mortality_cumulative_per_million.Cumulative difference between the reported number of deaths since 1 January 2020 and the projected number of deaths for the same period based on previous years, per million people."
+				}
+		  ]
+  		}
+	]
+}		

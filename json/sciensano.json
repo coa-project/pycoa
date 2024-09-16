@@ -1,0 +1,33 @@
+{
+  "header": "Sciensano",
+  "geoinfo": {
+    "granularity": "region",
+    "iso3": "BEL",
+    "locationmode":"name"
+  },
+  "replace":{
+          "NA":"np.nan"
+         },
+  "datasets": [
+  	{	
+	 "urldata": "https://epistat.sciensano.be/Data/COVID19BE_CASES_AGESEX.csv",
+	 "urlparent":"https://epistat.sciensano.be/covid/",
+	 "separator":",",
+  	"columns": [
+    		{
+			"name":"date",
+                        "alias":"DATE" 
+                },
+		{ 
+			"name":"where",
+			"alias":"PROVINCE"
+		},
+		{
+                	"name":"tot_cases",
+			"alias":"CASES",
+			"cumulative":true
+		}
+  		]
+	}
+     ]		
+}

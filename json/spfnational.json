@@ -1,0 +1,53 @@
+{
+  "header": "SPFNational",
+  "geoinfo": {
+    "granularity": "country",
+    "iso3": "FRA",
+    "locationmode":"code"
+  },
+  "datasets": [
+  	{	
+	 "urldata": "https://www.data.gouv.fr/fr/datasets/r/f335f9ea-86e3-4ffa-9684-93c009d5e617",
+	 "separator":",",
+  	"columns": [
+    		{
+                         "name":"date"
+                },
+		{
+      			"name": "tot_dc_hosp",
+      			"alias": "dchosp",
+      			"description": "Cumul des décès (cumul des décès constatés à l'hôpital et en EMS)"
+    		},
+    		{
+      			"name": "cur_reanimation",
+      			"alias": "incid_rea",
+      			"description": "Nombre de nouveaux patients admis en réanimation au cours des dernières 24h."
+    		},
+   		 {
+      			"name": "cur_hospitalises",
+      			"alias": "incid_hosp",
+      			"description": "Nombre de nouveaux patients hospitalisés au cours des dernières 24h."
+    		},
+    		{
+      			"name": "cur_cas",
+      			"alias": "conf_j1",
+      			"description": "Nombre de nouveaux cas confirmés (J-1 date de résultats)"
+    		},
+    		{
+      			"name": "tot_dc_esms",
+      			"alias": "esms_dc",
+      			"description": "Décès en ESMS"
+    		},
+    		{
+      			"name": "tot_dc",
+      			"alias": "dc_tot"
+    		},
+    		{
+      			"name": "cur_tx_pos",
+      			"alias": "tx_pos",
+      			"description": "Taux de positivité des tests virologiques"
+    		}
+  		]
+	}
+     ]		
+}

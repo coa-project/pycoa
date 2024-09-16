@@ -1,0 +1,23 @@
+{
+  "header": "United States of America",
+    "geoinfo": {
+    "granularity": "subregion",
+    "iso3":"USA",
+    "locationmode":"name"
+  },
+  "datasets": [
+  	{	
+	 "urldata": "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_deaths_US.csv",
+	 "namedata":"tot_deaths", 
+	 "urlparent":"https://github.com/CSSEGISandData/COVID-19",
+	 "separator":",",
+  	 "dropcolumns":["UID","iso2","iso3","code3","FIPS","Admin2","Country_Region","Lat","Long_","Combined_Key","Population"],
+	 "columns": [
+		 {
+		    "name":"where",
+    		    "alias":"Province_State"	
+		}
+		  ]
+  		}
+	]
+}		

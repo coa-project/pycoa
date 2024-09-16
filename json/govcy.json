@@ -1,0 +1,43 @@
+{
+  "header": "Cyprus",
+    "geoinfo": {
+    "granularity": "country",
+    "iso3":"CYP",
+    "locationmode":"code"
+  },
+  "replace":{
+          ":":"np.nan"
+  	 },
+  "datasets": [
+  	{	
+	 "urldata":"https://www.data.gov.cy/sites/default/files/CY%20Covid19%20Open%20Data%20-%20Extended%20-%20new_247.csv",
+	 "urlparent":"https://www.data.gov.cy/node/4617?language=en",
+	 "separator":",",
+	 "columns": [
+		  {
+		     "name":"date"
+  		  },
+		  {
+		  "name":"tot_deaths",
+		  "alias":"total deaths",
+		  "description":"total deaths attributed to Covid-19 disease (total deaths)"
+		  },
+		  {
+		  "name":"tot_cases",
+		  "alias":"total cases",
+		  "description":"total number of confirmed cases (total cases)"
+		  },
+		  {
+		  "name":"cur_hosp",
+		  "alias":"Hospitalised Cases",
+		  "description":"number of patients with covid-19 hospitalized cases (Hospitalised Cases)"
+		  },
+		  {
+                  "name":"cur_icu",
+		  "alias":"Cases In ICUs",
+		  "description":"number of patients with covid-19 admitted to ICUs (Cases In ICUs)"
+	           }
+	           ]
+         }
+       ]
+}   

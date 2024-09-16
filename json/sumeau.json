@@ -1,0 +1,26 @@
+{
+  "header": "sumeau, 'Surveillance du Sars-Cov-2 dans les eaux usées' selected",
+  "geoinfo": {
+    "granularity": "country",
+    "iso3": "FRA",
+    "locationmode":"code"
+  },
+  "datasets": [
+  	{	
+	 "urldata": "https://www.data.gouv.fr/fr/datasets/r/2963ccb5-344d-4978-bdd3-08aaf9efe514",
+	 "urlparent":"https://www.data.gouv.fr/fr/datasets/surveillance-du-sars-cov-2-dans-les-eaux-usees-sumeau",
+	 "decimal":",",
+  	"columns": [
+    		{
+                         "name":"date",
+			 "alias":"semaine"
+                },
+    		{
+			"name":"ratio",
+			"alias":"National",
+			"description":"Les indicateurs de suivi du SARS-CoV-2 dans les eaux usées sont calculés à partir du ratio entre la concentration virale de SARS-CoV-2 (exprimée en cg/L et quantification réalisée à partir du gène E) et la concentration en azote ammoniacal (exprimée en mg de N/L)"
+    		}
+  		]
+	}
+     ]		
+}

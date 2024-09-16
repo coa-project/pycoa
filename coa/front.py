@@ -11,7 +11,7 @@ About :
 
 This is the PyCoA front end functions. It provides easy access and
 use of the whole PyCoA framework in a simplified way.
-The use can change the database, the type of data, the output format
+The use can change the VirusStat, the type of data, the output format
 with keywords (see help of functions below).
 
 Basic usage
@@ -23,11 +23,11 @@ Basic usage
 ** getting recovered data for some countries **
 
     cf.get(where=['Spain','Italy'],which='recovered')
-** listing available database and which data can be used **
+** listing available VirusStat and which data can be used **
     cf.listwhom()
     cf.setwhom('jhu',reload=True) # return available keywords (aka 'which' data), reload DB is True by default
     cf.listwhich()   # idem
-    cf.listwhat()    # return available time series type (weekly,
+    cf.lwhat()    # return available time series type (weekly,
                      # daily...)
     cf.plot(option='sumall') # return the cumulative plot for all countries
                      # for default which keyword. See cf.listwhich() and
@@ -52,10 +52,11 @@ from coa.tools import (
 )
 import coa.allvisu as allvisu
 import coa.covid19 as coco
+from coa.dbparser import MetaInfo
 from coa.error import *
 import coa._version
 import coa.geo as coge
-from coa.dbparser import _db_list_dict
+
 import geopandas as gpd
 output_notebook(hide_banner=True)
 
@@ -64,26 +65,24 @@ class Front:
         Front Class
     """
     def __init__(self,):
-        self.av = allvisu.AllVisu()
-        av = self.av
-        self._listwhom = list(_db_list_dict.keys())
-        self._listwhat = list(av.dicochartargs['what'])
-        self._listoutput = list(av.dicochartargs['output'])  # first one is default for get
-        self._listhist = list(av.dicochartargs['typeofhist'])
-        self._listplot = list(av.dicochartargs['typeofplot'])
-        self._listoption = list(av.dicochartargs['option'])
+        self.meta = MetaInfo()
 
-        self._listmaplabel = list(av.dicovisuargs['maplabel'])
-        self._listvisu = list(av.dicovisuargs['vis'])
-        self._listtiles = list(av.dicovisuargs['tile'])
+        self.av = allvisu.OptionVisu()
+        self.lwhat = list(self.av.dicochartargs['what'])
+        self.lhist = list(self.av.dicochartargs['typeofhist'])
+        self.loption = list(self.av.dicochartargs['option'])
 
-        self._listchartkargs = av.listchartkargs
-        self._dict_bypop = av._dict_bypop
+        self.lmaplabel = list(self.av.dicovisuargs['maplabel'])
+        self.lvisu = list(self.av.dicovisuargs['vis'])
+        self.ltiles = list(self.av.dicovisuargs['tile'])
 
-        self._db = ''
-        self._whom = ''
+        self.lchartkargs = self.av.listchartkargs
+        self.dict_bypop = self.av._dict_bypop
+
+        self.db = ''
+        self.virus = ''
         self.vis = 'bokeh'
-        self._cocoplot = None
+        self.cocoplot = None
         self.namefunction = None
 
     def whattodo(self,):
@@ -123,10 +122,10 @@ class Front:
         maplabel =  kwargs.get('maplabel','text')
         guideline = kwargs.get('guideline','False')
         title = kwargs.get('title',None)
-        if not self._cocoplot:
-            self._cocoplot = self.av
-        self._cocoplot.setkwargsfront(kwargs)
-        if vis not in self._listvisu:
+        if not self.cocoplot:
+            self.cocoplot = self.av
+        self.cocoplot.setkwargsfront(kwargs)
+        if vis not in self.lvisu:
             raise CoaError("Sorry but " + visu + " visualisation isn't implemented ")
         else:
             self.setdisplay(vis)
@@ -139,7 +138,6 @@ class Front:
                 return f(**self.getkwargs())
             except:
                 pass
-
 
     def setnamefunction(self,name):
         '''
@@ -158,7 +156,7 @@ class Front:
        '''
         Visualization seter
        '''
-       if vis not in self._listvisu:
+       if vis not in self.lvisu:
             raise CoaError("Visualisation "+ visu + " not implemented setting problem. Please contact support@pycoa.fr")
        else:
             self.vis = vis
@@ -183,55 +181,83 @@ class Front:
         get() function. The first one is the default output given if
         not specified.
         """
-        return self._listoutput
+        return list(self.av.dicochartargs['output'])
     # ----------------------------------------------------------------------
-    # --- listvisu() -------------------------------------------------------
+    # --- lvisu() -------------------------------------------------------
     # ----------------------------------------------------------------------
     def listvisu(self,):
         """Return the list of currently available visualization for the
         map() function. The first one is the default output given if
         not specified.
         """
-        return self._listvisu
+        return self.lvisu
     # ----------------------------------------------------------------------
     # --- listwhom() -------------------------------------------------------
     # ----------------------------------------------------------------------
     def listwhom(self, detailed = False):
-        """Return the list of currently avalailable databases for covid19
+        """Return the list of currently avalailable VirusStats for covid19
          data in PyCoA.
-         The first one is the default one.
-
-         If detailed=True, gives information location of each given database.
+         Only GOOD json description database is returned !
+         If detailed=True, gives information location of each given VirusStat.
         """
-        df = pd.DataFrame(_db_list_dict)
+        allpd  = self.meta.getallmetadata()
+        namedb = allpd.name.to_list()
+
+        if detailed:
+            dico = {}
+            namels, iso3ls, grls, varls = [],[],[],[]
+            for i in namedb:
+
+                mypd = allpd.loc[allpd.name.isin([i])]
+                if mypd.validejson.values  == 'GOOD':
+                    namels.append(i)
+                    iso3 = mypd.parsingjson.values[0]['geoinfo']['iso3']
+                    iso3ls.append(iso3)
+                    gr = mypd.parsingjson.values[0]['geoinfo']['granularity']
+                    grls.append(gr)
+                    for datasets in mypd.parsingjson.values[0]['datasets']:
+                        pdata = pd.DataFrame(datasets['columns'])
+                    varls.append(self.listwhich(i))
+
+            dico.update({'dbname': namels})
+            dico.update({'iso3': iso3ls})
+            dico.update({'granularity': grls})
+            dico.update({'variables': varls})
+            return pd.DataFrame.from_dict(dico, orient='index').T.reset_index(drop=True).set_index('dbname')
+        else:
+            return namedb
+        '''
+        db_list_dict = self.meta.getallmetadata()
+        df = pd.DataFrame(db_list_dict)
         df = df.T.reset_index()
         df.index = df.index+1
-        df = df.rename(columns={'index':'Database',0: "WW/iso3",1:'Granularité',2:'WW/Name'})
-        df = df.sort_values(by='Database').reset_index(drop=True)
+        df = df.rename(columns={'index':'VirusStat',0: "WW/iso3",1:'Granularité',2:'WW/Name'})
+        df = df.sort_values(by='VirusStat').reset_index(drop=True)
         try:
             if int(detailed):
                 df = (df.style.set_table_styles([{'selector' : '','props' : [('border','3px solid green')]}]))
                 print("Pandas has been pimped, use '.data' to get a pandas dataframe")
                 return df
             else:
-                return list(df['Database'])
+                return list(df['VirusStat'])
         except:
             raise CoaKeyError('Waiting for a boolean !')
-    # --- listwhat() -------------------------------------------------------
+        '''
+    # --- lwhat() -------------------------------------------------------
     # ----------------------------------------------------------------------
     def listwhat(self,):
         """Return the list of currently avalailable type of series available.
          The first one is the default one.
         """
-        return self._listwhat
+        return self.lwhat
     # ----------------------------------------------------------------------
-    # --- listhist() -------------------------------------------------------
+    # --- lthist() -------------------------------------------------------
     # ----------------------------------------------------------------------
     def listhist(self,):
         """Return the list of currently avalailable type of hist available.
          The first one is the default one.
         """
-        return self._listhist
+        return self.lhist
     # ----------------------------------------------------------------------
     # --- listplot() -------------------------------------------------------
     # ----------------------------------------------------------------------
@@ -239,15 +265,15 @@ class Front:
         """Return the list of currently avalailable type of plots available.
          The first one is the default one.
         """
-        return self._listplot
+        return list(self.av.dicochartargs['typeofplot'])
     # ----------------------------------------------------------------------
-    # --- listoption() -----------------------------------------------------
+    # --- loption() -----------------------------------------------------
     # ----------------------------------------------------------------------
     def listoption(self,):
         """Return the list of currently avalailable option apply to data.
          Default is no option.
         """
-        return self._listoption
+        return self.loption
 
     # ----------------------------------------------------------------------
     # --- listallkargs() -----------------------------------------------------
@@ -255,63 +281,71 @@ class Front:
     def listchartkargs(self,):
         """Return the list of avalailable kargs for chart functions
         """
-        return self._listchartkargs
+        return self.lchartkargs
     # ----------------------------------------------------------------------
     # --- listtile() -------------------------------------------------------
     # ----------------------------------------------------------------------
-    def listtile(self,):
+    def listtiles(self,):
         """Return the list of currently avalailable tile option for map()
          Default is the first one.
         """
-        return self._listtiles
+        return self.ltiles
     # ----------------------------------------------------------------------
     # --- listwhich() ------------------------------------------------------
     # ----------------------------------------------------------------------
-    def listwhich(self,):
-        """Get which are the available fields for the current base.
+    def listwhich(self,dbname):
+        """Get which are the available fields for base 'dbname'
+        if dbname is omitted current dabatase used (i.e self.db)
         Output is a list of string.
         By default, the listwhich()[0] is the default which field in other
         functions.
         """
-        return sorted(self._db.get_parserdb().get_available_keywords())
+        if dbname:
+            dic = self.meta.getcurrentmetadata(dbname)
+        else:
+            dic = self.meta.getcurrentmetadata(self.db)
+        return sorted(self.meta.getcurrentmetadatawhich(dic))
     # ----------------------------------------------------------------------
     # --- listwhere() ------------------------------------------------------
     # ----------------------------------------------------------------------
     def listwhere(self,clustered = False):
-        """Get the list of available regions/subregions managed by the current database
+        """Get the list of available regions/subregions managed by the current VirusStat
         """
+        granularity = self.meta.getcurrentmetadata(self.db)['geoinfo']['granularity']
+        code = self.meta.getcurrentmetadata(self.db)['geoinfo']['iso3']
         def clust():
-            if _db_list_dict[self._whom][1] == 'nation' and _db_list_dict[self._whom][2] not in ['World','Europe']:
-                return  self._db.geo.to_standard(_db_list_dict[_whom][0])
+            if granularity == 'country' and code not in ['WLD','EUR']:
+                return  self.virus.geo.to_standard(code)
             else:
-                r = self._db.geo.get_region_list()
+                r = self.virus.geo.get_region_list()
                 if not isinstance(r, list):
                     r=sorted(r['name_region'].to_list())
-                r.append(_db_list_dict[self._whom][2])
-                if _db_list_dict[self._whom][2] == 'Europe':
+                r.append(code)
+                if code  == 'EUR':
                     r.append('European Union')
                 return r
-        if _db_list_dict[self._whom][1] == 'nation' and _db_list_dict[self._whom][2] not in ['World','Europe']:
-            return [ _db_list_dict[self._whom][2] ]
+
+        if granularity == 'country' and code not in ['WLD','EUR']:
+            return code
         if clustered:
             return clust()
         else:
-            if self._db.db_world == True:
-                if _db_list_dict[self._whom][1] == 'nation' and _db_list_dict[self._whom][2] not in ['World','Europe']:
-                    r =  _db.geo.to_standard(_db_list_dict[self._whom][0])
+            if self.virus.db_world == True:
+                if granularity == 'country' and code not in ['WLD','EUR'] :
+                    r =  self.virus.to_standard(code)
                 else:
-                    if _db_list_dict[self._whom][2]=='World':
-                        r = self._db.geo.get_GeoRegion().get_countries_from_region('world')
+                    if code == 'WLD':
+                        r = self.virus.geo.get_GeoRegion().get_countries_from_region('World')
                     else:
-                        r = self._db.geo.get_GeoRegion().get_countries_from_region('europe')
-                    r = [self._db.geo.to_standard(c)[0] for c in r]
+                        r = self.virus.geo.get_GeoRegion().get_countries_from_region('Europe')
+                    r = [self.virus.geo.to_standard(c)[0] for c in r]
             else:
-                if _db_list_dict[self._whom][1] == 'subregion':
-                    pan = self._db.geo.get_subregion_list()
+                if granularity == 'subregion':
+                    pan = self.virus.geo.get_subregion_list()
                     r = list(pan.name_subregion.unique())
-                elif _db_list_dict[self._whom][1] == 'region':
+                elif granularity == 'country':
                     r = clust()
-                    r.append(_db_list_dict[self._whom][2])
+                    r.append(code)
                 else:
                     raise CoaKeyError('What is the granularity of your DB ?')
             return r
@@ -321,51 +355,50 @@ class Front:
     def listbypop(self):
         """Get the list of available population normalization
         """
-        return list(self._dict_bypop.keys())
+        return list(self.dict_bypop.keys())
     # ----------------------------------------------------------------------
-    # --- listmaplabel() ------------------------------------------------------
+    # --- lmaplabel() ------------------------------------------------------
     # ----------------------------------------------------------------------
     def listmaplabel(self):
         """Get the list of available population normalization
         """
-        return self._listmaplabel
+        return self.lmaplabel
     # ----------------------------------------------------------------------
     # --- setwhom() --------------------------------------------------------
     # ----------------------------------------------------------------------
     def setwhom(self,base,**kwargs):
-        """Set the covid19 database used, given as a string.
+        """Set the covid19 VirusStat used, given as a string.
         Please see pycoa.listbase() for the available current list.
 
         By default, the listbase()[0] is the default base used in other
         functions.
         """
         reload = kwargs.get('reload', True)
-        visu = True
         if reload not in [0,1]:
             raise CoaError('reload must be a boolean ... ')
         if base not in self.listwhom():
-            raise CoaDbError(base + ' is not a supported database. '
+            raise CoaDbError(base + ' is not a supported VirusStat. '
                                     'See pycoa.listbase() for the full list.')
         # Check if the current base is already set to the requested base
-        if self._whom == base:
-            print(f"The database '{base}' is already set as the current database.")
+        if self.db == base:
+            info(f"The VirusStat '{base}' is already set as the current database")
             return
         else:
             if reload:
-                self._db, self._cocoplot = coco.DataBase.factory(db_name=base,reload=reload)
+                self.virus, self.cocoplot = coco.VirusStat.factory(db_name=base,reload=reload)
             else:
-                self._db = coco.DataBase.readpekl('.cache/'+base+'.pkl')
-                pandy = self._db.getwheregeometrydescription()
-                self._cocoplot = allvisu.AllVisu(base, pandy)
+                self.virus = coco.VirusStat.readpekl('.cache/'+base+'.pkl')
+                pandy = self.virus.getwheregeometrydescription()
+                self.cocoplot = allvisu.AllVisu(base, pandy)
                 coge.GeoManager('name')
-        self._whom = base
+        self.db = base
     # ----------------------------------------------------------------------
     # --- getwhom() --------------------------------------------------------
     # ----------------------------------------------------------------------
     def getwhom(self,return_error=True):
         """Return the current base which is used
         """
-        return self._whom
+        return self.whom
 
     # ----------------------------------------------------------------------
     # --- get(**kwargs) ----------------------------------------------------
@@ -376,22 +409,22 @@ class Front:
         """
         if which:
             if which in self.listwhich():
-                print(self._db.get_parserdb().get_keyword_definition(which))
-                print('Parsed from this url:',self._db.get_parserdb().get_keyword_url(which))
+                print(self.virus.get_parserdb().get_keyword_definition(which))
+                print('Parsed from this url:',self.virus.get_parserdb().get_keyword_url(which))
             else:
                 raise CoaKeyError('This value do not exist please check.'+'Available variable so far in this db ' + str(listwhich()))
         else:
-            df = self._db.get_parserdb().get_dbdescription()
+            df = self.virus.get_parserdb().get_dbdescription()
             return df
 
     def getrawdb(self, **kwargs):
         """
-            Return the main pandas i.e with all the which values loaded from the database selected
+            Return the main pandas i.e with all the which values loaded from the VirusStat selected
         """
-        col = list(self._db.get_fulldb().columns)
-        mem='{:,}'.format(self._db.get_fulldb()[col].memory_usage(deep=True).sum())
+        col = list(self.virus.get_fulldb().columns)
+        mem='{:,}'.format(self.virus.get_fulldb()[col].memory_usage(deep=True).sum())
         info('Memory usage of all columns: ' + mem + ' bytes')
-        df = self._db.get_fulldb(**kwargs)
+        df = self.virus.get_fulldb(**kwargs)
         return df
     # ----------------------------------------------------------------------
     # --- chartsinput_deco(f)
@@ -414,16 +447,16 @@ class Front:
             '''
                 wrapper dealing with arg testing
             '''
-            if self._db == '':
+            if self.db == '':
                 raise CoaKeyError('Something went wrong ... does a db has been loaded ? (setwhom)')
-                #self._db, self._cocoplot = coco.DataBase.factory(db_name = self._whom)
-            for i in self._cocoplot.listviskargs:
+                #self.db, self.cocoplot = coco.VirusStat.factory(db_name = self.whom)
+            for i in self.av.listviskargs:
                 try:
                     kwargs.pop(i)
                 except:
                     pass
 
-            kwargs_test(kwargs,self._listchartkargs,'Bad args used ! please check ')
+            kwargs_test(kwargs,self.av.listchartkargs,'Bad args used ! please check ')
             where = kwargs.get('where', None)
             which = kwargs.get('which', None)
             if which and not isinstance(which,list):
@@ -444,13 +477,13 @@ class Front:
             #if input_field:
             #    which = input_field
             if what:
-                if what not in self.listwhat():
+                if what not in self.lwhat:
                     raise CoaKeyError('What = ' + what + ' not supported. '
-                                                              'See listwhat() for full list.')
+                                                              'See lwhat() for full list.')
                 if 'what'=='sandard':
                     what = which
             else:
-                what = self._listwhat[0]
+                what = self.lwhat[0]
 
             option = kwargs.get('option', None)
             bypop = kwargs.get('bypop','no')
@@ -459,10 +492,6 @@ class Front:
 
             if kwargs['output'] not in self.listoutput():
                 raise CoaKeyError('Output option ' + kwargs['output'] + ' not supported. See help().')
-            if whom is None:
-                whom = self._whom
-            if whom != self._whom:
-                setwhom(whom)
 
             if bypop not in self.listbypop():
                 raise CoaKeyError('The bypop arg should be selected in '+str(self.listbypop())+' only.')
@@ -470,12 +499,12 @@ class Front:
             if isinstance(input_arg, pd.DataFrame):
                 if input_arg is not None and not input_arg.empty:
                     pandy = input_arg
-                    pandy = self._db.get_stats(**kwargs)
+                    pandy = self.virus.get_stats(**kwargs)
                 else:
                     pandy=pd.DataFrame()
                     input_field = which
                     for i in which:
-                        tmp = self._db.get_stats(which=i,where=where, option=option)
+                        tmp = self.virus.get_stats(which=i,where=where, option=option)
                         if len(which)>1:
                             tmp = tmp.rename(columns={'daily':'daily_'+i,'weekly':'weekly_'+i})
                         if pandy.empty:
@@ -484,9 +513,8 @@ class Front:
                             tmp = tmp[[i,'daily_'+i,'weekly_'+i,'date','clustername']]
                             pandy = pd.merge(pandy, tmp, on=['date','clustername'],how='inner')
                     input_arg = pandy
-
                 if bypop != 'no':
-                    input_arg = self._db.normbypop(pandy,input_field,bypop)
+                    input_arg = self.virus.normbypop(pandy,input_field,bypop)
                     if bypop=='pop':
                         input_field = input_field+' per total population'
                     else:
@@ -494,18 +522,11 @@ class Front:
                     pandy = input_arg
                 if isinstance(input_field,list):
                     which = input_field[0]
-                #else:
-                #    which = input_field
-                #if which is None:
-                #    which = pandy.columns[2]
                 pandy.loc[:,'standard'] = pandy[pandy.columns[2]]
                 if 'input_field' not in kwargs:
                     kwargs['input_field'] = input_field
-                #if option:
-                #    print('option has no effect here, please try do it when you construct your input pandas ')
             elif input_arg == None :
-                #kwargs.pop('input_field')
-                pandy = self._db.get_stats(**kwargs)
+                pandy = self.virus.get_stats(**kwargs)
                 if which :
                     pandy['standard'] = pandy[which[0]]
                 else:
@@ -521,15 +542,15 @@ class Front:
                     lwhere=flat_list([[i,i] for i in where])
                     pandy['where']=lwhere
                     pandy['clustername']=lwhere
-                    pandy['codelocation']=len(pandy)*['000']
+                    pandy['code']=len(pandy)*['000']
                     pandy=pandy.fillna(0)
                     bypop = 'no'
                 if bypop != 'no':
                     if what:
                         val = what
                     else:
-                        val = _listwhat[0]
-                    pandy = self._db.normbypop(pandy , val, bypop)
+                        val = _lwhat[0]
+                    pandy = self.virus.normbypop(pandy , val, bypop)
                     if bypop=='pop':
                         input_field = input_field+' per total population'
                     else:
@@ -551,12 +572,12 @@ class Front:
                 lwhere=flat_list([[i,i] for i in where])
                 pandy['where']=lwhere
                 pandy['clustername']=lwhere
-                pandy['codelocation']=len(pandy)*['000']
+                pandy['code']=len(pandy)*['000']
                 pandy=pandy.fillna(0)
                 bypop = 'no'
 
-            db_first_date = pandy[[pandy.columns[2],'date']].date.min()
-            db_last_date = pandy[[pandy.columns[2],'date']].date.max()
+            db_first_date = pandy.date.min()
+            db_last_date = pandy.date.max()
 
             if when_beg < db_first_date:
                 when_beg = db_first_date
@@ -567,8 +588,8 @@ class Front:
             if when_end < db_first_date:
                 raise CoaNoData("No available data before "+str(db_first_date))
             # when cut
-            if when_beg >  pandy[[pandy.columns[2],'date']].date.max() or when_end >  pandy[[pandy.columns[2],'date']].date.max():
-                raise CoaNoData("No available data after "+str( pandy[[pandy.columns[2],'date']].date.max()))
+            if when_beg >  db_last_date or when_end >  db_last_date:
+                raise CoaNoData("No available data after "+str(db_last_date))
 
             if onedate:
                 pandy = pandy[pandy.date == when_end]
@@ -602,7 +623,7 @@ class Front:
     def get(self,**kwargs):
         """Return covid19 data in specified format output (default, by list)
         for specified locations ('where' keyword).
-        The used database is set by the setbase() function but can be
+        The used VirusStat is set by the setbase() function but can be
         changed on the fly ('whom' keyword)
         Keyword arguments
         -----------------
@@ -610,16 +631,16 @@ class Front:
         where  --   a single string of location, or list of (mandatory,
                     no default value)
         which  --   what sort of data to deliver ( 'death','confirmed',
-                    'recovered' for 'jhu' default database). See listwhich() function
-                    for full list according to the used database.
+                    'recovered' for 'jhu' default VirusStat). See listwhich() function
+                    for full list according to the used VirusStat.
 
         what   --   which data are computed, either in standard mode
                     ('standard', default value), or 'daily' (diff with previous day
                     and 'weekly' (diff with previous week). See
                     listwhich() for fullist of available
-                    Full list of what keyword with the listwhat() function.
+                    Full list of what keyword with the lwhat() function.
 
-        whom   --   Database specification (overload the setbase()
+        whom   --   VirusStat specification (overload the setbase()
                     function). See listwhom() for supported list
 
         when   --   dates are given under the format dd/mm/yyyy. In the when
@@ -642,8 +663,8 @@ class Front:
                     option is applied for each bracketed member of the where arg.
 
                     By default : no option.
-                    See listoption().
-        bypop --    normalize by population (if available for the selected database).
+                    See loption().
+        bypop --    normalize by population (if available for the selected VirusStat).
                     * by default, 'no' normalization
                     * can normalize by '100', '1k', '100k' or '1M'
         """
@@ -673,7 +694,7 @@ class Front:
             info('Memory usage of all columns: ' + mem + ' bytes')
 
         elif output == 'geopandas':
-            casted_data = pd.merge(pandy, self._db.getwheregeometrydescription(), on='where')
+            casted_data = pd.merge(pandy, self.virus.getwheregeometrydescription(), on='where')
             casted_data=gpd.GeoDataFrame(casted_data)
         elif output == 'dict':
             casted_data = pandy.to_dict('split')
@@ -725,7 +746,7 @@ class Front:
             """
             Create a map according to arguments and options.
             See help(map).
-            - 2 types of visu are avalailable so far : bokeh or folium (see listvisu())
+            - 2 types of visu are avalailable so far : bokeh or folium (see lvisu())
             by default visu='bokeh'
             - In the default case (i.e visu='bokeh') available option are :
                 - dateslider=True: a date slider is called and displayed on the right part of the map
@@ -747,11 +768,11 @@ class Front:
                 kwargs.pop('bypop')
             dateslider = kwargs.get('dateslider', None)
             maplabel = kwargs.get('maplabel', None)
-            listmaplabel=self._listmaplabel
+            lmaplabel=self.lmaplabel
             if maplabel is not None:
                 if not isinstance(maplabel,list):
                     maplabel = [maplabel]
-                if  [a for a in maplabel if a not in listmaplabel]:
+                if  [a for a in maplabel if a not in lmaplabel]:
                     raise CoaTypeError('Waiting a correct maplabel value. See help.')
             sparkline = False
             if dateslider is not None:
@@ -763,7 +784,7 @@ class Front:
                     kwargs['maplabel'] = ['text']
                 if 'textinteger' in maplabel:
                     kwargs['maplabel'] = ['textinteger']
-                for i in listmaplabel:
+                for i in lmaplabel:
                     if i in maplabel and i not in ['text','textinteger']:
                         kwargs['maplabel'].append(i)
                 #if all([ True if i in ['text','spark','label%','log'] else False for i in kwargs['maplabel'] ]) :
@@ -782,13 +803,13 @@ class Front:
         if visu == 'bokeh':
             if maplabel:
                 if 'spark' in maplabel or 'spiral' in maplabel:
-                    return self._cocoplot.pycoa_pimpmap(**kwargs)
+                    return self.cocoplot.pycoa_pimpmap(**kwargs)
                 elif 'text' or 'exploded' or 'dense' in maplabel:
-                    return self._cocoplot.pycoa_map(**kwargs)
+                    return self.cocoplot.pycoa_map(**kwargs)
                 else:
                     CoaError("What kind of pimp map you want ?!")
             else:
-                return self._cocoplot.pycoa_map(**kwargs)
+                return self.cocoplot.pycoa_map(**kwargs)
 
     @chartsinput_deco
     @decomap
@@ -800,24 +821,24 @@ class Front:
         if visu == 'bokeh':
             if maplabel:
                 if 'spark' in maplabel or 'spiral' in maplabel:
-                    fig = self._cocoplot.pycoa_pimpmap(**kwargs)
+                    fig = self.cocoplot.pycoa_pimpmap(**kwargs)
                 elif 'text' or 'exploded' or 'dense' in maplabel:
-                    fig = self._cocoplot.pycoa_map(**kwargs)
+                    fig = self.cocoplot.pycoa_map(**kwargs)
                 else:
                     CoaError("What kind of pimp map you want ?!")
             else:
-                fig = self._cocoplot.pycoa_map(**kwargs)
+                fig = self.cocoplot.pycoa_map(**kwargs)
             return show(fig)
         elif visu == 'folium':
             if dateslider is not None :
                 raise CoaKeyError('Not available with folium map, you should considere to use bokeh map visu in this case')
             if  maplabel and set(maplabel) != set(['log']):
                 raise CoaKeyError('Not available with folium map, you should considere to use bokeh map visu in this case')
-            return self._cocoplot.pycoa_mapfolium(**kwargs)
+            return self.cocoplot.pycoa_mapfolium(**kwargs)
         elif visu == 'mplt':
-            return self._cocoplot.pycoa_mpltmap(**kwargs)
+            return self.cocoplot.pycoa_mpltmap(**kwargs)
         elif visu == 'seaborn':
-            return self._cocoplot.pycoa_heatmap_seaborn(**kwargs)
+            return self.cocoplot.pycoa_heatmap_seaborn(**kwargs)
         else:
             self.setdisplay('bokeh')
             raise CoaTypeError('Waiting for a valid visualisation. So far: \'bokeh\', \'folium\' or \'mplt\' \
@@ -860,7 +881,7 @@ class Front:
             #input = kwargs.pop('input')
             #input_field = kwargs.pop('input_field')
             dateslider = kwargs.get('dateslider', None)
-            typeofhist = kwargs.pop('typeofhist',self.listhist()[0])
+            typeofhist = kwargs.get('typeofhist',self.listhist()[0])
             kwargs.pop('output')
             if kwargs.get('bypop'):
               kwargs.pop('bypop')
@@ -868,40 +889,40 @@ class Front:
                 if typeofhist == 'bylocation':
                     if 'bins' in kwargs:
                         raise CoaKeyError("The bins keyword cannot be set with histograms by location. See help.")
-                    fig = self._cocoplot.pycoa_horizonhisto(**kwargs)
+                    fig = self.cocoplot.pycoa_horizonhisto(**kwargs)
                 elif typeofhist == 'byvalue':
                     if dateslider:
                         info('dateslider not implemented for typeofhist=\'byvalue\'.')
-                        fig = self._cocoplot.pycoa_horizonhisto(**kwargs)
+                        fig = self.cocoplot.pycoa_horizonhisto(**kwargs)
                     else:
-                        fig = self._cocoplot.pycoa_histo( **kwargs)
+                        fig = self.cocoplot.pycoa_histo( **kwargs)
                 elif typeofhist == 'pie':
-                    fig = self._cocoplot.pycoa_pie(**kwargs)
+                    fig = self.cocoplot.pycoa_pie(**kwargs)
             elif self.getdisplay() == 'seaborn':
                 if typeofhist == 'bylocation':
-                    fig = self._cocoplot.pycoa_hist_seaborn_hori( **kwargs)
+                    fig = self.cocoplot.pycoa_hist_seaborn_hori( **kwargs)
                 elif typeofhist == 'pie':
-                    fig = self._cocoplot.pycoa_pairplot_seaborn(**kwargs)
+                    fig = self.cocoplot.pycoa_pairplot_seaborn(**kwargs)
                 elif typeofhist == 'byvalue':
-                    fig = self._cocoplot.pycoa_hist_seaborn_value( **kwargs)
+                    fig = self.cocoplot.pycoa_hist_seaborn_value( **kwargs)
                 else:
                     print(typeofhist + ' not implemented in ' + self.getdisplay())
                     self.setdisplay('bokeh')
-                    fig = self._cocoplot.pycoa_horizonhisto(**kwargs)
+                    fig = self.cocoplot.pycoa_horizonhisto(**kwargs)
             elif self.getdisplay() == 'mplt':
                 if typeofhist == 'bylocation':
-                    fig = self._cocoplot.pycoa_mplthorizontalhisto(**kwargs)
+                    fig = self.cocoplot.pycoa_mplthorizontalhisto(**kwargs)
                 elif typeofhist == 'byvalue':
-                    fig = self._cocoplot.pycoa_mplthisto(**kwargs)
+                    fig = self.cocoplot.pycoa_mplthisto(**kwargs)
                 elif typeofhist == 'pie':
-                    fig = self._cocoplot.pycoa_mpltpie(**kwargs)
+                    fig = self.cocoplot.pycoa_mpltpie(**kwargs)
                 else:
                     print(typeofhist + ' not implemented in ' + self.getdisplay())
                     self.setdisplay('bokeh')
-                    fig = self._cocoplot.pycoa_horizonhisto(**kwargs)
+                    fig = self.cocoplot.pycoa_horizonhisto(**kwargs)
             else:
                 self.setdisplay('bokeh')
-                raise CoaKeyError('Unknown typeofhist value. Available value : listhist().')
+                raise CoaKeyError('Unknown typeofhist value. Available value : lthist().')
             return func(self,fig)
         return inner
 
@@ -969,49 +990,49 @@ class Front:
             input_field = kwargs.get('input_field')
             typeofplot = kwargs.get('typeofplot',self.listplot()[0])
             kwargs.pop('output')
-            fig = self._cocoplot
+            fig = self.cocoplot
             if kwargs.get('bypop'):
                 kwargs.pop('bypop')
             if self.getdisplay() == 'bokeh':
                 if typeofplot == 'date':
-                    fig = self._cocoplot.pycoa_date_plot(**kwargs)
+                    fig = self.cocoplot.pycoa_date_plot(**kwargs)
                 elif typeofplot == 'spiral':
-                    fig = self._cocoplot.pycoa_spiral_plot(**kwargs)
+                    fig = self.cocoplot.pycoa_spiral_plot(**kwargs)
                 elif typeofplot == 'versus':
                     if isinstance(input_field,list) and len(input_field) == 2:
-                        fig = self._cocoplot.pycoa_plot(**kwargs)
+                        fig = self.cocoplot.pycoa_plot(**kwargs)
                     else:
                         print('typeofplot is versus but dim(input_field)!=2, versus has not effect ...')
-                        fig = self._cocoplot.pycoa_date_plot(**kwargs)
+                        fig = self.cocoplot.pycoa_date_plot(**kwargs)
                 elif typeofplot == 'menulocation':
-                    if _db_list_dict[self._whom][1] == 'nation' and _db_list_dict[self._whom][2] != 'World':
+                    if _db_list_dict[self.whom][1] == 'nation' and _db_list_dict[self.whom][2] != 'World':
                         print('typeofplot is menulocation with a national DB granularity, use date plot instead ...')
-                        fig = self._cocoplot.pycoa_date_plot(*kwargs)
+                        fig = self.cocoplot.pycoa_date_plot(*kwargs)
                     else:
                         if isinstance(input_field,list) and len(input_field) > 1:
                             CoaWarning('typeofplot is menulocation but dim(input_field)>1, take first one '+input_field[0])
-                        fig = self._cocoplot.pycoa_menu_plot(**kwargs)
+                        fig = self.cocoplot.pycoa_menu_plot(**kwargs)
                 elif typeofplot == 'yearly':
                     if input.date.max()-input.date.min() <= dt.timedelta(days=365):
                         print("Yearly will not be used since the time covered is less than 1 year")
-                        fig = self._cocoplot.pycoa_date_plot(**kwargs)
+                        fig = self.cocoplot.pycoa_date_plot(**kwargs)
                     else:
-                        fig = self._cocoplot.pycoa_yearly_plot(**kwargs)
+                        fig = self.cocoplot.pycoa_yearly_plot(**kwargs)
             elif self.getdisplay() == 'mplt':
                 if typeofplot == 'date':
-                    fig = self._cocoplot.pycoa_mpltdate_plot(**kwargs)
+                    fig = self.cocoplot.pycoa_mpltdate_plot(**kwargs)
                 elif typeofplot == 'versus':
-                    fig = self._cocoplot.pycoa_mpltversus_plot(**kwargs)
+                    fig = self.cocoplot.pycoa_mpltversus_plot(**kwargs)
                 elif typeofplot == 'yearly':
-                    fig = self._cocoplot.pycoa_mpltyearly_plot(**kwargs)
+                    fig = self.cocoplot.pycoa_mpltyearly_plot(**kwargs)
                 else:
                     raise CoaKeyError('For display: '+self.getdisplay() +' unknown type of plot '+typeofplot)
             elif self.getdisplay() == 'seaborn':
                 if typeofplot == 'date':
-                    fig = self._cocoplot.pycoa_date_plot_seaborn(**kwargs)
+                    fig = self.cocoplot.pycoa_date_plot_seaborn(**kwargs)
                 else:
                     print(typeofplot + ' not implemented in ' + self.getdisplay())
-                    fig = self._cocoplot.pycoa_spiral_plot(**kwargs)
+                    fig = self.cocoplot.pycoa_spiral_plot(**kwargs)
             else:
                 self.setdisplay('bokeh')
                 raise CoaKeyError('Unknown typeofplot value. Should be date, versus, menulocation, spiral or yearly.')

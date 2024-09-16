@@ -56,7 +56,7 @@ class GeoManager():
             'name',           # Standard name ( != Official, caution )
             'num']            # Numeric standard
 
-    _list_db=[None,'jhu','worldometers','owid','opencovid19national','spfnational','mpoxgh','olympics'] # first is default
+    _list_db=[None,'jhu','worldometers','owid','opencovid19national','spfnational','mpoxgh','olympics','europa','govcy','sumeau'] # first is default
     _list_output=['list','dict','pandas'] # first is default
 
     _standard = None # currently used normalisation standard
@@ -165,8 +165,9 @@ class GeoManager():
             raise CoaTypeError('Waiting for str, list of str or pandas'
                 'as input of get_standard function member of GeoManager')
 
-        w=[v.title() for v in w] # capitalize first letter of each name
-
+        fakeiso3={'WLD':'World','EUR':'Europe'} #Oliv add this for iso3 json description for World and Europe
+        w=[ v.title() if v not in list(fakeiso3.keys()) else fakeiso3[v] for v in w   ] # capitalize first letter of each name
+        #w = (pd.Series(w).replace(fakeiso3).str.title()).to_list()
         w0=w.copy()
 
         if db:
@@ -296,7 +297,7 @@ class GeoManager():
                     "Northern Cyprus":"CYP",\
                     "Curacao":"CUW",\
                     "Faeroe Islands":"FRO",\
-                    "Vatican":"VAT"
+                    "Vatican":"VAT",
                 })
         elif db=='olympics':
             translation_dict.update({\
@@ -1156,6 +1157,7 @@ class GeoCountry():
                     self._country_data.loc[self._country_data.name_subregion.isin(ath)].dissolve(aggfunc='sum').values
             self._country_data = self._country_data.loc[~self._country_data.name_subregion.isin(ath[:-1])]
             changename={'Ο ΟΡΟΣ':'ΑΓΙΟ ΟΡΟΣ','ΑΘΗΝΩΝ':'ΑΤΤΙΚΗΣ'}
+
             self._country_data['name_subregion'].replace(changename, inplace=True)
             self._country_data['name_region'].replace(changename, inplace=True)
 

@@ -28,8 +28,9 @@ from coa.tools import (
     return_nonan_dates_pandas,
 )
 import coa.geo as coge
-import coa.dbparser as dbparser
-from coa.dbparser import _db_list_dict
+
+import coa.dbparser as parser
+
 import geopandas as gpd
 from coa.error import *
 from scipy import stats as sps
@@ -37,11 +38,9 @@ import pickle
 import os, time
 import coa.allvisu as allvisu
 import coa.geo as coge
-class DataBase(object):
+class VirusStat(object):
    """
-   DataBase class
-   Parse a Covid-19 database and filled the pandas python objet : mainpandas
-   It takes a string argument, which can be: 'jhu','spf', 'spfnational','owid', 'opencovid19' and 'opencovid19national'
+   VirusStat class
    """
    def __init__(self, db_name):
         """
@@ -50,38 +49,22 @@ class DataBase(object):
             - call the geo
             - call the display
         """
-        verb("Init of covid19.DataBase()")
-        self.database_type = dbparser._db_list_dict
+        verb("Init of covid19.VirusStat()")
         self.db = db_name
-        self.dbfullinfo = dbparser.DBInfo(db_name)
-        self.slocation = self.dbfullinfo.get_locations()
-        #self.geo = self.dbfullinfo.get_geo()
-        self.db_world = self.dbfullinfo.get_world_boolean()
+        self.currentmetadata = parser.MetaInfo().getcurrentmetadata(db_name)
+        self.currentdata = parser.DataParser(db_name)
+
+        self.slocation = self.currentdata.get_locations()
+        #self.geo = self.currentdata.get_geo()
+        self.db_world = self.currentdata.get_world_boolean()
         self.codisp  = None
-        self.iso3country = _db_list_dict[db_name][0]
-        self.granularity = _db_list_dict[db_name][1]
-        self.namecountry = _db_list_dict[db_name][2]
+        self.code = self.currentmetadata['geoinfo']['iso3']
+        self.granularity = self.currentmetadata['geoinfo']['granularity']
+        self.namecountry = self.currentmetadata['geoinfo']['iso3']
         self._gi = coge.GeoInfo()
 
         try:
-            if self.granularity != 'nation':
-                self.geo = coge.GeoCountry(self.iso3country)
-                if self.granularity == 'region':
-                    where_kindgeo = self.geo.get_region_list()[['code_region', 'name_region', 'geometry']]
-                    where_kindgeo = where_kindgeo.rename(columns={'name_region': 'where'})
-                    if self.iso3country == 'PRT':
-                         tmp = where_kindgeo.rename(columns={'name_region': 'where'})
-                         tmp = tmp.loc[tmp.code_region=='PT.99']
-                         self.boundary_metropole =tmp['geometry'].total_bounds
-                    if self.iso3country == 'FRA':
-                         tmp = where_kindgeo.rename(columns={'name_region': 'where'})
-                         tmp = tmp.loc[tmp.code_region=='999']
-                         self.boundary_metropole =tmp['geometry'].total_bounds
-                elif self.granularity == 'subregion':
-                    list_dep_metro = None
-                    where_kindgeo = self.geo.get_subregion_list()[['code_subregion', 'name_subregion', 'geometry']]
-                    where_kindgeo = where_kindgeo.rename(columns={'name_subregion': 'where'})
-            else:
+            if self.granularity == 'country':
                    self.geo = coge.GeoManager('name')
                    geopan = gpd.GeoDataFrame()#crs="EPSG:4326")
                    info = coge.GeoInfo()
@@ -91,6 +74,25 @@ class DataBase(object):
                    geopan = gpd.GeoDataFrame(geopan, geometry=geopan.geometry, crs="EPSG:4326")
                    geopan = geopan[geopan['where'] != 'Antarctica']
                    where_kindgeo = geopan.dropna().reset_index(drop=True)
+            else:
+                   self.geo = coge.GeoCountry(self.code)
+                   if self.granularity == 'region':
+                        where_kindgeo = self.geo.get_region_list()[['code_region', 'name_region', 'geometry']]
+                        where_kindgeo = where_kindgeo.rename(columns={'name_region': 'where'})
+                        if self.code == 'PRT':
+                             tmp = where_kindgeo.rename(columns={'name_region': 'where'})
+                             tmp = tmp.loc[tmp.code_region=='PT.99']
+                             self.boundary_metropole =tmp['geometry'].total_bounds
+                        if self.code == 'FRA':
+                             tmp = where_kindgeo.rename(columns={'name_region': 'where'})
+                             tmp = tmp.loc[tmp.code_region=='999']
+                             self.boundary_metropole =tmp['geometry'].total_bounds
+                   elif self.granularity == 'subregion':
+                        list_dep_metro = None
+                        where_kindgeo = self.geo.get_subregion_list()[['code_subregion', 'name_subregion', 'geometry']]
+                        where_kindgeo = where_kindgeo.rename(columns={'name_subregion': 'where'})
+                   else:
+                       raise CoaTypeError('What is the granularity of your  database ?')
         except:
             raise CoaTypeError('What data base are you looking for ?')
         self.where_geodescription = where_kindgeo
@@ -104,23 +106,22 @@ class DataBase(object):
      when sumall option is used this method is usefull for the display
      it returns an input with new columns
     '''
-    input['permanentdisplay'] = input.codelocation
-    if 'codelocation' and 'clustername' not in input.columns:
-       input['codelocation'] = input['where']
+    input['permanentdisplay'] = input.code
+    if 'code' and 'clustername' not in input.columns:
+       input['code'] = input['where']
        input['clustername'] = input['where']
        input['rolloverdisplay'] = input['where']
        input['permanentdisplay'] = input['where']
     else:
-       if self.granularity == 'nation' :
-           #input['codelocation'] = input['codelocation'].apply(lambda x: str(x).replace('[', '').replace(']', '') if len(x)< 10 else x[0]+'...'+x[-1] )
-           ##input['permanentdisplay'] = input.apply(lambda x: x.clustername if self.geo.get_GeoRegion().is_region(x.clustername) else str(x.codelocation), axis = 1)
-           input['permanentdisplay'] = input.codelocation
+       if self.granularity == 'country' :
+           #input['code'] = input['code'].apply(lambda x: str(x).replace('[', '').replace(']', '') if len(x)< 10 else x[0]+'...'+x[-1] )
+           ##input['permanentdisplay'] = input.apply(lambda x: x.clustername if self.geo.get_GeoRegion().is_region(x.clustername) else str(x.code), axis = 1)
+           input['permanentdisplay'] = input.code
        else:
            if self.granularity == 'subregion' :
                input = input.reset_index(drop=True)
-
-               if isinstance(input['codelocation'].iloc[0],list):
-                   input['codelocation'] = input['codelocation'].apply(lambda x: str(x).replace("'", '')\
+               if isinstance(input['code'].iloc[0],list):
+                   input['code'] = input['code'].apply(lambda x: str(x).replace("'", '')\
                                                 if len(x)<5 else '['+str(x[0]).replace("'", '')+',...,'+str(x[-1]).replace("'", '')+']')
 
                trad={}
@@ -130,34 +131,36 @@ class DataBase(object):
                   cluster = [i for i in cluster]
                for i in cluster:
                    if i == self.namecountry:
-                       input['permanentdisplay'] = input.clustername #[self.dbld[self.database_name][2]]*len(input)
+                       input['permanentdisplay'] = input.clustername #[self.dbld[self.VirusStat_name][2]]*len(input)
                    else:
                        if self.geo.is_region(i):
                            trad[i] = self.geo.is_region(i)
                        elif self.geo.is_subregion(i):
-                           trad[i] = self.geo.is_subregion(i)#input.loc[input.clustername==i]['codelocation'].iloc[0]
+                           trad[i] = self.geo.is_subregion(i)#input.loc[input.clustername==i]['code'].iloc[0]
                        else:
                            trad[i] = i
                        trad={k:(v[:3]+'...'+v[-3:] if len(v)>8 else v) for k,v in trad.items()}
-                       if ',' in input.codelocation[0]:
+                       if ',' in input.code[0]:
                            input['permanentdisplay'] = input.clustername
                        else:
-                           input['permanentdisplay'] = input.codelocation#input.clustername.map(trad)
+                           input['permanentdisplay'] = input.code#input.clustername.map(trad)
            elif self.granularity == 'region' :
                if all(i == self.namecountry for i in input.clustername.unique()):
                    input['permanentdisplay'] = [self.namecountry]*len(input)
                else:
-                   input['permanentdisplay'] = input.codelocation
+                   input['permanentdisplay'] = input.code
            else :
                CoaError("Sorry but what's the granularity of you DB "+self.granularity)
     input['rolloverdisplay'] = input['where']
+    if isinstance(input['permanentdisplay'][0],list):
+        input['permanentdisplay'] = [str(i) for i in input['permanentdisplay']]
     return input
 
 
    @staticmethod
    def factory(**kwargs):
        '''
-        Return an instance to DataBase and to Display methods
+        Return an instance to VirusStat and to Display methods
         This is recommended to avoid mismatch in labeled figures
        '''
        db_name = kwargs.get('db_name')
@@ -169,11 +172,11 @@ class DataBase(object):
        filepkl = path + db_name + '.pkl'
 
        if reload:
-           datab = DataBase(db_name)
+           datab = VirusStat(db_name)
            with open(filepkl, 'wb') as f:
                pickle.dump(datab,f)
        #else:
-       #   datab=DataBase.readpekl(filepkl)
+       #   datab=VirusStat.readpekl(filepkl)
        #   print("HERE")
        #if visu:
        visu=True
@@ -183,9 +186,9 @@ class DataBase(object):
        else:
             return datab, None
 
-   def set_display(self,db,wheregeometrydescription):
+   def set_display(self,db_name,wheregeometrydescription):
        ''' Set the Display '''
-       self.codisp = allvisu.AllVisu(db, wheregeometrydescription)
+       self.codisp = allvisu.AllVisu(db_name, wheregeometrydescription)
 
    def get_display(self):
        ''' Return the instance of Display initialized by factory'''
@@ -199,7 +202,7 @@ class DataBase(object):
               os.makedirs(path)
          db_name=filepkl.replace(path,'').replace('.pkl','')
          print("Data from "+db_name + " isn't allready stored")
-         datab = DataBase(db_name)
+         datab = VirusStat(db_name)
          with open(filepkl, 'wb') as f:
              pickle.dump(datab,f)
       else:
@@ -217,33 +220,33 @@ class DataBase(object):
        return self.geo
 
    def get_parserdb(self):
-       return self.dbfullinfo
+       return self.currentdata
 
    def get_fulldb(self):
-      return self.dbfullinfo.get_mainpandas()
+      return self.currentdata.get_maingeopandas()
 
-   def get_available_database(self):
+   def get_available_VirusStat(self):
         '''
-        Return all the available Covid19 database
+        Return all the available Covid19 VirusStat
         '''
-        return self.database_name
+        return self.VirusStat_name
 
    def get_stats(self,**kwargs):
         '''
         Return the pandas pandas_datase
          - index: only an incremental value
-         - location: list of location used in the database selected (using geo standardization)
+         - location: list of location used in the VirusStat selected (using geo standardization)
          - 'which' :  return the keyword values selected from the avalailable keywords keepted seems
-            self.dbfullinfo.get_available_keywords()
+            self.currentdata.get_available_keywords()
 
          - 'option' :default none
-            * 'nonneg' In some cases negatives values can appeared due to a database updated, nonneg option
+            * 'nonneg' In some cases negatives values can appeared due to a VirusStat updated, nonneg option
                 will smooth the curve during all the period considered
             * 'nofillnan' if you do not want that NaN values are filled, which is the default behaviour
             * 'smooth7' moving average, window of 7 days
             * 'sumall' sum data over all locations
 
-        keys are keyswords from the selected database
+        keys are keyswords from the selected VirusStat
                 location        | date      | keywords          |  daily            |  weekly
                 -----------------------------------------------------------------------
                 location1       |    1      |  val1-1           |  daily1-1          |  diff1-1
@@ -265,26 +268,19 @@ class DataBase(object):
         wallname = None
         optionskipped=False
         othersinputfieldpandas=pd.DataFrame()
-        if 'where' not in kwargs or kwargs['where'] is None.__class__ or kwargs['where'] == None:
-            #if self.dbfullinfo.get_dblistdico(self.db)[0] == 'WW':
-            #    kwargs['where'] = self.dbfullinfo.get_dblistdico(self.db)[2]
-            #else:
-            #    kwargs['where'] = self.slocation
-            kwargs['where'] = self.dbfullinfo.get_dblistdico(self.db)[2]
-            wallname = self.dbfullinfo.get_dblistdico(self.db)[2]
-        else:
-            kwargs['where'] = kwargs['where']
 
-        wallname = None
+        if 'where' not in kwargs or kwargs['where'] is None.__class__ or kwargs['where'] == None:
+            kwargs['where'] = list(self.get_fulldb()['where'].unique())
+
         option = kwargs.get('option', 'fillnan')
         fillnan = True # default
         sumall = False # default
         sumallandsmooth7 = False
         if 'input' not in kwargs:
-            mypycoapd = self.dbfullinfo.get_mainpandas()
+            mypycoapd = self.currentdata.get_maingeopandas()
             if 'which' not in kwargs:
-                kwargs['which'] = mypycoapd.columns[2]
-            #if kwargs['which'] not in self.dbfullinfo.get_available_keywords():
+                kwargs['which'] = self.currentdata.get_available_keywords()[0]
+            #if kwargs['which'] not in self.currentdata.get_available_keywords():
             #    raise CoaKeyError(kwargs['which']+' this value is not available in this db, please check !')
             mainpandas = return_nonan_dates_pandas(mypycoapd,kwargs['which'])
             #while for last date all values are nan previous date
@@ -301,13 +297,12 @@ class DataBase(object):
         devorigclist = None
         origclistlist = None
         origlistlistloc = None
-        if option and 'sumall' in option:
+
+        if 'sumall' in option:
             if not isinstance(kwargs['where'], list):
                 kwargs['where'] = [[kwargs['where']]]
             else:
-                if isinstance(kwargs['where'][0], list):
-                    kwargs['where'] = kwargs['where']
-                else:
+                if not isinstance(kwargs['where'][0], list):
                     kwargs['where'] = [kwargs['where']]
         if not isinstance(kwargs['where'], list):
             listloc = ([kwargs['where']]).copy()
@@ -323,6 +318,7 @@ class DataBase(object):
                 else:
                     raise CoaWhereError("In the case of sumall all locations must have the same types i.e\
                     list or string but both is not accepted, could be confusing")
+
         owid_name=''
         if self.db_world:
             self.geo.set_standard('name')
@@ -348,7 +344,7 @@ class DataBase(object):
         else:
             def explosion(listloc,typeloc='subregion'):
                 exploded = []
-                a=self.geo.get_data()
+                a = self.geo.get_data()
                 for i in listloc:
                     if typeloc == 'subregion':
                         if self.geo.is_region(i):
@@ -364,7 +360,7 @@ class DataBase(object):
                             tmp = list(tmp.loc[tmp.code_region==i]['name_region'])
                         elif self.geo.is_region(i):
                             tmp = self.geo.get_regions_from_macroregion(name=i,output='name')
-                            if dbparser._db_list_dict[self.db][0] in ['USA, FRA, ESP, PRT']:
+                            if self.currentmetadata['geoinfo']['iso3'] in ['USA, FRA, ESP, PRT']:
                                 tmp = tmp[:-1]
                         else:
                             if self.geo.is_subregion(i):
@@ -380,17 +376,19 @@ class DataBase(object):
                 return flat_list(exploded)
             if origlistlistloc != None:
                 dicooriglist={}
+
                 for i in origlistlistloc:
-                    if i[0].upper() in [self.database_type[self.db][0].upper(),self.database_type[self.db][2].upper()]:
-                        dicooriglist[self.database_type[self.db][0]]=explosion(flat_list(self.slocation),self.database_type[self.db][1])
+                    if i[0].upper() in [self.currentmetadata['geoinfo']['iso3'].upper(),self.currentmetadata['geoinfo']['iso3'].upper()]:
+                        dicooriglist[self.currentmetadata[self.db][0]] = explosion(flat_list(self.slocation),self.currentmetadata['geoinfo']['granularity'])
                     else:
-                        dicooriglist[','.join(i)]=explosion(i,self.database_type[self.db][1])
+                        dicooriglist[','.join(i)]=explosion(i,self.currentmetadata['geoinfo']['granularity'])
             else:
-                if any([i.upper() in [self.dbfullinfo.get_dblistdico(self.db)[0].upper(),self.dbfullinfo.get_dblistdico(self.db)[2].upper()] for i in listloc]):
+                if any([i.upper() in [self.currentmetadata['geoinfo']['iso3'].upper(),self.currentmetadata['geoinfo']['iso3'].upper()] for i in listloc]):
                     listloc=self.slocation
-                listloc = explosion(listloc,self.dbfullinfo.get_dblistdico(self.db)[1])
+                listloc = explosion(listloc,self.currentmetadata['geoinfo']['granularity'])
                 listloc = flat_list(listloc)
                 location_exploded = listloc
+
         def sticky(lname):
             if len(lname)>0:
                 tmp=''
@@ -407,14 +405,14 @@ class DataBase(object):
                 if any(isinstance(c, list) for c in v):
                     v=v[0]
                 tmp = tmp.loc[tmp['where'].isin(v)]
-                code = tmp.codelocation.unique()
+                code = tmp.code.unique()
                 tmp['clustername'] = [k]*len(tmp)
                 if pdcluster.empty:
                     pdcluster = tmp
                 else:
                     pdcluster = pd.concat([pdcluster,tmp])
                 j+=1
-            pdfiltered = pdcluster[['where','date','codelocation',kwargs['which'],'clustername']]
+            pdfiltered = pdcluster[['where','date','code',kwargs['which'],'clustername']]
         else:
             pdfiltered = mainpandas.loc[mainpandas['where'].isin(location_exploded)]
             if 'input_field' in kwargs or isinstance(kwargs['which'],list):
@@ -422,15 +420,16 @@ class DataBase(object):
                     kwargs['input_field']=kwargs['which']
                 if isinstance(kwargs['input_field'],list):
                     pdfilteredoriginal = pdfiltered.copy()
-                    pdfiltered = pdfiltered[['where','date','codelocation',kwargs['input_field'][0]]]
+                    pdfiltered = pdfiltered[['where','date','code',kwargs['input_field'][0]]]
                     othersinputfieldpandas = pdfilteredoriginal[['where','date']+kwargs['input_field'][1:]]
                     kwargs['which'] = kwargs['input_field'][0]
                 else:
-                    pdfiltered = pdfiltered[['where','date','codelocation', kwargs['input_field']]]
+                    pdfiltered = pdfiltered[['where','date','code', kwargs['input_field']]]
                     kwargs['which'] = kwargs['input_field']
             else:
-                pdfiltered = pdfiltered[['where','date','codelocation', kwargs['which']]]
+                pdfiltered = pdfiltered[['where','date','code', kwargs['which']]]
             pdfiltered['clustername'] = pdfiltered['where'].copy()
+
         if not isinstance(option,list):
             option=[option]
         if 'fillnan' not in option and 'nofillnan' not in option:
@@ -440,6 +439,7 @@ class DataBase(object):
             option.insert(0, 'nonneg')
         if 'smooth7' in option and 'sumall' in option:
             sumallandsmooth7=True
+
         for o in option:
             if o == 'nonneg':
                 if kwargs['which'].startswith('cur_'):
@@ -513,6 +513,7 @@ class DataBase(object):
             elif o != None and o != '':
                 raise CoaKeyError('The option '+o+' is not recognized in get_stats. See listoptions() for list.')
         pdfiltered = pdfiltered.reset_index(drop=True)
+
         #sumallandsmooth7 if sumall set, return only integrate val
         tmppandas=pd.DataFrame()
         if sumall:
@@ -523,10 +524,10 @@ class DataBase(object):
                else:
                   tmp = pdfiltered.groupby(['clustername','date']).sum(numeric_only=True).reset_index()#.loc[pdfiltered.clustername.isin(uniqcluster)].\
 
-               codescluster = {i:list(pdfiltered.loc[pdfiltered.clustername==i]['codelocation'].unique()) for i in uniqcluster}
+               codescluster = {i:list(pdfiltered.loc[pdfiltered.clustername==i]['code'].unique()) for i in uniqcluster}
                namescluster = {i:list(pdfiltered.loc[pdfiltered.clustername==i]['where'].unique()) for i in uniqcluster}
 
-               tmp['codelocation'] = tmp['clustername'].map(codescluster)
+               tmp['code'] = tmp['clustername'].map(codescluster)
                tmp['where'] = tmp['clustername'].map(namescluster)
 
                pdfiltered = tmp
@@ -538,13 +539,13 @@ class DataBase(object):
                 else:
                     tmp = pdfiltered.groupby(['date']).sum().reset_index()
                 uniqloc = list(pdfiltered['where'].unique())
-                uniqcodeloc = list(pdfiltered.codelocation.unique())
+                uniqcodeloc = list(pdfiltered.code.unique())
                 tmp.loc[:,'where'] = ['dummy']*len(tmp)
-                tmp.loc[:,'codelocation'] = ['dummy']*len(tmp)
+                tmp.loc[:,'code'] = ['dummy']*len(tmp)
                 tmp.loc[:,'clustername'] = ['dummy']*len(tmp)
                 for i in range(len(tmp)):
                     tmp.at[i,'where'] = uniqloc #sticky(uniqloc)
-                    tmp.at[i,'codelocation'] = uniqcodeloc #sticky(uniqcodeloc)
+                    tmp.at[i,'code'] = uniqcodeloc #sticky(uniqcodeloc)
                     tmp.at[i,'clustername'] =  sticky(uniqloc)[0]
                 pdfiltered = tmp
             if sumallandsmooth7:
@@ -576,7 +577,7 @@ class DataBase(object):
                                   .reset_index(level=0,drop=True).diff()
             inx=pdfiltered.groupby('clustername').head(7).index
             pdfiltered.loc[inx, 'daily'] = pdfiltered['daily'].fillna(method="bfill")
-        unifiedposition=['where', 'date', kwargs['which'], 'daily', 'cumul', 'weekly', 'codelocation','clustername']
+        unifiedposition=['where', 'date', kwargs['which'], 'daily', 'cumul', 'weekly', 'code','clustername']
 
         if kwargs['which'] in ['standard','daily','weekly','cumul']:
             unifiedposition.remove(kwargs['which'])
@@ -587,9 +588,8 @@ class DataBase(object):
         pdfiltered = pdfiltered.drop(columns='cumul')
         if not othersinputfieldpandas.empty:
             pdfiltered = pd.merge(pdfiltered, othersinputfieldpandas, on=['date','where'])
-        if 'input_field' not in kwargs:
-            verb("Here the information I\'ve got on ", kwargs['which']," : ",  self.dbfullinfo.get_keyword_definition(kwargs['which']))
-        pdfiltered = pdfiltered.loc[~(pdfiltered['where'].isna() | pdfiltered['codelocation'].isna())]
+
+        pdfiltered = pdfiltered.loc[~(pdfiltered['where'].isna() | pdfiltered['code'].isna())]
         pdfiltered = self.permanentdisplay(pdfiltered)
         return pdfiltered
 
@@ -601,37 +601,46 @@ class DataBase(object):
     """
     if pandy.empty:
         raise CoaKeyError('Seems to be an empty field')
-    if isinstance(pandy['codelocation'].iloc[0],list):
-        pandy = pandy.explode('codelocation')
+    if isinstance(pandy['code'].iloc[0],list):
+        pandy = pandy.explode('code')
 
+    clust = list(pandy['clustername'].unique())
     if self.db_world == True:
         pop_field='population'
-        pandy = self._gi.add_field(input=pandy,field=pop_field,geofield='codelocation')
+        pandy = self._gi.add_field(input=pandy,field=pop_field,geofield='code')
     else:
         if not isinstance(self._gi,coge.GeoCountry):
-            self._gi=None
+            self._gi = None
         else:
             if self._gi.get_country() != self.geo.get_country():
                 self._gi=None
 
         if self._gi == None :
             self._gi = self.geo
+
         pop_field='population_subregion'
-        if pop_field not in self._gi.get_list_properties():
-            raise CoaKeyError('The population information not available for this country. No normalization possible')
+        if self.granularity == 'region':
+            regsubreg={i:self.geo.get_subregions_from_region(name=i) for i in clust}
+            self._gi.add_field(input=pandy, field=pop_field, input_key='code')
+        elif self.granularity == 'subregion':
+            pandy=self._gi.add_field(input=pandy, field=pop_field, input_key='code')
+        else:
+            raise CoaKeyError('This is not region nor subregion what is it ?!')
 
-        pandy=self._gi.add_field(input=pandy,field=pop_field,input_key='codelocation')
+        #if pop_field not in self._gi.get_list_properties():
+        #    raise CoaKeyError('The population information not available for this country. No normalization possible')
 
-    clust = pandy['clustername'].unique()
+
+
     df = pd.DataFrame()
     for i in clust:
         pandyi = pandy.loc[ pandy['clustername'] == i ].copy()
-        pandyi.loc[:,pop_field] = pandyi.groupby('codelocation')[pop_field].first().sum()
-        if len(pandyi.groupby('codelocation')['codelocation'].first().tolist()) == 1:
-            cody = pandyi.groupby('codelocation')['codelocation'].first().tolist()*len(pandyi)
+        pandyi.loc[:,pop_field] = pandyi.groupby('code')[pop_field].first().sum()
+        if len(pandyi.groupby('code')['code'].first().tolist()) == 1:
+            cody = pandyi.groupby('code')['code'].first().tolist()*len(pandyi)
         else:
-            cody = [pandyi.groupby('codelocation')['codelocation'].first().tolist()]*len(pandyi)
-        pandyi = pandyi.assign(codelocation=cody)
+            cody = [pandyi.groupby('code')['code'].first().tolist()]*len(pandyi)
+        pandyi = pandyi.assign(code=cody)
         if df.empty:
             df = pandyi
         else:
@@ -642,12 +651,12 @@ class DataBase(object):
 
     pandy=pandy.copy()
     pandy[pop_field]=pandy[pop_field].replace(0., np.nan)
-    av = allvisu.AllVisu()
-    _dict_bypop =  av._dict_bypop
+    av = allvisu.OptionVisu()
+
     if bypop == 'pop':
-        pandy.loc[:,val2norm+' per total population']=pandy[val2norm]/pandy[pop_field]*_dict_bypop[bypop]
+        pandy.loc[:,val2norm+' per total population']=pandy[val2norm]/pandy[pop_field]*av._dict_bypop[bypop]
     else:
-        pandy.loc[:,val2norm+' per '+bypop + ' population']=pandy[val2norm]/pandy[pop_field]*_dict_bypop[bypop]
+        pandy.loc[:,val2norm+' per '+bypop + ' population']=pandy[val2norm]/pandy[pop_field]*av._dict_bypop[bypop]
     return pandy
 
    def merger(self,**kwargs):
@@ -663,7 +672,7 @@ class DataBase(object):
 
         def renamecol(pandy):
             torename=['daily','cumul','weekly']
-            return pandy.rename(columns={i:pandy.columns[2]+'_'+i  for i in torename})
+            return pandy.rename(columns={i:self.currentdata.get_available_keywords()+'_'+i  for i in torename})
         base = coapandas[0].copy()
         coapandas = [ renamecol(p) for p in coapandas ]
         base = coapandas[0].copy()
@@ -672,8 +681,8 @@ class DataBase(object):
 
         j=1
         for p in coapandas[1:]:
-            [ p.drop([i],axis=1, inplace=True) for i in ['where','where','codelocation'] if i in p.columns ]
-            #p.drop(['where','codelocation'],axis=1, inplace=True)
+            [ p.drop([i],axis=1, inplace=True) for i in ['where','where','code'] if i in p.columns ]
+            #p.drop(['where','code'],axis=1, inplace=True)
             base = pd.merge(base,p,on=['date','clustername'],how="inner")#,suffixes=('', '_drop'))
             #base.drop([col for col in base.columns if 'drop' in col], axis=1, inplace=True)
         return base

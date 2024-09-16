@@ -35,6 +35,7 @@ import unidecode
 import datetime as dt
 from coa.error import CoaKeyError, CoaTypeError, CoaConnectionError, CoaNotManagedError
 
+
 # testing if coadata is available
 import importlib
 _coacache_folder=''
@@ -128,8 +129,8 @@ def fill_missing_dates(p, date_field='date', loc_field='where', d1=None, d2=None
         pp2.index = pd.DatetimeIndex(pp2.index)
         pp3 = pp2.reindex(idx,fill_value=pd.NA)#numpy.nan)#
         pp3[loc_field] = pp3[loc_field].fillna(l)  #pp3['location'].fillna(method='bfill')
-        #pp3['codelocation'] = pp3['codelocation'].fillna(method='bfill')
-        #pp3['codelocation'] = pp3['codelocation'].fillna(method='ffill')
+        #pp3['isowhere'] = pp3['isowhere'].fillna(method='bfill')
+        #pp3['isowhere'] = pp3['isowhere'].fillna(method='ffill')
         pfill=pd.concat([pfill, pp3])
     pfill.reset_index(inplace=True)
     return pfill
@@ -214,6 +215,11 @@ def week_to_date(whenstr):
     elif len(whenstr) == 10:
         firstday = datetime.date(int(whenstr.split('-')[0]),int(whenstr.split('-')[1]),int(whenstr.split('-')[2]))
         convertion = firstday+datetime.timedelta(days=3)
+    elif len(whenstr) == 6:
+        year = whenstr[:4]
+        week = '-S'+whenstr[4:]
+        whenstr = year + week
+        convertion = datetime.datetime.strptime(whenstr  + '-1' , "%G-S%V-%u")+datetime.timedelta(days = 7)
     else:
         convertion = datetime.datetime.strptime(whenstr  + '-1' , "%G-S%V-%u")+datetime.timedelta(days = 7)
     return convertion

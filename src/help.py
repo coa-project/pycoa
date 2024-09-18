@@ -3,13 +3,13 @@ from colorama import init, Fore, Style
 
 __version__ = '3.0.1'
 __author__ = 'Tristan Beau, Julien Browaeys, Olivier Dadoun'
-__github__ = 'https://github.com/coa-project/pycoa'
+__github__ = 'https://github.com/src.project/pycoa
 __web__ = 'http://pycoa.fr/'
 
 def display_full_help():
     print()
     # Message d'accueil
-    print(Fore.RED + "Bienvenue dans l'aide de Pycoa" + Style.RESET_ALL)
+    print(Fore.RED + "Bienvenue dans l'aide de Pysrc. + Style.RESET_ALL)
 
     # Affichage de l'aide 
     print()
@@ -33,7 +33,7 @@ def display_full_help():
         ('listplot', "Liste les types de graphiques disponibles"),
         ('listtile', "Liste les textures disponibles pour les cartes"),
         ('listvisu', "Liste les options de visualisation disponibles pour les cartes"),
-        ('dir(pycoa)', "Affiche toutes les méthodes")
+        ('dir(pycoa.', "Affiche toutes les méthodes")
     ]
 
     for command, description in list_commands:        
@@ -77,7 +77,7 @@ def display_full_help():
 
     print()
     # Section exemple
-    print(Fore.BLUE + "Exemple de requêtes avec Pycoa" + Style.RESET_ALL)
+    print(Fore.BLUE + "Exemple de requêtes avec Pysrc. + Style.RESET_ALL)
 
     print()
     # Liste des commandes et descriptions pour les commandes de graphiques
@@ -98,17 +98,17 @@ def main():
     # Initialiser colorama
     init()
 
-    parser = argparse.ArgumentParser(description=Fore.RED+"Aide supplémentaire de Pycoa"+Style.RESET_ALL, add_help=False)
+    parser = argparse.ArgumentParser(description=Fore.RED+"Aide supplémentaire de Pysrc.+Style.RESET_ALL, add_help=False)
 
-    parser.add_argument('-h', '--help', action='store_true', help="Affiche l'aide complète de Pycoa")
+    parser.add_argument('-h', '--help', action='store_true', help="Affiche l'aide complète de Pysrc.)
     parser.add_argument('-v', '--version', action='version', version=f'%(prog)s {__version__}',
-                        help="Affiche la version de Pycoa")
+                        help="Affiche la version de Pysrc.)
     parser.add_argument('-a', '--author', action='store_true',
-                        help="Affiche les auteurs de Pycoa")
+                        help="Affiche les auteurs de Pysrc.)
     parser.add_argument('-g', '--github', action='store_true', 
-                        help="Affiche le github de Pycoa")
+                        help="Affiche le github de Pysrc.)
     parser.add_argument('-w', '--web', action='store_true',
-                        help="Affiche le site web de Pycoa")
+                        help="Affiche le site web de Pysrc.)
 
     args = parser.parse_args()
 

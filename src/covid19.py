@@ -6,7 +6,7 @@ Authors : Olivier Dadoun, Julien Browaeys, Tristan Beau
 Copyright ©pycoa.fr
 License: See joint LICENSE file
 
-Module : coa.covid19
+Module : src.covid19
 
 About :
 -------
@@ -21,30 +21,30 @@ import numpy as np
 import pandas as pd
 import datetime as dt
 
-from coa.tools import (
+from src.tools import (
     verb,
     kwargs_test,
     flat_list,
     return_nonan_dates_pandas,
 )
-import coa.geo as coge
+import src.geo as coge
 
-import coa.dbparser as parser
+import src.dbparser as parser
 
 import geopandas as gpd
-from coa.error import *
+from src.error import *
 from scipy import stats as sps
 import pickle
 import os, time
-import coa.allvisu as allvisu
-import coa.geo as coge
+import src.allvisu as allvisu
+import src.geo as coge
 class VirusStat(object):
    """
    VirusStat class
    """
    def __init__(self, db_name):
         """
-            Main pycoa class:
+            Main pycoa.class:
             - call the get_parser
             - call the geo
             - call the display
@@ -277,22 +277,22 @@ class VirusStat(object):
         sumall = False # default
         sumallandsmooth7 = False
         if 'input' not in kwargs:
-            mypycoapd = self.currentdata.get_maingeopandas()
+            mypycoa.d = self.currentdata.get_maingeopandas()
             if 'which' not in kwargs:
                 kwargs['which'] = self.currentdata.get_available_keywords()[0]
             #if kwargs['which'] not in self.currentdata.get_available_keywords():
             #    raise CoaKeyError(kwargs['which']+' this value is not available in this db, please check !')
-            mainpandas = return_nonan_dates_pandas(mypycoapd,kwargs['which'])
+            mainpandas = return_nonan_dates_pandas(mypycoa.d,kwargs['which'])
             #while for last date all values are nan previous date
         else:
-            mypycoapd=kwargs['input']
-            if str(type(mypycoapd['where'][0]))=="<class 'list'>":
-                return mypycoapd
+            mypycoa.d=kwargs['input']
+            if str(type(mypycoa.d['where'][0]))=="<class 'list'>":
+                return mypycoa.d
             kwargs['which']=kwargs['input_field']
-            mainpandas = return_nonan_dates_pandas(mypycoapd,kwargs['input_field'])
+            mainpandas = return_nonan_dates_pandas(mypycoa.d,kwargs['input_field'])
             #if isinstance(kwargs['input_field'],list):
             #    for i in kwargs['input_field']:
-            #        mainpandas[i] = mypycoapd[i]
+            #        mainpandas[i] = mypycoa.d[i]
 
         devorigclist = None
         origclistlist = None
@@ -661,26 +661,26 @@ class VirusStat(object):
 
    def merger(self,**kwargs):
         '''
-        Merge two or more pycoa pandas from get_stats operation
-        'coapandas': list (min 2D) of pandas from stats
+        Merge two or more pycoa.pandas from get_stats operation
+        'src.andas': list (min 2D) of pandas from stats
         '''
 
-        coapandas = kwargs.get('coapandas', None)
+        src.andas = kwargs.get('src.andas', None)
 
-        if coapandas is None or not isinstance(coapandas, list) or len(coapandas)<=1:
-            raise CoaKeyError('coapandas value must be at least a list of 2 elements ... ')
+        if src.andas is None or not isinstance(src.andas, list) or len(src.andas)<=1:
+            raise CoaKeyError('src.andas value must be at least a list of 2 elements ... ')
 
         def renamecol(pandy):
             torename=['daily','cumul','weekly']
             return pandy.rename(columns={i:self.currentdata.get_available_keywords()+'_'+i  for i in torename})
-        base = coapandas[0].copy()
-        coapandas = [ renamecol(p) for p in coapandas ]
-        base = coapandas[0].copy()
+        base = src.andas[0].copy()
+        src.andas = [ renamecol(p) for p in src.andas ]
+        base = src.andas[0].copy()
         if not 'clustername' in base.columns:
             raise CoaKeyError('No "clustername" in your pandas columns ... don\'t know what to do ')
 
         j=1
-        for p in coapandas[1:]:
+        for p in src.andas[1:]:
             [ p.drop([i],axis=1, inplace=True) for i in ['where','where','code'] if i in p.columns ]
             #p.drop(['where','code'],axis=1, inplace=True)
             base = pd.merge(base,p,on=['date','clustername'],how="inner")#,suffixes=('', '_drop'))
@@ -689,14 +689,14 @@ class VirusStat(object):
 
    def saveoutput(self,**kwargs):
        '''
-       saveoutput pycoas pandas as an  output file selected by output argument
-       'pandas': pycoa pandas
+       saveoutput pycoa. pandas as an  output file selected by output argument
+       'pandas': pycoa.pandas
        'saveformat': excel or csv (default excel)
-       'savename': pycoaout (default)
+       'savename': pycoa.ut (default)
        '''
        possibleformat=['excel','csv']
        saveformat = 'excel'
-       savename = 'pycoaout'
+       savename = 'pycoa.ut'
        pandyori = ''
        if 'saveformat' in kwargs:
             saveformat = kwargs['saveformat']

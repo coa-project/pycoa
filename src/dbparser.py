@@ -3,7 +3,7 @@
 Date :    april 2020 - june 2024
 Authors : Olivier Dadoun, Julien Browaeys, Tristan Beau
 License: See joint LICENSE file
-Module : coa.dbparser
+Module : src.dbparser
 Aboutself.granu_country
 -----
 This is the PyCoA rapport module it gives all available information concerning a database key words
@@ -20,8 +20,8 @@ import collections
 import random
 import numpy as np
 from tqdm import tqdm
-from coa.error import *
-from coa.tools import (
+from src.error import *
+from src.tools import (
     info,
     verb,
     kwargs_test,
@@ -31,7 +31,7 @@ from coa.tools import (
     fill_missing_dates,
     flat_list
 )
-import coa.geo as coge
+import src.geo as coge
 import sys
 import pycountry
 
@@ -43,7 +43,7 @@ class MetaInfo:
         It returns a dictionnary with:
             * key: epidemiological variable
             * values:
-                - new variable name for pycoa purpose, if needed. By default is an empty string ''
+                - new variable name for pycoa.purpose, if needed. By default is an empty string ''
                 - desciption of the variable. By default is an empty string '' but it is highly recommended to describe the variable
                 - url of the csv where the epidemiological variable is
                 - url of the master i.e where some general description could be located. By default is an empty string ''
@@ -165,7 +165,7 @@ class MetaInfo:
 
       def test(dico,lm):
           sig = 1
-          msg = 'pycoa json meta structure is validated'
+          msg = 'pycoa.json meta structure is validated'
           for i in lm:
               try:
                  dico[i]

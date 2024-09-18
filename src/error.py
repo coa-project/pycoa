@@ -5,12 +5,12 @@ Authors : Olivier Dadoun, Julien Browaeys, Tristan Beau
 Copyright ©pycoa.fr
 License: See joint LICENSE file
 
-Module : coa.error
+Module : src.error
 
 About :
 -------
 
-Main class definitions for error management within the pycoa framework.
+Main class definitions for error management within the pycoa.framework.
 All Coa exceptions should derive from the main CoaError class.
 """
 class CoaWarning(Exception):
@@ -19,10 +19,10 @@ class CoaWarning(Exception):
     def __init__(self, message):
         #self.message = message
         message = '  ' + message + '  '
-        pycoatexterror = 'PYCOA Warning ! '
-        center=int((len(message)-len(pycoatexterror))/2)
+        pycoa.exterror = 'PYCOA Warning ! '
+        center=int((len(message)-len(pycoa.exterror))/2)
         self.message = ' '*len(message)+'\n'\
-        + ' '*center+pycoatexterror+' '*center+'\n'\
+        + ' '*center+pycoa.exterror+' '*center+'\n'\
         + message.center(30)+'\n'+' '*len(message)
         print('\033[45m'+self.message)
         Exception(message)
@@ -33,10 +33,10 @@ class CoaError(Exception):
     def __init__(self, message):
         #self.message = message
         message = '  ' + message + '  '
-        pycoatexterror = 'PYCOA Error ! '
-        center=int((len(message)-len(pycoatexterror))/2)
+        pycoa.exterror = 'PYCOA Error ! '
+        center=int((len(message)-len(pycoa.exterror))/2)
         self.message = ' '*len(message)+'\n'\
-        + ' '*center+pycoatexterror+' '*center+'\n'\
+        + ' '*center+pycoa.exterror+' '*center+'\n'\
         + message.center(30)+'\n'+' '*len(message)
         print('\033[1;30;41m'+self.message)
         Exception(message)

@@ -4,7 +4,7 @@ Date :    april 2020 - june 2024
 Authors : Olivier Dadoun, Julien Browaeys, Tristan Beau
 License: See joint LICENSE file
 
-Module : coa.tools
+Module : src.tools
 
 About
 -----
@@ -33,21 +33,21 @@ from zlib import crc32
 from urllib.parse import urlparse
 import unidecode
 import datetime as dt
-from coa.error import CoaKeyError, CoaTypeError, CoaConnectionError, CoaNotManagedError
+from src.error import CoaKeyError, CoaTypeError, CoaConnectionError, CoaNotManagedError
 
 
-# testing if coadata is available
+# testing if src.ata is available
 import importlib
-_coacache_folder=''
-_coacache_module_info = importlib.util.find_spec("coacache")
-if _coacache_module_info != None:
-    _coacache_folder = _coacache_module_info.submodule_search_locations[0]
+_src.ache_folder=''
+_src.ache_module_info = importlib.util.find_spec("src.ache")
+if _src.ache_module_info != None:
+    _src.ache_folder = _src.ache_module_info.submodule_search_locations[0]
 
 # Verbosity of pycoa
 _verbose_mode = 1 # default
 
 # ----------------------------------------------------
-# --- Usefull functions for pycoa --------------------
+# --- Usefull functions for pycoa.--------------------
 # ----------------------------------------------------
 def get_verbose_mode():
     """Return the verbose mode
@@ -242,7 +242,7 @@ def get_local_from_url(url,expiration_time=0,suffix=''):
     One may add a suffix to the local filename if known.
     """
 
-    tmpdir=os.path.join(gettempdir(),"pycoa_data"+"_"+getuser())
+    tmpdir=os.path.join(gettempdir(),"pycoa.data"+"_"+getuser())
     if not os.path.exists(tmpdir):
         os.makedirs(tmpdir)
 
@@ -251,8 +251,8 @@ def get_local_from_url(url,expiration_time=0,suffix=''):
 
     local_file_exists=False
 
-    if _coacache_folder != '':
-        local_cached_filename=os.path.join(_coacache_folder,local_base_filename)
+    if _src.ache_folder != '':
+        local_cached_filename=os.path.join(_src.ache_folder,local_base_filename)
         local_file_exists=os.path.exists(local_cached_filename)
         local_filename=local_cached_filename
 

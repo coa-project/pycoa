@@ -4,7 +4,7 @@ Date :    april 2020 - june 2024
 Authors : Olivier Dadoun, Julien Browaeys, Tristan Beau
 License: See joint LICENSE file
 
-Module : coa.front
+Module : src.front
 
 About :
 -------
@@ -17,7 +17,7 @@ with keywords (see help of functions below).
 Basic usage
 -----------
 ** plotting covid deaths (default value) vs. time **
-    import coa.front as cf
+    import src.front as cf
 
     cf.plot(where='France')  # where keyword is mandatory
 ** getting recovered data for some countries **
@@ -44,18 +44,18 @@ from bokeh.io import (
     output_notebook,
 )
 import datetime as dt
-from coa.tools import (
+from src.tools import (
     kwargs_test,
     extract_dates,
     info,
     flat_list,
 )
-import coa.allvisu as allvisu
-import coa.covid19 as coco
-from coa.dbparser import MetaInfo
-from coa.error import *
-import coa._version
-import coa.geo as coge
+import src.allvisu as allvisu
+import src.covid19 as coco
+from src.dbparser import MetaInfo
+from src.error import *
+import src._version
+import src.geo as coge
 
 import geopandas as gpd
 output_notebook(hide_banner=True)
@@ -172,7 +172,7 @@ class Front:
     def getversion(self,):
         """Return the current running version of pycoa.
         """
-        return coa._version.__version__
+        return src._version.__version__
     # ----------------------------------------------------------------------
     # --- listoutput() -----------------------------------------------------
     # ----------------------------------------------------------------------
@@ -558,7 +558,7 @@ class Front:
                 kwargs['input_field'] = input_field
                 option = kwargs.get('option', None)
             else:
-                raise CoaTypeError('Waiting input as valid pycoa pandas '
+                raise CoaTypeError('Waiting input as valid pycoa.pandas '
                                    'dataframe. See help.')
             when_beg, when_end = extract_dates(when)
             onedate = False
@@ -712,10 +712,10 @@ class Front:
 
     def saveoutput(self,**kwargs):
         '''
-            Export pycoas pandas as an output file selected by output argument
+            Export pycoa. pandas as an output file selected by output argument
             'pandas': pandas to save
             'saveformat': excel (default) or csv
-            'savename': None (default pycoaout+ '.xlsx/.csv')
+            'savename': None (default pycoa.ut+ '.xlsx/.csv')
         '''
         global _db
         kwargs_test(kwargs, ['pandas','saveformat','savename'], 'Bad args used in the pycoa.saveoutput function.')
@@ -729,14 +729,14 @@ class Front:
 
     def merger(self,**kwargs):
         '''
-        Merge two or more pycoa pandas from get_stats operation
-        'coapandas': list (min 2D) of pandas from stats
-        'whichcol': list variable associate to the coapandas list to be retrieve
+        Merge two or more pycoa.pandas from get_stats operation
+        'src.andas': list (min 2D) of pandas from stats
+        'whichcol': list variable associate to the src.andas list to be retrieve
         '''
         global _db
-        kwargs_test(kwargs,['coapandas'], 'Bad args used in the pycoa.merger function.')
-        listpandy = kwargs.get('coapandas',[])
-        return _db.merger(coapandas = listpandy)
+        kwargs_test(kwargs,['src.andas'], 'Bad args used in the pycoa.merger function.')
+        listpandy = kwargs.get('src.andas',[])
+        return _db.merger(src.andas = listpandy)
 
     # ----------------------------------------------------------------------
     # --- map(**kwargs) ----------------------------------------------------
@@ -803,13 +803,13 @@ class Front:
         if visu == 'bokeh':
             if maplabel:
                 if 'spark' in maplabel or 'spiral' in maplabel:
-                    return self.cocoplot.pycoa_pimpmap(**kwargs)
+                    return self.cocoplot.pycoa.pimpmap(**kwargs)
                 elif 'text' or 'exploded' or 'dense' in maplabel:
-                    return self.cocoplot.pycoa_map(**kwargs)
+                    return self.cocoplot.pycoa.map(**kwargs)
                 else:
                     CoaError("What kind of pimp map you want ?!")
             else:
-                return self.cocoplot.pycoa_map(**kwargs)
+                return self.cocoplot.pycoa.map(**kwargs)
 
     @chartsinput_deco
     @decomap
@@ -821,24 +821,24 @@ class Front:
         if visu == 'bokeh':
             if maplabel:
                 if 'spark' in maplabel or 'spiral' in maplabel:
-                    fig = self.cocoplot.pycoa_pimpmap(**kwargs)
+                    fig = self.cocoplot.pycoa.pimpmap(**kwargs)
                 elif 'text' or 'exploded' or 'dense' in maplabel:
-                    fig = self.cocoplot.pycoa_map(**kwargs)
+                    fig = self.cocoplot.pycoa.map(**kwargs)
                 else:
                     CoaError("What kind of pimp map you want ?!")
             else:
-                fig = self.cocoplot.pycoa_map(**kwargs)
+                fig = self.cocoplot.pycoa.map(**kwargs)
             return show(fig)
         elif visu == 'folium':
             if dateslider is not None :
                 raise CoaKeyError('Not available with folium map, you should considere to use bokeh map visu in this case')
             if  maplabel and set(maplabel) != set(['log']):
                 raise CoaKeyError('Not available with folium map, you should considere to use bokeh map visu in this case')
-            return self.cocoplot.pycoa_mapfolium(**kwargs)
+            return self.cocoplot.pycoa.mapfolium(**kwargs)
         elif visu == 'mplt':
-            return self.cocoplot.pycoa_mpltmap(**kwargs)
+            return self.cocoplot.pycoa.mpltmap(**kwargs)
         elif visu == 'seaborn':
-            return self.cocoplot.pycoa_heatmap_seaborn(**kwargs)
+            return self.cocoplot.pycoa.heatmap_seaborn(**kwargs)
         else:
             self.setdisplay('bokeh')
             raise CoaTypeError('Waiting for a valid visualisation. So far: \'bokeh\', \'folium\' or \'mplt\' \
@@ -856,13 +856,13 @@ class Front:
 
             where (mandatory if no input), what, which, whom, when : (see help(get))
 
-            input       --  input data to plot within the pycoa framework (e.g.
+            input       --  input data to plot within the pycoa.framework (e.g.
                             after some analysis or filtering). Default is None which
                             means that we use the basic raw data through the get
                             function.
                             When the 'input' keyword is set, where, what, which,
                             whom when keywords are ignored.
-                            input should be given as valid pycoa pandas dataframe.
+                            input should be given as valid pycoa.pandas dataframe.
 
             input_field --  is the name of the field of the input pandas to plot.
                             Default is 'deaths/standard', the default output field of
@@ -889,37 +889,37 @@ class Front:
                 if typeofhist == 'bylocation':
                     if 'bins' in kwargs:
                         raise CoaKeyError("The bins keyword cannot be set with histograms by location. See help.")
-                    fig = self.cocoplot.pycoa_horizonhisto(**kwargs)
+                    fig = self.cocoplot.pycoa.horizonhisto(**kwargs)
                 elif typeofhist == 'byvalue':
                     if dateslider:
                         info('dateslider not implemented for typeofhist=\'byvalue\'.')
-                        fig = self.cocoplot.pycoa_horizonhisto(**kwargs)
+                        fig = self.cocoplot.pycoa.horizonhisto(**kwargs)
                     else:
-                        fig = self.cocoplot.pycoa_histo( **kwargs)
+                        fig = self.cocoplot.pycoa.histo( **kwargs)
                 elif typeofhist == 'pie':
-                    fig = self.cocoplot.pycoa_pie(**kwargs)
+                    fig = self.cocoplot.pycoa.pie(**kwargs)
             elif self.getdisplay() == 'seaborn':
                 if typeofhist == 'bylocation':
-                    fig = self.cocoplot.pycoa_hist_seaborn_hori( **kwargs)
+                    fig = self.cocoplot.pycoa.hist_seaborn_hori( **kwargs)
                 elif typeofhist == 'pie':
-                    fig = self.cocoplot.pycoa_pairplot_seaborn(**kwargs)
+                    fig = self.cocoplot.pycoa.pairplot_seaborn(**kwargs)
                 elif typeofhist == 'byvalue':
-                    fig = self.cocoplot.pycoa_hist_seaborn_value( **kwargs)
+                    fig = self.cocoplot.pycoa.hist_seaborn_value( **kwargs)
                 else:
                     print(typeofhist + ' not implemented in ' + self.getdisplay())
                     self.setdisplay('bokeh')
-                    fig = self.cocoplot.pycoa_horizonhisto(**kwargs)
+                    fig = self.cocoplot.pycoa.horizonhisto(**kwargs)
             elif self.getdisplay() == 'mplt':
                 if typeofhist == 'bylocation':
-                    fig = self.cocoplot.pycoa_mplthorizontalhisto(**kwargs)
+                    fig = self.cocoplot.pycoa.mplthorizontalhisto(**kwargs)
                 elif typeofhist == 'byvalue':
-                    fig = self.cocoplot.pycoa_mplthisto(**kwargs)
+                    fig = self.cocoplot.pycoa.mplthisto(**kwargs)
                 elif typeofhist == 'pie':
-                    fig = self.cocoplot.pycoa_mpltpie(**kwargs)
+                    fig = self.cocoplot.pycoa.mpltpie(**kwargs)
                 else:
                     print(typeofhist + ' not implemented in ' + self.getdisplay())
                     self.setdisplay('bokeh')
-                    fig = self.cocoplot.pycoa_horizonhisto(**kwargs)
+                    fig = self.cocoplot.pycoa.horizonhisto(**kwargs)
             else:
                 self.setdisplay('bokeh')
                 raise CoaKeyError('Unknown typeofhist value. Available value : lthist().')
@@ -954,13 +954,13 @@ class Front:
 
             where (mandatory), what, which, whom, when : (see help(get))
 
-            input       --  input data to plot within the pycoa framework (e.g.
+            input       --  input data to plot within the pycoa.framework (e.g.
                             after some analysis or filtering). Default is None which
                             means that we use the basic raw data through the get
                             function.
                             When the 'input' keyword is set, where, what, which,
                             whom when keywords are ignored.
-                            input should be given as valid pycoa pandas dataframe.
+                            input should be given as valid pycoa.pandas dataframe.
 
             input_field --  is the name of the field of the input pandas to plot.
                             Default is 'deaths/standard', the default output field of
@@ -995,44 +995,44 @@ class Front:
                 kwargs.pop('bypop')
             if self.getdisplay() == 'bokeh':
                 if typeofplot == 'date':
-                    fig = self.cocoplot.pycoa_date_plot(**kwargs)
+                    fig = self.cocoplot.pycoa.date_plot(**kwargs)
                 elif typeofplot == 'spiral':
-                    fig = self.cocoplot.pycoa_spiral_plot(**kwargs)
+                    fig = self.cocoplot.pycoa.spiral_plot(**kwargs)
                 elif typeofplot == 'versus':
                     if isinstance(input_field,list) and len(input_field) == 2:
-                        fig = self.cocoplot.pycoa_plot(**kwargs)
+                        fig = self.cocoplot.pycoa.plot(**kwargs)
                     else:
                         print('typeofplot is versus but dim(input_field)!=2, versus has not effect ...')
-                        fig = self.cocoplot.pycoa_date_plot(**kwargs)
+                        fig = self.cocoplot.pycoa.date_plot(**kwargs)
                 elif typeofplot == 'menulocation':
                     if _db_list_dict[self.whom][1] == 'nation' and _db_list_dict[self.whom][2] != 'World':
                         print('typeofplot is menulocation with a national DB granularity, use date plot instead ...')
-                        fig = self.cocoplot.pycoa_date_plot(*kwargs)
+                        fig = self.cocoplot.pycoa.date_plot(*kwargs)
                     else:
                         if isinstance(input_field,list) and len(input_field) > 1:
                             CoaWarning('typeofplot is menulocation but dim(input_field)>1, take first one '+input_field[0])
-                        fig = self.cocoplot.pycoa_menu_plot(**kwargs)
+                        fig = self.cocoplot.pycoa.menu_plot(**kwargs)
                 elif typeofplot == 'yearly':
                     if input.date.max()-input.date.min() <= dt.timedelta(days=365):
                         print("Yearly will not be used since the time covered is less than 1 year")
-                        fig = self.cocoplot.pycoa_date_plot(**kwargs)
+                        fig = self.cocoplot.pycoa.date_plot(**kwargs)
                     else:
-                        fig = self.cocoplot.pycoa_yearly_plot(**kwargs)
+                        fig = self.cocoplot.pycoa.yearly_plot(**kwargs)
             elif self.getdisplay() == 'mplt':
                 if typeofplot == 'date':
-                    fig = self.cocoplot.pycoa_mpltdate_plot(**kwargs)
+                    fig = self.cocoplot.pycoa.mpltdate_plot(**kwargs)
                 elif typeofplot == 'versus':
-                    fig = self.cocoplot.pycoa_mpltversus_plot(**kwargs)
+                    fig = self.cocoplot.pycoa.mpltversus_plot(**kwargs)
                 elif typeofplot == 'yearly':
-                    fig = self.cocoplot.pycoa_mpltyearly_plot(**kwargs)
+                    fig = self.cocoplot.pycoa.mpltyearly_plot(**kwargs)
                 else:
                     raise CoaKeyError('For display: '+self.getdisplay() +' unknown type of plot '+typeofplot)
             elif self.getdisplay() == 'seaborn':
                 if typeofplot == 'date':
-                    fig = self.cocoplot.pycoa_date_plot_seaborn(**kwargs)
+                    fig = self.cocoplot.pycoa.date_plot_seaborn(**kwargs)
                 else:
                     print(typeofplot + ' not implemented in ' + self.getdisplay())
-                    fig = self.cocoplot.pycoa_spiral_plot(**kwargs)
+                    fig = self.cocoplot.pycoa.spiral_plot(**kwargs)
             else:
                 self.setdisplay('bokeh')
                 raise CoaKeyError('Unknown typeofplot value. Should be date, versus, menulocation, spiral or yearly.')
@@ -1056,4 +1056,4 @@ class Front:
             return fig
     # ----------------------------------------------------------------------
 
-pycoa=Front()
+pycoa.Front()

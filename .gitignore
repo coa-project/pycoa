@@ -1,2 +1,6 @@
 coa/__pycache__
 venv/
+coabook/.*
+coabook/__pycache__
+coabook/.cache
+.DS_Store

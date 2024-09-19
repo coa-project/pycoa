@@ -6,7 +6,6 @@ sys.path.insert(1, '..')
 #commentaire
 try:
     import coaenv
-    print("Import of pycoa successful!")
 except ImportError as e:
     print("Error when importing pycoa:", e)
     print("Make sure the pycoa module is installed correctly.")

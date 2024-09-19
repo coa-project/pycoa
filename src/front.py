@@ -734,9 +734,9 @@ class Front:
         'whichcol': list variable associate to the src.andas list to be retrieve
         '''
         global _db
-        kwargs_test(kwargs,['src.andas'], 'Bad args used in the pycoa.merger function.')
-        listpandy = kwargs.get('src.andas',[])
-        return _db.merger(src.andas = listpandy)
+        kwargs_test(kwargs,['coapandas'], 'Bad args used in the pycoa.merger function.')
+        listpandy = kwargs.get('coapandas',[])
+        return _db.merger(coapandas = listpandy)
 
     # ----------------------------------------------------------------------
     # --- map(**kwargs) ----------------------------------------------------
@@ -1055,5 +1055,4 @@ class Front:
         else:
             return fig
     # ----------------------------------------------------------------------
-
-pycoa.Front()
+pycoa=Front()

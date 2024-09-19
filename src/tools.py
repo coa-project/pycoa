@@ -38,10 +38,10 @@ from src.error import CoaKeyError, CoaTypeError, CoaConnectionError, CoaNotManag
 
 # testing if src.ata is available
 import importlib
-_src.ache_folder=''
-_src.ache_module_info = importlib.util.find_spec("src.ache")
-if _src.ache_module_info != None:
-    _src.ache_folder = _src.ache_module_info.submodule_search_locations[0]
+_coacache_folder=''
+_coacache_module_info = importlib.util.find_spec("coacache")
+if _coacache_module_info != None:
+    _coacache_folder = _coacache_module_info.submodule_search_locations[0]
 
 # Verbosity of pycoa
 _verbose_mode = 1 # default

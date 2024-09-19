@@ -4,7 +4,7 @@
 Project : PyCoA
 Date :    april 2020 - june 2024
 Authors : Olivier Dadoun, Julien Browaeys, Tristan Beau
-Copyright ©pycoa.fr
+Copyright ©pycoa_fr
 License: See joint LICENSE file
 
 Module : src.allvisu
@@ -12,7 +12,7 @@ Module : src.allvisu
 About :
 -------
 
-An interface module to easily plot pycoa.data with bokeh
+An interface module to easily plot pycoa_data with bokeh
 
 """
 from src.tools import (
@@ -181,9 +181,9 @@ class AllVisu:
         verb("Init of AllVisu() with db=" + str(db_name))
         self.database_name = db_name
         self.currentmetadata = MetaInfo().getcurrentmetadata(db_name)
-        self.setchartsfunctions = [method for method in dir(AllVisu) if callable(getattr(AllVisu, method)) and method.startswith("pycoa.") and not method.startswith("__")]
+        self.setchartsfunctions = [method for method in dir(AllVisu) if callable(getattr(AllVisu, method)) and method.startswith("pycoa_") and not method.startswith("__")]
         self.geopan = gpd.GeoDataFrame()
-        self.pycoa.eopandas = False
+        self.pycoa_eopandas = False
         self.geom = []
         self.listfigs = []
         self.dicokfront = {}
@@ -211,7 +211,7 @@ class AllVisu:
             - add kwargs set in the setvisu front end to global kwargs variable : kwargs.update(self.getkwargsfront())
             """
             if not isinstance(kwargs['input'], pd.DataFrame):
-                raise CoaTypeError(input + 'Must be a pandas, with pycoa.structure !')
+                raise CoaTypeError(input + 'Must be a pandas, with pycoa_structure !')
 
             kwargs_test(kwargs, self.optionvisu.listchartkargs, 'Bad args used in the display function.')
             kwargs.update(self.getkwargsfront())
@@ -245,7 +245,7 @@ class AllVisu:
                 raise CoaKeyError('All values for '+ which + ' is nan nor empty')
 
             if type(input)==gpd.geodataframe.GeoDataFrame:
-               self.pycoa.eopandas = True
+               self.pycoa_eopandas = True
 
             if maplabel and 'unsorted' in maplabel:
                 pass
@@ -298,8 +298,8 @@ class AllVisu:
                 else:
                     when_end_change = min(when_end_change,AllVisu.changeto_nonull_date(input, when_end, i))
 
-            if func.__name__ not in ['pycoa.date_plot', 'pycoa.plot', 'pycoa.menu_plot', 'pycoa.spiral_plot',\
-                'pycoa.yearly_plot','pycoa.mpltdate_plot','pycoa.mpltversus_plot','pycoa.date_plot_seaborn']:
+            if func.__name__ not in ['pycoa_date_plot', 'pycoa_plot', 'pycoa_menu_plot', 'pycoa_spiral_plot',\
+                'pycoa_yearly_plot','pycoa_mpltdate_plot','pycoa_mpltversus_plot','pycoa_date_plot_seaborn']:
                 if len(input_field) > 1:
                     print(str(input_field) + ' is dim = ' + str(len(input_field)) + '. No effect with ' + func.__name__ + '! Take the first input: ' + input_field[0])
                 input_field = input_field[0]
@@ -312,7 +312,7 @@ class AllVisu:
             input = input.loc[(input['date'] >=  self.when_beg) & (input['date'] <=  self.when_end)]
 
             title_temporal = ' (' + 'between ' + when_beg.strftime('%d/%m/%Y') + ' and ' + when_end.strftime('%d/%m/%Y') + ')'
-            if func.__name__ not in ['pycoa.date_plot', 'pycoa.plot', 'pycoa.menu_plot', 'pycoa.spiral_plot','pycoa.yearly_plot']:
+            if func.__name__ not in ['pycoa_date_plot', 'pycoa_plot', 'pycoa_menu_plot', 'pycoa_spiral_plot','pycoa_yearly_plot']:
                 title_temporal = ' (' + when_end.strftime('%d/%m/%Y')  + ')'
             title_option=''
             if option:
@@ -341,9 +341,9 @@ class AllVisu:
 
             copyright = kwargs.get('copyright', None)
             if copyright:
-                copyright = '©pycoa.fr ' + copyright + title_temporal
+                copyright = '©pycoa_fr ' + copyright + title_temporal
             else:
-                copyright = '©pycoa.fr data from: {}'.format(self.database_name)+' '+title_temporal
+                copyright = '©pycoa_fr data from: {}'.format(self.database_name)+' '+title_temporal
             kwargs['copyright'] = copyright
 
             self.subtitle = copyright
@@ -376,7 +376,7 @@ class AllVisu:
     ''' FIGURE COMMUN FOR ALL Bokeh Figure'''
     def standardfig(self, **kwargs):
         """
-         Create a standard Bokeh figure, with pycoa.fr copyright, used in all the bokeh charts
+         Create a standard Bokeh figure, with pycoa_fr copyright, used in all the bokeh charts
          """
         copyright = kwargs.get('copyright',self.optionvisu.dicofigureargs['copyright'])
         plot_width = kwargs.get('plot_width',self.optionvisu.dicofigureargs['plot_width'])
@@ -405,7 +405,7 @@ class AllVisu:
             self.listfigs = fig
 
     @decowrapper
-    def pycoa.resume_data(self,**kwargs):
+    def pycoa_resume_data(self,**kwargs):
         loc=list(input['clustername'].unique())
         input['cases'] = input[input_field]
         resumetype = kwargs.get('resumetype','spiral')
@@ -420,7 +420,7 @@ class AllVisu:
                         (input.date <= self.when_end)].sort_values(by='date')) for i in loc}
             input['resume']=input['clustername'].map(spark)
         else:
-            raise CoaError('pycoa.resume_data can use spiral or spark ... here what ?')
+            raise CoaError('pycoa_resume_data can use spiral or spark ... here what ?')
         input = input.loc[input.date==input.date.max()].reset_index(drop=True)
         def path_to_image_html(path):
             return '<img src="'+ path + '" width="60" >'
@@ -458,7 +458,7 @@ class AllVisu:
 
             input = input.sort_values(by=['clustername', 'date']).reset_index(drop = True)
 
-            if func.__name__ != 'pycoa.menu_plot' :
+            if func.__name__ != 'pycoa_menu_plot' :
                 if len(location_ordered_byvalues) >= MAXCOUNTRIESDISPLAYED:
                     input = input.loc[input.clustername.isin(location_ordered_byvalues[:MAXCOUNTRIESDISPLAYED])]
             list_max = []
@@ -469,13 +469,13 @@ class AllVisu:
                 amplitude = (np.nanmax(list_max) - np.nanmin(list_max))
                 if amplitude > 10 ** 4:
                     self.optionvisu.ax_type.reverse()
-            if func.__name__ == 'pycoa.menu_plot' :
+            if func.__name__ == 'pycoa_menu_plot' :
                 if isinstance(input_field,list):
                     if len(input_field) > 1:
                         print(str(input_field) + ' is dim = ' + str(len(input_field)) + '. No effect with ' + func.__name__ + '! Take the first input: ' + input_field[0])
                     input_field = input_field[0]
                 if self.granularity == 'country' and self.code != 'WW':
-                    func.__name__ = 'pycoa.date_plot'
+                    func.__name__ = 'pycoa_date_plot'
             kwargs['input'] = input.reset_index(drop=True)
             return func(self, **kwargs)
         return inner_plot
@@ -483,11 +483,11 @@ class AllVisu:
     ''' PLOT VERSUS '''
     @decowrapper
     @decoplot
-    def pycoa.plot(self,**kwargs):
+    def pycoa_plot(self,**kwargs):
         '''
         -----------------
         Create a versus plot according to arguments.
-        See help(pycoa.plot).
+        See help(pycoa_plot).
         Keyword arguments
         -----------------
         - input = None : if None take first element. A DataFrame with a Pysrc.struture is mandatory
@@ -551,10 +551,10 @@ class AllVisu:
     ''' DATE PLOT '''
     @decowrapper
     @decoplot
-    def pycoa.date_plot(self,**kwargs):
+    def pycoa_date_plot(self,**kwargs):
         '''
         -----------------
-        Create a date plot according to arguments. See help(pycoa.date_plot).
+        Create a date plot according to arguments. See help(pycoa_date_plot).
         Keyword arguments
         -----------------
         - input = None : if None take first element. A DataFrame with a Pysrc.struture is mandatory
@@ -662,7 +662,7 @@ class AllVisu:
     ''' SPIRAL PLOT '''
     @decowrapper
     @decoplot
-    def pycoa.spiral_plot(self, **kwargs):
+    def pycoa_spiral_plot(self, **kwargs):
         panels = []
         listfigs = []
         input = kwargs.get('input')
@@ -740,11 +740,11 @@ class AllVisu:
     ''' SCROLLINGMENU PLOT '''
     @decowrapper
     @decoplot
-    def pycoa.menu_plot(self, **kwargs):
+    def pycoa_menu_plot(self, **kwargs):
         '''
         -----------------
         Create a date plot, with a scrolling menu location, according to arguments.
-        See help(pycoa.menu_plot).
+        See help(pycoa_menu_plot).
         Keyword arguments
         -----------------
         len(location) > 2
@@ -839,10 +839,10 @@ class AllVisu:
     ''' YEARLY PLOT '''
     @decowrapper
     @decoplot
-    def pycoa.yearly_plot(self,**kwargs):
+    def pycoa_yearly_plot(self,**kwargs):
         '''
         -----------------
-        Create a date plot according to arguments. See help(pycoa.date_plot).
+        Create a date plot according to arguments. See help(pycoa_date_plot).
         Keyword arguments
         -----------------
         - input = None : if None take first element. A DataFrame with a Pysrc.struture is mandatory
@@ -998,8 +998,8 @@ class AllVisu:
                                          value = started, step=24 * 60 * 60 * 1000, orientation = orientation)
                     #wanted_date = dateslider.value_as_datetime.date()
 
-                #if func.__name__ == 'pycoa.mapfolium' or func.__name__ == 'pycoa.map' or func.__name__ == 'innerdecomap' or func.__name__ == 'innerdecopycoa.eo':
-                if func.__name__ in ['pycoa.mapfolium','pycoa.map','pycoa.eo' ,'pycoa.pimpmap','pycoa.mpltmap']:
+                #if func.__name__ == 'pycoa_mapfolium' or func.__name__ == 'pycoa_map' or func.__name__ == 'innerdecomap' or func.__name__ == 'innerdecopycoa_eo':
+                if func.__name__ in ['pycoa_mapfolium','pycoa_map','pycoa_eo' ,'pycoa_pimpmap','pycoa_mpltmap']:
                     if isinstance(input['where'].iloc[0],list):
                         geom = self.kindgeo
                         geodic={}
@@ -1015,7 +1015,7 @@ class AllVisu:
                     if self.code in ['FRA','USA']:
                         self.geo = copy.deepcopy(self.geo)
                         d = self.geo._list_translation
-                        if func.__name__ != 'pycoa.mapfolium':
+                        if func.__name__ != 'pycoa_mapfolium':
                             if any(i in list(geopdwd.code.unique()) for i in d.keys()) \
                             or any(True for i in d.keys() if ''.join(list(geopdwd.code.unique())).find(i)!=-1):
                                 if maplabel:
@@ -1038,7 +1038,7 @@ class AllVisu:
                     '''
                     geopdwd = gpd.GeoDataFrame(geopdwd, geometry=geopdwd.geometry, crs="EPSG:4326")
 
-            if func.__name__ == 'pycoa.histo':
+            if func.__name__ == 'pycoa_histo':
                 pos = {}
                 new = pd.DataFrame()
                 n = 0
@@ -1064,11 +1064,11 @@ class AllVisu:
     ''' VERTICAL HISTO '''
     @decowrapper
     @decohistomap
-    def pycoa.histo(self, **kwargs):
+    def pycoa_histo(self, **kwargs):
         '''
             -----------------
             Create 1D histogramme by value according to arguments.
-            See help(pycoa.histo).
+            See help(pycoa_histo).
             Keyword arguments
             -----------------
             - geopdwd : A DataFrame with a Pysrc.struture is mandatory
@@ -1216,8 +1216,8 @@ class AllVisu:
             nmaxdisplayed = MAXCOUNTRIESDISPLAYED
             toggl = None
 
-            if len(locunique) >= nmaxdisplayed :#and func.__name__ != 'pycoa.pie' :
-                if func.__name__ != 'pycoa.pie' :
+            if len(locunique) >= nmaxdisplayed :#and func.__name__ != 'pycoa_pie' :
+                if func.__name__ != 'pycoa_pie' :
                     geopdwd_filter = geopdwd_filter.loc[geopdwd_filter.clustername.isin(locunique[:nmaxdisplayed])]
                 else:
                     geopdwd_filter_first = geopdwd_filter.loc[geopdwd_filter.clustername.isin(locunique[:nmaxdisplayed-1])]
@@ -1232,7 +1232,7 @@ class AllVisu:
 
                     geopdwd_filter = geopdwd_filter_first
                     geopdwd_filter = pd.concat([geopdwd_filter,geopdwd_filter_other])
-            if func.__name__ == 'pycoa.horizonhisto' :
+            if func.__name__ == 'pycoa_horizonhisto' :
                 #geopdwd_filter['bottom'] = geopdwd_filter.index
                 geopdwd_filter['left'] = geopdwd_filter['cases']
                 geopdwd_filter['right'] = geopdwd_filter['cases']
@@ -1256,7 +1256,7 @@ class AllVisu:
                 else:
                     geopdwd_filter['horihistotext'] = [ '{:.3g}'.format(float(i)) if float(i)>1.e4 or float(i)<0.01 else round(float(i),2) for i in geopdwd_filter['right'] ]
                     geopdwd_filter['horihistotext'] = [str(i) for i in geopdwd_filter['horihistotext']]
-            if func.__name__  in ['pycoa.pie','pycoa.mpltpie']  :
+            if func.__name__  in ['pycoa_pie','pycoa_mpltpie']  :
                 geopdwd_filter = self.add_columns_for_pie_chart(geopdwd_filter,input_field)
                 geopdwd = self.add_columns_for_pie_chart(geopdwd,input_field)
                 if maplabel and 'label%' in maplabel:
@@ -1286,7 +1286,7 @@ class AllVisu:
                     if not input_filter[input_filter[input_field] < 0.].empty:
                         print('Some value are negative, can\'t display log scale in this context')
                     else:
-                        if func.__name__ == 'pycoa.horizonhisto' :
+                        if func.__name__ == 'pycoa_horizonhisto' :
                             if maplabel and 'label%' in maplabel:
                                 standardfig.x_range = Range1d(0.01, 50 * max_value*100)
                             else:
@@ -1294,7 +1294,7 @@ class AllVisu:
 
                             srcfiltered.data['left'] = [min(srcfiltered.data['right'])/100.] * len(srcfiltered.data['right'])
 
-                if func.__name__ == 'pycoa.pie':
+                if func.__name__ == 'pycoa_pie':
                     if not input_filter[input_filter[input_field] < 0.].empty:
                         raise CoaKeyError('Some values are negative, can\'t display a Pie chart, try histo by location')
                     standardfig.plot_width = plot_width
@@ -1535,7 +1535,7 @@ class AllVisu:
                     tooltips=[('where', '@rolloverdisplay'), (input_field, '@cases{0,0.0}'), ],
                 if isinstance(tooltips,tuple):
                     tooltips = tooltips[0]
-                if func.__name__ == 'pycoa.pie' :
+                if func.__name__ == 'pycoa_pie' :
                     standardfig.add_tools(HoverTool(
                         tooltips = tooltips,
                         formatters = {'where': 'printf', '@{' + 'cases' + '}': cases_custom, '%':'printf'},
@@ -1560,11 +1560,11 @@ class AllVisu:
     @decowrapper
     @decohistomap
     @decohistopie
-    def pycoa.horizonhisto(self, **kwargs):
+    def pycoa_horizonhisto(self, **kwargs):
         '''
             -----------------
             Create 1D histogramme by location according to arguments.
-            See help(pycoa.histo).
+            See help(pycoa_histo).
             Keyword arguments
             -----------------
             - srcfiltered : A DataFrame with a Pysrc.struture is mandatory
@@ -1642,7 +1642,7 @@ class AllVisu:
             try:
                 locale.setlocale(locale.LC_ALL, 'en_US.utf8')
             except:
-                raise CoaError("Locale setting problem. Please contact support@pycoa.fr")
+                raise CoaError("Locale setting problem. Please contact support@pycoa_fr")
 
         df['textdisplayed2'] =  ['      '+str(round(100*i,1))+'%' for i in df['percentage']]
         df.loc[df['diff'] <= np.pi/20,'textdisplayed']=''
@@ -1652,11 +1652,11 @@ class AllVisu:
     @decowrapper
     @decohistomap
     @decohistopie
-    def pycoa.pie(self, **kwargs):
+    def pycoa_pie(self, **kwargs):
         '''
             -----------------
             Create a pie chart according to arguments.
-            See help(pycoa.pie).
+            See help(pycoa_pie).
             Keyword arguments
             -----------------
             - srcfiltered : A DataFrame with a Pysrc.struture is mandatory
@@ -1703,11 +1703,11 @@ class AllVisu:
     ''' MAP FOLIUM '''
     @decowrapper
     @decohistomap
-    def pycoa.mapfolium(self, **kwargs):
+    def pycoa_mapfolium(self, **kwargs):
         '''
             -----------------
             Create a map folium to arguments.
-            See help(pycoa.histo).
+            See help(pycoa_histo).
             Keyword arguments
             -----------------
             - srcfiltered : A DataFrame with a Pysrc.struture is mandatory
@@ -1754,7 +1754,7 @@ class AllVisu:
 
         minx, miny, maxx, maxy =  geopdwd_filtered.total_bounds
 
-        mapa = folium.Map(tiles=tile, attr='<a href=\"http://pycoa.fr\"> ©pycoa.fr </a>' + msg)
+        mapa = folium.Map(tiles=tile, attr='<a href=\"http://pycoa_fr\"> ©pycoa_fr </a>' + msg)
         #min_lat=minx, max_lat=maxx, min_lon=miny, max_lon=maxy)
         #location=[geopdwd_filtered.centroid.y.mean(),geopdwd_filtered.centroid.x.mean()],)
         if self.dbld[self.database_name][0] != 'WW':
@@ -1836,15 +1836,15 @@ class AllVisu:
         return mapa
 
     ''' DECORATOR FOR MAP BOKEH '''
-    def decopycoa.eo(func):
+    def decopycoa_eo(func):
         @wraps(func)
-        def innerdecopycoa.eo(self,**kwargs):
+        def innerdecopycoa_eo(self,**kwargs):
             geopdwd = kwargs.get('geopdwd')
             input_field = kwargs.get("input_field")
             geopdwd['cases'] = geopdwd[input_field]
             loca=geopdwd['where'].unique()
 
-            if self.pycoa.eopandas:
+            if self.pycoa_eopandas:
                 locgeo=geopdwd.loc[geopdwd['where'].isin(loca)].drop_duplicates('where').set_index('where')['geometry']
                 geopdwd=fill_missing_dates(geopdwd)
                 geopdwd_filtered = geopdwd.loc[geopdwd.date == self.when_end]
@@ -1890,7 +1890,7 @@ class AllVisu:
                 kwargs['geopdwd']=geopdwd
                 kwargs['geopdwd_filtered']=geopdwd_filtered
             return func(self, **kwargs)
-        return innerdecopycoa.eo
+        return innerdecopycoa_eo
 
     ''' RETURN GEOMETRY, LOCATIO + CASES '''
     def decomap(func):
@@ -1905,11 +1905,11 @@ class AllVisu:
             uniqloc = list(geopdwd_filtered.clustername.unique())
             dfLabel = pd.DataFrame()
             sourcemaplabel = ColumnDataSource(dfLabel)
-            if maplabel or func.__name__ in ['pycoa.pimpmap','pycoa.map','pycoa.mapfolium']:
+            if maplabel or func.__name__ in ['pycoa_pimpmap','pycoa_map','pycoa_mapfolium']:
                 locsum = geopdwd_filtered.clustername.unique()
                 numberpercluster = geopdwd_filtered['clustername'].value_counts().to_dict()
                 sumgeo = geopdwd_filtered.copy()
-                if self.pycoa.eopandas == True:
+                if self.pycoa_eopandas == True:
                     sumgeo = sumgeo.to_crs(3035)
                 else:
                     sumgeo['geometry'] = sumgeo['geometry'].buffer(0.001) #needed with geopandas 0.10.2
@@ -1953,7 +1953,7 @@ class AllVisu:
             x_range=(minx,maxx)
             y_range=(miny,maxy)
 
-            if func.__name__ == 'pycoa.pimpmap':
+            if func.__name__ == 'pycoa_pimpmap':
                 standardfig = self.standardfig(x_range=x_range, y_range=y_range, x_axis_type="mercator", y_axis_type="mercator",**kwargs,match_aspect=True)
             else:
                 standardfig = self.standardfig(x_axis_type="mercator", y_axis_type="mercator",**kwargs,match_aspect=True)
@@ -1989,13 +1989,13 @@ class AllVisu:
     ''' MAP BOKEH '''
     @decowrapper
     @decohistomap
-    @decopycoa.eo
+    @decopycoa_eo
     @decomap
-    def pycoa.map(self,**kwargs):
+    def pycoa_map(self,**kwargs):
         '''
             -----------------
             Create a map bokeh with arguments.
-            See help(pycoa.histo).
+            See help(pycoa_histo).
             Keyword arguments
             -----------------
             - srcfiltered : A DataFrame with a Pysrc.struture is mandatory
@@ -2194,19 +2194,19 @@ class AllVisu:
         point_policy = "snap_to_data",callback=callback))  # ,PanTool())
         if dateslider:
             standardfig = column(dateslider, standardfig,toggl)
-        self.pycoa.eopandas = False
+        self.pycoa_eopandas = False
         return standardfig
 
     ''' PIMPMAP BOKEH '''
     @decowrapper
     @decohistomap
-    @decopycoa.eo
+    @decopycoa_eo
     @decomap
-    def pycoa.pimpmap(self,**kwargs):
+    def pycoa_pimpmap(self,**kwargs):
         '''
             -----------------
             Create a bokeh map with pimpline label and with to arguments.
-            See help(pycoa.histo).
+            See help(pycoa_histo).
             Keyword arguments
             -----------------
             - srcfiltered : A DataFrame with a Pysrc.struture is mandatory
@@ -2580,7 +2580,7 @@ class AllVisu:
 
     @decowrapper
     @decoplot
-    def pycoa.mpltdate_plot(self,**kwargs):
+    def pycoa_mpltdate_plot(self,**kwargs):
         input = kwargs.get('input')
         input_field = kwargs.get('input_field')
         title = kwargs.get('title')
@@ -2602,7 +2602,7 @@ class AllVisu:
 
     @decowrapper
     @decoplot
-    def pycoa.mpltversus_plot(self,**kwargs):
+    def pycoa_mpltversus_plot(self,**kwargs):
         input = kwargs.get('input')
         input_field = kwargs.get('input_field')
         title = kwargs.get('title')
@@ -2622,7 +2622,7 @@ class AllVisu:
 
     @decowrapper
     @decoplot
-    def pycoa.mpltyearly_plot(self,**kwargs):
+    def pycoa_mpltyearly_plot(self,**kwargs):
         '''
          matplotlib date yearly plot chart
          Max display defined by MAXCOUNTRIESDISPLAYED
@@ -2653,7 +2653,7 @@ class AllVisu:
     @decowrapper
     @decohistomap
     @decohistopie
-    def pycoa.mpltpie(self,**kwargs):
+    def pycoa_mpltpie(self,**kwargs):
         '''
          matplotlib pie chart
          Max display defined by MAXCOUNTRIESDISPLAYED
@@ -2672,7 +2672,7 @@ class AllVisu:
     @decowrapper
     @decohistomap
     @decohistopie
-    def pycoa.mplthorizontalhisto(self,**kwargs):
+    def pycoa_mplthorizontalhisto(self,**kwargs):
         '''
         matplotlib horizon histo
         '''
@@ -2689,7 +2689,7 @@ class AllVisu:
         return fig
 
     @decowrapper
-    def pycoa.mplthisto(self,**kwargs):
+    def pycoa_mplthisto(self,**kwargs):
         '''
         matplotlib horizon histo
         '''
@@ -2709,7 +2709,7 @@ class AllVisu:
 
     @decowrapper
     @decohistomap
-    def pycoa.mpltmap(self,**kwargs):
+    def pycoa_mpltmap(self,**kwargs):
         '''
          matplotlib map display
         '''
@@ -2781,7 +2781,7 @@ class AllVisu:
     #####SEABORN PLOT#########
     @decowrapper
     @decoplotseaborn
-    def pycoa.date_plot_seaborn(self, **kwargs):
+    def pycoa_date_plot_seaborn(self, **kwargs):
         """
         Create a seaborn line plot with date on x-axis and input_field on y-axis.
         """
@@ -2815,7 +2815,7 @@ class AllVisu:
 
     @decowrapper
     @decoplotseaborn
-    def pycoa.versus_plot_seaborn(self, **kwargs):
+    def pycoa_versus_plot_seaborn(self, **kwargs):
         input = kwargs['input']
         filtered_input = kwargs['filtered_input']
         input_field = kwargs['input_field']
@@ -2849,7 +2849,7 @@ class AllVisu:
     @decowrapper
     @decoplotseaborn
     @decohistseaborn
-    def pycoa.hist_seaborn_verti(self, **kwargs):
+    def pycoa_hist_seaborn_verti(self, **kwargs):
         """
         Create a seaborn vertical histogram with input_field on y-axis.
         """
@@ -2871,7 +2871,7 @@ class AllVisu:
     @decowrapper
     @decoplotseaborn
     @decohistseaborn
-    def pycoa.hist_seaborn_value(self, **kwargs):
+    def pycoa_hist_seaborn_value(self, **kwargs):
         """
         Create a seaborn vertical histogram where the x-axis represents a numerical field.
         """
@@ -2894,7 +2894,7 @@ class AllVisu:
     @decowrapper
     @decoplotseaborn
     @decohistseaborn
-    def pycoa.hist_seaborn_hori(self, **kwargs):
+    def pycoa_hist_seaborn_hori(self, **kwargs):
         """
         Create a seaborn horizontal histogram with input_field on x-axis.
         """
@@ -2917,7 +2917,7 @@ class AllVisu:
     ######SEABORN BOXPLOT#########
     @decowrapper
     @decoplotseaborn
-    def pycoa.pairplot_seaborn(self, **kwargs):
+    def pycoa_pairplot_seaborn(self, **kwargs):
         """
         Create a seaborn pairplot
         """
@@ -2935,7 +2935,7 @@ class AllVisu:
     ######SEABORN heatmap#########
     @decowrapper
     @decoplotseaborn
-    def pycoa.heatmap_seaborn(self, **kwargs):
+    def pycoa_heatmap_seaborn(self, **kwargs):
         """
         Create a seaborn heatmap
         """

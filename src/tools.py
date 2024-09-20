@@ -251,8 +251,8 @@ def get_local_from_url(url,expiration_time=0,suffix=''):
 
     local_file_exists=False
 
-    if _src.ache_folder != '':
-        local_cached_filename=os.path.join(_src.ache_folder,local_base_filename)
+    if _coacache_folder  != '':
+        local_cached_filename=os.path.join(_coacache_folder,local_base_filename)
         local_file_exists=os.path.exists(local_cached_filename)
         local_filename=local_cached_filename
 

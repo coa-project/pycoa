@@ -37,8 +37,8 @@ import shapely.ops as so
 import bs4
 import numpy as np
 
-from coa.tools import verb,kwargs_test,get_local_from_url,dotdict,tostdstring
-from coa.error import *
+from src.tools import verb,kwargs_test,get_local_from_url,dotdict,tostdstring
+from src.error import *
 
 # ---------------------------------------------------------------------
 # --- GeoManager class ------------------------------------------------

@@ -5,7 +5,7 @@ Authors : Olivier Dadoun, Julien Browaeys, Tristan Beau
 Copyright ©pycoa.fr
 License: See joint LICENSE file
 
-Module : src.geo
+Module : coa.geo
 
 About :
 -------
@@ -37,8 +37,8 @@ import shapely.ops as so
 import bs4
 import numpy as np
 
-from src.tools import verb,kwargs_test,get_local_from_url,dotdict,tostdstring
-from src.error import *
+from coa.tools import verb,kwargs_test,get_local_from_url,dotdict,tostdstring
+from coa.error import *
 
 # ---------------------------------------------------------------------
 # --- GeoManager class ------------------------------------------------
@@ -56,7 +56,7 @@ class GeoManager():
             'name',           # Standard name ( != Official, caution )
             'num']            # Numeric standard
 
-    _list_db=[None,'jhu','worldometers','owid','opencovid19national','spfnational','mpoxgh','olympics','europa','govcy','sumeau'] # first is default
+    _list_db=[None,'jhu','worldometers','owid','opencovid19national','spfnational','mpoxgh','olympics'] # first is default
     _list_output=['list','dict','pandas'] # first is default
 
     _standard = None # currently used normalisation standard
@@ -165,9 +165,8 @@ class GeoManager():
             raise CoaTypeError('Waiting for str, list of str or pandas'
                 'as input of get_standard function member of GeoManager')
 
-        fakeiso3={'WLD':'World','EUR':'Europe'} #Oliv add this for iso3 json description for World and Europe
-        w=[ v.title() if v not in list(fakeiso3.keys()) else fakeiso3[v] for v in w   ] # capitalize first letter of each name
-        #w = (pd.Series(w).replace(fakeiso3).str.title()).to_list()
+        w=[v.title() for v in w] # capitalize first letter of each name
+
         w0=w.copy()
 
         if db:
@@ -297,7 +296,7 @@ class GeoManager():
                     "Northern Cyprus":"CYP",\
                     "Curacao":"CUW",\
                     "Faeroe Islands":"FRO",\
-                    "Vatican":"VAT",
+                    "Vatican":"VAT"
                 })
         elif db=='olympics':
             translation_dict.update({\
@@ -514,7 +513,7 @@ class GeoInfo():
                     #geojsondatafile = 'https://raw.githubusercontent.com/johan/world.geo.json/master/countries.geo.json'
                     #self._data_geometry = gpd.read_file(get_local_from_url(geojsondatafile,0,'.json'))[["id","geometry"]]
                     #world_geometry_url_zipfile='http://thematicmapping.org/downloads/TM_WORLD_BORDERS_SIMPL-0.3.zip' # too much simplified version ?
-                    world_geometry_url_zipfile='https://github.com/src.project/src.ata/raw/main/src.tore/TM_WORLD_BORDERS_SIMPL-0.3.zip' # too much simplified version ?
+                    world_geometry_url_zipfile='https://github.com/coa-project/coadata/raw/main/coastore/TM_WORLD_BORDERS_SIMPL-0.3.zip' # too much simplified version ?
                     # world_geometry_url_zipfile='http://thematicmapping.org/downloads/TM_WORLD_BORDERS-0.3.zip' # too precize version ?
                     self._data_geometry = gpd.read_file('zip://'+get_local_from_url(world_geometry_url_zipfile,0,'.zip'))[['ISO3','geometry']]
                     self._data_geometry.columns=["id_tmp","geometry"]
@@ -789,24 +788,24 @@ class GeoCountry():
 
     # Assuming zip file here
     _country_info_dict = {'FRA':'https://data.opendatasoft.com/explore/dataset/georef-france-departement@public/download/?format=geojson&timezone=Europe/Berlin&lang=fr',\
-                    #previously https://github.com/src.project/src.ata/raw/main/src.tore/public.opendatasoft.com_912711563.zip',\
+                    #previously https://github.com/coa-project/coadata/raw/main/coastore/public.opendatasoft.com_912711563.zip',\
                     #'USA':'https://alicia.data.socrata.com/api/geospatial/jhnu-yfrj?method=export&format=Original',\
-                    'USA':'https://github.com/src.project/src.ata/raw/main/src.ache/alicia.data.socrata.com_3337537769.zip',\
+                    'USA':'https://github.com/coa-project/coadata/raw/main/coacache/alicia.data.socrata.com_3337537769.zip',\
                     'ITA':'https://raw.githubusercontent.com/openpolis/geojson-italy/master/geojson/limits_IT_provinces.geojson',\
                     'IND':'https://raw.githubusercontent.com/deldersveld/topojson/master/countries/india/india-states.json',\
                     'DEU':'https://github.com/jgehrcke/covid-19-germany-gae/raw/master/geodata/DE-counties.geojson',\
                     #'ESP':'https://public.opendatasoft.com/explore/dataset/provincias-espanolas/download/?format=shp&timezone=Europe/Berlin&lang=en',\
-                    'ESP':'https://github.com/src.project/src.ata/raw/main/src.ache/public.opendatasoft.com_598837822.zip',\
+                    'ESP':'https://github.com/coa-project/coadata/raw/main/coacache/public.opendatasoft.com_598837822.zip',\
                     # missing some counties 'GBR':'https://opendata.arcgis.com/datasets/69dc11c7386943b4ad8893c45648b1e1_0.zip?geometry=%7B%22xmin%22%3A-44.36%2C%22ymin%22%3A51.099%2C%22xmax%22%3A39.487%2C%22ymax%22%3A59.78%2C%22type%22%3A%22extent%22%2C%22spatialReference%22%3A%7B%22wkid%22%3A4326%7D%7D&outSR=%7B%22latestWkid%22%3A27700%2C%22wkid%22%3A27700%7D',\
-                    'GBR':'https://github.com/src.project/src.ata/raw/main/src.tore/opendata.arcgis.com_3256063640',\
+                    'GBR':'https://github.com/coa-project/coadata/raw/main/coastore/opendata.arcgis.com_3256063640',\
                     # previously (but broken) : https://opendata.arcgis.com/datasets/3a4fa2ce68f642e399b4de07643eeed3_0.geojson',\
-                    'BEL':'https://github.com/src.project/src.ata/raw/main/src.ache/public.opendatasoft.com_537867990.zip',\
+                    'BEL':'https://github.com/coa-project/coadata/raw/main/coacache/public.opendatasoft.com_537867990.zip',\
 # previously (but not all regions now) 'https://public.opendatasoft.com/explore/dataset/arrondissements-belges-2019/download/?format=shp&timezone=Europe/Berlin&lang=en',\
-                    'PRT':'https://github.com/src.project/src.ata/raw/main/src.tore/concelhos.zip',\
-                    # (simplification of 'https://github.com/src.project/src.ata/raw/main'https://dados.gov.pt/en/datasets/r/59368d37-cbdb-426a-9472-5a04cf30fbe4',\
+                    'PRT':'https://github.com/coa-project/coadata/raw/main/coastore/concelhos.zip',\
+                    # (simplification of 'https://github.com/coa-project/coadata/raw/main'https://dados.gov.pt/en/datasets/r/59368d37-cbdb-426a-9472-5a04cf30fbe4',\
                     'MYS':'https://stacks.stanford.edu/file/druid:zd362bc5680/data.zip',\
                     'CHL':'http://geonode.meteochile.gob.cl/geoserver/wfs?format_options=charset%3AUTF-8&typename=geonode%3Adivision_comunal_geo_ide_1&outputFormat=SHAPE-ZIP&version=1.0.0&service=WFS&request=GetFeature',\
-                    'EUR':'https://github.com/src.project/src.ata/raw/main/src.tore/WHO_EUROsmall2.json',\
+                    'EUR':'https://github.com/coa-project/coadata/raw/main/coastore/WHO_EUROsmall2.json',\
                     'GRC':'https://geodata.gov.gr/dataset/6deb6a12-1a54-41b4-b53b-6b36068b8348/resource/3e571f7f-42a4-4b49-8db0-311695d72fa3/download/nomoiokxe.zip',\
                     'JPN':'https://raw.githubusercontent.com/piuccio/open-data-jp-prefectures-geojson/master/output/prefectures.geojson',\
                     }
@@ -814,7 +813,7 @@ class GeoCountry():
     _source_dict = {'FRA':{'Basics':_country_info_dict['FRA'],\
                     'Subregion Flags':'http://sticker-departement.com/',\
                     'Region Flags':'https://fr.wikipedia.org/w/index.php?title=R%C3%A9gion_fran%C3%A7aise&oldid=177269957',\
-                    'Population':'https://github.com/src.project/src.ata/raw/main/src.tore/www.insee.fr_3658796960',\
+                    'Population':'https://github.com/coa-project/coadata/raw/main/coastore/www.insee.fr_3658796960',\
                     # previously (but sometimes broken : 'https://www.insee.fr/fr/statistiques/4989753?sommaire=4989761'
                     },\
                     'USA':{'Basics':_country_info_dict['USA'],\
@@ -1157,7 +1156,6 @@ class GeoCountry():
                     self._country_data.loc[self._country_data.name_subregion.isin(ath)].dissolve(aggfunc='sum').values
             self._country_data = self._country_data.loc[~self._country_data.name_subregion.isin(ath[:-1])]
             changename={'Ο ΟΡΟΣ':'ΑΓΙΟ ΟΡΟΣ','ΑΘΗΝΩΝ':'ΑΤΤΙΚΗΣ'}
-
             self._country_data['name_subregion'].replace(changename, inplace=True)
             self._country_data['name_region'].replace(changename, inplace=True)
 
@@ -1757,3 +1755,4 @@ class GeoCountry():
         prop.append('code_subregion')
         return data.merge(self.get_data(region_merging)[prop],how='left',left_on=input_key,\
                             right_on=geofield)
+

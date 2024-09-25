@@ -101,7 +101,8 @@ class MetaInfo:
       the error if the file do not exist or not valide
       return only valid json
       '''
-      pathmetadb = '../json/'
+      currentpath=os.getcwd()
+      pathmetadb = currentpath + '/../json/'
       onlyfiles = [f for f in listdir(pathmetadb) if isfile(join(pathmetadb, f)) and f.endswith('.json')]
       jsongeoinfo = {}
       col = ['name','validejson','parsingjson']

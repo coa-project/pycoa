@@ -277,22 +277,22 @@ class VirusStat(object):
         sumall = False # default
         sumallandsmooth7 = False
         if 'input' not in kwargs:
-            mypycoa.d = self.currentdata.get_maingeopandas()
+            mypycoapd = self.currentdata.get_maingeopandas()
             if 'which' not in kwargs:
                 kwargs['which'] = self.currentdata.get_available_keywords()[0]
             #if kwargs['which'] not in self.currentdata.get_available_keywords():
             #    raise CoaKeyError(kwargs['which']+' this value is not available in this db, please check !')
-            mainpandas = return_nonan_dates_pandas(mypycoa.d,kwargs['which'])
+            mainpandas = return_nonan_dates_pandas(mypycoapd,kwargs['which'])
             #while for last date all values are nan previous date
         else:
-            mypycoa.d=kwargs['input']
-            if str(type(mypycoa.d['where'][0]))=="<class 'list'>":
-                return mypycoa.d
+            mypycoapd=kwargs['input']
+            if str(type(mypycoapd['where'][0]))=="<class 'list'>":
+                return mypycoapd
             kwargs['which']=kwargs['input_field']
-            mainpandas = return_nonan_dates_pandas(mypycoa.d,kwargs['input_field'])
+            mainpandas = return_nonan_dates_pandas(mypycoapd,kwargs['input_field'])
             #if isinstance(kwargs['input_field'],list):
             #    for i in kwargs['input_field']:
-            #        mainpandas[i] = mypycoa.d[i]
+            #        mainpandas[i] = mypycoapd[i]
 
         devorigclist = None
         origclistlist = None

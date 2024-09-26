@@ -102,7 +102,13 @@ class MetaInfo:
       return only valid json
       '''
       currentpath=os.getcwd()
-      pathmetadb = currentpath + '/../json/'
+      if os.path.isdir(currentpath+'/json'):
+          jsp = currentpath+'/json/'
+      elif os.path.isdir(currentpath+'/../json'):
+          jsp = currentpath+'/../json/'
+      else:
+          raise CoaError('Where the json folder (description ofth database) is supposed to be ')
+      pathmetadb = jsp
       onlyfiles = [f for f in listdir(pathmetadb) if isfile(join(pathmetadb, f)) and f.endswith('.json')]
       jsongeoinfo = {}
       col = ['name','validejson','parsingjson']

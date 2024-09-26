@@ -19,10 +19,10 @@ class CoaWarning(Exception):
     def __init__(self, message):
         #self.message = message
         message = '  ' + message + '  '
-        pycoa.exterror = 'PYCOA Warning ! '
-        center=int((len(message)-len(pycoa.exterror))/2)
+        pycoatexterror = 'PYCOA Warning ! '
+        center=int((len(message)-len(pycoatexterror))/2)
         self.message = ' '*len(message)+'\n'\
-        + ' '*center+pycoa.exterror+' '*center+'\n'\
+        + ' '*center+pycoatexterror+' '*center+'\n'\
         + message.center(30)+'\n'+' '*len(message)
         print('\033[45m'+self.message)
         Exception(message)
@@ -33,10 +33,10 @@ class CoaError(Exception):
     def __init__(self, message):
         #self.message = message
         message = '  ' + message + '  '
-        pycoa.exterror = 'PYCOA Error ! '
-        center=int((len(message)-len(pycoa.exterror))/2)
+        pycoatexterror = 'PYCOA Error ! '
+        center=int((len(message)-len(pycoatexterror))/2)
         self.message = ' '*len(message)+'\n'\
-        + ' '*center+pycoa.exterror+' '*center+'\n'\
+        + ' '*center+pycoatexterror+' '*center+'\n'\
         + message.center(30)+'\n'+' '*len(message)
         print('\033[1;30;41m'+self.message)
         Exception(message)

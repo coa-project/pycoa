@@ -2598,7 +2598,7 @@ class AllVisu:
                 leg.append(val+' '+col)
             plt.legend(leg)
         plt.title(title)
-        return
+        return plt
 
     @decowrapper
     @decoplot

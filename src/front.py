@@ -60,9 +60,9 @@ import src.geo as coge
 import geopandas as gpd
 output_notebook(hide_banner=True)
 
-class Front:
+class front:
     """
-        Front Class
+        front Class
     """
     def __init__(self,):
         self.meta = MetaInfo()
@@ -1055,5 +1055,4 @@ class Front:
         else:
             return fig
     # ----------------------------------------------------------------------
-Front()
-#pycoa=Front()
+#pycoa=front()

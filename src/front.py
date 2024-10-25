@@ -459,7 +459,7 @@ class __front__:
                     kwargs.pop(i)
                 except:
                     pass
-            print(self.lchartkargs)        
+
             kwargs_test(kwargs,self.lchartkargs,'Bad args used ! please check ')
             where = kwargs.get('where', None)
             which = kwargs.get('which', None)
@@ -606,6 +606,8 @@ class __front__:
                     bypop='total population'
                 else:
                     bypop+=' population'
+                if isinstance(which,list):
+                    which=which[0]
                 if 'tot_' and not what or what=='standard':
                     renamed = which + ' per '+ bypop
                 else:
@@ -1037,6 +1039,9 @@ class __front__:
                 else:
                     print(typeofplot + ' not implemented in ' + self.getdisplay())
                     fig = self.cocoplot.pycoa_spiral_plot(**kwargs)
+            elif self.getdisplay() == None:
+                CoaWarning('Visualisation has not been defined ... not displayed')
+                pass
             else:
                 self.setdisplay('bokeh')
                 raise CoaKeyError('Unknown typeofplot value. Should be date, versus, menulocation, spiral or yearly.')

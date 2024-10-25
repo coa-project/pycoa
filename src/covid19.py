@@ -660,7 +660,7 @@ class VirusStat(object):
     if bypop == 'pop':
         pandy.loc[:,val2norm+' per total population']=pandy[val2norm]/pandy[pop_field]*VirusStat.dictbypop()[bypop]
     else:
-        pandy.loc[:,val2norm+' per '+bypop + ' population']=pandy[val2norm]/pandy[pop_field]*sVirusStat.dictbypop()[bypop]
+        pandy.loc[:,val2norm+' per '+bypop + ' population']=pandy[val2norm]/pandy[pop_field]*VirusStat.dictbypop()[bypop]
     return pandy
 
    def merger(self,**kwargs):

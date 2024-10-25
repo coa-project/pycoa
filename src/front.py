@@ -76,7 +76,7 @@ class __front__:
         self.lvisu = list(self.av.dicovisuargs['vis'])
         self.ltiles = list(self.av.dicovisuargs['tile'])
 
-        self.lchartkargs = self.av.listchartkargs
+        self.lchartkargs = self.av.listchartkargs+['bypop']
         self.dict_bypop = coco.VirusStat.dictbypop()
 
         self.db = ''
@@ -459,8 +459,8 @@ class __front__:
                     kwargs.pop(i)
                 except:
                     pass
-
-            kwargs_test(kwargs,self.av.listchartkargs,'Bad args used ! please check ')
+            print(self.lchartkargs)        
+            kwargs_test(kwargs,self.lchartkargs,'Bad args used ! please check ')
             where = kwargs.get('where', None)
             which = kwargs.get('which', None)
             if which and not isinstance(which,list):

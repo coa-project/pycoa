@@ -126,8 +126,6 @@ class OptionVisu():
         self.scolors = Category10[5]
         self.ax_type = ['linear', 'log']
 
-        self._dict_bypop = {'no':0,'100':100,'1k':1e3,'100k':1e5,'1M':1e6,'pop':1.}
-
         self.dicochartargs  = {
                                 'where':None,\
                                 'option':['nonneg', 'nofillnan', 'smooth7', 'sumall'],\
@@ -139,7 +137,6 @@ class OptionVisu():
                                 'typeofhist':['bylocation','byvalue','pie'],\
                                 'typeofplot':['date','menulocation','versus','spiral','yearly'],\
                                 'bins':10,\
-                                'bypop':list(self._dict_bypop.keys()),\
                                 #'dateslider':[False,True],\
                                 'output':['pandas','geopandas','list', 'dict', 'array']
                         }
@@ -208,7 +205,7 @@ class AllVisu:
                 - kwargs:
                     * keys = [plot_width, plot_width, title, when, title_temporal,bins, what, which]
             Note that method used only the needed variables, some of them are useless
-            - add kwargs set in the setvisu front end to global kwargs variable : kwargs.update(self.getkwargsfront())
+            - add kwargs set in the setoptvis front end to global kwargs variable : kwargs.update(self.getkwargsfront())
             """
             if not isinstance(kwargs['input'], pd.DataFrame):
                 raise CoaTypeError(input + 'Must be a pandas, with pycoa_structure !')
@@ -367,7 +364,7 @@ class AllVisu:
             raise CoaTypeError('Don\'t know the tile you want. So far:' + str(list(self.optionvisu.dicovisuargs['tile'])))
 
     def setkwargsfront(self,kw):
-        kwargs_test(kw, list(self.optionvisu.dicovisuargs.keys())+list(self.optionvisu.dicofigureargs.keys()), 'Error with this resquest (not available in setvisu)')
+        kwargs_test(kw, list(self.optionvisu.dicovisuargs.keys())+list(self.optionvisu.dicofigureargs.keys()), 'Error with this resquest (not available in setoptvis)')
         self.optionvisu.dicokfront = kw
 
     def getkwargsfront(self):

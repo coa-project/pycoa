@@ -96,7 +96,12 @@ class VirusStat(object):
         except:
             raise CoaTypeError('What data base are you looking for ?')
         self.where_geodescription = where_kindgeo
-        #self.set_display(db_name,where_kindgeo,vis)
+
+   @staticmethod
+   def dictbypop():
+       ''' return dictionnary bypop '''
+       bypop = {'no':0,'100':100,'1k':1e3,'100k':1e5,'1M':1e6,'pop':1.}
+       return bypop
 
    def getwheregeometrydescription(self):
         return self.where_geodescription
@@ -165,6 +170,7 @@ class VirusStat(object):
        '''
        db_name = kwargs.get('db_name')
        reload = kwargs.get('reload', True)
+       vis = kwargs.get('vis',None)
 
        path = ".cache/"
        if not os.path.exists(path):
@@ -179,18 +185,17 @@ class VirusStat(object):
        #   datab=VirusStat.readpekl(filepkl)
        #   print("HERE")
        #if visu:
-       visu=True
-       datab.set_display(db_name,datab.getwheregeometrydescription())
-       if visu:
-           return datab, datab.get_display()
+       if vis:
+           datab.setvisu(db_name,datab.getwheregeometrydescription())
+           return datab, datab.getvisu()
        else:
-            return datab, None
+           return datab, None
 
-   def set_display(self,db_name,wheregeometrydescription):
+   def setvisu(self,db_name,wheregeometrydescription):
        ''' Set the Display '''
        self.codisp = allvisu.AllVisu(db_name, wheregeometrydescription)
 
-   def get_display(self):
+   def getvisu(self):
        ''' Return the instance of Display initialized by factory'''
        return self.codisp
 
@@ -651,12 +656,11 @@ class VirusStat(object):
 
     pandy=pandy.copy()
     pandy[pop_field]=pandy[pop_field].replace(0., np.nan)
-    av = allvisu.OptionVisu()
 
     if bypop == 'pop':
-        pandy.loc[:,val2norm+' per total population']=pandy[val2norm]/pandy[pop_field]*av._dict_bypop[bypop]
+        pandy.loc[:,val2norm+' per total population']=pandy[val2norm]/pandy[pop_field]*VirusStat.dictbypop()[bypop]
     else:
-        pandy.loc[:,val2norm+' per '+bypop + ' population']=pandy[val2norm]/pandy[pop_field]*av._dict_bypop[bypop]
+        pandy.loc[:,val2norm+' per '+bypop + ' population']=pandy[val2norm]/pandy[pop_field]*sVirusStat.dictbypop()[bypop]
     return pandy
 
    def merger(self,**kwargs):

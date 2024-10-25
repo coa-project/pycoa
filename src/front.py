@@ -60,7 +60,7 @@ import src.geo as coge
 import geopandas as gpd
 output_notebook(hide_banner=True)
 
-class front:
+class __front__:
     """
         front Class
     """
@@ -77,18 +77,18 @@ class front:
         self.ltiles = list(self.av.dicovisuargs['tile'])
 
         self.lchartkargs = self.av.listchartkargs
-        self.dict_bypop = self.av._dict_bypop
+        self.dict_bypop = coco.VirusStat.dictbypop()
 
         self.db = ''
         self.virus = ''
-        self.vis = 'bokeh'
+        self.vis = None
         self.cocoplot = None
         self.namefunction = None
 
     def whattodo(self,):
         '''
         list all the keys, values from kwargs
-        avalailable with the chart methods et setvisu
+        avalailable with the chart methods et setoptvis
         '''
         dico1 = {k:str(v) for k,v in self.av.dicochartargs.items()}
         dico2 = {k:str(v) for k,v in self.av.dicofigureargs.items()}
@@ -106,38 +106,41 @@ class front:
         pd1.index = np.where(pd1.Arguments=='output','get', pd1.index)
         pd1.index = np.where(pd1.Arguments=='typeofhist','hist',pd1.index)
         pd1.index = np.where(pd1.Arguments=='typeofplot','plot', pd1.index)
-        pd2 = df(dv,'setvisu')
+        pd2 = df(dv,'setoptvis')
         pd1=pd.concat([pd1,pd2])
         pd1.index = pd1.index.rename('Methods')
         pd1 = pd1.sort_values(by='Arguments',ascending = False)
         return pd1
 
-    def setvisu(self,**kwargs):
+    def setoptvis(self,**kwargs):
         '''
             define visualization and associated options
         '''
-        vis = kwargs.get('vis','bokeh')
-        tile = kwargs.get('tile','openstreet')
-        dateslider = kwargs.get('dateslider',False)
-        maplabel =  kwargs.get('maplabel','text')
-        guideline = kwargs.get('guideline','False')
-        title = kwargs.get('title',None)
+        vis = kwargs.get('vis', None)
         if not self.cocoplot:
             self.cocoplot = self.av
-        self.cocoplot.setkwargsfront(kwargs)
-        if vis not in self.lvisu:
-            raise CoaError("Sorry but " + visu + " visualisation isn't implemented ")
+        if vis:
+            tile = kwargs.get('tile','openstreet')
+            dateslider = kwargs.get('dateslider',False)
+            maplabel =  kwargs.get('maplabel','text')
+            guideline = kwargs.get('guideline','False')
+            title = kwargs.get('title',None)
+            self.cocoplot.setkwargsfront(kwargs)
+            if vis not in self.lvisu:
+                raise CoaError("Sorry but " + visu + " visualisation isn't implemented ")
+            else:
+                self.setdisplay(vis)
+                print(f"The visualization has been set correctly to: {vis}")
+                try:
+                    f = self.gatenamefunction()
+                    if f == 'Charts Function Not Registered':
+                        raise CoaError("Sorry but " + f + ". Did you draw it ? ")
+                    return f(**self.getkwargs())
+                except:
+                    pass
         else:
-            self.setdisplay(vis)
-            print(f"The visualization has been set correctly to: {vis}")
-
-            try:
-                f = self.gatenamefunction()
-                if f == 'Charts Function Not Registered':
-                    raise CoaError("Sorry but " + f + ". Did you draw it ? ")
-                return f(**self.getkwargs())
-            except:
-                pass
+            CoaWarning("No Graphics loaded ! Only geopandas can be asked")
+        self.vis = vis
 
     def setnamefunction(self,name):
         '''
@@ -163,7 +166,7 @@ class front:
 
     def getdisplay(self,):
         '''
-        getter visualization
+        Visualization Getter
         '''
         return self.vis
     # ----------------------------------------------------------------------
@@ -380,12 +383,13 @@ class front:
             raise CoaDbError(base + ' is not a supported VirusStat. '
                                     'See pycoa.listbase() for the full list.')
         # Check if the current base is already set to the requested base
+        visu = self.getdisplay()
         if self.db == base:
             info(f"The VirusStat '{base}' is already set as the current database")
             return
         else:
             if reload:
-                self.virus, self.cocoplot = coco.VirusStat.factory(db_name=base,reload=reload)
+                self.virus, self.cocoplot = coco.VirusStat.factory(db_name=base,reload=reload,vis=visu)
             else:
                 self.virus = coco.VirusStat.readpekl('.cache/'+base+'.pkl')
                 pandy = self.virus.getwheregeometrydescription()
@@ -1055,4 +1059,8 @@ class front:
         else:
             return fig
     # ----------------------------------------------------------------------
+def front():
+    ''' This public function returns front class '''
+    fr = __front__()
+    return fr
 #pycoa=front()

@@ -169,34 +169,26 @@ class __front__:
         Visualization Getter
         '''
         return self.vis
-    # ----------------------------------------------------------------------
-    # --- getversion() -----------------------------------------------------
-    # ----------------------------------------------------------------------
+
     def getversion(self,):
         """Return the current running version of pycoa.
         """
         return src._version.__version__
-    # ----------------------------------------------------------------------
-    # --- listoutput() -----------------------------------------------------
-    # ----------------------------------------------------------------------
+
     def listoutput(self,):
         """Return the list of currently available output types for the
         get() function. The first one is the default output given if
         not specified.
         """
         return list(self.av.dicochartargs['output'])
-    # ----------------------------------------------------------------------
-    # --- lvisu() -------------------------------------------------------
-    # ----------------------------------------------------------------------
+
     def listvisu(self,):
         """Return the list of currently available visualization for the
         map() function. The first one is the default output given if
         not specified.
         """
         return self.lvisu
-    # ----------------------------------------------------------------------
-    # --- listwhom() -------------------------------------------------------
-    # ----------------------------------------------------------------------
+
     def listwhom(self, detailed = False):
         """Return the list of currently avalailable VirusStats for covid19
          data in PyCoA.
@@ -246,56 +238,42 @@ class __front__:
         except:
             raise CoaKeyError('Waiting for a boolean !')
         '''
-    # --- lwhat() -------------------------------------------------------
-    # ----------------------------------------------------------------------
+
     def listwhat(self,):
         """Return the list of currently avalailable type of series available.
          The first one is the default one.
         """
         return self.lwhat
-    # ----------------------------------------------------------------------
-    # --- lthist() -------------------------------------------------------
-    # ----------------------------------------------------------------------
+
     def listhist(self,):
         """Return the list of currently avalailable type of hist available.
          The first one is the default one.
         """
         return self.lhist
-    # ----------------------------------------------------------------------
-    # --- listplot() -------------------------------------------------------
-    # ----------------------------------------------------------------------
+
     def listplot(self,):
         """Return the list of currently avalailable type of plots available.
          The first one is the default one.
         """
         return list(self.av.dicochartargs['typeofplot'])
-    # ----------------------------------------------------------------------
-    # --- loption() -----------------------------------------------------
-    # ----------------------------------------------------------------------
+
     def listoption(self,):
         """Return the list of currently avalailable option apply to data.
          Default is no option.
         """
         return self.loption
 
-    # ----------------------------------------------------------------------
-    # --- listallkargs() -----------------------------------------------------
-    # ----------------------------------------------------------------------
     def listchartkargs(self,):
         """Return the list of avalailable kargs for chart functions
         """
         return self.lchartkargs
-    # ----------------------------------------------------------------------
-    # --- listtile() -------------------------------------------------------
-    # ----------------------------------------------------------------------
+
     def listtiles(self,):
         """Return the list of currently avalailable tile option for map()
          Default is the first one.
         """
         return self.ltiles
-    # ----------------------------------------------------------------------
-    # --- listwhich() ------------------------------------------------------
-    # ----------------------------------------------------------------------
+
     def listwhich(self,dbname):
         """Get which are the available fields for base 'dbname'
         if dbname is omitted current dabatase used (i.e self.db)
@@ -308,9 +286,7 @@ class __front__:
         else:
             dic = self.meta.getcurrentmetadata(self.db)
         return sorted(self.meta.getcurrentmetadatawhich(dic))
-    # ----------------------------------------------------------------------
-    # --- listwhere() ------------------------------------------------------
-    # ----------------------------------------------------------------------
+
     def listwhere(self,clustered = False):
         """Get the list of available regions/subregions managed by the current VirusStat
         """
@@ -352,23 +328,17 @@ class __front__:
                 else:
                     raise CoaKeyError('What is the granularity of your DB ?')
             return r
-    # ----------------------------------------------------------------------
-    # --- listbypop() ------------------------------------------------------
-    # ----------------------------------------------------------------------
+
     def listbypop(self):
         """Get the list of available population normalization
         """
         return list(self.dict_bypop.keys())
-    # ----------------------------------------------------------------------
-    # --- lmaplabel() ------------------------------------------------------
-    # ----------------------------------------------------------------------
+
     def listmaplabel(self):
         """Get the list of available population normalization
         """
         return self.lmaplabel
-    # ----------------------------------------------------------------------
-    # --- setwhom() --------------------------------------------------------
-    # ----------------------------------------------------------------------
+
     def setwhom(self,base,**kwargs):
         """Set the covid19 VirusStat used, given as a string.
         Please see pycoa.listbase() for the available current list.
@@ -396,17 +366,12 @@ class __front__:
                 self.cocoplot = allvisu.AllVisu(base, pandy)
                 coge.GeoManager('name')
         self.db = base
-    # ----------------------------------------------------------------------
-    # --- getwhom() --------------------------------------------------------
-    # ----------------------------------------------------------------------
+
     def getwhom(self,return_error=True):
         """Return the current base which is used
         """
         return self.whom
 
-    # ----------------------------------------------------------------------
-    # --- get(**kwargs) ----------------------------------------------------
-    # ----------------------------------------------------------------------
     def getkeywordinfo(self, which=None):
         """
             Return keyword_definition for the db selected
@@ -430,12 +395,7 @@ class __front__:
         info('Memory usage of all columns: ' + mem + ' bytes')
         df = self.virus.get_fulldb(**kwargs)
         return df
-    # ----------------------------------------------------------------------
-    # --- chartsinput_deco(f)
-    # ------  with wraps
-    # ----------  wrapper(*args, **kwargs)
-    #---------------------------------------
-    # ----------------------------------------------------------------------
+
     def setkwargs(self,**kwargs):
         self._setkwargs=kwargs
 
@@ -622,9 +582,7 @@ class __front__:
             self.setkwargs(**kwargs)
             return f(self,**kwargs)
         return wrapper
-    # ----------------------------------------------------------------------
-    # --- get(**kwargs) ----------------------------------------------------
-    # ----------------------------------------------------------------------
+
     @chartsinput_deco
     def get(self,**kwargs):
         """Return covid19 data in specified format output (default, by list)
@@ -744,9 +702,6 @@ class __front__:
         listpandy = kwargs.get('coapandas',[])
         return _db.merger(coapandas = listpandy)
 
-    # ----------------------------------------------------------------------
-    # --- map(**kwargs) ----------------------------------------------------
-    # ----------------------------------------------------------------------
     def decomap(func):
         def inner(self,**kwargs):
             """
@@ -849,9 +804,7 @@ class __front__:
             self.setdisplay('bokeh')
             raise CoaTypeError('Waiting for a valid visualisation. So far: \'bokeh\', \'folium\' or \'mplt\' \
             aka matplotlib .See help.')
-    # ----------------------------------------------------------------------
-    # --- hist(**kwargs) ---------------------------------------------------
-    # ----------------------------------------------------------------------
+
     def decohist(func):
         def inner(self,**kwargs):
             """
@@ -948,9 +901,6 @@ class __front__:
         else:
             return fig
 
-    # ----------------------------------------------------------------------
-    # --- plot(**kwargs) ---------------------------------------------------
-    # ----------------------------------------------------------------------
     def decoplot(func):
         def inner(self,**kwargs):
             """
@@ -1063,9 +1013,8 @@ class __front__:
             return show(fig)
         else:
             return fig
-    # ----------------------------------------------------------------------
+
 def front():
     ''' This public function returns front class '''
     fr = __front__()
     return fr
-#pycoa=front()

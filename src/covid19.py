@@ -33,7 +33,6 @@ import src.dbparser as parser
 
 import geopandas as gpd
 from src.error import *
-from scipy import stats as sps
 import pickle
 import os, time
 import src.allvisu as allvisu
@@ -742,6 +741,7 @@ class VirusStat(object):
 
         return smoothed
    def get_posteriors(self,sr, window=7, min_periods=1):
+        from scipy import stats as sps
         # We create an array for every possible value of Rt
         R_T_MAX = 12
         r_t_range = np.linspace(0, R_T_MAX, R_T_MAX*100+1)

@@ -39,10 +39,7 @@ Basic usage
 import pandas as pd
 from functools import wraps
 import numpy as np
-from bokeh.io import (
-    show,
-    output_notebook,
-)
+
 import datetime as dt
 from src.tools import (
     kwargs_test,
@@ -50,24 +47,29 @@ from src.tools import (
     info,
     flat_list,
 )
-import src.allvisu as allvisu
+
 import src.covid19 as coco
 from src.dbparser import MetaInfo
 from src.error import *
-import src._version
 import src.geo as coge
 
 import geopandas as gpd
-output_notebook(hide_banner=True)
+from src.output import OptionVisu
 
 class __front__:
     """
         front Class
     """
-    def __init__(self,):
+    def __init__(self,visu = True):
         self.meta = MetaInfo()
+        self.av = OptionVisu()
+        if visu:
+            output_notebook(hide_banner=True)
+            from bokeh.io import (
+                show,
+                output_notebook,
+            )
 
-        self.av = allvisu.OptionVisu()
         self.lwhat = list(self.av.dicochartargs['what'])
         self.lhist = list(self.av.dicochartargs['typeofhist'])
         self.loption = list(self.av.dicochartargs['option'])
@@ -363,7 +365,7 @@ class __front__:
             else:
                 self.virus = coco.VirusStat.readpekl('.cache/'+base+'.pkl')
                 pandy = self.virus.getwheregeometrydescription()
-                self.cocoplot = allvisu.AllVisu(base, pandy)
+                self.cocoplot = output.AllVisu(base, pandy)
                 coge.GeoManager('name')
         self.db = base
 
@@ -1017,4 +1019,9 @@ class __front__:
 def front():
     ''' This public function returns front class '''
     fr = __front__()
+    return fr
+
+def bfront():
+    ''' This public function returns batch front class '''
+    fr = __front__(visu=False)
     return fr

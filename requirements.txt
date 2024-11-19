@@ -1,0 +1,8 @@
+pandas
+requests
+unidecode
+pycountry
+pycountry_convert
+geopandas
+bs4
+lxml

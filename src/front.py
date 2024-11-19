@@ -54,7 +54,7 @@ from src.error import *
 import src.geo as coge
 
 import geopandas as gpd
-from src.output import OptionVisu
+from src.output import OptionVisu, AllVisu
 
 class __front__:
     """
@@ -86,6 +86,7 @@ class __front__:
         self.vis = None
         self.cocoplot = None
         self.namefunction = None
+        self._setkwargs = None
 
     def whattodo(self,):
         '''
@@ -113,6 +114,38 @@ class __front__:
         pd1.index = pd1.index.rename('Methods')
         pd1 = pd1.sort_values(by='Arguments',ascending = False)
         return pd1
+
+    def setvisu(self,**kwargs):
+        '''
+            define visualization and associated options
+        '''
+        vis = kwargs.get('vis','bokeh')
+        tile = kwargs.get('tile','openstreet')
+        dateslider = kwargs.get('dateslider',False)
+        maplabel =  kwargs.get('maplabel','text')
+        guideline = kwargs.get('guideline','False')
+        title = kwargs.get('title',None)
+        print("self.getwhom()",self.getwhom(),self.cocoplot,AllVisu(self.getwhom()))
+        if not self.cocoplot:
+            try:
+                self.cocoplot = AllVisu(self.getwhom())
+            except:
+                raise CoaError('A DB must be defined before')
+        self.setkwargs(**kwargs)
+        if vis not in self.lvisu:
+            raise CoaError("Sorry but " + visu + " visualisation isn't implemented ")
+        else:
+            self.setdisplay(vis)
+            print(f"The visualization has been set correctly to: {vis}")
+            print(self.gatenamefunction())
+            try:
+                f = self.gatenamefunction()
+
+                if f == 'Charts Function Not Registered':
+                    raise CoaError("Sorry but " + f + ". Did you draw it ? ")
+                return f(**self.getkwargs())
+            except:
+                pass
 
     def setoptvis(self,**kwargs):
         '''
@@ -372,7 +405,7 @@ class __front__:
     def getwhom(self,return_error=True):
         """Return the current base which is used
         """
-        return self.whom
+        return self.db
 
     def getkeywordinfo(self, which=None):
         """
@@ -399,7 +432,7 @@ class __front__:
         return df
 
     def setkwargs(self,**kwargs):
-        self._setkwargs=kwargs
+        self._setkwargs = kwargs
 
     def getkwargs(self,):
         return self._setkwargs
@@ -798,7 +831,7 @@ class __front__:
             if  maplabel and set(maplabel) != set(['log']):
                 raise CoaKeyError('Not available with folium map, you should considere to use bokeh map visu in this case')
             return self.cocoplot.pycoa_mapfolium(**kwargs)
-        elif visu == 'mplt':
+        elif visu == 'matplotlib':
             return self.cocoplot.pycoa_mpltmap(**kwargs)
         elif visu == 'seaborn':
             return self.cocoplot.pycoa_heatmap_seaborn(**kwargs)
@@ -870,7 +903,7 @@ class __front__:
                     print(typeofhist + ' not implemented in ' + self.getdisplay())
                     self.setdisplay('bokeh')
                     fig = self.cocoplot.pycoa_horizonhisto(**kwargs)
-            elif self.getdisplay() == 'mplt':
+            elif self.getdisplay() == 'matplotlib':
                 if typeofhist == 'bylocation':
                     fig = self.cocoplot.pycoa_mplthorizontalhisto(**kwargs)
                 elif typeofhist == 'byvalue':
@@ -963,7 +996,7 @@ class __front__:
                         print('typeofplot is versus but dim(input_field)!=2, versus has not effect ...')
                         fig = self.cocoplot.pycoa_date_plot(**kwargs)
                 elif typeofplot == 'menulocation':
-                    if _db_list_dict[self.whom][1] == 'nation' and _db_list_dict[self.whom][2] != 'World':
+                    if _db_list_dict[self.db][1] == 'nation' and _db_list_dict[self.db][2] != 'World':
                         print('typeofplot is menulocation with a national DB granularity, use date plot instead ...')
                         fig = self.cocoplot.pycoa_date_plot(*kwargs)
                     else:
@@ -976,7 +1009,7 @@ class __front__:
                         fig = self.cocoplot.pycoa_date_plot(**kwargs)
                     else:
                         fig = self.cocoplot.pycoa_yearly_plot(**kwargs)
-            elif self.getdisplay() == 'mplt':
+            elif self.getdisplay() == 'matplotlib':
                 if typeofplot == 'date':
                     fig = self.cocoplot.pycoa_mpltdate_plot(**kwargs)
                 elif typeofplot == 'versus':

@@ -36,6 +36,7 @@ import base64
 import copy
 import locale
 import inspect
+import importlib
 
 import shapely.geometry as sg
 
@@ -54,7 +55,7 @@ class OptionVisu:
     """
         Option visualisation !
     """
-    def __init__(self, db_name = None, kindgeo = None):
+    def __init__(self):
         self.ax_type = ['linear', 'log']
 
         self.dicochartargs  = {
@@ -80,7 +81,7 @@ class OptionVisu:
                                 'copyright': None
                          }
         self.dicovisuargs =   {
-                             'vis':['bokeh','folium','seaborn','mplt'],
+                             'vis':['bokeh','folium','seaborn','matplotlib'],
                              'mode':['mouse','vline','hline'],\
                              'tile' : ['openstreet','esri','stamen'],\
                              'orientation':['horizontal','vertical'],\
@@ -89,9 +90,16 @@ class OptionVisu:
                              'guideline':[False,True],\
                          }
         self.listviskargs = list(self.dicovisuargs.keys())
-
+        self.dicokfront = {}
         self.when_beg = dt.date(1, 1, 1)
         self.when_end = dt.date(1, 1, 1)
+
+    def setkwargsfront(self,kw):
+        kwargs_test(kw, list(self.dicovisuargs.keys())+list(self.dicofigureargs.keys()), 'Error with this resquest (not available in setoptvis)')
+        self.dicokfront = kw
+
+    def getkwargsfront(self):
+        return self.dicokfront
 
 class AllVisu:
     """
@@ -99,86 +107,31 @@ class AllVisu:
     """
 
     def __init__(self, db_name = None, kindgeo = None):
-        import seaborn as sns
-        import matplotlib.pyplot as plt
-        import matplotlib
-        matplotlib.rcParams['backend']
-        from bokeh.models import (
-            ColumnDataSource,
-            TableColumn,
-            DataTable,
-            ColorBar,
-            LogTicker,
-            HoverTool,
-            CrosshairTool,
-            BasicTicker,
-            GeoJSONDataSource,
-            LinearColorMapper,
-            LogColorMapper,
-            Label,
-            PrintfTickFormatter,
-            BasicTickFormatter,
-            NumeralTickFormatter,
-            CustomJS,
-            CustomJSHover,
-            Select,
-            Range1d,
-            DatetimeTickFormatter,
-            Legend,
-            LegendItem,
-            Text
-        )
-        from bokeh.models.widgets import (
-            Tabs,
-            Panel,
-            Button,
-            TableColumn,
-            Toggle
-        )
-        from bokeh.plotting import figure
-        from bokeh.layouts import (
-            row,
-            column,
-            gridplot
-        )
-        from bokeh.palettes import (
-            Category10,
-            Category20,
-            Viridis256
-        )
-        from bokeh.models import Title
+        self.optionvisu = OptionVisu()
+        self.lcolors = ['red', 'blue', 'green', 'orange', 'purple',
+          'brown', 'pink', 'gray', 'yellow', 'cyan']
+        self.scolors = self.lcolors[:5]
+        graphics_libs = self.optionvisu.dicovisuargs['vis']
 
-        from bokeh.io import export_png
-        from bokeh import events
-        from bokeh.models.widgets import DateSlider
-        from bokeh.models import (
-            LabelSet,
-            WMTSTileSource
-        )
-        from bokeh.transform import (
-            transform,
-            cumsum
-        )
+        available_libs = self.test_add_graphics_libraries(graphics_libs)
+        for lib, available in available_libs.items():
+            status = "disponible" if available else "non installé"
+            print(f"{lib}: {status}")
 
-        import branca.colormap
-        from branca.colormap import LinearColormap
-        from branca.element import (
-            Element,
-            Figure
-        )
-        import folium
-        from IPython.core.display import (
-            display,
-            HTML
-        )
+        print(available_libs.values(),any(available_libs.values()))
+        if not any(available_libs.values()):
+            raise CoaError('None display is avalaible. MPLT should be installed at least')
 
         if kindgeo is None:
             pass
         else:
             self.kindgeo = kindgeo
 
-        self.optionvisu  = OptionVisu()
-        self.scolors = Category10[5]
+        if  available_libs['bokeh']:
+            self.scolors = Category10[5]
+            self.lcolors = Category20[20]
+        #self.optionvisu  = OptionVisu()
+
         self.database_name = None
         verb("Init of AllVisu() with db=" + str(db_name))
         self.database_name = db_name
@@ -188,13 +141,26 @@ class AllVisu:
         self.pycoa_eopandas = False
         self.geom = []
         self.listfigs = []
-        self.dicokfront = {}
         self.dchartkargs = {}
         self.dvisukargs = {}
         self.uptitle, self.subtitle = ' ',' '
         self.code = self.currentmetadata['geoinfo']['iso3']
         self.granularity = self.currentmetadata['geoinfo']['granularity']
         self.namecountry = self.currentmetadata['geoinfo']['iso3']
+
+
+    def test_add_graphics_libraries(self,libraries):
+        '''
+            Tests the presence of the specified graphical libraries
+        '''
+        results = {}
+        for lib in libraries:
+            try:
+                importlib.import_module(lib)
+                results[lib] = True
+            except ImportError:
+                results[lib] = False
+        return results
 
 
     ''' WRAPPER COMMUN FOR ALL'''
@@ -216,7 +182,7 @@ class AllVisu:
                 raise CoaTypeError(input + 'Must be a pandas, with pycoa_structure !')
 
             kwargs_test(kwargs, self.optionvisu.listchartkargs, 'Bad args used in the display function.')
-            kwargs.update(self.getkwargsfront())
+            kwargs.update(OptionVisu().getkwargsfront())
 
             input = kwargs.get('input')
             input_field = kwargs.get('input_field')
@@ -257,9 +223,9 @@ class AllVisu:
             uniqloc = input.clustername.unique()
 
             if len(uniqloc) < 5:
-                colors = self.optionvisu.scolors
+                colors = self.scolors
             else:
-                colors = self.optionvisu.lcolors
+                colors = self.lcolors
             colors = itertools.cycle(colors)
             dico_colors = {i: next(colors) for i in uniqloc}
 
@@ -367,13 +333,6 @@ class AllVisu:
             self.tile = tile
         else:
             raise CoaTypeError('Don\'t know the tile you want. So far:' + str(list(self.optionvisu.dicovisuargs['tile'])))
-
-    def setkwargsfront(self,kw):
-        kwargs_test(kw, list(self.optionvisu.dicovisuargs.keys())+list(self.optionvisu.dicofigureargs.keys()), 'Error with this resquest (not available in setoptvis)')
-        self.optionvisu.dicokfront = kw
-
-    def getkwargsfront(self):
-        return self.dicokfront
 
     ''' FIGURE COMMUN FOR ALL Bokeh Figure'''
     def standardfig(self, **kwargs):
@@ -2584,6 +2543,7 @@ class AllVisu:
     @decowrapper
     @decoplot
     def pycoa_mpltdate_plot(self,**kwargs):
+        import matplotlib.pyplot as plt
         input = kwargs.get('input')
         input_field = kwargs.get('input_field')
         title = kwargs.get('title')

@@ -1,9 +1,10 @@
-from src.front import front
+# Example using sentinellesIRA database
+from src.front import bfront
 
 def test_pyvoa():
-    pyvoa = front()
+    pyvoa = bfront()
     pyvoa.setwhom('sentinellesIRA')
-    display(pyvoa.get())
+    print(pyvoa.get())
     pyvoa.setvisu(vis='mplt')
     return  pyvoa.plot()
 

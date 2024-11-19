@@ -35,7 +35,6 @@ import geopandas as gpd
 from src.error import *
 import pickle
 import os, time
-import src.allvisu as allvisu
 import src.geo as coge
 class VirusStat(object):
    """
@@ -192,7 +191,8 @@ class VirusStat(object):
 
    def setvisu(self,db_name,wheregeometrydescription):
        ''' Set the Display '''
-       self.codisp = allvisu.AllVisu(db_name, wheregeometrydescription)
+       import src.output as output
+       self.codisp = output.AllVisu(db_name, wheregeometrydescription)
 
    def getvisu(self):
        ''' Return the instance of Display initialized by factory'''
@@ -566,8 +566,8 @@ class VirusStat(object):
         else:
             pdfiltered['cumul'] = pdfiltered_nofillnan.groupby('clustername')[kwargs['which']].cumsum()
             if fillnan:
-                pdfiltered.loc[:,'cumul'] =\
-                pdfiltered.groupby('clustername')['cumul'].apply(lambda x: x.ffill())
+                pdfiltered.loc[:,'cumul'] = \
+                pdfiltered.groupby('clustername')['cumul'].fillna(method="ffill")
         pdfiltered.cumul=pdfiltered.cumul.astype('int32')
         pdfiltered['daily'] = pdfiltered.groupby('clustername')['cumul'].diff()
         pdfiltered['weekly'] = pdfiltered.groupby('clustername')['cumul'].diff(7)

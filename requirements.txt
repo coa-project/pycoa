@@ -6,4 +6,4 @@ pycountry_convert
 geopandas
 bs4
 lxml
-seaborn
+matplotlib

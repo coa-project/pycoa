@@ -19,7 +19,6 @@ import datetime
 import collections
 import random
 import numpy as np
-from tqdm import tqdm
 from src.error import *
 from src.tools import (
     info,

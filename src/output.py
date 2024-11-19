@@ -26,104 +26,35 @@ import math
 import pandas as pd
 import geopandas as gpd
 import numpy as np
-import seaborn as sns
+
 from collections import defaultdict
 import itertools
 import json
 import io
 from io import BytesIO
 import base64
-from IPython import display
 import copy
 import locale
 import inspect
 
-from bokeh.models import (
-    ColumnDataSource,
-    TableColumn,
-    DataTable,
-    ColorBar,
-    LogTicker,
-    HoverTool,
-    CrosshairTool,
-    BasicTicker,
-    GeoJSONDataSource,
-    LinearColorMapper,
-    LogColorMapper,
-    Label,
-    PrintfTickFormatter,
-    BasicTickFormatter,
-    NumeralTickFormatter,
-    CustomJS,
-    CustomJSHover,
-    Select,
-    Range1d,
-    DatetimeTickFormatter,
-    Legend,
-    LegendItem,
-    Text
-)
-from bokeh.models.widgets import (
-    Tabs,
-    Panel,
-    Button,
-    TableColumn,
-    Toggle
-)
-from bokeh.plotting import figure
-from bokeh.layouts import (
-    row,
-    column,
-    gridplot
-)
-from bokeh.palettes import (
-    Category10,
-    Category20,
-    Viridis256
-)
-from bokeh.models import Title
-
-from bokeh.io import export_png
-from bokeh import events
-from bokeh.models.widgets import DateSlider
-from bokeh.models import (
-    LabelSet,
-    WMTSTileSource
-)
-from bokeh.transform import (
-    transform,
-    cumsum
-)
-
-import branca.colormap
-from branca.colormap import LinearColormap
-from branca.element import (
-    Element,
-    Figure
-)
-import folium
-
 import shapely.geometry as sg
-from PIL import Image
-import matplotlib.pyplot as plt
-import matplotlib
-matplotlib.rcParams['backend']
+
 import datetime as dt
 import bisect
 from functools import wraps
-from IPython.core.display import (
-    display,
-    HTML
-)
+
 from src.dbparser import MetaInfo
 
 width_height_default = [500, 380]
 MAXCOUNTRIESDISPLAYED = 24
 
-class OptionVisu():
+__all__ = ['OptionVisu']
+
+class OptionVisu:
+    """
+        Option visualisation !
+    """
     def __init__(self, db_name = None, kindgeo = None):
-        self.lcolors = Category20[20]
-        self.scolors = Category10[5]
         self.ax_type = ['linear', 'log']
 
         self.dicochartargs  = {
@@ -166,14 +97,88 @@ class AllVisu:
     """
         All visualisation should be implemented here !
     """
+
     def __init__(self, db_name = None, kindgeo = None):
+        import seaborn as sns
+        import matplotlib.pyplot as plt
+        import matplotlib
+        matplotlib.rcParams['backend']
+        from bokeh.models import (
+            ColumnDataSource,
+            TableColumn,
+            DataTable,
+            ColorBar,
+            LogTicker,
+            HoverTool,
+            CrosshairTool,
+            BasicTicker,
+            GeoJSONDataSource,
+            LinearColorMapper,
+            LogColorMapper,
+            Label,
+            PrintfTickFormatter,
+            BasicTickFormatter,
+            NumeralTickFormatter,
+            CustomJS,
+            CustomJSHover,
+            Select,
+            Range1d,
+            DatetimeTickFormatter,
+            Legend,
+            LegendItem,
+            Text
+        )
+        from bokeh.models.widgets import (
+            Tabs,
+            Panel,
+            Button,
+            TableColumn,
+            Toggle
+        )
+        from bokeh.plotting import figure
+        from bokeh.layouts import (
+            row,
+            column,
+            gridplot
+        )
+        from bokeh.palettes import (
+            Category10,
+            Category20,
+            Viridis256
+        )
+        from bokeh.models import Title
+
+        from bokeh.io import export_png
+        from bokeh import events
+        from bokeh.models.widgets import DateSlider
+        from bokeh.models import (
+            LabelSet,
+            WMTSTileSource
+        )
+        from bokeh.transform import (
+            transform,
+            cumsum
+        )
+
+        import branca.colormap
+        from branca.colormap import LinearColormap
+        from branca.element import (
+            Element,
+            Figure
+        )
+        import folium
+        from IPython.core.display import (
+            display,
+            HTML
+        )
+
         if kindgeo is None:
             pass
         else:
             self.kindgeo = kindgeo
 
         self.optionvisu  = OptionVisu()
-
+        self.scolors = Category10[5]
         self.database_name = None
         verb("Init of AllVisu() with db=" + str(db_name))
         self.database_name = db_name
@@ -2378,6 +2383,7 @@ class AllVisu:
         """
         Save map as png geckodriver and PIL packages are needed
         """
+        from PIL import Image
         size = width_height_default[0], width_height_default[1]
         if pngfile:
             pngfile = pngfile

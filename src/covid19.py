@@ -497,7 +497,6 @@ class VirusStat(object):
                 # fill with previous value
                 pdfiltered = pdfiltered.reset_index(drop=True)
                 pdfiltered_nofillnan = pdfiltered.copy()
-                #pdfiltered.loc[:,kwargs['which']] = pdfiltered.groupby(['where','clustername'])[kwargs['which']].apply(lambda x: x.bfill())
                 pdfiltered.loc[:,kwargs['which']] = pdfiltered.groupby(['where','clustername'],group_keys=False)[kwargs['which']].apply(lambda x: x.bfill())
                 #if kwargs['which'].startswith('total_') or kwargs['which'].startswith('tot_'):
                 #    pdfiltered.loc[:,kwargs['which']] = pdfiltered.groupby(['clustername'])[kwargs['which']].apply(lambda x: x.ffill())
@@ -505,7 +504,7 @@ class VirusStat(object):
                     print(kwargs['which'], "has been selected. Some missing data has been interpolated from previous data.")
                     print("This warning appear right now due to some missing values at the latest date ", pdfiltered.date.max(),".")
                     print("Use the option='nofillnan' if you want to only display the original data")
-                    pdfiltered.loc[:,kwargs['which']] = pdfiltered.groupby(['where','clustername'])[kwargs['which']].apply(lambda x: x.ffill())
+                    pdfiltered.loc[:,kwargs['which']] = pdfiltered.groupby(['where','clustername'],group_keys=False)[kwargs['which']].apply(lambda x: x.ffill())
                     pdfiltered = pdfiltered[pdfiltered[kwargs['which']].notna()]
             elif o == 'smooth7':
                 pdfiltered[kwargs['which']] = pdfiltered.groupby(['where'])[kwargs['which']].rolling(7,min_periods=7).mean().reset_index(level=0,drop=True)

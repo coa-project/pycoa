@@ -61,7 +61,7 @@ class CoaWarning(Exception):
 class CoaError(Exception):
     """Base class for exceptions in PyCoa."""
     def __init__(self, message):
-        blinking_centered_text('PYCOA Error !',message, blinking=1,text_color='white', bg_color='magenta')
+        blinking_centered_text('PYCOA Error !',message, blinking=1,text_color='white', bg_color='red')
         Exception(message)
 
 
@@ -69,7 +69,7 @@ class CoaNoData(CoaError, IndexError):
     """Exception raised when there is no data to plot or to manage (invalid cut)"""
 
     def __init__(self, message):
-        blinking_centered_text('PYCOA Error !',message, blinking=1,text_color='white', bg_color='magenta')
+        blinking_centered_text('PYCOA Error !',message, blinking=1,text_color='white', bg_color='red')
         IndexError(message)
         CoaError(message)
 
@@ -82,7 +82,7 @@ class CoaKeyError(CoaError, KeyError):
     """
 
     def __init__(self, message):
-        blinking_centered_text('PYCOA Error !',message, blinking=1,text_color='white', bg_color='magenta')
+        blinking_centered_text('PYCOA Error !',message, blinking=1,text_color='white', bg_color='red')
         KeyError(message)
         CoaError(message)
 
@@ -95,7 +95,7 @@ class CoaWhereError(CoaError, IndexError):
     """
 
     def __init__(self, message):
-        blinking_centered_text('PYCOA Error !',message, blinking=1,text_color='white', bg_color='magenta')
+        blinking_centered_text('PYCOA Error !',message, blinking=1,text_color='white', bg_color='red')
         IndexError(message)
         CoaError(message)
 
@@ -108,7 +108,7 @@ class CoaTypeError(CoaError, TypeError):
     """
 
     def __init__(self, message):
-        blinking_centered_text('PYCOA Error !',message, blinking=1,text_color='white', bg_color='magenta')
+        blinking_centered_text('PYCOA Error !',message, blinking=1,text_color='white', bg_color='red')
         TypeError(message)
         CoaError(message)
 
@@ -121,7 +121,7 @@ class CoaLookupError(CoaError, LookupError):
     """
 
     def __init__(self, message):
-        blinking_centered_text('PYCOA Error !',message, blinking=1,text_color='white', bg_color='magenta')
+        blinking_centered_text('PYCOA Error !',message, blinking=1,text_color='white', bg_color='red')
         LookupError(message)
         CoaError(message)
 
@@ -134,7 +134,7 @@ class CoaNotManagedError(CoaError):
     """
 
     def __init__(self, message):
-        blinking_centered_text('PYCOA Error !',message, blinking=1,text_color='white', bg_color='magenta')
+        blinking_centered_text('PYCOA Error !',message, blinking=1,text_color='white', bg_color='red')
         CoaError(message)
 
 
@@ -146,7 +146,7 @@ class CoaDbError(CoaError):
     """
 
     def __init__(self, message):
-        blinking_centered_text('PYCOA Error !',message, blinking=1,text_color='white', bg_color='magenta')
+        blinking_centered_text('PYCOA Error !',message, blinking=1,text_color='white', bg_color='red')
         CoaError(message)
 
 
@@ -158,6 +158,6 @@ class CoaConnectionError(CoaError, ConnectionError):
     """
 
     def __init__(self, message):
-        blinking_centered_text('PYCOA Error !',message, blinking=1,text_color='white', bg_color='magenta')
+        blinking_centered_text('PYCOA Error !',message, blinking=1,text_color='white', bg_color='red')
         ConnectionError(message)
         CoaError(message)

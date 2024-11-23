@@ -62,7 +62,8 @@ class CoaError(Exception):
     """Base class for exceptions in PyCoa."""
     def __init__(self, message):
         blinking_centered_text('PYCOA Error !',message, blinking=1,text_color='white', bg_color='red')
-        Exception(message)
+        exit(0)
+        #Exception(message)
 
 
 class CoaNoData(CoaError, IndexError):

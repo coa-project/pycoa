@@ -279,6 +279,7 @@ class GeoManager():
                 "Wallis & Futuna":"WLF",\
                 "Saint Pierre & Miquelon":"SPM",\
                 "Sint Maarten":"SXM",\
+                "Turkey":"TUR",\
                 } )
         elif db=='owid':
             translation_dict.update({\

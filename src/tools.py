@@ -59,6 +59,8 @@ def set_verbose_mode(v):
     """
     global _verbose_mode
     _verbose_mode=v
+    if (v < 2) :
+        pd.options.mode.chained_assignment = None  # default='warn'
     return get_verbose_mode()
 
 def info(*args):

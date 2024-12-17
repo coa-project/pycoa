@@ -36,6 +36,7 @@ import shapely.affinity as sa
 import shapely.ops as so
 import bs4
 import numpy as np
+import io
 
 from src.tools import verb,kwargs_test,get_local_from_url,dotdict,tostdstring
 from src.error import *
@@ -879,7 +880,7 @@ class GeoCountry():
                     src='http:'+src
                 img.replace_with(src)
 
-            tabs_reg_flag=pd.read_html(str(soup_reg_flag)) # pandas read the modified html
+            tabs_reg_flag=pd.read_html(io.StringIO(str(soup_reg_flag))) # pandas read the modified html
             metropole=tabs_reg_flag[5][["Logo","Dénomination","Code INSEE[5]"]]  # getting 5th table, and only usefull columns
             ultramarin=tabs_reg_flag[6][["Logo","Dénomination","Code INSEE[5]"]] # getting 6th table
             p_reg_flag=pd.concat([metropole,ultramarin]).rename(columns={"Code INSEE[5]":"code_region",\

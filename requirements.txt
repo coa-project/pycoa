@@ -7,3 +7,4 @@ geopandas
 bs4
 lxml
 matplotlib
+contextily

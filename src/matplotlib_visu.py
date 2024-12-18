@@ -188,6 +188,7 @@ class matplotlib_visu:
         from matplotlib import cm
         from mpl_toolkits.axes_grid1 import make_axes_locatable
         import contextily as cx
+        import xyzservices
         plt = kwargs.get('plt')
         ax = kwargs.get('ax')
         plt.axis('off')
@@ -202,11 +203,16 @@ class matplotlib_visu:
                                 'orientation': "horizontal","pad": 0.001})
 
         if tile == 'openstreet':
-            cx.add_basemap(ax, crs=cx.providers.CartoDB.Voyager)
+            input = input.to_crs(epsg=3857)
+            cx.add_basemap(ax, crs=input.crs.to_string(), source=cx.providers.OpenStreetMap.Mapnik)
         elif tile == 'esri':
-            cx.add_basemap(ax, source=cx.providers.CartoDB.Positron)
+            cx.add_basemap(ax, crs=input.crs.to_string(), source=cx.providers.Esri.WorldImagery)
         elif tile == 'stamen':
-            cx.add_basemap(ax, source=cx.providers.OpenStreetMap.Mapnik)
+            cx.add_basemap(ax, crs=input.crs.to_string(), source=cx.providers.Esri.WorldImagery)
+            CoaWarning("Couldn't find stamen for matplolib use esri ....")
+            input = input.to_crs(epsg=4326)
+        elif tile == 'positron':
+            cx.add_basemap(ax, crs=input.crs.to_string(), source=cx.providers.CartoDB.PositronNoLabels)
         else:
             CoaError("Don't know what kind of tile is it ...")
 

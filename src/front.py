@@ -42,10 +42,12 @@ import numpy as np
 
 import datetime as dt
 from src.tools import (
-    kwargs_test,
-    extract_dates,
+    kwargs_keystesting,
+    kwargs_valuestesting,
+    debug,
     info,
     flat_list,
+    all_or_none_lists,
 )
 
 import src.covid19 as coco
@@ -54,7 +56,8 @@ from src.error import *
 import src.geo as coge
 
 import geopandas as gpd
-from src.output import InputOption, AllVisu, matplotlib_visu
+from src.output import InputOption, AllVisu
+
 
 class __front__:
     """
@@ -74,10 +77,13 @@ class __front__:
         self.lhist = list(self.av.d_graphicsinput_args['typeofhist'])
         self.loption = list(self.av.d_batchinput_args['option'])
 
-        self.lmaplabel = list(self.av.d_graphicsinput_args['maplabel'])
+        self.lmapoption = list(self.av.d_graphicsinput_args['mapoption'])
         self.ltiles = list(self.av.d_graphicsinput_args['tile'])
 
-        self.lchartkargs = self.av.listchartkargs+['bypop']
+        self.lchartkargskeys = self.av.listchartkargskeys
+        self.listchartkargsvalues = self.av.listchartkargsvalues
+        self.listviskargskeys = self.av.listviskargskeys
+
         self.dict_bypop = coco.VirusStat.dictbypop()
 
         self.db = ''
@@ -86,7 +92,7 @@ class __front__:
         self.allvisu = None
         self.charts = None
         self.namefunction = None
-        self._setkwargs = None
+        self._setkwargsvisu = None
 
     def whattodo(self,):
         '''
@@ -96,7 +102,6 @@ class __front__:
         dico1 = {k:str(v) for k,v in self.av.d_batchinput_args.items()}
         dico2 = {k:str(v) for k,v in self.av.d_graphicsinput_args.items()}
         dico2['vis'] = self.lvisu
-        print("'dico2'",dico1)
         def df(d,k):
             m = pd.DataFrame.from_dict(d.items())
             m['index'] = len(m)*[k]
@@ -114,37 +119,6 @@ class __front__:
         pd1 = pd1.sort_values(by='Arguments',ascending = False)
         return pd1
 
-    def setvisu(self,**kwargs):
-        '''
-            define visualization and associated options
-        '''
-        vis = kwargs.get('vis','matplotlib')
-        tile = kwargs.get('tile','openstreet')
-        dateslider = kwargs.get('dateslider',False)
-        maplabel =  kwargs.get('maplabel','text')
-        guideline = kwargs.get('guideline','False')
-        title = kwargs.get('title',None)
-        addgeometry = self.virus.getwheregeometrydescription()
-
-        if not self.allvisu:
-            try:
-                self.allvisu = AllVisu(self.getwhom(),addgeometry)
-            except:
-                raise CoaError('A DB must be defined before')
-        self.setkwargs(**kwargs)
-        if vis not in self.lvisu:
-            raise CoaError("Sorry but " + vis + " visualisation isn't implemented ")
-        else:
-            self.setdisplay(vis)
-            print(f"The visualization has been set correctly to: {vis}")
-            try:
-                f = self.gatenamefunction()
-                if f == 'Charts Function Not Registered':
-                    raise CoaError("Sorry but " + f + ". Did you draw it ? ")
-                return f(**self.getkwargs())
-            except:
-                pass
-
     def setoptvis(self,**kwargs):
         '''
             define visualization and associated options
@@ -155,7 +129,7 @@ class __front__:
         if vis:
             tile = kwargs.get('tile','openstreet')
             dateslider = kwargs.get('dateslider',False)
-            maplabel =  kwargs.get('maplabel','text')
+            mapoption =  kwargs.get('mapoption','text')
             guideline = kwargs.get('guideline','False')
             title = kwargs.get('title',None)
             self.allvisu.setkwargsfront(kwargs)
@@ -165,7 +139,7 @@ class __front__:
                 self.setdisplay(vis)
                 print(f"The visualization has been set correctly to: {vis}")
                 try:
-                    f = self.gatenamefunction()
+                    f = self.getnamefunction()
                     if f == 'Charts Function Not Registered':
                         raise CoaError("Sorry but " + f + ". Did you draw it ? ")
                     return f(**self.getkwargs())
@@ -182,7 +156,7 @@ class __front__:
         # self.namefunction = name : it updates the visu + redraws the last chart
         self.namefunction = name.__name__
 
-    def gatenamefunction(self,):
+    def getnamefunction(self,):
         '''
         Name chart function getter
         '''
@@ -269,7 +243,7 @@ class __front__:
             else:
                 return list(df['VirusStat'])
         except:
-            raise CoaKeyError('Waiting for a boolean !')
+            raise CoaError('Waiting for a boolean !')
         '''
 
     def listwhat(self,):
@@ -296,10 +270,15 @@ class __front__:
         """
         return self.loption
 
-    def listchartkargs(self,):
-        """Return the list of avalailable kargs for chart functions
+    def listchartkargskeys(self,):
+        """Return the list of avalailable kargs keys for chart functions
         """
-        return self.lchartkargs
+        return self.lchartkargskeys
+
+    def listchartkargskeys(self,):
+        """Return the list of avalailable kargs values for chart functions
+        """
+        return self.lchartkargsvalues
 
     def listtiles(self,):
         """Return the list of currently avalailable tile option for map()
@@ -359,7 +338,7 @@ class __front__:
                     r = clust()
                     r.append(code)
                 else:
-                    raise CoaKeyError('What is the granularity of your DB ?')
+                    raise CoaError('What is the granularity of your DB ?')
             return r
 
     def listbypop(self):
@@ -367,10 +346,10 @@ class __front__:
         """
         return list(self.dict_bypop.keys())
 
-    def listmaplabel(self):
+    def listmapoption(self):
         """Get the list of available population normalization
         """
-        return self.lmaplabel
+        return self.lmapoption
 
     def setwhom(self,base,**kwargs):
         """Set the covid19 VirusStat used, given as a string.
@@ -414,7 +393,7 @@ class __front__:
                 print(self.virus.get_parserdb().get_keyword_definition(which))
                 print('Parsed from this url:',self.virus.get_parserdb().get_keyword_url(which))
             else:
-                raise CoaKeyError('This value do not exist please check.'+'Available variable so far in this db ' + str(listwhich()))
+                raise CoaError('This value do not exist please check.'+'Available variable so far in this db ' + str(listwhich()))
         else:
             df = self.virus.get_parserdb().get_dbdescription()
             return df
@@ -429,195 +408,126 @@ class __front__:
         df = self.virus.get_fulldb(**kwargs)
         return df
 
-    def setkwargs(self,**kwargs):
-        self._setkwargs = kwargs
+    def setkwargsvisu(self,**kwargs):
+        '''
+            Update visu option , if a key exist update it else take default
+        '''
+        if self._setkwargsvisu:
+            for k,v in kwargs.items():
+                if v:
+                    self._setkwargsvisu[k] = v
+        else:
+            self._setkwargsvisu = kwargs
 
-    def getkwargs(self,):
-        return self._setkwargs
+    def getvisukwargs(self,):
+        return self._setkwargsvisu
 
-    def chartsinput_deco(f):
+    def input_wrapper(func):
         '''
             Main decorator it mainly deals with arg testings
         '''
-        @wraps(f)
+        @wraps(func)
         def wrapper(self,**kwargs):
             '''
-                wrapper dealing with arg testing
+                Wrapper input function .
+                Wrap and format the user input argument for covid19 class
+                if argument is missing fill with the default value
+                Transforms 'where', 'which', and 'option' into lists if they are not already.
+                order position of the items in 'option'
             '''
             if self.db == '':
-                raise CoaKeyError('Something went wrong ... does a db has been loaded ? (setwhom)')
-                #self.db, self.allvisu = coco.VirusStat.factory(db_name = self.whom)
-            for i in self.av.listviskargs:
-                try:
-                    kwargs.pop(i)
-                except:
-                    pass
+                raise CoaError('Something went wrong ... does a db has been loaded ? (setwhom)')
+            mustbealist = ['where','which','option']
+            kwargs_keystesting(kwargs,self.lchartkargskeys + self.listviskargskeys,' kwargs keys not recognized ...')
+            default = { k:[v[0]] if isinstance(v,list) else v for k,v in self.av.d_batchinput_args.items()}
 
-            kwargs_test(kwargs,self.lchartkargs,'Bad args used ! please check ')
-            where = kwargs.get('where', None)
-            which = kwargs.get('which', None)
-            if which and not isinstance(which,list):
-                which=[which]
-            what = kwargs.get('what', None)
+            dicovisu = {k:kwargs.get(k) for k,v in self.av.d_graphicsinput_args.items()}
+            self.setkwargsvisu(**dicovisu)
+            [kwargs_valuestesting(dicovisu[i],self.av.d_graphicsinput_args[i],'value of '+ i +' not correct')
+                for i in ['typeofhist','typeofplot']]
 
-            whom = kwargs.get('whom', None)
-            option = kwargs.get('option', None)
-            when = kwargs.get('when', None)
-            input_arg = kwargs.get('input', None)
-            input_field = kwargs.get('input_field',None)
-            #if (option != None) and (isinstance(input_field,list) or isinstance(which,list)):
-            #    raise CoaKeyError('option not compatible when input_fied/which is a list')
-            if 'input_field' not in kwargs:
-                input_field = which
-            else:
-                which = kwargs['input_field']
-            #if input_field:
-            #    which = input_field
-            if what:
-                if what not in self.lwhat:
-                    raise CoaKeyError('What = ' + what + ' not supported. '
-                                                              'See lwhat() for full list.')
-                if 'what'=='sandard':
-                    what = which
-            else:
-                what = self.lwhat[0]
-
-            option = kwargs.get('option', None)
-            bypop = kwargs.get('bypop','no')
-
-            kwargs['output'] = kwargs.get('output', self.listoutput()[0])
-
-            if kwargs['output'] not in self.listoutput():
-                raise CoaKeyError('Output option ' + kwargs['output'] + ' not supported. See help().')
-
-            if bypop not in self.listbypop():
-                raise CoaKeyError('The bypop arg should be selected in '+str(self.listbypop())+' only.')
-
-            if isinstance(input_arg, pd.DataFrame):
-                if input_arg is not None and not input_arg.empty:
-                    pandy = input_arg
-                    pandy = self.virus.get_stats(**kwargs)
-                else:
-                    pandy=pd.DataFrame()
-                    input_field = which
-                    for i in which:
-                        tmp = self.virus.get_stats(which=i,where=where, option=option)
-                        if len(which)>1:
-                            tmp = tmp.rename(columns={'daily':'daily_'+i,'weekly':'weekly_'+i})
-                        if pandy.empty:
-                            pandy = tmp
-                        else:
-                            tmp = tmp[[i,'daily_'+i,'weekly_'+i,'date','clustername']]
-                            pandy = pd.merge(pandy, tmp, on=['date','clustername'],how='inner')
-                    input_arg = pandy
-                if bypop != 'no':
-                    input_arg = self.virus.normbypop(pandy,input_field,bypop)
-                    if bypop=='pop':
-                        input_field = input_field+' per total population'
+            for k,v in default.items():
+                if k in kwargs.keys():
+                    if isinstance(kwargs[k],list):
+                        default[k] = kwargs[k]
                     else:
-                        input_field = input_field+' per '+ bypop + ' population'
-                    pandy = input_arg
-                if isinstance(input_field,list):
-                    which = input_field[0]
-                pandy.loc[:,'standard'] = pandy[pandy.columns[2]]
-                if 'input_field' not in kwargs:
-                    kwargs['input_field'] = input_field
-            elif input_arg == None :
-                pandy = self.virus.get_stats(**kwargs)
-                if which :
-                    pandy['standard'] = pandy[which[0]]
-                else:
-                    pandy['standard'] = pandy[pandy.columns[2]]
-                    which = list(pandy.columns)[2]
-                input_field = what
+                        default[k] = [kwargs[k]]
+            kwargs = default
 
-                if pandy[[pandy.columns[2],'date']].isnull().values.all():
-                    info('--------------------------------------------')
-                    info('All values for '+ which + ' is nan nor empty')
-                    info('--------------------------------------------')
-                    pandy['date']=len(where)*[dt.date(2020,1,1),dt.date.today()]
-                    lwhere=flat_list([[i,i] for i in where])
-                    pandy['where']=lwhere
-                    pandy['clustername']=lwhere
-                    pandy['code']=len(pandy)*['000']
-                    pandy=pandy.fillna(0)
-                    bypop = 'no'
-                if bypop != 'no':
-                    if what:
-                        val = what
-                    else:
-                        val = _lwhat[0]
-                    pandy = self.virus.normbypop(pandy , val, bypop)
-                    if bypop=='pop':
-                        input_field = input_field+' per total population'
-                    else:
-                        input_field = input_field+' per '+ bypop + ' population'
-                kwargs['input_field'] = input_field
-                option = kwargs.get('option', None)
-            else:
-                raise CoaTypeError('Waiting input as valid pycoa.pandas '
-                                   'dataframe. See help.')
-            when_beg, when_end = extract_dates(when)
-            onedate = False
-            if when and ':' not in when:
-                onedate = True
-            if pandy[[pandy.columns[2],'date']].isnull().values.all():
-                info('--------------------------------------------')
-                info('All values for '+ which + ' is nan nor empty')
-                info('--------------------------------------------')
-                pandy['date']=len(where)*[dt.date(2020,1,1),dt.date.today()]
-                lwhere=flat_list([[i,i] for i in where])
-                pandy['where']=lwhere
-                pandy['clustername']=lwhere
-                pandy['code']=len(pandy)*['000']
-                pandy=pandy.fillna(0)
-                bypop = 'no'
+            for k,v in kwargs.items():
+                if k not in mustbealist:
+                    kwargs[k]=v[0]
 
-            db_first_date = pandy.date.min()
-            db_last_date = pandy.date.max()
+            if kwargs['where'][0] == '':
+                kwargs['where'] = list(self.virus.get_fulldb()['where'].unique())
 
-            if when_beg < db_first_date:
-                when_beg = db_first_date
+            if not all_or_none_lists(kwargs['where']):
+                raise CoaError('For coherence all the element in where must have the same type list or not list ...')
 
-            if when_end > db_last_date:
-                when_end = db_last_date
+            if 'sumall' in kwargs['option']:
+                kwargs['option'].remove('sumall')
+                kwargs['option'].append('sumall')
 
-            if when_end < db_first_date:
-                raise CoaNoData("No available data before "+str(db_first_date))
-            # when cut
-            if when_beg >  db_last_date or when_end >  db_last_date:
-                raise CoaNoData("No available data after "+str(db_last_date))
+            if 'fillnan' not in kwargs['option']:
+                kwargs['option'].insert(0,'fillnan')
 
-            if onedate:
-                pandy = pandy[pandy.date == when_end]
-            else:
-                pandy = pandy[(pandy.date >= when_beg) & (pandy.date <= when_end)]
-            if bypop != 'no':
-                kwargs['input_field'] = [i for i in pandy.columns if ' per ' in i]
-                #name = [i for i in list(pandy.columns) if ' per ' in i]
-                if bypop=='pop':
-                    bypop='total population'
-                else:
-                    bypop+=' population'
-                if isinstance(which,list):
-                    which=which[0]
-                if 'tot_' and not what or what=='standard':
-                    renamed = which + ' per '+ bypop
-                else:
-                    renamed = which + ' '+ what +' per '+ bypop
-                pandy = pandy.rename(columns={kwargs['input_field'][0]:renamed})
-                kwargs['input_field'] = renamed
+            if 'nofillnan' in kwargs['option']:
+                kwargs['option'].remove('fillnan')
+                kwargs['option'].insert(0,'nofillnan')
+
+            if 'sumall' in kwargs['option'] and len(kwargs['which'])>1:
+                raise CoaError('sumall option incompatible with multile values ... remove one please')
+
+            if  func.__name__ == 'get':
+                if dicovisu['typeofplot']:
+                    raise CoaError("'typeofplot' not compatible with get ...")
+                if  dicovisu['typeofhist']:
+                    raise CoaError("'typeofhist' not compatible with get ...")
+            elif func.__name__ == 'plot':
+                if dicovisu['typeofhist']:
+                    raise CoaError("'typeofhist' option not compatible with plot ...")
+            elif func.__name__ in ['hist','map']:
+                if dicovisu['typeofplot']:
+                    raise CoaError("'typeofplot' option not compatible with " + func.__name__ )
+            elif func.__name__ in ['save']:
                 pass
             else:
-                if not input_field or input_field == 'standard':
-                    kwargs['input_field'] = pandy.columns[2]
-            kwargs['input'] = pandy
-            kwargs['vis'] = self.getdisplay()
-            self.setkwargs(**kwargs)
-            return f(self,**kwargs)
+                raise CoaError(" What does " + func.__name__ + ' is supposed to be ... ?')
+
+            if self.getvisukwargs()['vis']:
+                pass
+            if kwargs['input'].empty:
+                    kwargs = self.virus.get_stats(**kwargs)
+
+            found_bypop = None
+            for w in kwargs['option']:
+                if w.startswith('bypop='):
+                    found_bypop = w
+                    kwargs['which'] = [i+ ' ' +found_bypop for i in kwargs['which']]
+                    break
+
+            return func(self,**kwargs)
         return wrapper
 
-    @chartsinput_deco
+    def setvisu(self,**kwargs):
+        '''
+            define visualization and associated options
+        '''
+        kwargs_keystesting(kwargs,self.listviskargskeys,'Bad args used ! please check ')
+        default = { k:v[0] if isinstance(v,list) else v for k,v in self.av.d_graphicsinput_args.items()}
+        vis = kwargs.get('vis')
+        for k,v in default.items():
+            kwargs[k] = v
+
+        if vis not in self.lvisu:
+            raise CoaError("Sorry but " + vis + " visualisation isn't implemented ")
+        else:
+            self.setdisplay(vis)
+            kwargs['vis'] = vis
+            CoaInfo(f"The visualization has been set correctly to: {vis}")
+        self.setkwargsvisu(**kwargs)
+
+    @input_wrapper
     def get(self,**kwargs):
         """Return covid19 data in specified format output (default, by list)
         for specified locations ('where' keyword).
@@ -666,12 +576,10 @@ class __front__:
                     * by default, 'no' normalization
                     * can normalize by '100', '1k', '100k' or '1M'
         """
-
         output = kwargs.get('output')
         pandy = kwargs.get('input')
-        input_field  = kwargs.get('input_field')
-        pandy = pandy.drop(columns='standard')
 
+        self.setnamefunction(self.get)
         if output == 'pandas':
             def color_df(val):
                 if val.columns=='date':
@@ -680,12 +588,7 @@ class __front__:
                     return 'red'
                 else:
                     return black
-            #if 'option' in kwargs:
-            #    raise CoaKeyError("Cannot use option with input pandas data. "
-            #                      "Use option within the get() function instead.")
-            #pandy = pandy.drop_duplicates(['date','clustername'])
-            #pandy = pandy.drop(columns=['cumul'])
-            #pandy['cumul'] = pandy[which]
+
             casted_data = pandy
             col=list(casted_data.columns)
             mem='{:,}'.format(casted_data[col].memory_usage(deep=True).sum())
@@ -705,7 +608,8 @@ class __front__:
             if output == 'array':
                 casted_data = np.array(pandy)
         else:
-            raise CoaKeyError('Unknown output.')
+            raise CoaError('Unknown output.')
+        self.outcome = casted_data
         return casted_data
 
     def saveoutput(self,**kwargs):
@@ -716,12 +620,12 @@ class __front__:
             'savename': None (default pycoa.ut+ '.xlsx/.csv')
         '''
         global _db
-        kwargs_test(kwargs, ['pandas','saveformat','savename'], 'Bad args used in the pycoa.saveoutput function.')
+        kwargs_keystesting(kwargs, ['pandas','saveformat','savename'], 'Bad args used in the pycoa.saveoutput function.')
         pandy = kwargs.get('pandas', pd.DataFrame())
         saveformat = kwargs.get('saveformat', 'excel')
         savename = kwargs.get('savename', '')
         if pandy.empty:
-            raise CoaKeyError('Pandas to save is mandatory there is not default !')
+            raise CoaError('Pandas to save is mandatory there is not default !')
         else:
             _db.saveoutput(pandas=pandy,saveformat=saveformat,savename=savename)
 
@@ -732,11 +636,12 @@ class __front__:
         'whichcol': list variable associate to the src.andas list to be retrieve
         '''
         global _db
-        kwargs_test(kwargs,['coapandas'], 'Bad args used in the pycoa.merger function.')
+        kwargs_keystesting(kwargs,['coapandas'], 'Bad args used in the pycoa.merger function.')
         listpandy = kwargs.get('coapandas',[])
         return _db.merger(coapandas = listpandy)
 
     def decomap(func):
+        @wraps(func)
         def inner(self,**kwargs):
             """
             Create a map according to arguments and options.
@@ -745,7 +650,7 @@ class __front__:
             by default visu='bokeh'
             - In the default case (i.e visu='bokeh') available option are :
                 - dateslider=True: a date slider is called and displayed on the right part of the map
-                - maplabel = text, values are displayed directly on the map
+                - mapoption = text, values are displayed directly on the map
                            = textinter, values as an integer are displayed directly on the map
                            = spark, sparkline are displayed directly on the map
                            = spiral, spiral are displayed directly on the map
@@ -753,75 +658,79 @@ class __front__:
                            = exploded/dense, when available exploded/dense map geometry (for USA & FRA sor far)
             """
             input = kwargs.get('input')
-            input_field = kwargs.get('input_field')
-            #if not input.empty:
-            #    kwargs.pop('input')
-            #    kwargs.pop('input_field')
+            where = kwargs.get('where')
+
             if 'output' in kwargs:
                 kwargs.pop('output')
             if 'bypop' in kwargs:
                 kwargs.pop('bypop')
             dateslider = kwargs.get('dateslider', None)
-            maplabel = kwargs.get('maplabel', None)
-            lmaplabel=self.lmaplabel
-            if maplabel is not None:
-                if not isinstance(maplabel,list):
-                    maplabel = [maplabel]
-                if  [a for a in maplabel if a not in lmaplabel]:
-                    raise CoaTypeError('Waiting a correct maplabel value. See help.')
-            sparkline = False
-            if dateslider is not None:
-                del kwargs['dateslider']
-                kwargs['cursor_date'] = dateslider
-            if maplabel is not None:
-                kwargs['maplabel'] = []
-                if 'text' in maplabel:
-                    kwargs['maplabel'] = ['text']
-                if 'textinteger' in maplabel:
-                    kwargs['maplabel'] = ['textinteger']
-                for i in lmaplabel:
-                    if i in maplabel and i not in ['text','textinteger']:
-                        kwargs['maplabel'].append(i)
-                #if all([ True if i in ['text','spark','label%','log'] else False for i in kwargs['maplabel'] ]) :
-                #    CoaKeyError('Waiting for a valide label visualisation: text, spark or label%')
-                input.loc[:,input_field]=input[input_field].fillna(0) #needed in the case where there are nan else js pb
+            mapoption = kwargs.get('mapoption', None)
+            if 'dense' in mapoption:
+                if not self.virus.gettypeofgeometry().is_dense_geometry():
+                    self.virus.gettypeofgeometry().set_dense_geometry()
+                    new_geo = self.virus.geo.get_data()
+                    granularity = self.meta.getcurrentmetadata(self.db)['geoinfo']['granularity']
+                    new_geo = new_geo.rename(columns={'name_'+granularity:'where'})
+                    new_geo['where'] = new_geo['where'].apply(lambda x: x.upper())
+
+                    new_geo = new_geo.set_index('where')['geometry'].to_dict()
+
+                    input['geometry'] = input['where'].apply(lambda x: x.upper()).map(new_geo)
+                    input['where'] = input['where'].apply(lambda x: x.title())
+                    kwargs['input'] = input
             return func(self,**kwargs)
         return inner
 
-    @chartsinput_deco
+    def input_visuwrapper(func):
+        '''
+            Basicaly return one variable for histo and map when several which have been requested ...
+        '''
+        @wraps(func)
+        def inner(self,**kwargs):
+            if not 'get' in func.__name__:
+                z = {**self.getvisukwargs(), **kwargs}
+            if func.__name__ in ['hist','map']:
+                if len(z['which'])>1:
+                    raise CoaError("Histo and map available only for ONE variable ...")
+                else:
+                    z['which'] = z['which'][0]
+                z['input'] = z['input'].loc[z['input'].date==z['input'].date.max()].reset_index(drop=True)
+                z['input'] = z['input'].sort_values(by=kwargs['which'], ascending=False)
+            return func(self,**z)
+        return inner
+
+    @input_wrapper
     @decomap
     def figuremap(self,**kwargs):
         dateslider = kwargs.get('dateslider', None)
-        maplabel = kwargs.get('maplabel', None)
+        mapoption = kwargs.get('mapoption', None)
         visu = self.getdisplay()
         if visu == 'bokeh':
-            if maplabel:
-                if 'spark' in maplabel or 'spiral' in maplabel:
+            if mapoption:
+                if 'spark' in mapoption or 'spiral' in mapoption:
                     return self.allvisu.pycoa_pimpmap(**kwargs)
-                elif 'text' or 'exploded' or 'dense' in maplabel:
+                elif 'text' or 'exploded' or 'dense' in mapoption:
                     return self.allvisu.pycoa_map(**kwargs)
                 else:
                     CoaError("What kind of pimp map you want ?!")
             else:
                 return self.allvisu.pycoa_map(**kwargs)
 
-    @chartsinput_deco
+    @input_wrapper
+    @input_visuwrapper
     @decomap
     def map(self,**kwargs):
         self.setnamefunction(self.map)
-        dateslider = kwargs.get('dateslider', None)
-        maplabel = kwargs.get('maplabel', None)
-        kwargs['dateslider'] = dateslider
-        kwargs['maplabel'] = maplabel
-
         if self.getdisplay():
-            fig = self.allvisu.map(**kwargs)
-            return fig
+            z = {**self.getvisukwargs(), **kwargs}
+            self.outcome = self.allvisu.map(**z)
+            return self.outcome
         else:
             CoaError(" No visualization has been set up !")
 
-
     def decohist(func):
+        @wraps(func)
         def inner(self,**kwargs):
             """
             Create histogram according to arguments.
@@ -839,7 +748,7 @@ class __front__:
                             whom when keywords are ignored.
                             input should be given as valid pycoa.pandas dataframe.
 
-            input_field --  is the name of the field of the input pandas to plot.
+            which --  is the name of the field of the input pandas to plot.
                             Default is 'deaths/standard', the default output field of
                             the get() function.
 
@@ -853,38 +762,44 @@ class __front__:
                             histograms.
                             If none provided, a default value will be used.
             """
-            #input = kwargs.pop('input')
-            #input_field = kwargs.pop('input_field')
-            dateslider = kwargs.get('dateslider', None)
-            typeofhist = kwargs.get('typeofhist',self.listhist()[0])
+            dateslider = kwargs.get('dateslider')
+            typeofhist = kwargs.get('typeofhist')
             kwargs.pop('output')
             if kwargs.get('bypop'):
               kwargs.pop('bypop')
-            kwargs['typeofhist'] = typeofhist
             if self.getdisplay():
-                fig = self.allvisu.hist(**kwargs)
-                return func(self,fig)
+                self.outcome = self.allvisu.hist(**kwargs)
+                return func(self,self.outcome)
             else:
-                CoaError(" No visualization has been set up !")
+                raise CoaError(" No visualization has been set up !")
         return inner
 
-    @chartsinput_deco
+    @input_wrapper
     @decohist
     def figurehist(fig):
         ''' Return fig Bohek object '''
         return fig
 
-    @chartsinput_deco
+    @input_wrapper
+    @input_visuwrapper
     @decohist
     def hist(self,fig):
         ''' show hist '''
         self.setnamefunction(self.hist)
+        self.outcome = fig
         if self.getdisplay() == 'bokeh':
+            from bokeh.io import (
+            show,
+            output_notebook,
+            )
+            output_notebook(hide_banner=True)
             show(fig)
+            return fig
         else:
             return fig
 
     def decoplot(func):
+        @wraps(func)
         def inner(self,**kwargs):
             """
             Create a date plot according to arguments. See help(plot).
@@ -901,7 +816,7 @@ class __front__:
                             whom when keywords are ignored.
                             input should be given as valid pycoa.pandas dataframe.
 
-            input_field --  is the name of the field of the input pandas to plot.
+            which --  is the name of the field of the input pandas to plot.
                             Default is 'deaths/standard', the default output field of
                             the get() function.
 
@@ -918,45 +833,69 @@ class __front__:
                            'menulocation': date plot with two scroll menu locations.
                                             Usefull to study the behaviour of a variable for two different countries.
                            'versus': plot variable against an other one.
-                                     For this type of plot one should used 'input' and 'input_field' (not fully tested).
-                                     Moreover dim(input_field) must be 2.
+                                     For this type of plot one should used 'input' and 'which' (not fully tested).
+                                     Moreover dim(which) must be 2.
                             'spiral' : plot variable as a spiral angular plot, angle being the date
                             'yearly' : same as date but modulo 1 year
 
             guideline add a guideline for the plot. False by default
             """
             input = kwargs.get('input')
-            input_field = kwargs.get('input_field')
+            which = kwargs.get('which')
             typeofplot = kwargs.get('typeofplot',self.listplot()[0])
             kwargs.pop('output')
 
+            if typeofplot == 'versus' and len(which)>2:
+                CoaError(" versu can be used with 2 variables and only 2 !")
             if kwargs.get('bypop'):
                 kwargs.pop('bypop')
 
             if self.getdisplay():
-                fig = self.allvisu.plot(**kwargs)
-                return func(self,fig)
+                z = {**self.getvisukwargs(), **kwargs}
+                self.outcome = self.allvisu.plot(**z)
+
+                return func(self,self.outcome)
             else:
                 CoaError(" No visualization has been set up !")
         return inner
 
-    @chartsinput_deco
+    @input_wrapper
     @decoplot
     def figureplot(self,fig):
         ''' Return fig Bohek object '''
         return fig
 
-    @chartsinput_deco
+    @input_wrapper
+    @input_visuwrapper
     @decoplot
     def plot(self,fig):
         self.setnamefunction(self.plot)
         ''' show plot '''
         if self.getdisplay() == 'bokeh' and self.plot != '':
-            return show(fig)
+            from bokeh.io import (
+            show,
+            output_notebook,
+            )
+            output_notebook(hide_banner=True)
+            show(fig)
+            return fig
         else:
             return fig
 
+    def savefig(self,name):
+        if  self.getnamefunction() != 'get':
+            if self.getdisplay() == 'bokeh':
+                bokeh_visu.bokeh_savefig(self.outcome,name)
+            else:
+                self.outcome.savefig(name)
+        else:
+            CoaError('savefig can\'t be used to store a panda DataFrame')
+
+from src.__version__ import __version__,__author__,__email__
 def front():
     ''' This public function returns front class '''
     fr = __front__()
+    fr.__version__ = __version__
+    fr.__author__ = __author__
+    fr.__email__ = __email__
     return fr

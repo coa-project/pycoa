@@ -33,7 +33,8 @@ from zlib import crc32
 from urllib.parse import urlparse
 import unidecode
 import datetime as dt
-from src.error import CoaKeyError, CoaTypeError, CoaConnectionError, CoaNotManagedError
+import numpy as np
+from src.error import CoaError, CoaConnectionError, CoaNotManagedError
 
 
 # testing if src.ata is available
@@ -77,6 +78,31 @@ def verb(*args):
     if _verbose_mode > 1:
         print(*args)
 
+def kwargs_keystesting(given_args, expected_args, error_string):
+    """Test that the list of kwargs is compatible with expected args. If not
+    it raises a CoaKeyError with error_string.
+    """
+
+    if type(given_args)!=dict:
+        raise CoaError("kwargs_keystesting error, the given args are not a dict type.")
+    if type(expected_args)!=list:
+        raise CoaError("kwargs_keystesting error, the expected args are not a list type")
+
+    bad_kwargs=[a for a in list(given_args.keys()) if a not in expected_args ]
+    if len(bad_kwargs) != 0 :
+        raise CoaError(error_string+' Unrecognized args are '+str(bad_kwargs)+'.')
+
+    return True
+
+def debug(value,message=''):
+    if message:
+        message = message
+    else:
+        message = ''
+    print("\n------------------------\n")
+    print(" ---- " , message ,  " ->>>>>>>>       ",value)
+    print("\n------------------------\n")
+
 def kwargs_test(given_args, expected_args, error_string):
     """Test that the list of kwargs is compatible with expected args. If not
     it raises a CoaKeyError with error_string.
@@ -91,6 +117,54 @@ def kwargs_test(given_args, expected_args, error_string):
     if len(bad_kwargs) != 0 :
         raise CoaKeyError(error_string+' Unrecognized args are '+str(bad_kwargs)+'.')
 
+    return True
+
+def kwargs_valuestesting(given_values, expected_values, error_string):
+    ''' test if the values in the list given_values are in the expected_values '''
+    if not isinstance(expected_values,list):
+        raise CoaError("kwargs_fulltest error, the given args are not a list type.")
+
+    if expected_values is not None and given_values is not None:
+        if isinstance(given_values,list):
+            if isinstance(given_values[0],list):
+                for a in given_values:
+                    bad_values = [i for i in a if i not in expected_values ]
+                    if len(bad_values) != 0 :
+                        raise CoaError(error_string+' unrecognized values '+str(bad_values))
+            else:
+                bad_values = [a for a in given_values if a not in expected_values ]
+                if len(bad_values) != 0 :
+                    raise CoaError(error_string+' unrecognized values '+str(bad_values))
+        else:
+            if given_values not in expected_values:
+                raise CoaError(error_string+' unrecognized values '+str(given_values))
+    else:
+        pass
+
+def kwargs_keyvaluestesting(given_kargs, expected_kargs, hiddenkeys,error_string):
+    """Test that the list of kwargs is compatible with expected args. If not
+    it raises a CoaKeyError with error_string.
+    """
+    if not isinstance(given_kargs,dict) or not isinstance(expected_kargs,dict):
+        raise CoaError("kwargs_fulltest error, the given args are not a dict type.")
+
+    bad_kwargs = [a for a in list(given_kargs.keys()) if a not in list(expected_kargs.keys()) ]
+    if len(bad_kwargs) != 0 :
+        raise CoaError(error_string+' Unrecognized args are '+str(bad_kwargs)+'.')
+    else:
+        if hiddenkeys:
+            [expected_kargs.pop(i) for i in hiddenkeys]
+            [given_kargs.pop(i) for i in hiddenkeys ]
+        for a in list(given_kargs.values()):
+            if isinstance(a,list):
+                for i in a:
+                    expected = [i for i in flat_list(list(expected_kargs.values())) if i != '']
+                    print("%%%",expected)
+                    if i not in flat_list(expected) and list(expected_kargs.values()):
+                        raise CoaError(error_string+' %%%Unrecognized argument '+i+'.')
+            else:
+                if a not in list(expected_kargs.values()):
+                    raise CoaError(error_string+' Unrecognized argument '+a+'.')
     return True
 
 def tostdstring(s):
@@ -181,13 +255,14 @@ def extract_dates(when):
     #w1=datetime.datetime.now()
     w0=datetime.date(1,1,1) # minimal year is 1
     w1=datetime.date.today()
-    if when:  # when input is not None, assume min and max date
+    if when and when != ['']:  # when input is not None, assume min and max date
+        print(when,type(when))
         if type(when) != type(str()):
-            raise CoaTypeError("Date expected as string.")
+            raise CoaError("Date expected as string.")
         w=when.split(':')
 
         if len(w)>2 :
-            raise CoaTypeError("Too many dates given. Expecting 1 or 2 with : as a separator. ")
+            raise CoaError("Too many dates given. Expecting 1 or 2 with : as a separator. ")
         if len(w) == 1:
             w1=check_valid_date(w[0])
         if len(w) > 1:
@@ -197,9 +272,8 @@ def extract_dates(when):
                 w0=check_valid_date(w[0])
 
         if w0>w1:
-            raise CoaTypeError("First date must occur before the second one.")
-
-    return w0,w1
+            raise CoaError("First date must occur before the second one.")
+    return w0, w1
 
 def week_to_date(whenstr):
     """
@@ -312,6 +386,58 @@ def flat_list(matrix):
          else:
              flatten_matrix.append(sublist)
      return flatten_matrix
+
+def all_or_none_lists(my_list):
+    # Vérifie s'il existe au moins une liste dans les éléments
+    has_list = any(isinstance(x, list) for x in my_list)
+    # Si oui, vérifie que tous les éléments sont des listes
+    if has_list and not all(isinstance(x, list) for x in my_list):
+        return False
+    return True
+
+def getnonnegfunc(mypd,which):
+    '''
+    From a mypd pandas and a which value return non negative values
+    '''
+    if isinstance(which,list):
+        raise CoaError('getnonnegfunc do not accepte a list ...')
+    else:
+        whichvalues = mypd[which]
+        reconstructed = pd.DataFrame()
+        try:
+            y0 = whichvalues.values[0] # integrated offset at t=0
+        except:
+            y0 = 0
+        if np.isnan(y0):
+            y0 = 0
+        pa = whichvalues.diff()
+        yy = pa.values
+        ind = list(pa.index)
+        where_nan = np.isnan(yy)
+        yy[where_nan] = 0.
+        indices=np.where(yy < 0)[0]
+        for kk in np.where(yy < 0)[0]:
+            k = int(kk)
+            val_to_repart = -yy[k]
+            if k < np.size(yy)-1:
+                yy[k] = (yy[k+1]+yy[k-1])/2
+            else:
+                yy[k] = yy[k-1]
+            val_to_repart = val_to_repart + yy[k]
+            s = np.nansum(yy[0:k])
+            if not any([i !=0 for i in yy[0:k]]) == True and s == 0:
+                yy[0:k] = 0.
+            elif s == 0:
+                yy[0:k] = np.nan*np.ones(k)
+            else:
+                yy[0:k] = yy[0:k]*(1-float(val_to_repart)/s)
+        whichvalues = whichvalues.copy()
+        whichvalues.loc[ind] = np.cumsum(yy)+y0 # do not forget the offset
+        if reconstructed.empty:
+            reconstructed = mypd
+        else:
+            reconstructed = pd.concat([mypd,whichvalues])
+    return reconstructed
 
 def return_nonan_dates_pandas(df = None, field = None):
    ''' Check if for last date all values are nan, if yes check previous date and loop until false'''

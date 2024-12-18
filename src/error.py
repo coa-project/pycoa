@@ -16,6 +16,7 @@ All Coa exceptions should derive from the main CoaError class.
 import os
 import sys
 import time
+from time import sleep
 def blinking_centered_text(typemsg,message,blinking=0,text_color="37", bg_color="41"):
     """
     center blinking color output message
@@ -36,13 +37,15 @@ def blinking_centered_text(typemsg,message,blinking=0,text_color="37", bg_color=
     text_code = color_codes.get(text_color.lower(), color_codes["white"])
     bg_code = bg_codes.get(bg_color.lower(), bg_codes["red"])
 
-    rows, columns = os.popen('stty size', 'r').read().split()
-    columns = int(columns)
+    try:
+        rows, columns = os.popen('stty size', 'r').read().split()
+        columns = int(columns)
+        typemsg = typemsg.center(columns)
+        message = message.center(columns)
+    except:
+        pass
 
-    typemsg = typemsg.center(columns)
-    message = message.center(columns)
-
-    # Séquences ANSI pour les couleurs et le clignotement
+        # Séquences ANSI pour les couleurs et le clignotement
     if blinking:
         ansi_start = f"\033[5;{text_code};{bg_code}m"
     else:
@@ -50,6 +53,21 @@ def blinking_centered_text(typemsg,message,blinking=0,text_color="37", bg_color=
     ansi_reset = "\033[0m"
     sys.stdout.write(f"{ansi_start}{typemsg}{ansi_reset}\n")
     sys.stdout.write(f"{ansi_start}{message}{ansi_reset}\n")
+
+
+class CoaInfo(Exception):
+    """Base class for exceptions in PyCoa."""
+
+    def __init__(self, message):
+        blinking_centered_text('PYCOA Info !',message, blinking=0,text_color='white', bg_color='magenta')
+        Exception(message)
+
+class CoaDBInfo(Exception):
+    """Base class for exceptions in PyCoa."""
+
+    def __init__(self, message):
+        blinking_centered_text('PYCOA Info !',message, blinking=0,text_color='white', bg_color='blue')
+        Exception(message)
 
 class CoaWarning(Exception):
     """Base class for exceptions in PyCoa."""
@@ -62,9 +80,8 @@ class CoaError(Exception):
     """Base class for exceptions in PyCoa."""
     def __init__(self, message):
         blinking_centered_text('PYCOA Error !',message, blinking=1,text_color='white', bg_color='red')
-        exit(0)
+        sys.exit(0)
         #Exception(message)
-
 
 class CoaNoData(CoaError, IndexError):
     """Exception raised when there is no data to plot or to manage (invalid cut)"""
@@ -73,20 +90,6 @@ class CoaNoData(CoaError, IndexError):
         blinking_centered_text('PYCOA Error !',message, blinking=1,text_color='white', bg_color='red')
         IndexError(message)
         CoaError(message)
-
-
-class CoaKeyError(CoaError, KeyError):
-    """Exception raised for errors in used key option.
-
-    Attributes:
-        message -- explanation of the error
-    """
-
-    def __init__(self, message):
-        blinking_centered_text('PYCOA Error !',message, blinking=1,text_color='white', bg_color='red')
-        KeyError(message)
-        CoaError(message)
-
 
 class CoaWhereError(CoaError, IndexError):
     """Exception raised for location errors.

@@ -82,7 +82,7 @@ class InputOption():
                                  'typeofplot':['date','menulocation','versus','spiral','yearly'],\
                                  'bins':10,\
                                  'vis':['matplotlib','bokeh','folium','seaborn'],\
-                                 'tile' : ['openstreet','esri','stamen'],\
+                                 'tile' : ['esri','openstreet','stamen'],\
                                  'orientation':['horizontal','vertical'],\
                                  'dateslider':[False,True],\
                                  'mapoption':['text','textinteger','spark','label%','log','unsorted','dense'],\

@@ -156,9 +156,9 @@ class MetaInfo:
         if 'namedata' in i:
                 which.append(i['namedata'])
       if 'date' in which:
-            which.remove('date')
+            which = list(filter(('date').__ne__, which))
       if 'where' in which:
-            which.remove('where')
+            which = list(filter(('where').__ne__, which))
       return which
 
   @staticmethod
@@ -259,7 +259,8 @@ class DataParser:
           url = datasets['urldata']
           pdata = pd.DataFrame(datasets['columns'])
           if 'alias' in list(pdata.columns):
-              pdata.alias.fillna(pdata.name, inplace=True)
+             # pdata.alias.fillna(pdata.name, inplace=True)
+              pdata["alias"] = pdata["alias"].fillna(pdata["name"])
           else:
               pdata['alias'] = pdata['name']
           if 'description' in list(pdata.columns):
@@ -377,6 +378,7 @@ class DataParser:
       pandas_db = pandas_db.sort_values(['where','date'])
 
       self.available_keywords = list(pandas_db.columns)
+
       if 'date' in self.available_keywords:
           self.available_keywords.remove('date')
       if 'where' in self.available_keywords:

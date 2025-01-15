@@ -327,16 +327,19 @@ class VirusStat(object):
 
        input['date'] = pd.to_datetime(input['date'], errors='coerce')
        when_beg_data, when_end_data = input.date.min(), input.date.max()
-
+       when_beg_data, when_end_data = when_beg_data.date(), when_end_data.date()
+       #print("HERE 3")
        if when:
            when_beg, when_end = extract_dates(when)
+           print("HERE",when_beg,type(when_beg),type(input.date[0].date()))
            if when_beg < when_beg_data:
                 when_beg = when_beg_data
                 CoaWarning("No available data before "+str(when_beg_data) + ' - ' + str(when_beg) + ' is considered')
            if when_end > when_end_data:
                 when_end = when_end_data
                 CoaWarning("No available data after "+str(when_end_data) + ' - ' + str(when_end) + ' is considered')
-           input = input[(input.date >= when_beg) & (input.date <= when_end)]
+           input = input[(input.date >= pd.to_datetime(when_beg)) & (input.date <= pd.to_datetime(when_end))]
+           kwargs['input'] = input
            when_beg_data,when_end_data = when_beg, when_end
 
        kwargs['when'] = [str(when_beg_data)+':'+str(when_end_data)]

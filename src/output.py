@@ -73,8 +73,6 @@ class InputOption():
         self.listchartkargsvalues = list(self.d_batchinput_args.values())
 
         self.d_graphicsinput_args = {
-                                 'plot_height':Width_Height_Default[1],\
-                                 'plot_width':Width_Height_Default[0],\
                                  'title':'',\
                                  'copyright': 'pyvoa',\
                                  'mode':['mouse','vline','hline'],\
@@ -82,7 +80,7 @@ class InputOption():
                                  'typeofplot':['date','menulocation','versus','spiral','yearly'],\
                                  'bins':10,\
                                  'vis':['matplotlib','bokeh','folium','seaborn'],\
-                                 'tile' : ['esri','openstreet','stamen'],\
+                                 'tile' : ['openstreet','esri','stamen','positron'],\
                                  'orientation':['horizontal','vertical'],\
                                  'dateslider':[False,True],\
                                  'mapoption':['text','textinteger','spark','label%','log','unsorted','dense'],\
@@ -111,7 +109,6 @@ class InputOption():
     def getkwargsfront(self):
         return self.dicokfront
 
-Width_Height_Default = [680, 200]
 Max_Countries_Default  = 12
 class AllVisu:
     """
@@ -167,6 +164,7 @@ class AllVisu:
         def inner_hm(self, **kwargs):
             input = kwargs.get('input')
             which = kwargs.get('which')
+
             return func(self, **kwargs)
         return inner_hm
     ''' DECORATORS FOR HISTO VERTICAL, HISTO HORIZONTAL, PIE '''
@@ -189,8 +187,6 @@ class AllVisu:
             input_others[which] = input_others[which].sum()
             input_others['where'] = 'Others'
             input_others['code'] = 'Others'
-            input_others['permanentdisplay'] = 'Others'
-            input_others['rolloverdisplay'] = 'Others'
             input_others['colors'] = '#FFFFFF'
             input_others = input_others.drop_duplicates(['where','code'])
             input = pd.concat([input_first,input_others])
@@ -278,7 +274,7 @@ class AllVisu:
         elif vis == 'bokeh':
             if typeofhist == 'bylocation':
                 if 'bins' in kwargs:
-                    raise CoaKeyError("The bins keyword cannot be set with histograms by location. See help.")
+                    raise CoaError("The bins keyword cannot be set with histograms by location. See help.")
                 fig = bokeh_visu().bokeh_horizonhisto(**kwargs)
             elif typeofhist == 'byvalue':
                 fig = bokeh_visu().bokeh_histo( **kwargs)
@@ -305,7 +301,6 @@ class AllVisu:
         vis = kwargs.get('vis')
         mapoption = kwargs.get('mapoption')
         input = kwargs.get('input')
-
         if vis == 'matplotlib':
             return matplotlib_visu().matplotlib_map(**kwargs)
         elif vis == 'seaborn':
@@ -320,7 +315,7 @@ class AllVisu:
                     CoaError("What kind of pimp map you want ?!")
             else:
                 fig = bokeh_visu().bokeh_map(**kwargs)
-            return show(fig)
+            return fig
         elif vis == 'folium':
             return matplotlib_visu().bokeh_mapfolium(**kwargs)
         else:

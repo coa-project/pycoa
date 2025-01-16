@@ -44,6 +44,61 @@ from functools import wraps
 
 from src.dbparser import MetaInfo
 
+from bokeh.models import (
+ColumnDataSource,
+TableColumn,
+DataTable,
+ColorBar,
+LogTicker,
+HoverTool,
+CrosshairTool,
+BasicTicker,
+GeoJSONDataSource,
+LinearColorMapper,
+LogColorMapper,
+Label,
+PrintfTickFormatter,
+BasicTickFormatter,
+NumeralTickFormatter,
+CustomJS,
+CustomJSHover,
+Select,
+Range1d,
+DatetimeTickFormatter,
+Legend,
+LegendItem,
+Text
+)
+from bokeh.models.layouts import TabPanel, Tabs
+from bokeh.models import Panel
+from bokeh.plotting import figure, show
+from bokeh.io import output_notebook
+
+output_notebook()
+from bokeh.layouts import (
+row,
+column,
+gridplot
+)
+from bokeh.palettes import (
+Category10,
+Category20,
+Viridis256
+)
+from bokeh.models import Title
+
+from bokeh.io import export_png
+from bokeh import events
+from bokeh.models.widgets import DateSlider
+from bokeh.models import (
+LabelSet,
+WMTSTileSource
+)
+from bokeh.transform import (
+transform,
+cumsum
+)
+
 Width_Height_Default = [680, 200]
 Max_Countries_Default = 24
 
@@ -51,13 +106,45 @@ Max_Countries_Default = 24
 class bokeh_visu:
     def __init__(self,):
         self.pycoageopandas = False
+        self.lcolors = Category20[20]
+        self.scolors = Category10[5]
+        self.HoverTool= HoverTool
+        self.TabPanel = TabPanel
+        self.DatetimeTickFormatter = DatetimeTickFormatter
+        self.BasicTicker = BasicTicker
+        self.GeoJSONDataSource = GeoJSONDataSource
+        self.Tabs = Tabs
+        self.LinearColorMapper = LinearColorMapper
+        self.ColorBar = ColorBar
+        self.Viridis256 = Viridis256
+
         if type(input)==gpd.geodataframe.GeoDataFrame:
             self.pycoageopandas = True
-        self.when_beg = dt.date(1, 1, 1)
-        self.when_end = dt.date(1, 1, 1)
-        self.uptitle, self.subtitle = ' ',' '
-        self.scolors = ''
-        self.lcolors = ''
+
+            '''
+            kwargs['GeoJSONDataSource'] : GeoJSONDataSource,\
+            kwargs['Viridis256'] = Viridis256,\
+            kwargs['LinearColorMapper'] = LinearColorMapper,\
+            kwargs['ColorBar'] = ColorBar,\
+            kwargs['BasicTicker'] = BasicTicker,\
+            kwargs['BasicTickFormatter'] = BasicTickFormatter,\
+            kwargs['Label'] = Label,\
+            kwargs['figure'] = figure,\
+            kwargs['Title'] = Title,\
+            kwargs['Category10'] = Category10,\
+            kwargs['Category20'] = Category20,\
+            kwargs['ColumnDataSource'] = ColumnDataSource,\
+            kwargs['HoverTool'] = HoverTool,\
+            kwargs['BasicTickFormatter'] = BasicTickFormatter,\
+            kwargs['TabPanel'] = TabPanel,\
+            kwargs['DatetimeTickFormatter'] = DatetimeTickFormatter,\
+            kwargs['BasicTickFormatter'] = BasicTickFormatter,\
+            kwargs['Tabs'] = Tabs,\
+            kwargs['Range1d'] = Range1d,\
+            kwargs['ColumnDataSource'] = ColumnDataSource,\
+            kwargs['LabelSet'] = LabelSet,\
+
+            '''
 
     @staticmethod
     def min_max_range(a_min, a_max):
@@ -144,112 +231,40 @@ class bokeh_visu:
             """
             ALL Librairies (and more) needs by bokeh
             """
-            from bokeh.models import (
-            ColumnDataSource,
-            TableColumn,
-            DataTable,
-            ColorBar,
-            LogTicker,
-            HoverTool,
-            CrosshairTool,
-            BasicTicker,
-            GeoJSONDataSource,
-            LinearColorMapper,
-            LogColorMapper,
-            Label,
-            PrintfTickFormatter,
-            BasicTickFormatter,
-            NumeralTickFormatter,
-            CustomJS,
-            CustomJSHover,
-            Select,
-            Range1d,
-            DatetimeTickFormatter,
-            Legend,
-            LegendItem,
-            Text
-            )
-            from bokeh.models.layouts import TabPanel, Tabs
-            from bokeh.models import Panel
-            from bokeh.plotting import figure
-            from bokeh.layouts import (
-            row,
-            column,
-            gridplot
-            )
-            from bokeh.palettes import (
-            Category10,
-            Category20,
-            Viridis256
-            )
-            from bokeh.models import Title
-
-            from bokeh.io import export_png
-            from bokeh import events
-            from bokeh.models.widgets import DateSlider
-            from bokeh.models import (
-            LabelSet,
-            WMTSTileSource
-            )
-            from bokeh.transform import (
-            transform,
-            cumsum
-            )
-            kwargs['GeoJSONDataSource'] = GeoJSONDataSource
-            kwargs['Viridis256'] = Viridis256
-            kwargs['LinearColorMapper'] = LinearColorMapper
-            kwargs['ColorBar'] = ColorBar
-            kwargs['BasicTicker'] = BasicTicker
-            kwargs['BasicTickFormatter'] = BasicTickFormatter
-            kwargs['Label'] = Label
-            kwargs['figure'] = figure
-            kwargs['Title'] = Title
-            kwargs['Category10'] = Category10
-            kwargs['Category20'] = Category20
-            kwargs['ColumnDataSource'] = ColumnDataSource
-            kwargs['HoverTool'] = HoverTool
-            kwargs['BasicTickFormatter'] = BasicTickFormatter
-            kwargs['TabPanel'] = TabPanel
-            kwargs['DatetimeTickFormatter'] = DatetimeTickFormatter
-            kwargs['BasicTickFormatter'] = BasicTickFormatter
-            kwargs['Tabs'] = Tabs
-            kwargs['Range1d'] = Range1d
-            kwargs['ColumnDataSource'] = ColumnDataSource
-            kwargs['LabelSet'] = LabelSet
-            self.lcolors = Category20[20]
-            self.scolors = Category10[5]
             return func(self,**kwargs)
         return wrapper
 
-    @importbokeh
+    #@importbokeh
     def bokeh_figure(self, **kwargs):
         """
          Create a standard Bokeh figure, with pycoa_fr copyright, used in all the bokeh charts
         """
-        copyright = kwargs.get('copyright',InputOption().d_graphicsinput_args['copyright'])
-        plot_width = kwargs.get('plot_width',InputOption().d_graphicsinput_args['plot_width'])
-        plot_height = kwargs.get('plot_height',InputOption().d_graphicsinput_args['plot_height'])
+        '''
+        copyright = kwargs.get('text')
+        plot_width = kwargs.get('plot_width',Width_Height_Default[0])
+        plot_height = kwargs.get('plot_height',Width_Height_Default[1])
         Label = kwargs.get('Label')
         figure = kwargs.get('figure')
         Title = kwargs.get('Title')
         min_width = kwargs.get('min_width')
         min_height = kwargs.get('min_height')
-        y_axis_type = kwargs.get('y_axis_type','linear')
-        x_axis_type = kwargs.get('x_axis_type','linear')
+
+
         citation = Label(x=0.65 * plot_width - len(copyright), y=0.01 *plot_height,
                                           x_units='screen', y_units='screen',
                                           text_font_size='1.5vh', background_fill_color='white',
                                           background_fill_alpha=.75,
-                                          text=copyright)
-
-        fig = figure(y_axis_type = y_axis_type,x_axis_type = x_axis_type,\
-            min_width = plot_width, min_height = plot_height,
-            tools=['save', 'box_zoom,reset'],
-            toolbar_location="right", sizing_mode="stretch_width")
+                                          text = copyright)
+        '''
+        y_axis_type = kwargs.get('y_axis_type','linear')
+        x_axis_type = kwargs.get('x_axis_type','linear')
+        fig = figure(**kwargs)
+            #y_axis_type = y_axis_type,x_axis_type = x_axis_type,\
+            #min_width = plot_width, min_height = plot_height,
+            #tools=['save', 'box_zoom,reset'],
+            #toolbar_location="right", sizing_mode="stretch_width")
         #fig.add_layout(citation)
-        fig.add_layout(Title(text=self.uptitle, text_font_size="10pt"), 'above')
-        #if 'innerdecomap' not in inspect.stack()[1].function:
-        #fig.add_layout(Title(text=self.subtitle, text_font_size="8pt", text_font_style="italic"), 'below')
+        #fig.add_layout(Title(text=self.uptitle, text_font_size="10pt"), 'above')
         return fig
 
     @staticmethod
@@ -269,12 +284,6 @@ class bokeh_visu:
         """)
         bkfigure.js_on_event(events.DoubleTap, toggle_legend_js)
 
-    def set_tile(self,tile):
-        if tile in list(InputOption().d_graphicsinput_args['tile']):
-            self.tile = tile
-        else:
-            raise CoaTypeError('Don\'t know the tile you want. So far:' + str(list(InputOption().d_graphicsinput_args['tile'])))
-
     def get_listfigures(self):
         return  self.listfigs
 
@@ -284,34 +293,33 @@ class bokeh_visu:
             self.listfigs = fig
 
     def bokeh_resume_data(self,**kwargs):
-        loc=list(input['clustername'].unique())
-        input['cases'] = input[input_field]
+        loc=list(input['where'].unique())
+        input['cases'] = input[which]
         resumetype = kwargs.get('resumetype','spiral')
         if resumetype == 'spiral':
-            dspiral={i:AllVisu.spiral(input.loc[ (input.clustername==i) &
+            dspiral={i:AllVisu.spiral(input.loc[ (input['where']==i) &
                         (input.date >= self.when_beg) &
                         (input.date <= self.when_end)].sort_values(by='date')) for i in loc}
-            input['resume']=input['clustername'].map(dspiral)
+            input['resume']=input['where'].map(dspiral)
         elif resumetype == 'spark':
-            spark={i:AllVisu.sparkline(input.loc[ (input.clustername==i) &
+            spark={i:AllVisu.sparkline(input.loc[ (input['where']==i) &
                         (input.date >= self.when_beg) &
                         (input.date <= self.when_end)].sort_values(by='date')) for i in loc}
-            input['resume']=input['clustername'].map(spark)
+            input['resume']=input['where'].map(spark)
         else:
             raise CoaError('bokeh_resume_data can use spiral or spark ... here what ?')
         input = input.loc[input.date==input.date.max()].reset_index(drop=True)
         def path_to_image_html(path):
             return '<img src="'+ path + '" width="60" >'
 
-        input=input.drop(columns=['permanentdisplay','rolloverdisplay','colors','cases'])
-        input=input.apply(lambda x: x.round(2) if x.name in [input_field,'daily','weekly'] else x)
+        input=input.apply(lambda x: x.round(2) if x.name in [which,'daily','weekly'] else x)
         if isinstance(input['where'][0], list):
-            col=[i for i in list(input.columns) if i not in ['clustername','where','code']]
-            col.insert(0,'clustername')
+            col=[i for i in list(input.columns) if i not in ['where','where','code']]
+            col.insert(0,'where')
             input = input[col]
-            input=input.set_index('clustername')
+            input=input.set_index('where')
         else:
-           input = input.drop(columns='clustername')
+           input = input.drop(columns='where')
            input=input.set_index('where')
 
         return input.to_html(escape=False,formatters=dict(resume=path_to_image_html))
@@ -325,8 +333,8 @@ class bokeh_visu:
         Keyword arguments
         -----------------
         - input = None : if None take first element. A DataFrame with a Pysrc.struture is mandatory
-        |location|date|Variable desired|daily|cumul|weekly|code|clustername|permanentdisplay|rolloverdisplay|
-        - input_field = if None take second element. It should be a list dim=2. Moreover the 2 variables must be present
+        |location|date|Variable desired|daily|cumul|weekly|code|clustername|rolloverdisplay|
+        - which = if None take second element. It should be a list dim=2. Moreover the 2 variables must be present
         in the DataFrame considered.
         - plot_heigh = Width_Height_Default[1]
         - plot_width = Width_Height_Default[0]
@@ -342,7 +350,8 @@ class bokeh_visu:
                  if [dd/mm/yyyy:] up to max date
         '''
         input = kwargs.get('input')
-        input_field = kwargs.get('input_field')
+        which = kwargs.get('which')
+        copyright = kwargs.get('copyright')
         mode = kwargs.get('mode',list(self.d_graphicsinput_args['mode'])[0])
 
         panels = []
@@ -351,22 +360,22 @@ class bokeh_visu:
             self.set_listfigures([])
         listfigs=[]
         for axis_type in self.optionvisu.ax_type:
-            bokeh_figure = self.bokeh_figure( x_axis_label = input_field[0], y_axis_label = input_field[1],
-                                                y_axis_type = axis_type, **kwargs )
+            bokeh_figure = self.bokeh_figure( x_axis_label = which[0], y_axis_label = which[1],
+                                                y_axis_type = axis_type, text = "ffff")
 
             bokeh_figure.add_tools(HoverTool(
                 tooltips=[('where', '@rolloverdisplay'), ('date', '@date{%F}'),
-                          (input_field[0], '@{casesx}' + '{custom}'),
-                          (input_field[1], '@{casesy}' + '{custom}')],
+                          (which[0], '@{casesx}' + '{custom}'),
+                          (which[1], '@{casesy}' + '{custom}')],
                 formatters={'where': 'printf', '@{casesx}': cases_custom, '@{casesy}': cases_custom,
                             '@date': 'datetime'}, mode = mode,
                 point_policy="snap_to_data"))  # ,PanTool())
 
-            for loc in input.clustername.unique():
-                pandaloc = input.loc[input.clustername == loc].sort_values(by='date', ascending=True)
-                pandaloc.rename(columns={input_field[0]: 'casesx', input_field[1]: 'casesy'}, inplace=True)
+            for loc in input['where'].unique():
+                pandaloc = input.loc[input['where'] == loc].sort_values(by='date', ascending=True)
+                pandaloc.rename(columns={which[0]: 'casesx', which[1]: 'casesy'}, inplace=True)
                 bokeh_figure.line(x='casesx', y='casesy',
-                                 source=ColumnDataSource(pandaloc), legend_label=pandaloc.clustername.iloc[0],
+                                 source=ColumnDataSource(pandaloc), legend_label=pandaloc['where'].iloc[0],
                                  color=pandaloc.colors.iloc[0], line_width=3, hover_line_width=4)
 
             bokeh_figure.legend.label_text_font_size = "12px"
@@ -382,7 +391,7 @@ class bokeh_visu:
         return tabs
 
     ''' DATE PLOT '''
-    @importbokeh
+    #@importbokeh
     def bokeh_date_plot(self,**kwargs):
         '''
         -----------------
@@ -390,8 +399,8 @@ class bokeh_visu:
         Keyword arguments
         -----------------
         - input = None : if None take first element. A DataFrame with a Pysrc.struture is mandatory
-        |location|date|Variable desired|daily|cumul|weekly|code|clustername|permanentdisplay|rolloverdisplay|
-        - input_field = if None take second element could be a list
+        |location|date|Variable desired|daily|cumul|weekly|code|clustername|rolloverdisplay|
+        - which = if None take second element could be a list
         - plot_heigh= Width_Height_Default[1]
         - plot_width = Width_Height_Default[0]
         - title = None
@@ -407,61 +416,45 @@ class bokeh_visu:
                  if [dd/mm/yyyy:] up to max date
         '''
         input = kwargs.get('input')
-        input_field = kwargs.get('input_field')
-        ColumnDataSource = kwargs.get('ColumnDataSource')
-        Category10 = kwargs.get('Category10')[5]
-        Category20 = kwargs.get('Category20')[20]
-        HoverTool = kwargs.get('HoverTool')
-        DatetimeTickFormatter = kwargs.get('DatetimeTickFormatter')
-        BasicTickFormatter = kwargs.get('BasicTickFormatter')
-        Tabs = kwargs.get('Tabs')
-        TabPanel = kwargs.get('TabPanel')
-        if not isinstance(kwargs.get('input_field'),list):
-            input_field = [input_field]
+        input = input.drop(columns='geometry')
+        which = kwargs.get('which')
 
-        mode = kwargs.get('mode',list(InputOption().d_graphicsinput_args['mode'])[0])
-        guideline = kwargs.get('guideline',list(InputOption().d_graphicsinput_args['guideline'])[0])
+        mode = kwargs.get('mode')
+        guideline = kwargs.get('guideline')
 
         panels = []
         listfigs = []
         cases_custom = bokeh_visu().rollerJS()
 
-        if isinstance(input['rolloverdisplay'].iloc[0],list):
-            input['rolloverdisplay'] = input['clustername']
-        for axis_type in InputOption().ax_type:
+        for axis_type in ['linear', 'log']:
             bokeh_figure = self.bokeh_figure( y_axis_type = axis_type, x_axis_type = 'datetime')
+            lcolors = iter(self.lcolors)
             i = 0
             r_list=[]
             maxou=-1000
             lcolors = iter(self.lcolors)
             line_style = ['solid', 'dashed', 'dotted', 'dotdash','dashdot']
-            maxou,minou=0,0
+            maxou, minou=0,0
             tooltips=[]
-            for val in input_field:
-                for loc in list(input.clustername.unique()):
-                    input_filter = input.loc[input.clustername == loc].reset_index(drop = True)
-                    src = ColumnDataSource(input_filter)
+            for val in which:
+                for loc in list(input['where'].unique()):
+                    color = next(lcolors)
+                    inputwhere = input.loc[input['where'] == loc].reset_index(drop = True)
+                    src = ColumnDataSource(inputwhere)
                     leg = loc
-                    #leg = input_filter.permanentdisplay[0]
-                    if len(input_field)>1:
-                        leg = input_filter.permanentdisplay[0] + ', ' + val
-                    if len(list(input.clustername.unique())) == 1:
-                        color = next(lcolors)
-                    else:
-                        color = input_filter.colors[0]
 
                     r = bokeh_figure.line(x = 'date', y = val, source = src,
                                      color = color, line_width = 3,
                                      legend_label = leg,
                                      hover_line_width = 4, name = val, line_dash=line_style[i%4])
                     r_list.append(r)
-                    maxou=max(maxou,np.nanmax(input_filter[val].values))
-                    minou=max(minou,np.nanmin(input_filter[val].values))
+                    maxou=max(maxou,np.nanmax(inputwhere[val].values))
+                    minou=max(minou,np.nanmin(inputwhere[val].values))
 
                     if minou <0.01:
-                        tooltips.append([('where', '@rolloverdisplay'), ('date', '@date{%F}'), (r.name, '@$name')])
+                        tooltips.append([('where', '@where'), ('date', '@date{%F}'), (r.name, '@$name')])
                     else:
-                        tooltips.append([('where', '@rolloverdisplay'), ('date', '@date{%F}'), (r.name, '@$name{0,0.0}')])
+                        tooltips.append([('where', '@where'), ('date', '@date{%F}'), (r.name, '@$name{0,0.0}')])
                     if isinstance(tooltips,tuple):
                         tooltips = tooltips[0]
                 i += 1
@@ -469,7 +462,7 @@ class bokeh_visu:
                 label = r.name
                 tt = tooltips[i]
                 formatters = {'where': 'printf', '@date': 'datetime', '@name': 'printf'}
-                hover=HoverTool(tooltips = tt, formatters = formatters, point_policy = "snap_to_data", mode = mode, renderers=[r])  # ,PanTool())
+                hover=self.HoverTool(tooltips = tt, formatters = formatters, point_policy = "snap_to_data", mode = mode, renderers=[r])  # ,PanTool())
                 bokeh_figure.add_tools(hover)
 
                 if guideline:
@@ -481,22 +474,22 @@ class bokeh_visu:
                     bokeh_figure.yaxis.formatter = BasicTickFormatter(use_scientific=False)
 
             bokeh_figure.legend.label_text_font_size = "12px"
-            panel = TabPanel(child=bokeh_figure, title = axis_type)
+            panel = self.TabPanel(child=bokeh_figure, title = axis_type)
             panels.append(panel)
             bokeh_figure.legend.background_fill_alpha = 0.6
 
             bokeh_figure.legend.location  = "top_left"
             bokeh_figure.legend.click_policy="hide"
             bokeh_figure.legend.label_text_font_size = '8pt'
-            if len(input_field) > 1 and len(input_field)*len(input.clustername.unique())>16:
+            if len(which) > 1 and len(which)*len(input['where'].unique())>16:
                 CoaWarning('To much labels to be displayed ...')
                 bokeh_figure.legend.visible=False
-            bokeh_figure.xaxis.formatter = DatetimeTickFormatter(
+            bokeh_figure.xaxis.formatter = self.DatetimeTickFormatter(
                 days = "%d/%m/%y", months = "%d/%m/%y", years = "%b %Y")
             bokeh_visu().bokeh_legend(bokeh_figure)
             listfigs.append(bokeh_figure)
         self.set_listfigures(listfigs)
-        tabs = Tabs(tabs = panels)
+        tabs = self.Tabs(tabs = panels)
         return tabs
 
     ''' SPIRAL PLOT '''
@@ -504,29 +497,29 @@ class bokeh_visu:
         panels = []
         listfigs = []
         input = kwargs.get('input')
-        input_field = kwargs.get('input_field')
+        which = kwargs.get('which')
 
         if isinstance(input['rolloverdisplay'].iloc[0],list):
-            input['rolloverdisplay'] = input['clustername']
+            input['rolloverdisplay'] = input['where']
         borne = 300
 
         bokeh_figure = self.bokeh_figure(x_range=[-borne, borne], y_range=[-borne, borne], match_aspect=True,**kwargs)
 
-        if len(input.clustername.unique()) > 1 :
-            print('Can only display spiral for ONE location. I took the first one:', input.clustername[0])
-            input = input.loc[input.clustername == input.clustername[0]].copy()
+        if len(input['where'].unique()) > 1 :
+            print('Can only display spiral for ONE location. I took the first one:', input['where'][0])
+            input = input.loc[input['where'] == input['where'][0]].copy()
         input["dayofyear"]=input.date.dt.dayofyear
         input['year']=input.date.dt.year
-        input['cases'] = input[input_field]
+        input['cases'] = input[which]
 
-        K = 2*input[input_field].max()
+        K = 2*input[which].max()
         #drop bissextile fine tuning in needed in the future
         input = input.loc[~(input['date'].dt.month.eq(2) & input['date'].dt.day.eq(29))].reset_index(drop=True)
         input["dayofyear_angle"] = input["dayofyear"]*2 * np.pi/365
         input["r_baseline"] = input.apply(lambda x : ((x["year"]-2020)*2 * np.pi + x["dayofyear_angle"])*K,axis=1)
         size_factor = 16
-        input["r_cas_sup"] = input.apply(lambda x : x["r_baseline"] + 0.5*x[input_field]*size_factor,axis=1)
-        input["r_cas_inf"] = input.apply(lambda x : x["r_baseline"] - 0.5*x[input_field]*size_factor,axis=1)
+        input["r_cas_sup"] = input.apply(lambda x : x["r_baseline"] + 0.5*x[which]*size_factor,axis=1)
+        input["r_cas_inf"] = input.apply(lambda x : x["r_baseline"] - 0.5*x[which]*size_factor,axis=1)
 
         radius = 200
         def polar(theta,r,norm=radius/input["r_baseline"].max()):
@@ -548,7 +541,7 @@ class bokeh_visu:
         date=input['date'],
         cases=input['cases']
         ))
-        bokeh_figure.line( x = 'x', y = 'y', source = src, legend_label = input.clustername[0],
+        bokeh_figure.line( x = 'x', y = 'y', source = src, legend_label = input['where'][0],
                         line_width = 3, line_color = 'blue')
         circle = bokeh_figure.circle('x', 'y', size=2, source=src)
 
@@ -584,8 +577,8 @@ class bokeh_visu:
         -----------------
         len(location) > 2
         - input = None : if None take first element. A DataFrame with a Pysrc.struture is mandatory
-        |location|date|Variable desired|daily|cumul|weekly|code|clustername|permanentdisplay|rolloverdisplay|
-        - input_field = if None take second element could be a list
+        |location|date|Variable desired|daily|cumul|weekly|code|clustername|rolloverdisplay|
+        - which = if None take second element could be a list
         - plot_heigh= Width_Height_Default[1]
         - plot_width = Width_Height_Default[0]
         - title = None
@@ -602,22 +595,22 @@ class bokeh_visu:
         '''
 
         input = kwargs.get('input')
-        input_field= kwargs.get('input_field')
+        which= kwargs.get('which')
         guideline = kwargs.get('guideline',self.d_graphicsinput_args['guideline'][0])
         mode = kwargs.get('guideline',self.d_graphicsinput_args['mode'][0])
-        if isinstance(input_field,list):
-            input_field=input_field[0]
+        if isinstance(which,list):
+            which=which[0]
 
-        uniqloc = list(input.clustername.unique())
+        uniqloc = list(input['where'].unique())
         uniqloc.sort()
         if 'where' in input.columns:
             if len(uniqloc) < 2:
                 raise CoaTypeError('What do you want me to do ? You have selected, only one country.'
                                    'There is no sens to use this method. See help.')
-        input = input[['date', 'clustername', input_field]]
-        input = input.sort_values(by='clustername', ascending = True).reset_index(drop=True)
+        input = input[['date', 'where', which]]
+        input = input.sort_values(by='where', ascending = True).reset_index(drop=True)
 
-        mypivot = pd.pivot_table(input, index='date', columns='clustername', values=input_field)
+        mypivot = pd.pivot_table(input, index='date', columns='where', values=which)
         column_order = uniqloc
         mypivot = mypivot.reindex(column_order, axis=1)
         source = ColumnDataSource(mypivot)
@@ -679,8 +672,8 @@ class bokeh_visu:
         Keyword arguments
         -----------------
         - input = None : if None take first element. A DataFrame with a Pysrc.struture is mandatory
-        |location|date|Variable desired|daily|cumul|weekly|code|clustername|permanentdisplay|rolloverdisplay|
-        - input_field = if None take second element could be a list
+        |location|date|Variable desired|daily|cumul|weekly|code|clustername|rolloverdisplay|
+        - which = if None take second element could be a list
         - plot_heigh= Width_Height_Default[1]
         - plot_width = Width_Height_Default[0]
         - title = None
@@ -696,17 +689,17 @@ class bokeh_visu:
                  if [dd/mm/yyyy:] up to max date
         '''
         input = kwargs['input']
-        input_field = kwargs['input_field']
+        which = kwargs['which']
         guideline = kwargs.get('guideline',self.d_graphicsinput_args['guideline'][0])
         mode = kwargs.get('mode',self.d_graphicsinput_args['mode'][0])
 
-        if len(input.clustername.unique()) > 1 :
-            CoaWarning('Can only display yearly plot for ONE location. I took the first one:'+ input.clustername[0])
-        if isinstance(input_field[0],list):
-            input_field = input_field[0][0]
-            CoaWarning('Can only display yearly plot for ONE which value. I took the first one:'+ input_field)
+        if len(input['where'].unique()) > 1 :
+            CoaWarning('Can only display yearly plot for ONE location. I took the first one:'+ input['where'][0])
+        if isinstance(which[0],list):
+            which = which[0][0]
+            CoaWarning('Can only display yearly plot for ONE which value. I took the first one:'+ which)
 
-        input = input.loc[input.clustername == input.clustername[0]].copy()
+        input = input.loc[input['where'] == input['where'][0]].copy()
 
         panels = []
         listfigs = []
@@ -719,31 +712,31 @@ class bokeh_visu:
         input.loc[:,'dayofyear']= input['date'].apply(lambda x : x.dayofyear)
         allyears = list(input.allyears.unique())
         if isinstance(input['rolloverdisplay'].iloc[0],list):
-            input['rolloverdisplay'] = input['clustername']
-        #if len(input_field)>1:
+            input['rolloverdisplay'] = input['where']
+        #if len(which)>1:
         #    CoaError('Only one variable could be displayed')
         #else:
-        #    input_field=input_field[0]
+        #    which=which[0]
         for axis_type in self.optionvisu.ax_type:
             bokeh_figure = self.bokeh_figure( y_axis_type = axis_type,**kwargs)
             i = 0
             r_list=[]
             maxou=-1000
-            input['cases']=input[input_field]
+            input['cases']=input[which]
             line_style = ['solid', 'dashed', 'dotted', 'dotdash']
             colors = itertools.cycle(self.optionvisu.lcolors)
-            for loc in list(input.clustername.unique()):
+            for loc in list(input['where'].unique()):
                 for year in allyears:
-                    input_filter = input.loc[(input.clustername == loc) & (input['date'].dt.year.eq(year))].reset_index(drop = True)
-                    src = ColumnDataSource(input_filter)
+                    input = input.loc[(input['where'] == loc) & (input['date'].dt.year.eq(year))].reset_index(drop = True)
+                    src = ColumnDataSource(input)
                     leg = str(year) + ' ' + loc
-                    r = bokeh_figure.line(x = 'dayofyear', y = input_field, source = src,
+                    r = bokeh_figure.line(x = 'dayofyear', y = which, source = src,
                                      color = next(colors), line_width = 3,
                                      legend_label = leg,
-                                     hover_line_width = 4, name = input_field)
-                    maxou=max(maxou,np.nanmax(input_filter[input_field].values))
+                                     hover_line_width = 4, name = which)
+                    maxou=max(maxou,np.nanmax(input[which].values))
 
-            label = input_field
+            label = which
             tooltips = [('where', '@rolloverdisplay'), ('date', '@date{%F}'), ('Cases', '@cases{0,0.0}')]
             formatters = {'where': 'printf', '@date': 'datetime', '@name': 'printf'}
             hover=HoverTool(tooltips = tooltips, formatters = formatters, point_policy = "snap_to_data", mode = mode)  # ,PanTool())
@@ -794,9 +787,9 @@ class bokeh_visu:
             See help(bokeh_histo).
             Keyword arguments
             -----------------
-            - geopdwd : A DataFrame with a Pysrc.struture is mandatory
-            |location|date|Variable desired|daily|cumul|weekly|code|clustername|permanentdisplay|rolloverdisplay|
-            - input_field = if None take second element could be a list
+            - input : A DataFrame with a Pysrc.struture is mandatory
+            |location|date|Variable desired|daily|cumul|weekly|code|clustername|rolloverdisplay|
+            - which = if None take second element could be a list
             - plot_heigh= Width_Height_Default[1]
             - plot_width = Width_Height_Default[0]
             - title = None
@@ -807,9 +800,9 @@ class bokeh_visu:
                      if [:dd/mm/yyyy] min date up to
                      if [dd/mm/yyyy:] up to max date
         '''
-        input_field=kwargs.get('input_field')
-        geopdwd_filtered = kwargs.get('geopdwd_filtered')
-        input = geopdwd_filtered.rename(columns = {'cases': input_field})
+        which=kwargs.get('which')
+        inputed = kwargs.get('inputed')
+        input = inputed.rename(columns = {'cases': which})
         bins = kwargs.get('bins', InputOption().d_graphicsinput_args['bins'])
         HoverTool = kwargs.get('HoverTool')
         PrintfTickFormatter = kwargs.get('PrintfTickFormatter')
@@ -817,8 +810,8 @@ class bokeh_visu:
         ColumnDataSource = kwargs.get('ColumnDataSource')
         TabPanel = kwargs.get('TabPanel')
         Tabs = kwargs.get('Tabs')
-        min_val = geopdwd_filtered[input_field].min()
-        max_val =  geopdwd_filtered[input_field].max()
+        min_val = inputed[which].min()
+        max_val =  inputed[which].max()
 
         if bins:
             bins = bins
@@ -833,11 +826,11 @@ class bokeh_visu:
         interval = [ min_val + i*delta for i in range(bins+1)]
 
         contributors = {  i : [] for i in range(bins+1)}
-        for i in range(len(geopdwd_filtered)):
-            rank = bisect.bisect_left(interval, geopdwd_filtered.iloc[i][input_field])
+        for i in range(len(inputed)):
+            rank = bisect.bisect_left(interval, inputed.iloc[i][which])
             if rank == bins+1:
                 rank = bins
-            contributors[rank].append(geopdwd_filtered.iloc[i]['clustername'])
+            contributors[rank].append(inputed.iloc[i]['where'])
 
         lcolors = iter(self.lcolors)
 
@@ -912,8 +905,8 @@ class bokeh_visu:
             Keyword arguments
             -----------------
             - srcfiltered : A DataFrame with a Pysrc.struture is mandatory
-            |location|date|Variable desired|daily|cumul|weekly|code|clustername|permanentdisplay|rolloverdisplay|
-            - input_field = if None take second element could be a list
+            |location|date|Variable desired|daily|cumul|weekly|code|clustername|rolloverdisplay|
+            - which = if None take second element could be a list
             - plot_heigh= Width_Height_Default[1]
             - plot_width = Width_Height_Default[0]
             - title = None
@@ -937,37 +930,37 @@ class bokeh_visu:
 
         dateslider=kwargs.get('dateslider')
         toggl=kwargs.get('toggl')
-        geopdwd_filtered = kwargs.get('geopdwd_filtered')
+        inputed = kwargs.get('inputed')
         maplabel = kwargs.get('maplabel', InputOption().d_graphicsinput_args['maplabel'])
 
 
-        geopdwd_filtered['left'] = geopdwd_filtered['cases']
-        geopdwd_filtered['right'] = geopdwd_filtered['cases']
-        geopdwd_filtered['left'] = geopdwd_filtered['left'].apply(lambda x: 0 if x > 0 else x)
-        geopdwd_filtered['right'] = geopdwd_filtered['right'].apply(lambda x: 0 if x < 0 else x)
+        inputed['left'] = inputed['cases']
+        inputed['right'] = inputed['cases']
+        inputed['left'] = inputed['left'].apply(lambda x: 0 if x > 0 else x)
+        inputed['right'] = inputed['right'].apply(lambda x: 0 if x < 0 else x)
 
-        n = len(geopdwd_filtered.index)
+        n = len(inputed.index)
         ymax = InputOption().d_graphicsinput_args['plot_height']
 
-        geopdwd_filtered['top'] = [ymax*(n-i)/n + 0.5*ymax/n   for i in range(n)]
-        geopdwd_filtered['bottom'] = [ymax*(n-i)/n - 0.5*ymax/n for i in range(n)]
-        geopdwd_filtered['horihistotexty'] = geopdwd_filtered['bottom'] + 0.5*ymax/n
-        geopdwd_filtered['horihistotextx'] = geopdwd_filtered['right']
+        inputed['top'] = [ymax*(n-i)/n + 0.5*ymax/n   for i in range(n)]
+        inputed['bottom'] = [ymax*(n-i)/n - 0.5*ymax/n for i in range(n)]
+        inputed['horihistotexty'] = inputed['bottom'] + 0.5*ymax/n
+        inputed['horihistotextx'] = inputed['right']
 
         if 'label%' in maplabel:
-            geopdwd_filtered['right'] = geopdwd_filtered['right'].apply(lambda x: 100.*x)
-            geopdwd_filtered['horihistotextx'] = geopdwd_filtered['right']
-            geopdwd_filtered['horihistotext'] = [str(round(i))+'%' for i in geopdwd_filtered['right']]
+            inputed['right'] = inputed['right'].apply(lambda x: 100.*x)
+            inputed['horihistotextx'] = inputed['right']
+            inputed['horihistotext'] = [str(round(i))+'%' for i in inputed['right']]
         if 'textinteger' in maplabel:
-            geopdwd_filtered['horihistotext'] = geopdwd_filtered['right'].astype(float).astype(int).astype(str)
+            inputed['horihistotext'] = inputed['right'].astype(float).astype(int).astype(str)
         else:
-            geopdwd_filtered['horihistotext'] = [ '{:.3g}'.format(float(i)) if float(i)>1.e4 or float(i)<0.01 else round(float(i),2) for i in geopdwd_filtered['right'] ]
-            geopdwd_filtered['horihistotext'] = [str(i) for i in geopdwd_filtered['horihistotext']]
+            inputed['horihistotext'] = [ '{:.3g}'.format(float(i)) if float(i)>1.e4 or float(i)<0.01 else round(float(i),2) for i in inputed['right'] ]
+            inputed['horihistotext'] = [str(i) for i in inputed['horihistotext']]
 
         lcolors = iter(self.lcolors)
         color = next(lcolors)
-        geopdwd_filtered['color'] = [next(lcolors) for i in range(len(geopdwd_filtered))]
-        srcfiltered = ColumnDataSource(data = geopdwd_filtered)
+        inputed['color'] = [next(lcolors) for i in range(len(inputed))]
+        srcfiltered = ColumnDataSource(data = inputed)
         new_panels = []
 
         for axis_type in InputOption().ax_type:
@@ -977,7 +970,7 @@ class bokeh_visu:
             #bokeh_figure.yaxis[0].formatter = NumeralTickFormatter(format="0.0")
             ytick_loc = [int(i) for i in srcfiltered.data['horihistotexty']]
             bokeh_figure.yaxis.ticker  = ytick_loc
-            label_dict = dict(zip(ytick_loc,srcfiltered.data['permanentdisplay']))
+            label_dict = dict(zip(ytick_loc,srcfiltered.data['where']))
             bokeh_figure.yaxis.major_label_overrides = label_dict
 
             bokeh_figure.quad(source = srcfiltered,
@@ -1017,7 +1010,7 @@ class bokeh_visu:
 
         df['text_size'] = '8pt'
 
-        df['textdisplayed'] = df['permanentdisplay'].str.pad(36, side = "left")
+        df['textdisplayed'] = df['where'].str.pad(36, side = "left")
         try:
             locale.setlocale(locale.LC_ALL, 'en_US')
         except:
@@ -1039,8 +1032,8 @@ class bokeh_visu:
             Keyword arguments
             -----------------
             - srcfiltered : A DataFrame with a Pysrc.struture is mandatory
-            |location|date|Variable desired|daily|cumul|weekly|code|clustername|permanentdisplay|rolloverdisplay|
-            - input_field = if None take second element could be a list
+            |location|date|Variable desired|daily|cumul|weekly|code|clustername|rolloverdisplay|
+            - which = if None take second element could be a list
             - plot_heigh= Width_Height_Default[1]
             - plot_width = Width_Height_Default[0]
             - title = None
@@ -1064,7 +1057,7 @@ class bokeh_visu:
 
         bokeh_figure.wedge(x=0, y=0, radius=1.,line_color='#E8E8E8',
         start_angle=cumsum('angle', include_zero=True), end_angle=cumsum('angle'), fill_color='colors',
-        legend_label='clustername', source=srcfiltered)
+        legend_label='where', source=srcfiltered)
         bokeh_figure.legend.visible = False
 
         labels = LabelSet(x=0, y=0,text='textdisplayed',angle=cumsum('angle', include_zero=True),
@@ -1082,56 +1075,11 @@ class bokeh_visu:
     def deco_bokeh_geo(func):
         @wraps(func)
         def innerdeco_bokeh_geo(self,**kwargs):
-            geopdwd = kwargs.get('geopdwd')
-            input_field = kwargs.get("input_field")
-            geopdwd['cases'] = geopdwd[input_field]
-            loca=geopdwd['where'].unique()
+            input = kwargs.get('input')
+            which = kwargs.get("which")
+            input['cases'] = input[which]
+            loca=input['where'].unique()
 
-            if self.pycoageopandas:
-                locgeo=geopdwd.loc[geopdwd['where'].isin(loca)].drop_duplicates('where').set_index('where')['geometry']
-                geopdwd=fill_missing_dates(geopdwd)
-                geopdwd_filtereded = geopdwd.loc[geopdwd.date == self.when_end]
-                geopdwd_filtereded_cp = geopdwd_filtereded.copy()
-                geopdwd_filtereded_cp.loc[:,'geometry']=geopdwd_filtereded_cp['where'].map(locgeo)
-                geopdwd_filtereded_cp.loc[:,'geometry']=geopdwd_filtereded_cp['geometry'].to_crs(crs="EPSG:4326")
-                geopdwd_filtereded_cp.loc[:,'clustername']=geopdwd_filtereded_cp['where']
-                geopdwd_filtereded = geopdwd_filtereded_cp
-            else:
-                geopdwd_filtereded = geopdwd.loc[geopdwd.date == self.when_end]
-                geopdwd_filtereded = geopdwd_filtereded.reset_index(drop = True)
-                geopdwd_filtereded = gpd.GeoDataFrame(geopdwd_filtereded, geometry=geopdwd_filtereded.geometry, crs="EPSG:4326")
-                geopdwd = geopdwd.sort_values(by=['clustername', 'date'], ascending = [True, False])
-                geopdwd_filtereded = geopdwd_filtereded.sort_values(by=['clustername', 'date'], ascending = [True, False]).drop(columns=['date', 'colors'])
-                new_poly = []
-                geolistmodified = dict()
-
-                for index, row in geopdwd_filtereded.iterrows():
-                    split_poly = []
-                    new_poly = []
-                    if row['geometry']:
-                        for pt in self.get_polycoords(row):
-                            if type(pt) == tuple:
-                                new_poly.append(AllVisu.wgs84_to_web_mercator(pt))
-                            elif type(pt) == list:
-                                shifted = []
-                                for p in pt:
-                                    shifted.append(AllVisu.wgs84_to_web_mercator(p))
-                                new_poly.append(sg.Polygon(shifted))
-                            else:
-                                raise CoaTypeError("Neither tuple or list don't know what to do with \
-                                    your geometry description")
-
-                        if type(new_poly[0]) == tuple:
-                            geolistmodified[row['where']] = sg.Polygon(new_poly)
-                        else:
-                            geolistmodified[row['where']] = sg.MultiPolygon(new_poly)
-                ng = pd.DataFrame(geolistmodified.items(), columns=['where', 'geometry'])
-                geolistmodified = gpd.GeoDataFrame({'where': ng['where'], 'geometry': gpd.GeoSeries(ng['geometry'])}, crs="epsg:3857")
-                geopdwd_filtereded = geopdwd_filtereded.drop(columns='geometry')
-                geopdwd_filtereded = pd.merge(geolistmodified, geopdwd_filtereded, on='where')
-
-                kwargs['geopdwd']=geopdwd
-                kwargs['geopdwd_filtereded']=geopdwd_filtereded
             return func(self, **kwargs)
         return innerdeco_bokeh_geo
 
@@ -1145,8 +1093,8 @@ class bokeh_visu:
             Keyword arguments
             -----------------
             - srcfiltered : A DataFrame with a Pysrc.struture is mandatory
-            |location|date|Variable desired|daily|cumul|weekly|code|clustername|permanentdisplay|rolloverdisplay|
-            - input_field = if None take second element could be a list
+            |location|date|Variable desired|daily|cumul|weekly|code|clustername|rolloverdisplay|
+            - which = if None take second element could be a list
             - plot_heigh= Width_Height_Default[1]
             - plot_width = Width_Height_Default[0]
             - title = None
@@ -1161,38 +1109,37 @@ class bokeh_visu:
                          if [dd/mm/yyyy:] up to max date
             - maplabel: False
         '''
-        geopdwd=kwargs.get('geopdwd')
-        geopdwd_filtereded=kwargs.get('geopdwd_filtereded')
+        input=kwargs.get('input')
         sourcemaplabel=kwargs.get('sourcemaplabel')
+        tile = kwargs.get('tile')
+        print(tile)
+        tile = bokeh_visu.convert_tile(tile, 'bokeh')
+        print(tile)
+        wmt = WMTSTileSource(url = tile)
+        print(wmt)
+        bokeh_figure = self.bokeh_figure(x_axis_type = 'mercator', y_axis_type = 'mercator', match_aspect = True)    
+        bokeh_figure.add_tile(wmt, retina=True)
 
-        bokeh_figure = self.bokeh_figure(x_axis_type = 'mercator', y_axis_type = 'mercator', match_aspect = True)
-
-        dateslider = kwargs.get('dateslider',list(InputOption().d_graphicsinput_args['dateslider'])[0])
-        maplabel = kwargs.get('maplabel',list(InputOption().d_graphicsinput_args['maplabel'])[0])
+        dateslider = kwargs.get('dateslider')
+        maplabel = kwargs.get('maplabel')
         min_col, max_col, min_col_non0 = 3*[0.]
         try:
             if dateslider:
-                min_col, max_col = bokeh_visu().min_max_range(np.nanmin(geopdwd['cases']),
-                                                         np.nanmax(geopdwd['cases']))
-                min_col_non0 = (np.nanmin(geopdwd.loc[geopdwd['cases']>0.]['cases']))
+                min_col, max_col = bokeh_visu().min_max_range(np.nanmin(input['cases']),
+                                                         np.nanmax(input['cases']))
+                min_col_non0 = (np.nanmin(input.loc[input['cases']>0.]['cases']))
             else:
-                min_col, max_col = bokeh_visu().min_max_range(np.nanmin(geopdwd_filtereded['cases']),
-                                                         np.nanmax(geopdwd_filtereded['cases']))
-                min_col_non0 = (np.nanmin(geopdwd_filtereded.loc[geopdwd_filtereded['cases']>0.]['cases']))
-        except ValueError:  #raised if `geopdwd_filtereded` is empty.
+                min_col, max_col = bokeh_visu().min_max_range(np.nanmin(input['cases']),
+                                                         np.nanmax(input['cases']))
+                min_col_non0 = (np.nanmin(input.loc[input['cases']>0.]['cases']))
+        except ValueError:
             pass
-        #min_col, max_col = np.nanmin(geopdwd_filtereded['cases']),np.nanmax(geopdwd_filtereded['cases'])
-        GeoJSONDataSource = kwargs['GeoJSONDataSource']
-        json_data = json.dumps(json.loads(geopdwd_filtereded.to_json()))
-        geopdwd_filtereded = GeoJSONDataSource(geojson=json_data)
+        #min_col, max_col = np.nanmin(inputeded['cases']),np.nanmax(inputeded['cases'])
+        input = input.drop(columns='date')
+        json_data = json.dumps(json.loads(input.to_json()))
+        inputeded = self.GeoJSONDataSource(geojson=json_data)
 
-
-        LinearColorMapper = kwargs.get('LinearColorMapper')
-        ColorBar = kwargs.get('ColorBar')
-        Viridis256 = kwargs.get('Viridis256')
-        BasicTicker = kwargs.get('BasicTicker')
-        BasicTickFormatter = kwargs.get('BasicTickFormatter')
-        invViridis256 = Viridis256[::-1]
+        invViridis256 = self.Viridis256[::-1]
         if maplabel and 'log' in maplabel:
             color_mapper = LogColorMapper(palette=invViridis256, low=min_col_non0, high=max_col, nan_color='#ffffff')
         else:
@@ -1209,15 +1156,13 @@ class bokeh_visu:
         #self.bokeh_figure().add_layout(Title(text=self.subtitle, text_font_size="8pt", text_font_style="italic"), 'below')
         if dateslider:
             allcases_location, allcases_dates = pd.DataFrame(), pd.DataFrame()
-            allcases_location = geopdwd.groupby('where')['cases'].apply(list)
-            geopdwd_tmp = geopdwd.drop_duplicates(subset = ['where']).drop(columns = 'cases')
-            geopdwd_tmp = pd.merge(geopdwd_tmp, allcases_location, on = 'where')
-            geopdwd_tmp  = geopdwd_tmp.drop_duplicates(subset = ['clustername'])
-            geopdwd_tmp = ColumnDataSource(geopdwd_tmp.drop(columns=['geometry']))
+            allcases_location = input.groupby('where')['cases'].apply(list)
+            input_tmp = input.drop_duplicates(subset = ['where']).drop(columns = 'cases')
+            input_tmp = pd.merge(input_tmp, allcases_location, on = 'where')
+            input_tmp  = input_tmp.drop_duplicates(subset = ['where'])
+            input_tmp = ColumnDataSource(input_tmp.drop(columns=['geometry']))
 
-            sourcemaplabel.data['rolloverdisplay'] = sourcemaplabel.data['clustername']
-
-            callback = CustomJS(args =  dict(source = geopdwd_tmp, source_filter = geopdwd_filtereded,
+            callback = CustomJS(args =  dict(source = input_tmp, source_filter = inputeded,
                                           datesliderjs = dateslider, title=bokeh_figure.title,
                                           color_mapperjs = color_mapper, maplabeljs = sourcemaplabel),
                         code = """
@@ -1225,7 +1170,7 @@ class bokeh_visu:
                         var ind_date = (datesliderjs.value-datesliderjs.start)/(24*3600*1000);
                         var new_cases = [];
                         var dict = {};
-                        var iloop = source_filter.data['clustername'].length;
+                        var iloop = source_filter.data['where'].length;
 
                         function form(value) {
                              if(value>10000 || value <0.01)
@@ -1276,7 +1221,7 @@ class bokeh_visu:
                     """)
             dateslider.js_on_change('value', callback)
             # Set up Play/Pause button/toggle JS
-            date_list = pd.date_range(geopdwd.date.min(),geopdwd.date.max()-dt.timedelta(days=1),freq='d').to_list()
+            date_list = pd.date_range(input.date.min(),input.date.max()-dt.timedelta(days=1),freq='d').to_list()
             indexCDS = ColumnDataSource(dict(date=date_list))
             toggl_js = CustomJS(args=dict(dateslider=dateslider,indexCDS=indexCDS),code="""
             // A little lengthy but it works for me, for this problem, in this version.
@@ -1313,12 +1258,11 @@ class bokeh_visu:
             toggl = Toggle(label='► Play',active=False, button_type="success",height=30,width=10)
             toggl.js_on_change('active',toggl_js)
 
-
         bokeh_figure.xaxis.visible = False
         bokeh_figure.yaxis.visible = False
         bokeh_figure.xgrid.grid_line_color = None
         bokeh_figure.ygrid.grid_line_color = None
-        bokeh_figure.patches('xs', 'ys', source = geopdwd_filtereded,
+        bokeh_figure.patches('xs', 'ys', source = inputeded,
                             fill_color = {'field': 'cases', 'transform': color_mapper},
                             line_color = 'black', line_width = 0.25, fill_alpha = 1)
         if maplabel:
@@ -1339,7 +1283,7 @@ class bokeh_visu:
         document.getElementsByClassName('bk-tooltip')[0].style.opacity="0.7";
         """ )
         tooltips = """
-                    <b>location: @rolloverdisplay<br>
+                    <b>location: @where<br>
                     cases: @cases{0,0.0} </b>
                     """
 
@@ -1348,10 +1292,30 @@ class bokeh_visu:
         point_policy = "snap_to_data",callback=callback))  # ,PanTool())
         if dateslider:
             bokeh_figure = column(dateslider, bokeh_figure,toggl)
-        self.pycoa_geopandas = False
-        return bokeh_figure
+        return show(bokeh_figure)
 
     @staticmethod
     def bokeh_savefig(fig,name):
         from bokeh.io import export_png
         export_png(fig, filename = name)
+
+    @staticmethod
+    def convert_tile(tilename, which = 'bokeh'):
+        ''' Return tiles url according to folium or bokeh resquested'''
+        tile = 'openstreet'
+        if tilename == 'openstreet':
+            if which == 'folium':
+                tile = r'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
+            else:
+                tile = r'http://c.tile.openstreetmap.org/{Z}/{X}/{Y}.png'
+        elif tilename == 'positron':
+            print('Problem with positron tile (huge http resquest need to check), esri is then used ...')
+            tile = r'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}.png'
+        #    tile = 'https://tiles.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png'
+        elif tilename == 'esri':
+            tile = r'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}.png'
+        elif tilename == 'stamen':
+            tile = r'http://tile.stamen.com/toner/{z}/{x}/{y}.png'
+        else:
+            print('Don\'t know you tile ... take default one: ')
+        return tile

@@ -119,6 +119,236 @@ class __front__:
         pd1 = pd1.sort_values(by='Arguments',ascending = False)
         return pd1
 
+    def setwhom(self,base,**kwargs):
+        """Set the covid19 VirusStat used, given as a string.
+        Please see pycoa.listbase() for the available current list.
+
+        By default, the listbase()[0] is the default base used in other
+        functions.
+        """
+        reload = kwargs.get('reload', True)
+        if reload not in [0,1]:
+            raise CoaError('reload must be a boolean ... ')
+        if base not in self.listwhom():
+            raise CoaDbError(base + ' is not a supported VirusStat. '
+                                    'See pycoa.listbase() for the full list.')
+        # Check if the current base is already set to the requested base
+        visu = self.getdisplay()
+        if self.db == base:
+            info(f"The VirusStat '{base}' is already set as the current database")
+            return
+        else:
+            if reload:
+                self.virus, self.allvisu = coco.VirusStat.factory(db_name=base,reload=reload,vis=visu)
+            else:
+                self.virus = coco.VirusStat.readpekl('.cache/'+base+'.pkl')
+                pandy = self.virus.getwheregeometrydescription()
+                self.allvisu = AllVisu(base, pandy)
+                coge.GeoManager('name')
+        self.db = base
+
+    def input_wrapper(func):
+        '''
+            Main decorator it mainly deals with arg testings
+        '''
+        @wraps(func)
+        def wrapper(self,**kwargs):
+            '''
+                Wrapper input function .
+                Wrap and format the user input argument for covid19 class
+                if argument is missing fill with the default value
+                Transforms 'where', 'which', and 'option' into lists if they are not already.
+                order position of the items in 'option'
+            '''
+            if self.db == '':
+                raise CoaError('Something went wrong ... does a db has been loaded ? (setwhom)')
+            mustbealist = ['where','which','option']
+            kwargs_keystesting(kwargs,self.lchartkargskeys + self.listviskargskeys,' kwargs keys not recognized ...')
+            default = { k:[v[0]] if isinstance(v,list) else v for k,v in self.av.d_batchinput_args.items()}
+
+            dicovisu = {k:kwargs.get(k) for k,v in self.av.d_graphicsinput_args.items()}
+            self.setkwargsvisu(**dicovisu)
+            [kwargs_valuestesting(dicovisu[i],self.av.d_graphicsinput_args[i],'value of '+ i +' not correct')
+                for i in ['typeofhist','typeofplot']]
+
+            for k,v in default.items():
+                if k in kwargs.keys():
+                    if isinstance(kwargs[k],list):
+                        default[k] = kwargs[k]
+                    else:
+                        default[k] = [kwargs[k]]
+            kwargs = default
+
+            for k,v in kwargs.items():
+                if k not in mustbealist:
+                    kwargs[k]=v[0]
+
+            if kwargs['where'][0] == '':
+                kwargs['where'] = list(self.virus.get_fulldb()['where'].unique())
+
+            if not all_or_none_lists(kwargs['where']):
+                raise CoaError('For coherence all the element in where must have the same type list or not list ...')
+
+            if 'sumall' in kwargs['option']:
+                kwargs['option'].remove('sumall')
+                kwargs['option'].append('sumall')
+
+            if 'fillnan' not in kwargs['option']:
+                kwargs['option'].insert(0,'fillnan')
+
+            if 'nofillnan' in kwargs['option']:
+                kwargs['option'].remove('fillnan')
+                kwargs['option'].insert(0,'nofillnan')
+
+            if 'sumall' in kwargs['option'] and len(kwargs['which'])>1:
+                raise CoaError('sumall option incompatible with multile values ... remove one please')
+
+            if  func.__name__ == 'get':
+                if dicovisu['typeofplot']:
+                    raise CoaError("'typeofplot' not compatible with get ...")
+                if  dicovisu['typeofhist']:
+                    raise CoaError("'typeofhist' not compatible with get ...")
+            elif func.__name__ == 'plot':
+                if dicovisu['mapoption'] or dicovisu['tile']:
+                    CoaError('Please have a look on your arguement not compatible with plot')
+                if dicovisu['typeofhist']:
+                    raise CoaError("'typeofhist' option not compatible with plot ...")
+            elif func.__name__ == 'hist':
+                if dicovisu['typeofplot']:
+                    raise CoaError("'typeofplot' option not compatible with " + func.__name__ )
+                if dicovisu['mapoption'] or dicovisu['tile']:
+                    CoaError('Please have a look on your arguement not compatible with hist')
+            elif func.__name__ == 'map' :
+                if dicovisu['typeofplot']:
+                    raise CoaError("'typeofplot' option not compatible with " + func.__name__ )
+
+            elif func.__name__ in ['save']:
+                pass
+            else:
+                raise CoaError(" What does " + func.__name__ + ' is supposed to be ... ?')
+
+            if self.getvisukwargs()['vis']:
+                pass
+            if kwargs['input'].empty:
+                    kwargs = self.virus.get_stats(**kwargs)
+
+            found_bypop = None
+            for w in kwargs['option']:
+                if w.startswith('bypop='):
+                    found_bypop = w
+                    kwargs['which'] = [i+ ' ' +found_bypop for i in kwargs['which']]
+                    break
+            return func(self,**kwargs)
+        return wrapper
+
+    def input_visuwrapper(func):
+        '''
+            Basicaly return one variable for histo and map when several which have been requested ...
+        '''
+        @wraps(func)
+        def inner(self,**kwargs):
+            if not 'get' in func.__name__:
+                z = {**self.getvisukwargs(), **kwargs}
+            if func.__name__ in ['hist','map']:
+                if len(z['which'])>1:
+                    raise CoaError("Histo and map available only for ONE variable ...")
+                else:
+                    z['which'] = z['which'][0]
+                z['input'] = z['input'].loc[z['input'].date==z['input'].date.max()].reset_index(drop=True)
+                z['input'] = z['input'].sort_values(by=kwargs['which'], ascending=False)
+                if func.__name__ == 'map':
+                        z.pop('typeofhist')
+                        z.pop('typeofplot')
+                        z.pop('bins')
+            return func(self,**z)
+        return inner
+
+    @input_wrapper
+    def get(self,**kwargs):
+        """Return covid19 data in specified format output (default, by list)
+        for specified locations ('where' keyword).
+        The used VirusStat is set by the setbase() function but can be
+        changed on the fly ('whom' keyword)
+        Keyword arguments
+        -----------------
+
+        where  --   a single string of location, or list of (mandatory,
+                    no default value)
+        which  --   what sort of data to deliver ( 'death','confirmed',
+                    'recovered' for 'jhu' default VirusStat). See listwhich() function
+                    for full list according to the used VirusStat.
+
+        what   --   which data are computed, either in standard mode
+                    ('standard', default value), or 'daily' (diff with previous day
+                    and 'weekly' (diff with previous week). See
+                    listwhich() for fullist of available
+                    Full list of what keyword with the lwhat() function.
+
+        whom   --   VirusStat specification (overload the setbase()
+                    function). See listwhom() for supported list
+
+        when   --   dates are given under the format dd/mm/yyyy. In the when
+                    option, one can give one date which will be the end of
+                    the data slice. Or one can give two dates separated with
+                    ":", which will define the time cut for the output data
+                    btw those two dates.
+
+        output --   output format returned ( pandas (default), array (numpy.array),
+                    dict or list). See listoutput() function.
+
+        option --   pre-computing option.
+                    * nonneg means that negative daily balance is pushed back
+                    to previousdays in order to have a cumulative function which is
+                    monotonous increasing.
+                    * nofillnan means that nan value won't be filled.
+                    * smooth7 will perform a 7 day window average of data
+                    * sumall will return integrated over locations given via the
+                    where keyword. If using double bracket notation, the sumall
+                    option is applied for each bracketed member of the where arg.
+
+                    By default : no option.
+                    See loption().
+        bypop --    normalize by population (if available for the selected VirusStat).
+                    * by default, 'no' normalization
+                    * can normalize by '100', '1k', '100k' or '1M'
+        """
+        output = kwargs.get('output')
+        pandy = kwargs.get('input')
+
+        self.setnamefunction(self.get)
+        if output == 'pandas':
+            def color_df(val):
+                if val.columns=='date':
+                    return 'blue'
+                elif val.columns=='where':
+                    return 'red'
+                else:
+                    return black
+
+            casted_data = pandy
+            col=list(casted_data.columns)
+            mem='{:,}'.format(casted_data[col].memory_usage(deep=True).sum())
+            info('Memory usage of all columns: ' + mem + ' bytes')
+
+        elif output == 'geopandas':
+            casted_data = pd.merge(pandy, self.virus.getwheregeometrydescription(), on='where')
+            casted_data=gpd.GeoDataFrame(casted_data)
+        elif output == 'dict':
+            casted_data = pandy.to_dict('split')
+        elif output == 'list' or output == 'array':
+            my_list = []
+            for keys, values in pandy.items():
+                vc = [i for i in values]
+                my_list.append(vc)
+            casted_data = my_list
+            if output == 'array':
+                casted_data = np.array(pandy)
+        else:
+            raise CoaError('Unknown output.')
+        self.outcome = casted_data
+        return casted_data
+
+
     def setoptvis(self,**kwargs):
         '''
             define visualization and associated options
@@ -286,7 +516,7 @@ class __front__:
         """
         return self.ltiles
 
-    def listwhich(self,dbname):
+    def listwhich(self,dbname=None):
         """Get which are the available fields for base 'dbname'
         if dbname is omitted current dabatase used (i.e self.db)
         Output is a list of string.
@@ -295,8 +525,11 @@ class __front__:
         """
         if dbname:
             dic = self.meta.getcurrentmetadata(dbname)
-        else:
+
+        elif self.db:
             dic = self.meta.getcurrentmetadata(self.db)
+        else:
+            raise CoaError('listwhich for which database ? I am lost ... are you ?')
         return sorted(self.meta.getcurrentmetadatawhich(dic))
 
     def listwhere(self,clustered = False):
@@ -351,61 +584,33 @@ class __front__:
         """
         return self.lmapoption
 
-    def setwhom(self,base,**kwargs):
-        """Set the covid19 VirusStat used, given as a string.
-        Please see pycoa.listbase() for the available current list.
-
-        By default, the listbase()[0] is the default base used in other
-        functions.
-        """
-        reload = kwargs.get('reload', True)
-        if reload not in [0,1]:
-            raise CoaError('reload must be a boolean ... ')
-        if base not in self.listwhom():
-            raise CoaDbError(base + ' is not a supported VirusStat. '
-                                    'See pycoa.listbase() for the full list.')
-        # Check if the current base is already set to the requested base
-        visu = self.getdisplay()
-        if self.db == base:
-            info(f"The VirusStat '{base}' is already set as the current database")
-            return
-        else:
-            if reload:
-                self.virus, self.allvisu = coco.VirusStat.factory(db_name=base,reload=reload,vis=visu)
-            else:
-                self.virus = coco.VirusStat.readpekl('.cache/'+base+'.pkl')
-                pandy = self.virus.getwheregeometrydescription()
-                self.allvisu = AllVisu(base, pandy)
-                coge.GeoManager('name')
-        self.db = base
-
     def getwhom(self,return_error=True):
         """Return the current base which is used
         """
         return self.db
 
-    def getkeywordinfo(self, which=None):
+    def getwhichinfo(self, which=None):
         """
             Return keyword_definition for the db selected
         """
         if which:
-            if which in self.listwhich():
+            if which in self.listwhich(self.db):
                 print(self.virus.get_parserdb().get_keyword_definition(which))
                 print('Parsed from this url:',self.virus.get_parserdb().get_keyword_url(which))
             else:
-                raise CoaError('This value do not exist please check.'+'Available variable so far in this db ' + str(listwhich()))
+                raise CoaError('This value do not exist please check.'+'Available variable so far in this db ' + str(self.listwhich()))
         else:
             df = self.virus.get_parserdb().get_dbdescription()
             return df
 
-    def getrawdb(self, **kwargs):
+    def getrawdb(self):
         """
             Return the main pandas i.e with all the which values loaded from the VirusStat selected
         """
         col = list(self.virus.get_fulldb().columns)
         mem='{:,}'.format(self.virus.get_fulldb()[col].memory_usage(deep=True).sum())
         info('Memory usage of all columns: ' + mem + ' bytes')
-        df = self.virus.get_fulldb(**kwargs)
+        df = self.virus.get_fulldb()
         return df
 
     def setkwargsvisu(self,**kwargs):
@@ -421,93 +626,6 @@ class __front__:
 
     def getvisukwargs(self,):
         return self._setkwargsvisu
-
-    def input_wrapper(func):
-        '''
-            Main decorator it mainly deals with arg testings
-        '''
-        @wraps(func)
-        def wrapper(self,**kwargs):
-            '''
-                Wrapper input function .
-                Wrap and format the user input argument for covid19 class
-                if argument is missing fill with the default value
-                Transforms 'where', 'which', and 'option' into lists if they are not already.
-                order position of the items in 'option'
-            '''
-            if self.db == '':
-                raise CoaError('Something went wrong ... does a db has been loaded ? (setwhom)')
-            mustbealist = ['where','which','option']
-            kwargs_keystesting(kwargs,self.lchartkargskeys + self.listviskargskeys,' kwargs keys not recognized ...')
-            default = { k:[v[0]] if isinstance(v,list) else v for k,v in self.av.d_batchinput_args.items()}
-
-            dicovisu = {k:kwargs.get(k) for k,v in self.av.d_graphicsinput_args.items()}
-            self.setkwargsvisu(**dicovisu)
-            [kwargs_valuestesting(dicovisu[i],self.av.d_graphicsinput_args[i],'value of '+ i +' not correct')
-                for i in ['typeofhist','typeofplot']]
-
-            for k,v in default.items():
-                if k in kwargs.keys():
-                    if isinstance(kwargs[k],list):
-                        default[k] = kwargs[k]
-                    else:
-                        default[k] = [kwargs[k]]
-            kwargs = default
-
-            for k,v in kwargs.items():
-                if k not in mustbealist:
-                    kwargs[k]=v[0]
-
-            if kwargs['where'][0] == '':
-                kwargs['where'] = list(self.virus.get_fulldb()['where'].unique())
-
-            if not all_or_none_lists(kwargs['where']):
-                raise CoaError('For coherence all the element in where must have the same type list or not list ...')
-
-            if 'sumall' in kwargs['option']:
-                kwargs['option'].remove('sumall')
-                kwargs['option'].append('sumall')
-
-            if 'fillnan' not in kwargs['option']:
-                kwargs['option'].insert(0,'fillnan')
-
-            if 'nofillnan' in kwargs['option']:
-                kwargs['option'].remove('fillnan')
-                kwargs['option'].insert(0,'nofillnan')
-
-            if 'sumall' in kwargs['option'] and len(kwargs['which'])>1:
-                raise CoaError('sumall option incompatible with multile values ... remove one please')
-
-            if  func.__name__ == 'get':
-                if dicovisu['typeofplot']:
-                    raise CoaError("'typeofplot' not compatible with get ...")
-                if  dicovisu['typeofhist']:
-                    raise CoaError("'typeofhist' not compatible with get ...")
-            elif func.__name__ == 'plot':
-                if dicovisu['typeofhist']:
-                    raise CoaError("'typeofhist' option not compatible with plot ...")
-            elif func.__name__ in ['hist','map']:
-                if dicovisu['typeofplot']:
-                    raise CoaError("'typeofplot' option not compatible with " + func.__name__ )
-            elif func.__name__ in ['save']:
-                pass
-            else:
-                raise CoaError(" What does " + func.__name__ + ' is supposed to be ... ?')
-
-            if self.getvisukwargs()['vis']:
-                pass
-            if kwargs['input'].empty:
-                    kwargs = self.virus.get_stats(**kwargs)
-
-            found_bypop = None
-            for w in kwargs['option']:
-                if w.startswith('bypop='):
-                    found_bypop = w
-                    kwargs['which'] = [i+ ' ' +found_bypop for i in kwargs['which']]
-                    break
-
-            return func(self,**kwargs)
-        return wrapper
 
     def setvisu(self,**kwargs):
         '''
@@ -526,119 +644,6 @@ class __front__:
             kwargs['vis'] = vis
             CoaInfo(f"The visualization has been set correctly to: {vis}")
         self.setkwargsvisu(**kwargs)
-
-    @input_wrapper
-    def get(self,**kwargs):
-        """Return covid19 data in specified format output (default, by list)
-        for specified locations ('where' keyword).
-        The used VirusStat is set by the setbase() function but can be
-        changed on the fly ('whom' keyword)
-        Keyword arguments
-        -----------------
-
-        where  --   a single string of location, or list of (mandatory,
-                    no default value)
-        which  --   what sort of data to deliver ( 'death','confirmed',
-                    'recovered' for 'jhu' default VirusStat). See listwhich() function
-                    for full list according to the used VirusStat.
-
-        what   --   which data are computed, either in standard mode
-                    ('standard', default value), or 'daily' (diff with previous day
-                    and 'weekly' (diff with previous week). See
-                    listwhich() for fullist of available
-                    Full list of what keyword with the lwhat() function.
-
-        whom   --   VirusStat specification (overload the setbase()
-                    function). See listwhom() for supported list
-
-        when   --   dates are given under the format dd/mm/yyyy. In the when
-                    option, one can give one date which will be the end of
-                    the data slice. Or one can give two dates separated with
-                    ":", which will define the time cut for the output data
-                    btw those two dates.
-
-        output --   output format returned ( pandas (default), array (numpy.array),
-                    dict or list). See listoutput() function.
-
-        option --   pre-computing option.
-                    * nonneg means that negative daily balance is pushed back
-                    to previousdays in order to have a cumulative function which is
-                    monotonous increasing.
-                    * nofillnan means that nan value won't be filled.
-                    * smooth7 will perform a 7 day window average of data
-                    * sumall will return integrated over locations given via the
-                    where keyword. If using double bracket notation, the sumall
-                    option is applied for each bracketed member of the where arg.
-
-                    By default : no option.
-                    See loption().
-        bypop --    normalize by population (if available for the selected VirusStat).
-                    * by default, 'no' normalization
-                    * can normalize by '100', '1k', '100k' or '1M'
-        """
-        output = kwargs.get('output')
-        pandy = kwargs.get('input')
-
-        self.setnamefunction(self.get)
-        if output == 'pandas':
-            def color_df(val):
-                if val.columns=='date':
-                    return 'blue'
-                elif val.columns=='where':
-                    return 'red'
-                else:
-                    return black
-
-            casted_data = pandy
-            col=list(casted_data.columns)
-            mem='{:,}'.format(casted_data[col].memory_usage(deep=True).sum())
-            info('Memory usage of all columns: ' + mem + ' bytes')
-
-        elif output == 'geopandas':
-            casted_data = pd.merge(pandy, self.virus.getwheregeometrydescription(), on='where')
-            casted_data=gpd.GeoDataFrame(casted_data)
-        elif output == 'dict':
-            casted_data = pandy.to_dict('split')
-        elif output == 'list' or output == 'array':
-            my_list = []
-            for keys, values in pandy.items():
-                vc = [i for i in values]
-                my_list.append(vc)
-            casted_data = my_list
-            if output == 'array':
-                casted_data = np.array(pandy)
-        else:
-            raise CoaError('Unknown output.')
-        self.outcome = casted_data
-        return casted_data
-
-    def saveoutput(self,**kwargs):
-        '''
-            Export pycoa. pandas as an output file selected by output argument
-            'pandas': pandas to save
-            'saveformat': excel (default) or csv
-            'savename': None (default pycoa.ut+ '.xlsx/.csv')
-        '''
-        global _db
-        kwargs_keystesting(kwargs, ['pandas','saveformat','savename'], 'Bad args used in the pycoa.saveoutput function.')
-        pandy = kwargs.get('pandas', pd.DataFrame())
-        saveformat = kwargs.get('saveformat', 'excel')
-        savename = kwargs.get('savename', '')
-        if pandy.empty:
-            raise CoaError('Pandas to save is mandatory there is not default !')
-        else:
-            _db.saveoutput(pandas=pandy,saveformat=saveformat,savename=savename)
-
-    def merger(self,**kwargs):
-        '''
-        Merge two or more pycoa.pandas from get_stats operation
-        'src.andas': list (min 2D) of pandas from stats
-        'whichcol': list variable associate to the src.andas list to be retrieve
-        '''
-        global _db
-        kwargs_keystesting(kwargs,['coapandas'], 'Bad args used in the pycoa.merger function.')
-        listpandy = kwargs.get('coapandas',[])
-        return _db.merger(coapandas = listpandy)
 
     def decomap(func):
         @wraps(func)
@@ -680,24 +685,6 @@ class __front__:
                     input['where'] = input['where'].apply(lambda x: x.title())
                     kwargs['input'] = input
             return func(self,**kwargs)
-        return inner
-
-    def input_visuwrapper(func):
-        '''
-            Basicaly return one variable for histo and map when several which have been requested ...
-        '''
-        @wraps(func)
-        def inner(self,**kwargs):
-            if not 'get' in func.__name__:
-                z = {**self.getvisukwargs(), **kwargs}
-            if func.__name__ in ['hist','map']:
-                if len(z['which'])>1:
-                    raise CoaError("Histo and map available only for ONE variable ...")
-                else:
-                    z['which'] = z['which'][0]
-                z['input'] = z['input'].loc[z['input'].date==z['input'].date.max()].reset_index(drop=True)
-                z['input'] = z['input'].sort_values(by=kwargs['which'], ascending=False)
-            return func(self,**z)
         return inner
 
     @input_wrapper
@@ -882,10 +869,36 @@ class __front__:
         else:
             return fig
 
+    def saveoutput(self,**kwargs):
+        '''
+            Export pycoa. pandas as an output file selected by output argument
+            'pandas': pandas to save
+            'saveformat': excel (default) or csv
+            'savename': None (default pycoa.ut+ '.xlsx/.csv')
+        '''
+        global _db
+        kwargs_keystesting(kwargs, ['pandas','saveformat','savename'], 'Bad args used in the pycoa.saveoutput function.')
+        pandy = kwargs.get('pandas', pd.DataFrame())
+        saveformat = kwargs.get('saveformat', 'excel')
+        savename = kwargs.get('savename', '')
+        if pandy.empty:
+            raise CoaError('Pandas to save is mandatory there is not default !')
+        else:
+            _db.saveoutput(pandas=pandy,saveformat=saveformat,savename=savename)
+    def merger(self,**kwargs):
+        '''
+        Merge two or more pycoa.pandas from get_stats operation
+        'src.andas': list (min 2D) of pandas from stats
+        'whichcol': list variable associate to the src.andas list to be retrieve
+        '''
+        global _db
+        kwargs_keystesting(kwargs,['coapandas'], 'Bad args used in the pycoa.merger function.')
+        listpandy = kwargs.get('coapandas',[])
+        return _db.merger(coapandas = listpandy)
     def savefig(self,name):
         if  self.getnamefunction() != 'get':
             if self.getdisplay() == 'bokeh':
-                bokeh_visu.bokeh_savefig(self.outcome,name)
+                CoaError("Bokeh savefig not yet implemented")
             else:
                 self.outcome.savefig(name)
         else:

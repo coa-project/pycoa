@@ -45,11 +45,18 @@ from functools import wraps
 import matplotlib.dates as mdates
 from src.dbparser import MetaInfo
 
+from IPython import get_ipython
+
+
 class matplotlib_visu:
     '''
         MATPLOTLIB chart drawing methods ...
     '''
     def __init__(self,):
+        env = get_ipython().__class__.__name__
+        if env != 'ZMQInteractiveShell':
+            import matplotlib
+            matplotlib.use('Agg')
         pass
 
     def decomatplotlib(func):
@@ -163,7 +170,7 @@ class matplotlib_visu:
         fig = kwargs.get('fig')
         bar = ax.barh(input['where'], input[which],color=cmap.colors)
         ax.set_title(title)
-        return fig
+        return plt
 
     @decomatplotlib
     def matplotlib_histo(self,**kwargs):

@@ -263,11 +263,10 @@ class VirusStat(object):
                     wherejoined  = ',' .join(flat_list(w))
                     code = temp.loc[temp.date==temp.date.max()]['code']
                     codejoined  = ',' .join(code)
-                    geometryjoined = temp.loc[temp.date==temp.date.max()]["geometry"].unary_union
-
+                    geometryjoined = temp.loc[temp.date == temp.date.max()]["geometry"].unary_union
                     temp = temp.groupby(['date'])[which].sum().reset_index()
-                    temp['where'] =  len(temp)*[wherejoined]
-                    temp['code'] =  len(temp)*[codejoined]
+                    temp['where'] = len(temp)*[wherejoined]
+                    temp['code'] = len(temp)*[codejoined]
                     temp['geometry'] = len(temp)*[geometryjoined]
 
                     if wpd.empty:
@@ -331,7 +330,6 @@ class VirusStat(object):
        #print("HERE 3")
        if when:
            when_beg, when_end = extract_dates(when)
-           print("HERE",when_beg,type(when_beg),type(input.date[0].date()))
            if when_beg < when_beg_data:
                 when_beg = when_beg_data
                 CoaWarning("No available data before "+str(when_beg_data) + ' - ' + str(when_beg) + ' is considered')
@@ -394,7 +392,8 @@ class VirusStat(object):
        input.loc[:,'weekly'] = input['weekly'].bfill()
 
        input = input.reset_index(drop=True)
-       kwargs['input'] = input
+       if 'geometry' in input.columns:
+          kwargs['input'] = gpd.GeoDataFrame(input, geometry=input.geometry, crs='EPSG:4326').reset_index(drop=True)
        return kwargs
 
    def normbypop(self, pandy, val2norm ,bypop):

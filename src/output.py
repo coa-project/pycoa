@@ -61,7 +61,7 @@ class InputOption():
 
         self.d_batchinput_args  = {
                                 'where':[''],\
-                                'option':['fillnan','nofillnan','nonneg','smooth7','sumall',
+                                'option':['nonneg','smooth7','sumall',
                                 'bypop=0','bypop=100', 'bypop=1k', 'bypop=100k','bypop=1M'],\
                                 'which':[''],\
                                 'what':['current','daily','weekly'],\
@@ -262,6 +262,7 @@ class AllVisu:
         '''
         typeofhist = kwargs.get('typeofhist')
         vis = kwargs.get('vis')
+
         if vis == 'matplotlib':
             if typeofhist == 'bylocation':
                 fig = matplotlib_visu().matplotlib_horizontal_histo(**kwargs)

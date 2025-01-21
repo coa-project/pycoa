@@ -242,7 +242,6 @@ class __front__:
         def inner(self,**kwargs):
             if not 'get' in func.__name__:
                 z = {**self.getvisukwargs(), **kwargs}
-            print(len(z['which']),z['which'])
             if func.__name__ in ['hist','map']:
                 if isinstance(z['which'],list) and len(z['which'])>1:
                     raise CoaError("Histo and map available only for ONE variable ...")

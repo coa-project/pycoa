@@ -255,30 +255,21 @@ class VirusStat(object):
                 else:
                     w_s = self.subregions_deployed(w,self.granularity)
                 temp = input.loc[input['where'].str.upper().isin([x.upper() for x in w_s])].reset_index(drop=True)
-
                 temp = gpd.GeoDataFrame(temp, geometry=temp.geometry, crs="EPSG:4326").reset_index(drop=True)
-                wpd = pd.DataFrame()
+                wherejoined  = ',' .join(flat_list(w))
+                code = temp.loc[temp.date==temp.date.max()]['code']
+                codejoined  = ',' .join(code)
+                geometryjoined = temp.loc[temp.date == temp.date.max()]["geometry"].unary_union
+                temp = temp.groupby(['date'])[which].sum().reset_index()
+                temp['where'] = len(temp)*[wherejoined]
+                temp['code'] = len(temp)*[codejoined]
+                temp['geometry'] = len(temp)*[geometryjoined]
 
-                for wi in which:
-                    wherejoined  = ',' .join(flat_list(w))
-                    code = temp.loc[temp.date==temp.date.max()]['code']
-                    codejoined  = ',' .join(code)
-                    geometryjoined = temp.loc[temp.date == temp.date.max()]["geometry"].unary_union
-                    temp = temp.groupby(['date'])[which].sum().reset_index()
-                    temp['where'] = len(temp)*[wherejoined]
-                    temp['code'] = len(temp)*[codejoined]
-                    temp['geometry'] = len(temp)*[geometryjoined]
-
-                    if wpd.empty:
-                        wpd = temp
-                    else:
-                        wpd = pd.concat([wpd,temp])
-
-                wpd=wpd.loc[~wpd['where'].isin(w)]
                 if newpd.empty:
                     newpd = temp
                 else:
                     newpd = pd.concat([newpd,temp])
+
         else:
             where = flat_list(where)
             if self.db_world:
@@ -297,6 +288,7 @@ class VirusStat(object):
              - nonneg redistribute value in order to remove negative value
 
        '''
+
        defaultargs = InputOption().d_batchinput_args
        option = kwargs['option']
        kwargs_valuestesting(option,defaultargs['option'],'option error ... ')
@@ -304,10 +296,12 @@ class VirusStat(object):
        kwargs_valuestesting(what,defaultargs['what'],'what error ...')
        output = kwargs['output']
        kwargs_valuestesting(output,defaultargs['output'],'output error ...')
+
        which = kwargs.get('which',[self.currentdata.get_available_keywords()[0]])
        if which == ['']:
            which = [self.currentdata.get_available_keywords()[0]]
            kwargs['which'] = which
+
        kwargs_valuestesting(which,self.currentdata.get_available_keywords(),'which error ...')
        when = kwargs.get('when')
 
@@ -323,11 +317,10 @@ class VirusStat(object):
        where = kwargs.get('where')
 
        kwargs['input'] = input
-
        input['date'] = pd.to_datetime(input['date'], errors='coerce')
        when_beg_data, when_end_data = input.date.min(), input.date.max()
        when_beg_data, when_end_data = when_beg_data.date(), when_end_data.date()
-       #print("HERE 3")
+
        if when:
            when_beg, when_end = extract_dates(when)
            if when_beg < when_beg_data:
@@ -341,20 +334,16 @@ class VirusStat(object):
            when_beg_data,when_end_data = when_beg, when_end
 
        kwargs['when'] = [str(when_beg_data)+':'+str(when_end_data)]
-
-       input = self.whereclustered(**kwargs)
        flatwhere = flat_list(where)
-
        for w in which:
+           kwargs['input'].loc[:,w] = kwargs['input'].groupby('where')[w].bfill()
+           kwargs['input'].loc[:,w] = kwargs['input'].groupby('where')[w].ffill()
+           kwargs['which'] = w
+           kwargs['input'] = self.whereclustered(**kwargs)
+           wconcatpd = pd.DataFrame()
            for o in option:
-               wconcatpd = pd.DataFrame()
-               temppd = input
-               if o == 'fillnan':
-                    temppd.loc[:,w] = temppd.groupby('where')[w].bfill()
-                    temppd.loc[:,w] = temppd.groupby('where')[w].ffill()
-               elif o == 'nofillnan':
-                    fillnan = False
-               elif o == 'nonneg':
+               temppd = kwargs['input']
+               if o == 'nonneg':
                    if w.startswith('cur_'):
                        raise CoaWarning('The option nonneg cannot be used with instantaneous data, such as : ' + w)
                    concatpd = pd.DataFrame()
@@ -385,7 +374,9 @@ class VirusStat(object):
                else:
                     wconcatpd = pd.concat([wconcatpd,temppd])
 
-       input = wconcatpd
+       input = kwargs['input']                
+       if not wconcatpd.empty:
+           input = wconcatpd
        input.loc[:,'daily'] = input.groupby('where')[w].diff()
        input.loc[:,'weekly'] = input.groupby('where')[w].diff(7)
        input.loc[:,'daily'] = input['daily'].bfill()

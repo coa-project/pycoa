@@ -193,13 +193,6 @@ class __front__:
                 kwargs['option'].remove('sumall')
                 kwargs['option'].append('sumall')
 
-            if 'fillnan' not in kwargs['option']:
-                kwargs['option'].insert(0,'fillnan')
-
-            if 'nofillnan' in kwargs['option']:
-                kwargs['option'].remove('fillnan')
-                kwargs['option'].insert(0,'nofillnan')
-
             if 'sumall' in kwargs['option'] and len(kwargs['which'])>1:
                 raise CoaError('sumall option incompatible with multile values ... remove one please')
 
@@ -249,11 +242,12 @@ class __front__:
         def inner(self,**kwargs):
             if not 'get' in func.__name__:
                 z = {**self.getvisukwargs(), **kwargs}
+            print(len(z['which']),z['which'])
             if func.__name__ in ['hist','map']:
-                if len(z['which'])>1:
+                if isinstance(z['which'],list) and len(z['which'])>1:
                     raise CoaError("Histo and map available only for ONE variable ...")
-                else:
-                    z['which'] = z['which'][0]
+                #else:
+                #    z['which'] = z['which'][0]
                 z['input'] = z['input'].loc[z['input'].date==z['input'].date.max()].reset_index(drop=True)
                 z['input'] = z['input'].sort_values(by=kwargs['which'], ascending=False)
                 if func.__name__ == 'map':
@@ -300,7 +294,6 @@ class __front__:
                     * nonneg means that negative daily balance is pushed back
                     to previousdays in order to have a cumulative function which is
                     monotonous increasing.
-                    * nofillnan means that nan value won't be filled.
                     * smooth7 will perform a 7 day window average of data
                     * sumall will return integrated over locations given via the
                     where keyword. If using double bracket notation, the sumall
@@ -895,6 +888,7 @@ class __front__:
         kwargs_keystesting(kwargs,['coapandas'], 'Bad args used in the pycoa.merger function.')
         listpandy = kwargs.get('coapandas',[])
         return _db.merger(coapandas = listpandy)
+
     def savefig(self,name):
         if  self.getnamefunction() != 'get':
             if self.getdisplay() == 'bokeh':

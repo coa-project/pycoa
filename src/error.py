@@ -54,8 +54,8 @@ def blinking_centered_text(typemsg,message,blinking=0,text_color="37", bg_color=
         sys.stdout.write(f'{ansi_start}{typemsg}{ansi_reset}\n')
         sys.stdout.write(f'{ansi_start}{message}{ansi_reset}\n')
     else:
-        print(f'{typemsg}\n')
-        print(f'{message}\n')
+        print(f'{ansi_start}{typemsg}{ansi_reset}\n')
+        print(f'{ansi_start}{message}{ansi_reset}\n')
 
 class CoaInfo(Exception):
     """Base class for exceptions in PYVOA."""

@@ -139,11 +139,11 @@ class VirusStat(object):
            with open(filepkl, 'wb') as f:
                pickle.dump(datab,f)
 
-       if vis:
-           datab.setvisu(db_name,datab.getwheregeometrydescription())
-           return datab, datab.getvisu()
-       else:
-           return datab, None
+       #if vis:
+       datab.setvisu(db_name,datab.getwheregeometrydescription())
+       return datab, datab.getvisu()
+       #else:
+       #        return datab, None
 
    def setvisu(self,db_name,wheregeometrydescription):
        ''' Set the Display '''
@@ -286,7 +286,6 @@ class VirusStat(object):
             options:
              - test all arguments an their values
              - nonneg redistribute value in order to remove negative value
-
        '''
 
        defaultargs = InputOption().d_batchinput_args
@@ -374,7 +373,7 @@ class VirusStat(object):
                else:
                     wconcatpd = pd.concat([wconcatpd,temppd])
 
-       input = kwargs['input']                
+       input = kwargs['input']
        if not wconcatpd.empty:
            input = wconcatpd
        input.loc[:,'daily'] = input.groupby('where')[w].diff()
@@ -385,6 +384,21 @@ class VirusStat(object):
        input = input.reset_index(drop=True)
        if 'geometry' in input.columns:
           kwargs['input'] = gpd.GeoDataFrame(input, geometry=input.geometry, crs='EPSG:4326').reset_index(drop=True)
+       if not isinstance(kwargs['which'],list):
+           kwargs['which'] = [kwargs['which']]
+       where_ordered_bylastvalues = list(
+            kwargs['input']
+            .groupby('where')
+            .tail(1)
+            .sort_values(by=kwargs['which'][0], ascending=False)['where']
+            .unique()
+            )
+       kwargs['input']['where'] = pd.Categorical(
+            kwargs['input']['where'],
+            categories=where_ordered_bylastvalues,
+            ordered=True
+            )
+       kwargs['input'] = kwargs['input'].sort_values(by=['where','date'])        
        return kwargs
 
    def normbypop(self, pandy, val2norm ,bypop):

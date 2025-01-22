@@ -43,7 +43,6 @@ import bisect
 from functools import wraps
 
 from src.dbparser import MetaInfo
-
 from bokeh.models import (
 ColumnDataSource,
 TableColumn,
@@ -67,7 +66,10 @@ Range1d,
 DatetimeTickFormatter,
 Legend,
 LegendItem,
-Text
+Text,
+)
+from bokeh.models import (
+    Toggle
 )
 from bokeh.models.layouts import TabPanel, Tabs
 from bokeh.models import Panel
@@ -101,28 +103,31 @@ cumsum
 
 Width_Height_Default = [680, 200]
 Max_Countries_Default = 24
-
-
+import src.output
 class bokeh_visu:
-    def __init__(self,):
+    def __init__(self,d_graphicsinput_args = None):
         self.pycoageopandas = False
         self.lcolors = Category20[20]
         self.scolors = Category10[5]
-        self.HoverTool= HoverTool
-        self.TabPanel = TabPanel
-        self.DatetimeTickFormatter = DatetimeTickFormatter
-        self.BasicTicker = BasicTicker
-        self.GeoJSONDataSource = GeoJSONDataSource
-        self.Tabs = Tabs
-        self.LinearColorMapper = LinearColorMapper
-        self.ColorBar = ColorBar
-        self.Viridis256 = Viridis256
+        #self.HoverTool= HoverTool
+        #self.TabPanel = TabPanel
+        #self.DatetimeTickFormatter = DatetimeTickFormatter
+        #self.BasicTicker = BasicTicker
+        #self.GeoJSONDataSource = GeoJSONDataSource
+        #self.Tabs = Tabs
+        #self.LinearColorMapper = LinearColorMapper
+        #self.ColorBar = ColorBar
+        #self.Viridis256 = Viridis256
+        self.d_graphicsinput_args = d_graphicsinput_args
+        self.graph_height=400
+        self.graph_width=400
 
+        #self.ColumnDataSource = ColumnDataSource
         if type(input)==gpd.geodataframe.GeoDataFrame:
             self.pycoageopandas = True
 
             '''
-            kwargs['GeoJSONDataSource'] : GeoJSONDataSource,\
+            kwargs['GeoJSONDataSource'] = GeoJSONDataSource,\
             kwargs['Viridis256'] = Viridis256,\
             kwargs['LinearColorMapper'] = LinearColorMapper,\
             kwargs['ColorBar'] = ColorBar,\
@@ -141,9 +146,7 @@ class bokeh_visu:
             kwargs['BasicTickFormatter'] = BasicTickFormatter,\
             kwargs['Tabs'] = Tabs,\
             kwargs['Range1d'] = Range1d,\
-            kwargs['ColumnDataSource'] = ColumnDataSource,\
             kwargs['LabelSet'] = LabelSet,\
-
             '''
 
     @staticmethod
@@ -241,8 +244,8 @@ class bokeh_visu:
         """
         '''
         copyright = kwargs.get('text')
-        plot_width = kwargs.get('plot_width',Width_Height_Default[0])
-        plot_height = kwargs.get('plot_height',Width_Height_Default[1])
+        graph_width = kwargs.get('graph_width',Width_Height_Default[0])
+        graph_height = kwargs.get('graph_height',Width_Height_Default[1])
         Label = kwargs.get('Label')
         figure = kwargs.get('figure')
         Title = kwargs.get('Title')
@@ -250,7 +253,7 @@ class bokeh_visu:
         min_height = kwargs.get('min_height')
 
 
-        citation = Label(x=0.65 * plot_width - len(copyright), y=0.01 *plot_height,
+        citation = Label(x=0.65 * graph_width - len(copyright), y=0.01 *graph_height,
                                           x_units='screen', y_units='screen',
                                           text_font_size='1.5vh', background_fill_color='white',
                                           background_fill_alpha=.75,
@@ -260,7 +263,7 @@ class bokeh_visu:
         x_axis_type = kwargs.get('x_axis_type','linear')
         fig = figure(**kwargs)
             #y_axis_type = y_axis_type,x_axis_type = x_axis_type,\
-            #min_width = plot_width, min_height = plot_height,
+            #min_width = graph_width, min_height = graph_height,
             #tools=['save', 'box_zoom,reset'],
             #toolbar_location="right", sizing_mode="stretch_width")
         #fig.add_layout(citation)
@@ -337,7 +340,7 @@ class bokeh_visu:
         - which = if None take second element. It should be a list dim=2. Moreover the 2 variables must be present
         in the DataFrame considered.
         - plot_heigh = Width_Height_Default[1]
-        - plot_width = Width_Height_Default[0]
+        - graph_width = Width_Height_Default[0]
         - title = None
         - copyright = default
         - mode = mouse
@@ -402,7 +405,7 @@ class bokeh_visu:
         |location|date|Variable desired|daily|cumul|weekly|code|clustername|rolloverdisplay|
         - which = if None take second element could be a list
         - plot_heigh= Width_Height_Default[1]
-        - plot_width = Width_Height_Default[0]
+        - graph_width = Width_Height_Default[0]
         - title = None
         - copyright = default
         - mode = mouse
@@ -434,7 +437,7 @@ class bokeh_visu:
             maxou=-1000
             lcolors = iter(self.lcolors)
             line_style = ['solid', 'dashed', 'dotted', 'dotdash','dashdot']
-            maxou, minou=0,0
+            maxou, minou=0, 0
             tooltips=[]
             for val in which:
                 for loc in list(input['where'].unique()):
@@ -448,8 +451,8 @@ class bokeh_visu:
                                      legend_label = leg,
                                      hover_line_width = 4, name = val, line_dash=line_style[i%4])
                     r_list.append(r)
-                    maxou=max(maxou,np.nanmax(inputwhere[val].values))
-                    minou=max(minou,np.nanmin(inputwhere[val].values))
+                    maxou=max(maxou,np.nanmax(inputwhere[val]))
+                    minou=max(minou,np.nanmin(inputwhere[val]))
 
                     if minou <0.01:
                         tooltips.append([('where', '@where'), ('date', '@date{%F}'), (r.name, '@$name')])
@@ -462,7 +465,7 @@ class bokeh_visu:
                 label = r.name
                 tt = tooltips[i]
                 formatters = {'where': 'printf', '@date': 'datetime', '@name': 'printf'}
-                hover=self.HoverTool(tooltips = tt, formatters = formatters, point_policy = "snap_to_data", mode = mode, renderers=[r])  # ,PanTool())
+                hover=HoverTool(tooltips = tt, formatters = formatters, point_policy = "snap_to_data", mode = mode, renderers=[r])  # ,PanTool())
                 bokeh_figure.add_tools(hover)
 
                 if guideline:
@@ -474,7 +477,7 @@ class bokeh_visu:
                     bokeh_figure.yaxis.formatter = BasicTickFormatter(use_scientific=False)
 
             bokeh_figure.legend.label_text_font_size = "12px"
-            panel = self.TabPanel(child=bokeh_figure, title = axis_type)
+            panel = TabPanel(child=bokeh_figure, title = axis_type)
             panels.append(panel)
             bokeh_figure.legend.background_fill_alpha = 0.6
 
@@ -484,12 +487,12 @@ class bokeh_visu:
             if len(which) > 1 and len(which)*len(input['where'].unique())>16:
                 CoaWarning('To much labels to be displayed ...')
                 bokeh_figure.legend.visible=False
-            bokeh_figure.xaxis.formatter = self.DatetimeTickFormatter(
+            bokeh_figure.xaxis.formatter = DatetimeTickFormatter(
                 days = "%d/%m/%y", months = "%d/%m/%y", years = "%b %Y")
             bokeh_visu().bokeh_legend(bokeh_figure)
             listfigs.append(bokeh_figure)
         self.set_listfigures(listfigs)
-        tabs = self.Tabs(tabs = panels)
+        tabs = Tabs(tabs = panels)
         return tabs
 
     ''' SPIRAL PLOT '''
@@ -580,7 +583,7 @@ class bokeh_visu:
         |location|date|Variable desired|daily|cumul|weekly|code|clustername|rolloverdisplay|
         - which = if None take second element could be a list
         - plot_heigh= Width_Height_Default[1]
-        - plot_width = Width_Height_Default[0]
+        - graph_width = Width_Height_Default[0]
         - title = None
         - copyright = default
         - mode = mouse
@@ -675,7 +678,7 @@ class bokeh_visu:
         |location|date|Variable desired|daily|cumul|weekly|code|clustername|rolloverdisplay|
         - which = if None take second element could be a list
         - plot_heigh= Width_Height_Default[1]
-        - plot_width = Width_Height_Default[0]
+        - graph_width = Width_Height_Default[0]
         - title = None
         - copyright = default
         - mode = mouse
@@ -779,7 +782,7 @@ class bokeh_visu:
         return tabs
 
     ''' VERTICAL HISTO '''
-    @importbokeh
+    #@importbokeh
     def bokeh_histo(self, **kwargs):
         '''
             -----------------
@@ -791,7 +794,7 @@ class bokeh_visu:
             |location|date|Variable desired|daily|cumul|weekly|code|clustername|rolloverdisplay|
             - which = if None take second element could be a list
             - plot_heigh= Width_Height_Default[1]
-            - plot_width = Width_Height_Default[0]
+            - graph_width = Width_Height_Default[0]
             - title = None
             - copyright = default
             - when : default min and max according to the inpude DataFrame.
@@ -801,17 +804,17 @@ class bokeh_visu:
                      if [dd/mm/yyyy:] up to max date
         '''
         which=kwargs.get('which')
-        inputed = kwargs.get('inputed')
-        input = inputed.rename(columns = {'cases': which})
-        bins = kwargs.get('bins', InputOption().d_graphicsinput_args['bins'])
+        input = kwargs.get('input')
+        input = input.rename(columns = {'cases': which})
+        bins = kwargs.get('bins', self.d_graphicsinput_args['bins'])
         HoverTool = kwargs.get('HoverTool')
         PrintfTickFormatter = kwargs.get('PrintfTickFormatter')
         Range1d = kwargs.get('Range1d')
         ColumnDataSource = kwargs.get('ColumnDataSource')
         TabPanel = kwargs.get('TabPanel')
         Tabs = kwargs.get('Tabs')
-        min_val = inputed[which].min()
-        max_val =  inputed[which].max()
+        min_val = input[which].min()
+        max_val =  input[which].max()
 
         if bins:
             bins = bins
@@ -826,11 +829,11 @@ class bokeh_visu:
         interval = [ min_val + i*delta for i in range(bins+1)]
 
         contributors = {  i : [] for i in range(bins+1)}
-        for i in range(len(inputed)):
-            rank = bisect.bisect_left(interval, inputed.iloc[i][which])
+        for i in range(len(input)):
+            rank = bisect.bisect_left(interval, input.iloc[i][which])
             if rank == bins+1:
                 rank = bins
-            contributors[rank].append(inputed.iloc[i]['where'])
+            contributors[rank].append(input.iloc[i]['where'])
 
         lcolors = iter(self.lcolors)
 
@@ -896,7 +899,7 @@ class bokeh_visu:
         return tabs
 
     ''' VERTICAL HISTO '''
-    @importbokeh
+    #@importbokeh
     def bokeh_horizonhisto(self, **kwargs):
         '''
             -----------------
@@ -908,7 +911,7 @@ class bokeh_visu:
             |location|date|Variable desired|daily|cumul|weekly|code|clustername|rolloverdisplay|
             - which = if None take second element could be a list
             - plot_heigh= Width_Height_Default[1]
-            - plot_width = Width_Height_Default[0]
+            - graph_width = Width_Height_Default[0]
             - title = None
             - copyright = default
             - mode = mouse
@@ -921,49 +924,49 @@ class bokeh_visu:
                          if [dd/mm/yyyy:] up to max date
         '''
 
-        ColumnDataSource = kwargs.get('ColumnDataSource')
-        TabPanel = kwargs.get('TabPanel')
-        Range1d = kwargs.get('Range1d')
-        NumeralTickFormatter = kwargs.get('NumeralTickFormatter')
-        LabelSet = kwargs.get('LabelSet')
-        Tabs = kwargs.get('Tabs')
+        #ColumnDataSource = kwargs.get('ColumnDataSource')
+        #TabPanel = kwargs.get('TabPanel')
+        #Range1d = kwargs.get('Range1d')
+        #NumeralTickFormatter = kwargs.get('NumeralTickFormatter')
+        #LabelSet = kwargs.get('LabelSet')
+        #Tabs = kwargs.get('Tabs')
 
-        dateslider=kwargs.get('dateslider')
-        toggl=kwargs.get('toggl')
-        inputed = kwargs.get('inputed')
-        maplabel = kwargs.get('maplabel', InputOption().d_graphicsinput_args['maplabel'])
+        #dateslider=kwargs.get('dateslider')
+        #toggl=kwargs.get('toggl')
+        input = kwargs.get('input')
+        which = kwargs.get('which')
+        mapoption = kwargs.get('mapoption', self.d_graphicsinput_args['mapoption'])
 
+        input['left'] = input[which]
+        input['right'] = input[which]
+        input['left'] = input['left'].apply(lambda x: 0 if x > 0 else x)
+        input['right'] = input['right'].apply(lambda x: 0 if x < 0 else x)
 
-        inputed['left'] = inputed['cases']
-        inputed['right'] = inputed['cases']
-        inputed['left'] = inputed['left'].apply(lambda x: 0 if x > 0 else x)
-        inputed['right'] = inputed['right'].apply(lambda x: 0 if x < 0 else x)
+        n = len(input.index)
+        ymax = self.graph_height
 
-        n = len(inputed.index)
-        ymax = InputOption().d_graphicsinput_args['plot_height']
+        input['top'] = [ymax*(n-i)/n + 0.5*ymax/n   for i in range(n)]
+        input['bottom'] = [ymax*(n-i)/n - 0.5*ymax/n for i in range(n)]
+        input['horihistotexty'] = input['bottom'] + 0.5*ymax/n
+        input['horihistotextx'] = input['right']
 
-        inputed['top'] = [ymax*(n-i)/n + 0.5*ymax/n   for i in range(n)]
-        inputed['bottom'] = [ymax*(n-i)/n - 0.5*ymax/n for i in range(n)]
-        inputed['horihistotexty'] = inputed['bottom'] + 0.5*ymax/n
-        inputed['horihistotextx'] = inputed['right']
-
-        if 'label%' in maplabel:
-            inputed['right'] = inputed['right'].apply(lambda x: 100.*x)
-            inputed['horihistotextx'] = inputed['right']
-            inputed['horihistotext'] = [str(round(i))+'%' for i in inputed['right']]
-        if 'textinteger' in maplabel:
-            inputed['horihistotext'] = inputed['right'].astype(float).astype(int).astype(str)
+        if 'label%' in mapoption:
+            input['right'] = input['right'].apply(lambda x: 100.*x)
+            input['horihistotextx'] = input['right']
+            input['horihistotext'] = [str(round(i))+'%' for i in input['right']]
+        if 'textinteger' in mapoption:
+            input['horihistotext'] = input['right'].astype(float).astype(int).astype(str)
         else:
-            inputed['horihistotext'] = [ '{:.3g}'.format(float(i)) if float(i)>1.e4 or float(i)<0.01 else round(float(i),2) for i in inputed['right'] ]
-            inputed['horihistotext'] = [str(i) for i in inputed['horihistotext']]
+            input['horihistotext'] = [ '{:.3g}'.format(float(i)) if float(i)>1.e4 or float(i)<0.01 else round(float(i),2) for i in input['right'] ]
+            input['horihistotext'] = [str(i) for i in input['horihistotext']]
 
         lcolors = iter(self.lcolors)
         color = next(lcolors)
-        inputed['color'] = [next(lcolors) for i in range(len(inputed))]
-        srcfiltered = ColumnDataSource(data = inputed)
+        input['color'] = [next(lcolors) for i in range(len(input))]
+        srcfiltered = ColumnDataSource(data = input)
         new_panels = []
 
-        for axis_type in InputOption().ax_type:
+        for axis_type in self.d_graphicsinput_args['ax_type']:
             bokeh_figure = self.bokeh_figure( x_axis_type = axis_type)
             #fig = panels[i].child
             bokeh_figure.y_range = Range1d(min(srcfiltered.data['bottom']), max(srcfiltered.data['top']))
@@ -989,8 +992,11 @@ class bokeh_visu:
             panel = TabPanel(child = bokeh_figure, title = axis_type)
             new_panels.append(panel)
         tabs = Tabs(tabs = new_panels)
-        if dateslider:
-                tabs = column(dateslider,tabs,toggl)
+        dateslider = self.d_graphicsinput_args['dateslider']
+
+        #if dateslider:
+        #        toggl = Toggle(label='► Play',active=False, button_type="success",height=30,width=10)
+        #        toggl.js_on_change('active',toggl_js)
         return tabs
 
     ''' PIE '''
@@ -1035,7 +1041,7 @@ class bokeh_visu:
             |location|date|Variable desired|daily|cumul|weekly|code|clustername|rolloverdisplay|
             - which = if None take second element could be a list
             - plot_heigh= Width_Height_Default[1]
-            - plot_width = Width_Height_Default[0]
+            - graph_width = Width_Height_Default[0]
             - title = None
             - copyright = default
             - mode = mouse
@@ -1047,8 +1053,8 @@ class bokeh_visu:
         dateslider=kwargs.get('dateslider')
         toggl=kwargs.get('toggl')
         bokeh_figure = panels[0].child
-        bokeh_figure.plot_height=400
-        bokeh_figure.plot_width=400
+        bokeh_figure.graph_height=400
+        bokeh_figure.graph_width=400
         bokeh_figure.x_range = Range1d(-1.1, 1.1)
         bokeh_figure.y_range = Range1d(-1.1, 1.1)
         bokeh_figure.axis.visible = False
@@ -1096,7 +1102,7 @@ class bokeh_visu:
             |location|date|Variable desired|daily|cumul|weekly|code|clustername|rolloverdisplay|
             - which = if None take second element could be a list
             - plot_heigh= Width_Height_Default[1]
-            - plot_width = Width_Height_Default[0]
+            - graph_width = Width_Height_Default[0]
             - title = None
             - copyright = default
             - mode = mouse
@@ -1107,21 +1113,18 @@ class bokeh_visu:
                          when format [dd/mm/yyyy : dd/mm/yyyy]
                          if [:dd/mm/yyyy] min date up to
                          if [dd/mm/yyyy:] up to max date
-            - maplabel: False
+            - mapoption: False
         '''
         input=kwargs.get('input')
-        sourcemaplabel=kwargs.get('sourcemaplabel')
+        sourcemapoption=kwargs.get('sourcemapoption')
         tile = kwargs.get('tile')
-        print(tile)
         tile = bokeh_visu.convert_tile(tile, 'bokeh')
-        print(tile)
         wmt = WMTSTileSource(url = tile)
-        print(wmt)
-        bokeh_figure = self.bokeh_figure(x_axis_type = 'mercator', y_axis_type = 'mercator', match_aspect = True)    
+        bokeh_figure = self.bokeh_figure(x_axis_type = 'mercator', y_axis_type = 'mercator', match_aspect = True)
         bokeh_figure.add_tile(wmt, retina=True)
 
         dateslider = kwargs.get('dateslider')
-        maplabel = kwargs.get('maplabel')
+        mapoption = kwargs.get('mapoption')
         min_col, max_col, min_col_non0 = 3*[0.]
         try:
             if dateslider:
@@ -1134,13 +1137,13 @@ class bokeh_visu:
                 min_col_non0 = (np.nanmin(input.loc[input['cases']>0.]['cases']))
         except ValueError:
             pass
-        #min_col, max_col = np.nanmin(inputeded['cases']),np.nanmax(inputeded['cases'])
+        #min_col, max_col = np.nanmin(inputed['cases']),np.nanmax(inputed['cases'])
         input = input.drop(columns='date')
         json_data = json.dumps(json.loads(input.to_json()))
-        inputeded = self.GeoJSONDataSource(geojson=json_data)
+        inputed = self.GeoJSONDataSource(geojson=json_data)
 
         invViridis256 = self.Viridis256[::-1]
-        if maplabel and 'log' in maplabel:
+        if mapoption and 'log' in mapoption:
             color_mapper = LogColorMapper(palette=invViridis256, low=min_col_non0, high=max_col, nan_color='#ffffff')
         else:
             color_mapper = LinearColorMapper(palette=invViridis256, low=min_col, high=max_col, nan_color='#ffffff')
@@ -1148,7 +1151,7 @@ class bokeh_visu:
                              border_line_color=None, location=(0, 0), orientation='horizontal', ticker=BasicTicker())
         color_bar.formatter = BasicTickFormatter(use_scientific=True, precision=1, power_limit_low=int(max_col))
 
-        if maplabel and 'label%' in maplabel:
+        if mapoption and 'label%' in mapoption:
             color_bar.formatter = BasicTickFormatter(use_scientific=False)
             color_bar.formatter = NumeralTickFormatter(format="0.0%")
 
@@ -1162,9 +1165,9 @@ class bokeh_visu:
             input_tmp  = input_tmp.drop_duplicates(subset = ['where'])
             input_tmp = ColumnDataSource(input_tmp.drop(columns=['geometry']))
 
-            callback = CustomJS(args =  dict(source = input_tmp, source_filter = inputeded,
+            callback = CustomJS(args =  dict(source = input_tmp, source_filter = inputed,
                                           datesliderjs = dateslider, title=bokeh_figure.title,
-                                          color_mapperjs = color_mapper, maplabeljs = sourcemaplabel),
+                                          color_mapperjs = color_mapper, mapoptionjs = sourcemapoption),
                         code = """
                         var ind_date_max = (datesliderjs.end-datesliderjs.start)/(24*3600*1000);
                         var ind_date = (datesliderjs.value-datesliderjs.start)/(24*3600*1000);
@@ -1193,13 +1196,13 @@ class bokeh_visu:
                             source_filter.data['cases'] = new_cases;
                             }
 
-                        if (maplabeljs.get_length() !== 0){
-                            maplabeljs.data['cases'] = source_filter.data['cases'];
+                        if (mapoptionjs.get_length() !== 0){
+                            mapoptionjs.data['cases'] = source_filter.data['cases'];
                             }
-                        for (var i = 0; i < maplabeljs.get_length(); i++)
+                        for (var i = 0; i < mapoptionjs.get_length(); i++)
                         {
-                            maplabeljs.data['cases'][i] = form(maplabeljs.data['cases'][i]).toString();
-                            maplabeljs.data['rolloverdisplay'][i] = source_filter.data['rolloverdisplay'][i];
+                            mapoptionjs.data['cases'][i] = form(mapoptionjs.data['cases'][i]).toString();
+                            mapoptionjs.data['rolloverdisplay'][i] = source_filter.data['rolloverdisplay'][i];
                         }
 
                         var tmp = title.text;
@@ -1211,12 +1214,12 @@ class bokeh_visu:
                         var dmy = dd + '/' + mm + '/' + yyyy;
                         title.text = tmp + dmy+")";
 
-                        if (maplabeljs.get_length() !== 0)
-                            maplabeljs.change.emit();
+                        if (mapoptionjs.get_length() !== 0)
+                            mapoptionjs.change.emit();
 
                         color_mapperjs.high=Math.max.apply(Math, new_cases);
                         color_mapperjs.low=Math.min.apply(Math, new_cases);
-                        console.log(maplabeljs.data['cases']);
+                        console.log(mapoptionjs.data['cases']);
                         source_filter.change.emit();
                     """)
             dateslider.js_on_change('value', callback)
@@ -1262,19 +1265,19 @@ class bokeh_visu:
         bokeh_figure.yaxis.visible = False
         bokeh_figure.xgrid.grid_line_color = None
         bokeh_figure.ygrid.grid_line_color = None
-        bokeh_figure.patches('xs', 'ys', source = inputeded,
+        bokeh_figure.patches('xs', 'ys', source = inputed,
                             fill_color = {'field': 'cases', 'transform': color_mapper},
                             line_color = 'black', line_width = 0.25, fill_alpha = 1)
-        if maplabel:
-            if 'text' in maplabel or 'textinteger' in maplabel:
+        if mapoption:
+            if 'text' in mapoption or 'textinteger' in mapoption:
 
-                if 'textinteger' in maplabel:
-                    sourcemaplabel.data['cases'] = sourcemaplabel.data['cases'].astype(float).astype(int).astype(str)
+                if 'textinteger' in mapoption:
+                    sourcemapoption.data['cases'] = sourcemapoption.data['cases'].astype(float).astype(int).astype(str)
                 labels = LabelSet(
                     x = 'centroidx',
                     y = 'centroidy',
                     text = 'cases',
-                    source = sourcemaplabel, text_font_size='10px',text_color='white',background_fill_color='grey',background_fill_alpha=0.5)
+                    source = sourcemapoption, text_font_size='10px',text_color='white',background_fill_color='grey',background_fill_alpha=0.5)
                 bokeh_figure.add_layout(labels)
 
         #cases_custom = AllVisu.rollerJS()

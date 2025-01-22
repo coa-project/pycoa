@@ -204,8 +204,7 @@ class matplotlib_visu:
         mapoption = kwargs.get('mapoption')
         title = kwargs.get('title')
         tile = kwargs.get('tile')
-
-        input.plot(column=which, ax=ax,legend=True,
+        input.plot(column = which, ax=ax,legend=True,
                                 legend_kwds={'label': which,
                                 'orientation': "horizontal","pad": 0.001})
 

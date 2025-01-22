@@ -358,7 +358,7 @@ class DataParser:
           # elif self.db == "olympics":
           #     pandas_temp['date'] = pd.to_datetime(pandas_temp['date'], format='%Y', errors='coerce').dt.date
           # else:
-          pandas_temp['date'] = pd.to_datetime(pandas_temp['date'], errors='coerce', infer_datetime_format=True).dt.date
+          pandas_temp['date'] = pd.to_datetime(pandas_temp['date'], errors='coerce').dt.date
 
           if granularity == 'country' and 'where' not in list(pdata.name):
               pandas_temp['where'] = place

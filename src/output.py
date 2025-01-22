@@ -49,7 +49,6 @@ from src.matplotlib_visu import matplotlib_visu
 from src.seaborn_visu import seaborn_visu
 from src.bokeh_visu import bokeh_visu
 
-
 __all__ = ['InputOption']
 
 class InputOption():
@@ -57,8 +56,6 @@ class InputOption():
         Option visualisation !
     """
     def __init__(self):
-        self.ax_type = ['linear', 'log']
-
         self.d_batchinput_args  = {
                                 'where':[''],\
                                 'option':['nonneg','smooth7','sumall',
@@ -85,7 +82,8 @@ class InputOption():
                                  'dateslider':[False,True],\
                                  'mapoption':['text','textinteger','spark','label%','log','unsorted','dense'],\
                                  'guideline':[False,True],\
-                              }
+                                 'ax_type':['linear', 'log']
+                                  }
         self.listviskargskeys = list(self.d_graphicsinput_args.keys())
         self.dicokfront = {}
 
@@ -162,9 +160,9 @@ class AllVisu:
         """
         @wraps(func)
         def inner_hm(self, **kwargs):
-            input = kwargs.get('input')
-            which = kwargs.get('which')
-
+            if len(kwargs['which'])>1:
+                CoaInfo("Only one variable could be displayed, take the first one ...")
+            kwargs['which'] = kwargs.get('which')[0]
             return func(self, **kwargs)
         return inner_hm
     ''' DECORATORS FOR HISTO VERTICAL, HISTO HORIZONTAL, PIE '''
@@ -185,8 +183,8 @@ class AllVisu:
             input_others = input.loc[input['where'].isin(locunique[Max_Countries_Default-1:])]
 
             input_others[which] = input_others[which].sum()
-            input_others['where'] = 'Others'
-            input_others['code'] = 'Others'
+            input_others['where'] = 'SumOthers'
+            input_others['code'] = 'SumOthers'
             input_others['colors'] = '#FFFFFF'
             input_others = input_others.drop_duplicates(['where','code'])
             input = pd.concat([input_first,input_others])
@@ -227,23 +225,23 @@ class AllVisu:
                 CoaError(typeofplot + ' not implemented in ' + vis)
         elif vis == 'bokeh':
             if typeofplot == 'date':
-                fig = bokeh_visu().bokeh_date_plot(**kwargs)
+                fig = bokeh_visu(InputOption().d_graphicsinput_args).bokeh_date_plot(**kwargs)
             elif typeofplot == 'spiral':
-                fig = bokeh_visu().bokeh_spiral_plot(**kwargs)
+                fig = bokeh_visu(InputOption().d_graphicsinput_args).bokeh_spiral_plot(**kwargs)
             elif typeofplot == 'versus':
                 if isinstance(which,list) and len(which) == 2:
-                    fig = bokeh_visu().bokeh_plot(**kwargs)
+                    fig = bokeh_visu(InputOption().d_graphicsinput_args).bokeh_plot(**kwargs)
                 else:
                     print('typeofplot is versus but dim(which)!=2, versus has not effect ...')
-                    fig = bokeh_visu().bokeh_date_plot(**kwargs)
+                    fig = bokeh_visu(InputOption().d_graphicsinput_args).bokeh_date_plot(**kwargs)
             elif typeofplot == 'menulocation':
                 if _db_list_dict[self.db][1] == 'nation' and _db_list_dict[self.db][2] != 'World':
                     print('typeofplot is menulocation with a national DB granularity, use date plot instead ...')
-                    fig = bokeh_visu().plot(*kwargs)
+                    fig = bokeh_visu(InputOption().d_graphicsinput_args).plot(*kwargs)
                 else:
                     if isinstance(which,list) and len(which) > 1:
                         CoaWarning('typeofplot is menulocation but dim(which)>1, take first one '+which[0])
-                    fig = bokeh_visu().bokeh_menu_plot(**kwargs)
+                    fig = bokeh_visu(InputOption().d_graphicsinput_args).bokeh_menu_plot(**kwargs)
             elif typeofplot == 'yearly':
                 if input.date.max()-input.date.min() <= dt.timedelta(days=365):
                     print("Yearly will not be used since the time covered is less than 1 year")
@@ -274,13 +272,11 @@ class AllVisu:
                 raise CoaError(typeofhist + ' not implemented in ' + vis)
         elif vis == 'bokeh':
             if typeofhist == 'bylocation':
-                if 'bins' in kwargs:
-                    raise CoaError("The bins keyword cannot be set with histograms by location. See help.")
-                fig = bokeh_visu().bokeh_horizonhisto(**kwargs)
+                fig = bokeh_visu(InputOption().d_graphicsinput_args).bokeh_horizonhisto(**kwargs)
             elif typeofhist == 'byvalue':
-                fig = bokeh_visu().bokeh_histo( **kwargs)
+                fig = bokeh_visu(InputOption().d_graphicsinput_args).bokeh_histo( **kwargs)
             elif typeofhist == 'pie':
-                fig = bokeh_visu().bokeh_pie(**kwargs)
+                fig = bokeh_visu(InputOption().d_graphicsinput_args).bokeh_pie(**kwargs)
         elif vis == 'seaborn':
             if typeofhist == 'bylocation':
                 fig = seaborn_visu().seaborn_hist_horizontal(**kwargs)

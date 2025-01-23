@@ -101,7 +101,7 @@ transform,
 cumsum
 )
 
-Width_Height_Default = [680, 200]
+Width_Height_Default = [580, 400]
 Max_Countries_Default = 24
 import src.output
 class bokeh_visu:
@@ -261,6 +261,8 @@ class bokeh_visu:
         '''
         y_axis_type = kwargs.get('y_axis_type','linear')
         x_axis_type = kwargs.get('x_axis_type','linear')
+        kwargs['width']  = kwargs.get('width', Width_Height_Default[0])
+        kwargs['height'] = kwargs.get('height',Width_Height_Default[1])
         fig = figure(**kwargs)
             #y_axis_type = y_axis_type,x_axis_type = x_axis_type,\
             #min_width = graph_width, min_height = graph_height,
@@ -934,7 +936,9 @@ class bokeh_visu:
         #dateslider=kwargs.get('dateslider')
         #toggl=kwargs.get('toggl')
         input = kwargs.get('input')
+        input = input.drop(columns='geometry')
         which = kwargs.get('which')
+        mode = kwargs.get('mode',self.d_graphicsinput_args['mode'])
         mapoption = kwargs.get('mapoption', self.d_graphicsinput_args['mapoption'])
 
         input['left'] = input[which]
@@ -961,11 +965,10 @@ class bokeh_visu:
             input['horihistotext'] = [str(i) for i in input['horihistotext']]
 
         lcolors = iter(self.lcolors)
-        color = next(lcolors)
-        input['color'] = [next(lcolors) for i in range(len(input))]
+        colors = next(lcolors)
+        input['colors'] = [next(lcolors) for i in range(len(input))]
         srcfiltered = ColumnDataSource(data = input)
         new_panels = []
-
         for axis_type in self.d_graphicsinput_args['ax_type']:
             bokeh_figure = self.bokeh_figure( x_axis_type = axis_type)
             #fig = panels[i].child
@@ -976,8 +979,9 @@ class bokeh_visu:
             label_dict = dict(zip(ytick_loc,srcfiltered.data['where']))
             bokeh_figure.yaxis.major_label_overrides = label_dict
 
+
             bokeh_figure.quad(source = srcfiltered,
-                top='top', bottom = 'bottom', left = 'left', right = 'right', color = 'color', line_color = 'black',
+                top='top', bottom = 'bottom', left = 'left', right = 'right', color = 'colors', line_color = 'black',
                 line_width = 1, hover_line_width = 2)
 
             labels = LabelSet(
@@ -987,6 +991,12 @@ class bokeh_visu:
                     y_offset=-4,
                     text = 'horihistotext',
                     source = srcfiltered,text_font_size='10px',text_color='black')
+
+            cases_custom = bokeh_visu().rollerJS()
+            hover_tool = HoverTool(tooltips=[('where', '@where'), (which, '@right{0,0.0}'), ],
+                                   formatters = {'where': 'printf', '@{' + 'right' + '}': cases_custom, '%':'printf'},
+                                   mode = mode, point_policy="snap_to_data")
+            bokeh_figure.add_tools(hover_tool)
             bokeh_figure.add_layout(labels)
 
             panel = TabPanel(child = bokeh_figure, title = axis_type)
@@ -994,9 +1004,9 @@ class bokeh_visu:
         tabs = Tabs(tabs = new_panels)
         dateslider = self.d_graphicsinput_args['dateslider']
 
-        #if dateslider:
-        #        toggl = Toggle(label='► Play',active=False, button_type="success",height=30,width=10)
-        #        toggl.js_on_change('active',toggl_js)
+        if dateslider:
+                toggl = Toggle(label='► Play',active=False, button_type="success",height=30,width=10)
+                #toggl.js_on_change('active',toggl_js)
         return tabs
 
     ''' PIE '''
@@ -1084,8 +1094,6 @@ class bokeh_visu:
             input = kwargs.get('input')
             which = kwargs.get("which")
             input['cases'] = input[which]
-            loca=input['where'].unique()
-
             return func(self, **kwargs)
         return innerdeco_bokeh_geo
 
@@ -1140,9 +1148,9 @@ class bokeh_visu:
         #min_col, max_col = np.nanmin(inputed['cases']),np.nanmax(inputed['cases'])
         input = input.drop(columns='date')
         json_data = json.dumps(json.loads(input.to_json()))
-        inputed = self.GeoJSONDataSource(geojson=json_data)
+        inputed = GeoJSONDataSource(geojson=json_data)
 
-        invViridis256 = self.Viridis256[::-1]
+        invViridis256 = Viridis256[::-1]
         if mapoption and 'log' in mapoption:
             color_mapper = LogColorMapper(palette=invViridis256, low=min_col_non0, high=max_col, nan_color='#ffffff')
         else:
@@ -1273,6 +1281,8 @@ class bokeh_visu:
 
                 if 'textinteger' in mapoption:
                     sourcemapoption.data['cases'] = sourcemapoption.data['cases'].astype(float).astype(int).astype(str)
+                sumgeo.loc[:,'centroidx'] = sumgeo['geometry'].centroid.x
+                sumgeo.loc[:,'centroidy'] = sumgeo['geometry'].centroid.y
                 labels = LabelSet(
                     x = 'centroidx',
                     y = 'centroidy',

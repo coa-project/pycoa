@@ -773,7 +773,6 @@ class __front__:
             )
             output_notebook(hide_banner=True)
             show(fig)
-            return fig
         else:
             return fig
 

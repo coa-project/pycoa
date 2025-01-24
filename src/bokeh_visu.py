@@ -809,12 +809,6 @@ class bokeh_visu:
         input = kwargs.get('input')
         input = input.rename(columns = {'cases': which})
         bins = kwargs.get('bins', self.d_graphicsinput_args['bins'])
-        HoverTool = kwargs.get('HoverTool')
-        PrintfTickFormatter = kwargs.get('PrintfTickFormatter')
-        Range1d = kwargs.get('Range1d')
-        ColumnDataSource = kwargs.get('ColumnDataSource')
-        TabPanel = kwargs.get('TabPanel')
-        Tabs = kwargs.get('Tabs')
         min_val = input[which].min()
         max_val =  input[which].max()
 
@@ -1131,7 +1125,7 @@ class bokeh_visu:
             - mapoption: False
         '''
         input=kwargs.get('input')
-        sourcemapoption=kwargs.get('sourcemapoption')
+        sourcemapoption=ColumnDataSource(input.drop(columns='geometry'))
         tile = kwargs.get('tile')
         tile = bokeh_visu.convert_tile(tile, 'bokeh')
         wmt = WMTSTileSource(url = tile)
@@ -1152,10 +1146,10 @@ class bokeh_visu:
                 min_col_non0 = (np.nanmin(input.loc[input['cases']>0.]['cases']))
         except ValueError:
             pass
-        #min_col, max_col = np.nanmin(inputed['cases']),np.nanmax(inputed['cases'])
+        #min_col, max_col = np.nanmin(intput_src['cases']),np.nanmax(intput_src['cases'])
         input = input.drop(columns='date')
         json_data = json.dumps(json.loads(input.to_json()))
-        inputed = GeoJSONDataSource(geojson=json_data)
+        intput_src = GeoJSONDataSource(geojson=json_data)
 
         invViridis256 = Viridis256[::-1]
         if mapoption and 'log' in mapoption:
@@ -1180,7 +1174,7 @@ class bokeh_visu:
             input_tmp  = input_tmp.drop_duplicates(subset = ['where'])
             input_tmp = ColumnDataSource(input_tmp.drop(columns=['geometry']))
 
-            callback = CustomJS(args =  dict(source = input_tmp, source_filter = inputed,
+            callback = CustomJS(args =  dict(source = input_tmp, source_filter = intput_src,
                                           datesliderjs = dateslider, title=bokeh_figure.title,
                                           color_mapperjs = color_mapper, mapoptionjs = sourcemapoption),
                         code = """
@@ -1280,7 +1274,7 @@ class bokeh_visu:
         bokeh_figure.yaxis.visible = False
         bokeh_figure.xgrid.grid_line_color = None
         bokeh_figure.ygrid.grid_line_color = None
-        bokeh_figure.patches('xs', 'ys', source = inputed,
+        bokeh_figure.patches('xs', 'ys', source = intput_src,
                             fill_color = {'field': 'cases', 'transform': color_mapper},
                             line_color = 'black', line_width = 0.25, fill_alpha = 1)
         if mapoption:
@@ -1288,8 +1282,8 @@ class bokeh_visu:
 
                 if 'textinteger' in mapoption:
                     sourcemapoption.data['cases'] = sourcemapoption.data['cases'].astype(float).astype(int).astype(str)
-                sumgeo.loc[:,'centroidx'] = sumgeo['geometry'].centroid.x
-                sumgeo.loc[:,'centroidy'] = sumgeo['geometry'].centroid.y
+                input.loc[:,'centroidx'] = input['geometry'].to_crs(3035).centroid.x
+                input.loc[:,'centroidy'] = input['geometry'].to_crs(3035).centroid.y
                 labels = LabelSet(
                     x = 'centroidx',
                     y = 'centroidy',

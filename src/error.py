@@ -61,7 +61,7 @@ class CoaInfo(Exception):
     """Base class for exceptions in PYVOA."""
 
     def __init__(self, message):
-        blinking_centered_text('PYVOA Info !',message, blinking=0,text_color='white', bg_color='magenta')
+        blinking_centered_text('PYVOA Info !',message, blinking=0,text_color='black', bg_color='blue')
         Exception(message)
 
 class CoaDBInfo(Exception):
@@ -75,7 +75,7 @@ class CoaWarning(Exception):
     """Base class for exceptions in PYVOA."""
 
     def __init__(self, message):
-        blinking_centered_text('PYVOA Warning !',message, blinking=0,text_color='white', bg_color='magenta')
+        blinking_centered_text('PYVOA Warning !',message, blinking=0,text_color='black', bg_color='orange')
         Exception(message)
 
 class CoaError(Exception):

@@ -240,7 +240,6 @@ class VirusStat(object):
         #where = [i.title() for i in where]
         option = kwargs['option']
         newpd = pd.DataFrame()
-
         if not isinstance(where[0],list):
             where = [where]
         if 'sumall' in option:
@@ -278,6 +277,9 @@ class VirusStat(object):
                 where = self.subregions_deployed(where,self.granularity)
             newpd = input.loc[input['where'].str.upper().isin([x.upper() for x in where])]
         newpd = gpd.GeoDataFrame(newpd, geometry=newpd.geometry, crs='EPSG:4326').reset_index(drop=True)
+        where_geometry_none = newpd[newpd['geometry'].isna()]['where'].unique()
+        CoaWarning(str(where_geometry_none)+' those localisation have None geometry, remove them ...')
+        newpd = newpd.dropna(subset=['geometry'])
         return newpd
 
    def get_stats(self,**kwargs):
@@ -309,7 +311,6 @@ class VirusStat(object):
        if input.empty:
            input = self.currentdata.get_maingeopandas()
            kwargs['input'] = input
-
        anticolumns = [x for x in self.currentdata.get_available_keywords() if x not in which]
 
        input = input.loc[:,~input.columns.isin(anticolumns)]

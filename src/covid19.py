@@ -298,8 +298,8 @@ class VirusStat(object):
 
        which = kwargs.get('which',[self.currentdata.get_available_keywords()[0]])
        if which == ['']:
-           which = [self.currentdata.get_available_keywords()[0]]
-           kwargs['which'] = which
+          which = [self.currentdata.get_available_keywords()[0]]
+          kwargs['which'] = which
 
        kwargs_valuestesting(which,self.currentdata.get_available_keywords(),'which error ...')
        when = kwargs.get('when')
@@ -337,6 +337,10 @@ class VirusStat(object):
        for w in which:
            kwargs['input'].loc[:,w] = kwargs['input'].groupby('where')[w].bfill()
            kwargs['input'].loc[:,w] = kwargs['input'].groupby('where')[w].ffill()
+           where_alldate_nan = kwargs['input'].groupby('where')[w].apply(lambda x: x.isna().all())
+           wherenan = where_alldate_nan[where_alldate_nan].index.tolist()
+           CoaInfo('drop ' + str(wherenan) +' : value is NAN for all the date')
+           kwargs['input'] = kwargs['input'].loc[~kwargs['input']['where'].isin(wherenan)]
            kwargs['which'] = w
            kwargs['input'] = self.whereclustered(**kwargs)
            wconcatpd = pd.DataFrame()
@@ -398,7 +402,7 @@ class VirusStat(object):
             categories=where_ordered_bylastvalues,
             ordered=True
             )
-       kwargs['input'] = kwargs['input'].sort_values(by=['where','date'])        
+       kwargs['input'] = kwargs['input'].sort_values(by=['where','date'])
        return kwargs
 
    def normbypop(self, pandy, val2norm ,bypop):

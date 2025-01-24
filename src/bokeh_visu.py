@@ -973,19 +973,20 @@ class bokeh_visu:
             bokeh_figure = self.bokeh_figure( x_axis_type = axis_type)
             #fig = panels[i].child
             bokeh_figure.y_range = Range1d(min(srcfiltered.data['bottom']), max(srcfiltered.data['top']))
-            factor = 1.2
-            left = 'left'
-            if axis_type=='log':
-                factor = 10.
-                left = 0.0001
-            bokeh_figure.x_range = Range1d(min(srcfiltered.data['left']), factor*max(srcfiltered.data['right']))
-            #bokeh_figure.yaxis[0].formatter = NumeralTickFormatter(format="0.0")
             ytick_loc = [int(i) for i in srcfiltered.data['horihistotexty']]
             bokeh_figure.yaxis.ticker  = ytick_loc
             label_dict = dict(zip(ytick_loc,srcfiltered.data['where']))
             bokeh_figure.yaxis.major_label_overrides = label_dict
+            #bokeh_figure.yaxis[0].formatter = NumeralTickFormatter(format="0.0")
 
-
+            factor = 1.2
+            left = 'left'
+            epslion = 0.
+            if axis_type=='log':
+                factor = 20.
+                left = 0.01
+                if min(srcfiltered.data['left'])==0:epslion = 0.01
+            bokeh_figure.x_range = Range1d(min(srcfiltered.data['left'])+epslion, factor*max(srcfiltered.data['right']))
             bokeh_figure.quad(source = srcfiltered,
                 top='top', bottom = 'bottom', left = left, right = 'right', color = 'colors', line_color = 'black',
                 line_width = 1, hover_line_width = 2)

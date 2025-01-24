@@ -364,7 +364,7 @@ class bokeh_visu:
         if self.get_listfigures():
             self.set_listfigures([])
         listfigs=[]
-        for axis_type in self.optionvisu.ax_type:
+        for axis_type in  self.d_graphicsinput_args['ax_type']:
             bokeh_figure = self.bokeh_figure( x_axis_label = which[0], y_axis_label = which[1],
                                                 y_axis_type = axis_type, text = "ffff")
 
@@ -600,9 +600,10 @@ class bokeh_visu:
         '''
 
         input = kwargs.get('input')
+        input = input.drop(columns='geometry')
         which= kwargs.get('which')
         guideline = kwargs.get('guideline',self.d_graphicsinput_args['guideline'][0])
-        mode = kwargs.get('guideline',self.d_graphicsinput_args['mode'][0])
+        mode = kwargs.get('mode',self.d_graphicsinput_args['mode'][0])
         if isinstance(which,list):
             which=which[0]
 
@@ -627,19 +628,19 @@ class bokeh_visu:
         src2 = ColumnDataSource(filter_data2)
 
         cases_custom = bokeh_visu().rollerJS()
-        hover_tool = HoverTool(tooltips=[('Cases', '@cases{0,0.0}'), ('date', '@date{%F}')],
-                               formatters={'Cases': 'printf', '@{cases}': cases_custom, '@date': 'datetime'},
-                               mode = mode, point_policy="snap_to_data")  # ,PanTool())
+        #hover_tool = HoverTool(tooltips=[(which, '@which{0,0.0}'), ('date', '@date{%F}')],
+        #                       formatters={which: 'printf', '@{which}': cases_custom, '@date': 'datetime'},
+        #                       mode = mode, point_policy="snap_to_data")  # ,PanTool())
 
         panels = []
-        for axis_type in self.optionvisu.ax_type:
-            bokeh_figure = self.bokeh_figure( y_axis_type = axis_type, x_axis_type = 'datetime', **kwargs)
+        for axis_type in  self.d_graphicsinput_args['ax_type']:
+            bokeh_figure = self.bokeh_figure( y_axis_type = axis_type, x_axis_type = 'datetime')
 
             bokeh_figure.yaxis[0].formatter = PrintfTickFormatter(format = "%4.2e")
             bokeh_figure.xaxis.formatter = DatetimeTickFormatter(
-                days = ["%d/%m/%y"], months = ["%d/%m/%y"], years = ["%b %Y"])
+                days = "%d/%m/%y", months = "%d/%m/%y", years = "%b %Y")
 
-            bokeh_figure.add_tools(hover_tool)
+        #    bokeh_figure.add_tools(hover_tool)
             if guideline:
                 cross= CrosshairTool()
                 bokeh_figure.add_tools(cross)
@@ -662,7 +663,7 @@ class bokeh_visu:
             bokeh_figure.add_layout(Legend(items = [li1, li2]))
             bokeh_figure.legend.location = 'top_left'
             layout = row(column(row(s1, s2), row(bokeh_figure)))
-            panel = Panel(child = layout, title = axis_type)
+            panel = TabPanel(child = layout, title = axis_type)
             panels.append(panel)
 
         tabs = Tabs(tabs = panels)
@@ -722,7 +723,7 @@ class bokeh_visu:
         #    CoaError('Only one variable could be displayed')
         #else:
         #    which=which[0]
-        for axis_type in self.optionvisu.ax_type:
+        for axis_type in  self.d_graphicsinput_args['ax_type']:
             bokeh_figure = self.bokeh_figure( y_axis_type = axis_type,**kwargs)
             i = 0
             r_list=[]
@@ -1133,6 +1134,7 @@ class bokeh_visu:
         bokeh_figure.add_tile(wmt, retina=True)
 
         dateslider = kwargs.get('dateslider')
+
         mapoption = kwargs.get('mapoption')
         min_col, max_col, min_col_non0 = 3*[0.]
         try:

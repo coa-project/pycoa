@@ -235,12 +235,12 @@ class AllVisu:
                     print('typeofplot is versus but dim(which)!=2, versus has not effect ...')
                     fig = bokeh_visu(InputOption().d_graphicsinput_args).bokeh_date_plot(**kwargs)
             elif typeofplot == 'menulocation':
-                if _db_list_dict[self.db][1] == 'nation' and _db_list_dict[self.db][2] != 'World':
+                if self.granularity == 'nation' and self.granularity != 'World':
                     print('typeofplot is menulocation with a national DB granularity, use date plot instead ...')
                     fig = bokeh_visu(InputOption().d_graphicsinput_args).plot(*kwargs)
                 else:
-                    if isinstance(which,list) and len(which) > 1:
-                        CoaWarning('typeofplot is menulocation but dim(which)>1, take first one '+which[0])
+                    if len(kwargs['which']) > 1:
+                        CoaWarning('typeofplot is menulocation but dim(which)>1, take first one '+kwargs['which'][0])
                     fig = bokeh_visu(InputOption().d_graphicsinput_args).bokeh_menu_plot(**kwargs)
             elif typeofplot == 'yearly':
                 if input.date.max()-input.date.min() <= dt.timedelta(days=365):

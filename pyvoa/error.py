@@ -5,7 +5,7 @@ Authors : Olivier Dadoun, Julien Browaeys, Tristan Beau
 Copyright ©PYVOA.fr
 License: See joint LICENSE file
 
-Module : src.error
+Module : pyvoa.error
 
 About :
 -------

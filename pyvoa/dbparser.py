@@ -3,7 +3,7 @@
 Date :    april 2020 - june 2024
 Authors : Olivier Dadoun, Julien Browaeys, Tristan Beau
 License: See joint LICENSE file
-Module : src.dbparser
+Module : pyvoa.dbparser
 Aboutself.granu_country
 -----
 This is the PyCoA rapport module it gives all available information concerning a database key words
@@ -19,8 +19,8 @@ import datetime
 import collections
 import random
 import numpy as np
-from src.error import *
-from src.tools import (
+from pyvoa.error import *
+from pyvoa.tools import (
     info,
     verb,
     kwargs_test,
@@ -30,7 +30,7 @@ from src.tools import (
     fill_missing_dates,
     flat_list
 )
-import src.geo as coge
+import pyvoa.geo as coge
 import sys
 import pycountry
 

@@ -7,7 +7,7 @@ Authors : Olivier Dadoun, Julien Browaeys, Tristan Beau
 Copyright ©pycoa_fr
 License: See joint LICENSE file
 
-Module : src.seaborn_visu
+Module : pyvoa.seaborn_visu
 
 About :
 -------
@@ -15,12 +15,12 @@ About :
 An interface module to easily plot pycoa_data with bokeh
 
 """
-from src.tools import (
+from pyvoa.tools import (
     extract_dates,
     verb,
     fill_missing_dates
 )
-from src.error import *
+from pyvoa.error import *
 import math
 import pandas as pd
 import geopandas as gpd
@@ -43,7 +43,7 @@ import datetime as dt
 import bisect
 from functools import wraps
 
-from src.dbparser import MetaInfo
+from pyvoa.dbparser import MetaInfo
 
 class seaborn_visu:
     ######SEABORN#########

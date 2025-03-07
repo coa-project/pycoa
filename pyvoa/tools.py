@@ -4,7 +4,7 @@ Date :    april 2020 - june 2024
 Authors : Olivier Dadoun, Julien Browaeys, Tristan Beau
 License: See joint LICENSE file
 
-Module : src.tools
+Module : pyvoa.tools
 
 About
 -----
@@ -34,10 +34,10 @@ from urllib.parse import urlparse
 import unidecode
 import datetime as dt
 import numpy as np
-from src.error import CoaError, CoaConnectionError, CoaNotManagedError
+from pyvoa.error import CoaError, CoaConnectionError, CoaNotManagedError
 
 
-# testing if src.ata is available
+# testing if pyvoa.ata is available
 import importlib
 _coacache_folder=''
 _coacache_module_info = importlib.util.find_spec("coacache")

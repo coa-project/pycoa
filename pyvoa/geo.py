@@ -38,8 +38,8 @@ import bs4
 import numpy as np
 import io
 
-from src.tools import verb,kwargs_test,get_local_from_url,dotdict,tostdstring
-from src.error import *
+from pyvoa.tools import verb,kwargs_test,get_local_from_url,dotdict,tostdstring
+from pyvoa.error import *
 
 # ---------------------------------------------------------------------
 # --- GeoManager class ------------------------------------------------
@@ -874,11 +874,11 @@ class GeoCountry():
             content_reg_flag = f_reg_flag.read()
             f_reg_flag.close()
             soup_reg_flag = bs4.BeautifulSoup(content_reg_flag,'lxml')
-            for img in soup_reg_flag.find_all('img'):  # need to convert <img tags to src content for pandas_read
-                src=img.get('src')
-                if src[0] == '/':
-                    src='http:'+src
-                img.replace_with(src)
+            for img in soup_reg_flag.find_all('img'):  # need to convert <img tags to pyvoa content for pandas_read
+                pyvoa=img.get('pyvoa')
+                if pyvoa[0] == '/':
+                    pyvoa='http:'+pyvoa
+                img.replace_with(pyvoa)
 
             tabs_reg_flag=pd.read_html(io.StringIO(str(soup_reg_flag))) # pandas read the modified html
             metropole=tabs_reg_flag[5][["Logo","Dénomination","Code INSEE[5]"]]  # getting 5th table, and only usefull columns
@@ -948,11 +948,11 @@ class GeoCountry():
             content_us = f_us.read()
             f_us.close()
             soup_us = bs4.BeautifulSoup(content_us,'lxml')
-            for img in soup_us.find_all('img'):  # need to convert <img tags to src content for pandas_read
-                src=img.get('src')
-                if src[0] == '/':
-                    src='http:'+src
-                img.replace_with(src)
+            for img in soup_us.find_all('img'):  # need to convert <img tags to pyvoa content for pandas_read
+                pyvoa=img.get('pyvoa')
+                if pyvoa[0] == '/':
+                    pyvoa='http:'+pyvoa
+                img.replace_with(pyvoa)
 
             h_us=pd.read_html(str(soup_us)) # pandas read the modified html
             h_us=h_us[1][h_us[1].columns[[0,1,2,5,7]]]

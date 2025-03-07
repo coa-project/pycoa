@@ -7,19 +7,19 @@ Authors : Olivier Dadoun, Julien Browaeys, Tristan Beau
 Copyright ©pycoa_fr
 License: See joint LICENSE file
 
-Module : src.bokeh_visu
+Module : pyvoa.bokeh_visu
 
 About :
 -------
 
 
 """
-from src.tools import (
+from pyvoa.tools import (
     extract_dates,
     verb,
     fill_missing_dates
 )
-from src.error import *
+from pyvoa.error import *
 import math
 import pandas as pd
 import geopandas as gpd
@@ -42,7 +42,7 @@ import datetime as dt
 import bisect
 from functools import wraps
 
-from src.dbparser import MetaInfo
+from pyvoa.dbparser import MetaInfo
 from bokeh.models import (
 ColumnDataSource,
 TableColumn,
@@ -103,7 +103,7 @@ cumsum
 
 Width_Height_Default = [580, 400]
 Max_Countries_Default = 24
-import src.output
+import pyvoa.output
 class bokeh_visu:
     def __init__(self,d_graphicsinput_args = None):
         self.pycoageopandas = False
@@ -315,7 +315,7 @@ class bokeh_visu:
             raise CoaError('bokeh_resume_data can use spiral or spark ... here what ?')
         input = input.loc[input.date==input.date.max()].reset_index(drop=True)
         def path_to_image_html(path):
-            return '<img src="'+ path + '" width="60" >'
+            return '<img pyvoa="'+ path + '" width="60" >'
 
         input=input.apply(lambda x: x.round(2) if x.name in [which,'daily','weekly'] else x)
         if isinstance(input['where'][0], list):
@@ -337,7 +337,7 @@ class bokeh_visu:
         See help(bokeh_plot).
         Keyword arguments
         -----------------
-        - input = None : if None take first element. A DataFrame with a Pysrc.struture is mandatory
+        - input = None : if None take first element. A DataFrame with a Pypyvoa.struture is mandatory
         |location|date|Variable desired|daily|cumul|weekly|code|clustername|rolloverdisplay|
         - which = if None take second element. It should be a list dim=2. Moreover the 2 variables must be present
         in the DataFrame considered.
@@ -403,7 +403,7 @@ class bokeh_visu:
         Create a date plot according to arguments. See help(bokeh_date_plot).
         Keyword arguments
         -----------------
-        - input = None : if None take first element. A DataFrame with a Pysrc.struture is mandatory
+        - input = None : if None take first element. A DataFrame with a Pypyvoa.struture is mandatory
         |location|date|Variable desired|daily|cumul|weekly|code|clustername|rolloverdisplay|
         - which = if None take second element could be a list
         - plot_heigh= Width_Height_Default[1]
@@ -445,10 +445,10 @@ class bokeh_visu:
                 for loc in list(input['where'].unique()):
                     color = next(lcolors)
                     inputwhere = input.loc[input['where'] == loc].reset_index(drop = True)
-                    src = ColumnDataSource(inputwhere)
+                    pyvoa = ColumnDataSource(inputwhere)
                     leg = loc
 
-                    r = bokeh_figure.line(x = 'date', y = val, source = src,
+                    r = bokeh_figure.line(x = 'date', y = val, source = pyvoa,
                                      color = color, line_width = 3,
                                      legend_label = leg,
                                      hover_line_width = 4, name = val, line_dash=line_style[i%4])
@@ -540,15 +540,15 @@ class bokeh_visu:
         [ ycol.append([i,j]) for i,j in zip(y_cas_inf,y_cas_sup)]
         bokeh_figure.patches(xcol,ycol,color='blue',fill_alpha = 0.5)
 
-        src = ColumnDataSource(data=dict(
+        pyvoa = ColumnDataSource(data=dict(
         x=x_base,
         y=y_base,
         date=input['date'],
         cases=input['cases']
         ))
-        bokeh_figure.line( x = 'x', y = 'y', source = src, legend_label = input['where'][0],
+        bokeh_figure.line( x = 'x', y = 'y', source = pyvoa, legend_label = input['where'][0],
                         line_width = 3, line_color = 'blue')
-        circle = bokeh_figure.circle('x', 'y', size=2, source=src)
+        circle = bokeh_figure.circle('x', 'y', size=2, source=pyvoa)
 
         cases_custom = bokeh_visu().rollerJS()
         hover_tool = HoverTool(tooltips=[('Cases', '@cases{0,0.0}'), ('date', '@date{%F}')],
@@ -581,7 +581,7 @@ class bokeh_visu:
         Keyword arguments
         -----------------
         len(location) > 2
-        - input = None : if None take first element. A DataFrame with a Pysrc.struture is mandatory
+        - input = None : if None take first element. A DataFrame with a Pypyvoa.struture is mandatory
         |location|date|Variable desired|daily|cumul|weekly|code|clustername|rolloverdisplay|
         - which = if None take second element could be a list
         - plot_heigh= Width_Height_Default[1]
@@ -622,10 +622,10 @@ class bokeh_visu:
         source = ColumnDataSource(mypivot)
 
         filter_data1 = mypivot[[uniqloc[0]]].rename(columns={uniqloc[0]: 'cases'})
-        src1 = ColumnDataSource(filter_data1)
+        pyvoa1 = ColumnDataSource(filter_data1)
 
         filter_data2 = mypivot[[uniqloc[1]]].rename(columns={uniqloc[1]: 'cases'})
-        src2 = ColumnDataSource(filter_data2)
+        pyvoa2 = ColumnDataSource(filter_data2)
 
         cases_custom = bokeh_visu().rollerJS()
         #hover_tool = HoverTool(tooltips=[(which, '@which{0,0.0}'), ('date', '@date{%F}')],
@@ -644,11 +644,11 @@ class bokeh_visu:
             if guideline:
                 cross= CrosshairTool()
                 bokeh_figure.add_tools(cross)
-            def add_line(src, options, init, color):
+            def add_line(pyvoa, options, init, color):
                 s = Select(options = options, value = init)
-                r = bokeh_figure.line(x = 'date', y = 'cases', source = src, line_width = 3, line_color = color)
+                r = bokeh_figure.line(x = 'date', y = 'cases', source = pyvoa, line_width = 3, line_color = color)
                 li = LegendItem(label = init, renderers = [r])
-                s.js_on_change('value', CustomJS(args=dict(s0=source, s1=src, li=li),
+                s.js_on_change('value', CustomJS(args=dict(s0=source, s1=pyvoa, li=li),
                                                  code="""
                                             var c = cb_obj.value;
                                             var y = s0.data[c];
@@ -658,8 +658,8 @@ class bokeh_visu:
                                      """))
                 return s, li
 
-            s1, li1 = add_line(src1, uniqloc, uniqloc[0], self.scolors[0])
-            s2, li2 = add_line(src2, uniqloc, uniqloc[1], self.scolors[1])
+            s1, li1 = add_line(pyvoa1, uniqloc, uniqloc[0], self.scolors[0])
+            s2, li2 = add_line(pyvoa2, uniqloc, uniqloc[1], self.scolors[1])
             bokeh_figure.add_layout(Legend(items = [li1, li2]))
             bokeh_figure.legend.location = 'top_left'
             layout = row(column(row(s1, s2), row(bokeh_figure)))
@@ -677,7 +677,7 @@ class bokeh_visu:
         Create a date plot according to arguments. See help(bokeh_date_plot).
         Keyword arguments
         -----------------
-        - input = None : if None take first element. A DataFrame with a Pysrc.struture is mandatory
+        - input = None : if None take first element. A DataFrame with a Pypyvoa.struture is mandatory
         |location|date|Variable desired|daily|cumul|weekly|code|clustername|rolloverdisplay|
         - which = if None take second element could be a list
         - plot_heigh= Width_Height_Default[1]
@@ -734,9 +734,9 @@ class bokeh_visu:
             for loc in list(input['where'].unique()):
                 for year in allyears:
                     input = input.loc[(input['where'] == loc) & (input['date'].dt.year.eq(year))].reset_index(drop = True)
-                    src = ColumnDataSource(input)
+                    pyvoa = ColumnDataSource(input)
                     leg = str(year) + ' ' + loc
-                    r = bokeh_figure.line(x = 'dayofyear', y = which, source = src,
+                    r = bokeh_figure.line(x = 'dayofyear', y = which, source = pyvoa,
                                      color = next(colors), line_width = 3,
                                      legend_label = leg,
                                      hover_line_width = 4, name = which)
@@ -793,7 +793,7 @@ class bokeh_visu:
             See help(bokeh_histo).
             Keyword arguments
             -----------------
-            - input : A DataFrame with a Pysrc.struture is mandatory
+            - input : A DataFrame with a Pypyvoa.struture is mandatory
             |location|date|Variable desired|daily|cumul|weekly|code|clustername|rolloverdisplay|
             - which = if None take second element could be a list
             - plot_heigh= Width_Height_Default[1]
@@ -904,7 +904,7 @@ class bokeh_visu:
             See help(bokeh_histo).
             Keyword arguments
             -----------------
-            - srcfiltered : A DataFrame with a Pysrc.struture is mandatory
+            - pyvoafiltered : A DataFrame with a Pypyvoa.struture is mandatory
             |location|date|Variable desired|daily|cumul|weekly|code|clustername|rolloverdisplay|
             - which = if None take second element could be a list
             - plot_heigh= Width_Height_Default[1]
@@ -962,15 +962,15 @@ class bokeh_visu:
         lcolors = iter(self.lcolors)
         colors = next(lcolors)
         input['colors'] = [next(lcolors) for i in range(len(input))]
-        srcfiltered = ColumnDataSource(data = input)
+        pyvoafiltered = ColumnDataSource(data = input)
         new_panels = []
         for axis_type in self.d_graphicsinput_args['ax_type']:
             bokeh_figure = self.bokeh_figure( x_axis_type = axis_type)
             #fig = panels[i].child
-            bokeh_figure.y_range = Range1d(min(srcfiltered.data['bottom']), max(srcfiltered.data['top']))
-            ytick_loc = [int(i) for i in srcfiltered.data['horihistotexty']]
+            bokeh_figure.y_range = Range1d(min(pyvoafiltered.data['bottom']), max(pyvoafiltered.data['top']))
+            ytick_loc = [int(i) for i in pyvoafiltered.data['horihistotexty']]
             bokeh_figure.yaxis.ticker  = ytick_loc
-            label_dict = dict(zip(ytick_loc,srcfiltered.data['where']))
+            label_dict = dict(zip(ytick_loc,pyvoafiltered.data['where']))
             bokeh_figure.yaxis.major_label_overrides = label_dict
             #bokeh_figure.yaxis[0].formatter = NumeralTickFormatter(format="0.0")
 
@@ -980,9 +980,9 @@ class bokeh_visu:
             if axis_type=='log':
                 factor = 20.
                 left = 0.01
-                if min(srcfiltered.data['left'])==0:epslion = 0.01
-            bokeh_figure.x_range = Range1d(min(srcfiltered.data['left'])+epslion, factor*max(srcfiltered.data['right']))
-            bokeh_figure.quad(source = srcfiltered,
+                if min(pyvoafiltered.data['left'])==0:epslion = 0.01
+            bokeh_figure.x_range = Range1d(min(pyvoafiltered.data['left'])+epslion, factor*max(pyvoafiltered.data['right']))
+            bokeh_figure.quad(source = pyvoafiltered,
                 top='top', bottom = 'bottom', left = left, right = 'right', color = 'colors', line_color = 'black',
                 line_width = 1, hover_line_width = 2)
 
@@ -992,7 +992,7 @@ class bokeh_visu:
                     x_offset=5,
                     y_offset=-4,
                     text = 'horihistotext',
-                    source = srcfiltered,text_font_size='10px',text_color='black')
+                    source = pyvoafiltered,text_font_size='10px',text_color='black')
 
             cases_custom = bokeh_visu().rollerJS()
             hover_tool = HoverTool(tooltips=[('where', '@where'), (which, '@right{0,0.0}'), ],
@@ -1049,7 +1049,7 @@ class bokeh_visu:
             See help(bokeh_pie).
             Keyword arguments
             -----------------
-            - srcfiltered : A DataFrame with a Pysrc.struture is mandatory
+            - pyvoafiltered : A DataFrame with a Pypyvoa.struture is mandatory
             |location|date|Variable desired|daily|cumul|weekly|code|clustername|rolloverdisplay|
             - which = if None take second element could be a list
             - plot_heigh= Width_Height_Default[1]
@@ -1060,7 +1060,7 @@ class bokeh_visu:
             - dateslider = None if True
                     - orientation = horizontal
         '''
-        srcfiltered=kwargs.get('srcfiltered')
+        pyvoafiltered=kwargs.get('pyvoafiltered')
         panels=kwargs.get('panels')
         dateslider=kwargs.get('dateslider')
         toggl=kwargs.get('toggl')
@@ -1075,14 +1075,14 @@ class bokeh_visu:
 
         bokeh_figure.wedge(x=0, y=0, radius=1.,line_color='#E8E8E8',
         start_angle=cumsum('angle', include_zero=True), end_angle=cumsum('angle'), fill_color='colors',
-        legend_label='where', source=srcfiltered)
+        legend_label='where', source=pyvoafiltered)
         bokeh_figure.legend.visible = False
 
         labels = LabelSet(x=0, y=0,text='textdisplayed',angle=cumsum('angle', include_zero=True),
-        text_font_size="10pt",source=srcfiltered,render_mode='canvas')
+        text_font_size="10pt",source=pyvoafiltered,render_mode='canvas')
 
         labels2 = LabelSet(x=0, y=0, text='textdisplayed2',
-        angle=cumsum('angle', include_zero=True),text_font_size="8pt",source=srcfiltered)
+        angle=cumsum('angle', include_zero=True),text_font_size="8pt",source=pyvoafiltered)
 
         bokeh_figure.add_layout(labels)
         bokeh_figure.add_layout(labels2)
@@ -1108,7 +1108,7 @@ class bokeh_visu:
             See help(bokeh_histo).
             Keyword arguments
             -----------------
-            - srcfiltered : A DataFrame with a Pysrc.struture is mandatory
+            - pyvoafiltered : A DataFrame with a Pypyvoa.struture is mandatory
             |location|date|Variable desired|daily|cumul|weekly|code|clustername|rolloverdisplay|
             - which = if None take second element could be a list
             - plot_heigh= Width_Height_Default[1]
@@ -1148,10 +1148,10 @@ class bokeh_visu:
                 min_col_non0 = (np.nanmin(input.loc[input['cases']>0.]['cases']))
         except ValueError:
             pass
-        #min_col, max_col = np.nanmin(intput_src['cases']),np.nanmax(intput_src['cases'])
+        #min_col, max_col = np.nanmin(intput_pyvoa['cases']),np.nanmax(intput_pyvoa['cases'])
         input = input.drop(columns='date')
         json_data = json.dumps(json.loads(input.to_json()))
-        intput_src = GeoJSONDataSource(geojson=json_data)
+        intput_pyvoa = GeoJSONDataSource(geojson=json_data)
 
         invViridis256 = Viridis256[::-1]
         if mapoption and 'log' in mapoption:
@@ -1176,7 +1176,7 @@ class bokeh_visu:
             input_tmp  = input_tmp.drop_duplicates(subset = ['where'])
             input_tmp = ColumnDataSource(input_tmp.drop(columns=['geometry']))
 
-            callback = CustomJS(args =  dict(source = input_tmp, source_filter = intput_src,
+            callback = CustomJS(args =  dict(source = input_tmp, source_filter = intput_pyvoa,
                                           datesliderjs = dateslider, title=bokeh_figure.title,
                                           color_mapperjs = color_mapper, mapoptionjs = sourcemapoption),
                         code = """
@@ -1276,7 +1276,7 @@ class bokeh_visu:
         bokeh_figure.yaxis.visible = False
         bokeh_figure.xgrid.grid_line_color = None
         bokeh_figure.ygrid.grid_line_color = None
-        bokeh_figure.patches('xs', 'ys', source = intput_src,
+        bokeh_figure.patches('xs', 'ys', source = intput_pyvoa,
                             fill_color = {'field': 'cases', 'transform': color_mapper},
                             line_color = 'black', line_width = 0.25, fill_alpha = 1)
         if mapoption:

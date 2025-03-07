@@ -4,7 +4,7 @@ Date :    april 2020 - june 2024
 Authors : Olivier Dadoun, Julien Browaeys, Tristan Beau
 License: See joint LICENSE file
 
-Module : src.front
+Module : pyvoa.front
 
 About :
 -------
@@ -17,7 +17,7 @@ with keywords (see help of functions below).
 Basic usage
 -----------
 ** plotting covid deaths (default value) vs. time **
-    import src.front as cf
+    import pyvoa.front as cf
 
     cf.plot(where='France')  # where keyword is mandatory
 ** getting recovered data for some countries **
@@ -41,7 +41,7 @@ from functools import wraps
 import numpy as np
 
 import datetime as dt
-from src.tools import (
+from pyvoa.tools import (
     kwargs_keystesting,
     kwargs_valuestesting,
     debug,
@@ -50,13 +50,13 @@ from src.tools import (
     all_or_none_lists,
 )
 
-import src.covid19 as coco
-from src.dbparser import MetaInfo
-from src.error import *
-import src.geo as coge
+import pyvoa.covid19 as coco
+from pyvoa.dbparser import MetaInfo
+from pyvoa.error import *
+import pyvoa.geo as coge
 
 import geopandas as gpd
-from src.output import InputOption, AllVisu
+from pyvoa.output import InputOption, AllVisu
 
 
 class __front__:
@@ -141,7 +141,7 @@ class __front__:
             if reload:
                 self.virus, self.allvisu = coco.VirusStat.factory(db_name=base,reload=reload,vis=visu)
             else:
-                self.virus = coco.VirusStat.readpekl('.cache/'+base+'.pkl')
+                self.virus = coco.VirusStat.readpkl('.cache/'+base+'.pkl')
                 pandy = self.virus.getwheregeometrydescription()
                 self.allvisu = AllVisu(base, pandy)
                 coge.GeoManager('name')
@@ -402,7 +402,7 @@ class __front__:
     def getversion(self,):
         """Return the current running version of pycoa.
         """
-        return src._version.__version__
+        return pyvoa._version.__version__
 
     def listoutput(self,):
         """Return the list of currently available output types for the
@@ -656,7 +656,8 @@ class __front__:
             """
             input = kwargs.get('input')
             where = kwargs.get('where')
-
+            mapoption = kwargs.get('mapoption')
+            print("mapoption",mapoption)
             if 'output' in kwargs:
                 kwargs.pop('output')
             if 'bypop' in kwargs:
@@ -700,6 +701,7 @@ class __front__:
     @input_visuwrapper
     @decomap
     def map(self,**kwargs):
+
         self.setnamefunction(self.map)
         if self.getdisplay():
             z = {**self.getvisukwargs(), **kwargs}
@@ -878,8 +880,8 @@ class __front__:
     def merger(self,**kwargs):
         '''
         Merge two or more pycoa.pandas from get_stats operation
-        'src.andas': list (min 2D) of pandas from stats
-        'whichcol': list variable associate to the src.andas list to be retrieve
+        'pyvoa.andas': list (min 2D) of pandas from stats
+        'whichcol': list variable associate to the pyvoa.andas list to be retrieve
         '''
         global _db
         kwargs_keystesting(kwargs,['coapandas'], 'Bad args used in the pycoa.merger function.')
@@ -895,7 +897,7 @@ class __front__:
         else:
             CoaError('savefig can\'t be used to store a panda DataFrame')
 
-from src.__version__ import __version__,__author__,__email__
+from pyvoa.__version__ import __version__,__author__,__email__
 def front():
     ''' This public function returns front class '''
     fr = __front__()

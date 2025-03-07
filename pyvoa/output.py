@@ -7,7 +7,7 @@ Authors : Olivier Dadoun, Julien Browaeys, Tristan Beau
 Copyright ©pycoa_fr
 License: See joint LICENSE file
 
-Module : src.allvisu
+Module : pyvoa.allvisu
 
 About :
 -------
@@ -15,13 +15,13 @@ About :
 An interface module to easily plot pycoa_data with bokeh
 
 """
-from src.tools import (
+from pyvoa.tools import (
     kwargs_keystesting,
     extract_dates,
     verb,
     fill_missing_dates
 )
-from src.error import *
+from pyvoa.error import *
 import math
 import pandas as pd
 import geopandas as gpd
@@ -44,10 +44,10 @@ import datetime as dt
 import bisect
 from functools import wraps
 
-from src.dbparser import MetaInfo
-from src.matplotlib_visu import matplotlib_visu
-from src.seaborn_visu import seaborn_visu
-from src.bokeh_visu import bokeh_visu
+from pyvoa.dbparser import MetaInfo
+from pyvoa.matplotlib_visu import matplotlib_visu
+from pyvoa.seaborn_visu import seaborn_visu
+from pyvoa.bokeh_visu import bokeh_visu
 
 __all__ = ['InputOption']
 

@@ -7,20 +7,20 @@ Authors : Olivier Dadoun, Julien Browaeys, Tristan Beau
 Copyright ©pycoa_fr
 License: See joint LICENSE file
 
-Module : src.matplotlib_visu
+Module : pyvoa.matplotlib_visu
 
 About :
 -------
 
 
 """
-from src.tools import (
+from pyvoa.tools import (
     extract_dates,
     debug,
     verb,
     fill_missing_dates
 )
-from src.error import *
+from pyvoa.error import *
 import math
 import pandas as pd
 import geopandas as gpd
@@ -43,7 +43,7 @@ import datetime as dt
 import bisect
 from functools import wraps
 import matplotlib.dates as mdates
-from src.dbparser import MetaInfo
+from pyvoa.dbparser import MetaInfo
 
 from IPython import get_ipython
 

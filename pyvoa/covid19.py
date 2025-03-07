@@ -6,7 +6,7 @@ Authors : Olivier Dadoun, Julien Browaeys, Tristan Beau
 Copyright ©pycoa.fr
 License: See joint LICENSE file
 
-Module : src.covid19
+Module : pyvoa.covid19
 
 About :
 -------
@@ -22,7 +22,7 @@ import pandas as pd
 pd.options.mode.chained_assignment = None  # default='warn'
 import datetime as dt
 
-from src.tools import (
+from pyvoa.tools import (
     kwargs_valuestesting,
     extract_dates,
     debug,
@@ -31,17 +31,17 @@ from src.tools import (
     getnonnegfunc,
     return_nonan_dates_pandas,
 )
-import src.geo as coge
+import pyvoa.geo as coge
 
-import src.dbparser as parser
+import pyvoa.dbparser as parser
 
 import geopandas as gpd
-from src.error import *
+from pyvoa.error import *
 import pickle
 import os, time
 import re
-import src.geo as coge
-from src.output import InputOption
+import pyvoa.geo as coge
+from pyvoa.output import InputOption
 class VirusStat(object):
    """
    VirusStat class
@@ -147,7 +147,7 @@ class VirusStat(object):
 
    def setvisu(self,db_name,wheregeometrydescription):
        ''' Set the Display '''
-       import src.output as output
+       import pyvoa.output as output
        self.codisp = output.AllVisu(db_name, wheregeometrydescription)
 
    def getvisu(self):
@@ -155,7 +155,7 @@ class VirusStat(object):
        return self.codisp
 
    @staticmethod
-   def readpekl(filepkl):
+   def readpkl(filepkl):
       if not os.path.isfile(filepkl):
          path = ".cache/"
          if not os.path.exists(path):
@@ -278,7 +278,8 @@ class VirusStat(object):
             newpd = input.loc[input['where'].str.upper().isin([x.upper() for x in where])]
         newpd = gpd.GeoDataFrame(newpd, geometry=newpd.geometry, crs='EPSG:4326').reset_index(drop=True)
         where_geometry_none = newpd[newpd['geometry'].isna()]['where'].unique()
-        CoaWarning(str(where_geometry_none)+' those localisation have None geometry, remove them ...')
+        if where_geometry_none:
+            CoaWarning('Those localisation have None geometry, remove them ...:'+str(where_geometry_none))
         newpd = newpd.dropna(subset=['geometry'])
         return newpd
 
@@ -340,7 +341,8 @@ class VirusStat(object):
            kwargs['input'].loc[:,w] = kwargs['input'].groupby('where')[w].ffill()
            where_alldate_nan = kwargs['input'].groupby('where')[w].apply(lambda x: x.isna().all())
            wherenan = where_alldate_nan[where_alldate_nan].index.tolist()
-           CoaInfo('drop ' + str(wherenan) +' : value is NAN for all the date')
+           if wherenan:
+               CoaWarning('drop ' + str(wherenan) +' : value is NAN for all the date  ')
            kwargs['input'] = kwargs['input'].loc[~kwargs['input']['where'].isin(wherenan)]
            kwargs['which'] = w
            kwargs['input'] = self.whereclustered(**kwargs)

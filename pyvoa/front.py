@@ -904,7 +904,7 @@ class front:
 # pv.map(...)
 # Ju requierement
 
-front_instance = front()
+__pyvoafront_instance__ = front()
 
 from pyvoa.__version__ import __version__,__author__,__email__
 front_instance.__version__ = __version__
@@ -914,6 +914,6 @@ front_instance.__email__ = __email__
 import sys
 module = sys.modules[__name__]
 
-for attr_name in dir(front_instance):
-    if not attr_name.startswith("_") and callable(getattr(front_instance, attr_name)):
-        setattr(module, attr_name, getattr(front_instance, attr_name))
+for attr_name in dir(__pyvoafront_instance__):
+    if not attr_name.startswith("_") and callable(getattr(__pyvoafront_instance__, attr_name)):
+        setattr(module, attr_name, getattr(__pyvoafront_instance__, attr_name))

@@ -60,7 +60,7 @@ from pyvoa.kwarg_options import InputOption
 from pyvoa.visualizer import AllVisu
 
 
-class __front__:
+class front:
     """
         front Class
     """
@@ -898,11 +898,22 @@ class __front__:
         else:
             CoaError('savefig can\'t be used to store a panda DataFrame')
 
+# this trick allow you to do
+# import pyvoa.front as pv
+# pv.setwhom(...)
+# pv.map(...)
+# Ju requierement
+
+front_instance = front()
+
 from pyvoa.__version__ import __version__,__author__,__email__
-def front():
-    ''' This public function returns front class '''
-    fr = __front__()
-    fr.__version__ = __version__
-    fr.__author__ = __author__
-    fr.__email__ = __email__
-    return fr
+front_instance.__version__ = __version__
+front_instance.__author__ = __author__
+front_instance.__email__ = __email__
+
+import sys
+module = sys.modules[__name__]
+
+for attr_name in dir(front_instance):
+    if not attr_name.startswith("_") and callable(getattr(front_instance, attr_name)):
+        setattr(module, attr_name, getattr(front_instance, attr_name))

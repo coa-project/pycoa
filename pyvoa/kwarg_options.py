@@ -15,16 +15,10 @@ About :
 An interface module to easily plot pycoa_data with bokeh
 
 """
-from pyvoa.tools import (
-    kwargs_keystesting,
-    extract_dates,
-    verb,
-    fill_missing_dates
-)
+from pyvoa.tools import kwargs_keystesting
 from pyvoa.error import *
 import math
 import pandas as pd
-import geopandas as gpd
 import numpy as np
 
 from collections import defaultdict
@@ -40,14 +34,8 @@ import importlib
 
 import shapely.geometry as sg
 
-import datetime as dt
 import bisect
 from functools import wraps
-
-from pyvoa.dbparser import MetaInfo
-from pyvoa.matplotlib_visu import matplotlib_visu
-from pyvoa.seaborn_visu import seaborn_visu
-from pyvoa.bokeh_visu import bokeh_visu
 
 __all__ = ['InputOption']
 
@@ -57,33 +45,33 @@ class InputOption():
     """
     def __init__(self):
         self.d_batchinput_args  = {
-                                'where':[''],\
-                                'option':['nonneg','smooth7','sumall',
-                                'bypop=0','bypop=100', 'bypop=1k', 'bypop=100k','bypop=1M'],\
-                                'which':[''],\
-                                'what':['current','daily','weekly'],\
-                                'when':[''],\
-                                'input':[pd.DataFrame()],\
-                                'output':['pandas','geopandas','list','dict','array']
-                              }
+                'where':[''],\
+                        'option':['nonneg','smooth7','sumall',
+                                  'bypop=0','bypop=100', 'bypop=1k', 'bypop=100k','bypop=1M'],\
+                                          'which':[''],\
+                                          'what':['current','daily','weekly'],\
+                                          'when':[''],\
+                                          'input':[pd.DataFrame()],\
+                                          'output':['pandas','geopandas','list','dict','array']
+                                          }
         self.listchartkargskeys = list(self.d_batchinput_args.keys())
         self.listchartkargsvalues = list(self.d_batchinput_args.values())
 
         self.d_graphicsinput_args = {
-                                 'title':'',\
-                                 'copyright': 'pyvoa',\
-                                 'mode':['mouse','vline','hline'],\
-                                 'typeofhist':['bylocation','byvalue','pie'],\
-                                 'typeofplot':['date','menulocation','versus','spiral','yearly'],\
-                                 'bins':10,\
-                                 'vis':['matplotlib','bokeh','folium','seaborn'],\
-                                 'tile' : ['openstreet','esri','stamen','positron'],\
-                                 'orientation':['horizontal','vertical'],\
-                                 'dateslider':[False,True],\
-                                 'mapoption':['text','textinteger','spark','label%','log','unsorted','dense'],\
-                                 'guideline':[False,True],\
-                                 'ax_type':['linear', 'log']
-                                  }
+                'title':'',\
+                        'copyright': 'pyvoa',\
+                        'mode':['mouse','vline','hline'],\
+                        'typeofhist':['bylocation','byvalue','pie'],\
+                        'typeofplot':['date','menulocation','versus','spiral','yearly'],\
+                        'bins':10,\
+                        'vis':['matplotlib','bokeh','folium','seaborn'],\
+                        'tile' : ['openstreet','esri','stamen','positron'],\
+                        'orientation':['horizontal','vertical'],\
+                        'dateslider':[False,True],\
+                        'mapoption':['text','textinteger','spark','label%','log','unsorted','dense'],\
+                        'guideline':[False,True],\
+                        'ax_type':['linear', 'log']
+                        }
         self.listviskargskeys = list(self.d_graphicsinput_args.keys())
         self.dicokfront = {}
 
@@ -106,215 +94,3 @@ class InputOption():
 
     def getkwargsfront(self):
         return self.dicokfront
-
-Max_Countries_Default  = 12
-class AllVisu:
-    """
-        All visualisation should be implemented here !
-    """
-    def __init__(self, db_name = None, kindgeo = None):
-        self.lcolors = ['red', 'blue', 'green', 'orange', 'purple',
-          'brown', 'pink', 'gray', 'yellow', 'cyan']
-        self.scolors = self.lcolors[:5]
-
-        if kindgeo is None:
-            pass
-        else:
-            self.kindgeo = kindgeo
-        self.when_beg, self.when_end = dt.date(1, 1, 1), dt.date(1, 1, 1)
-
-        self.database_name = None
-        verb("Init of AllVisu() with db=" + str(db_name))
-        self.database_name = db_name
-        self.currentmetadata = MetaInfo().getcurrentmetadata(db_name)
-        self.setchartsfunctions = [method for method in dir(AllVisu) if callable(getattr(AllVisu, method)) and method.startswith("pycoa_") and not method.startswith("__")]
-        self.geopan = gpd.GeoDataFrame()
-        self.pycoa_geopandas = False
-        self.geom = []
-        self.listfigs = []
-        self.dchartkargs = {}
-        self.dvisukargs = {}
-        self.uptitle, self.subtitle = ' ',' '
-        self.code = self.currentmetadata['geoinfo']['iso3']
-        self.granularity = self.currentmetadata['geoinfo']['granularity']
-        self.namecountry = self.currentmetadata['geoinfo']['iso3']
-
-    ''' DECORATORS FOR PLOT: DATE, VERSUS, SCROLLINGMENU '''
-    def decoplot(func):
-        """
-        decorator for plot purpose
-        """
-        @wraps(func)
-        def inner_plot(self ,**kwargs):
-            input = kwargs.get('input')
-            locunique = list(input['where'].unique())[:Max_Countries_Default]
-            input = input.loc[input['where'].isin(locunique)]
-            kwargs['input'] = input
-            return func(self, **kwargs)
-        return inner_plot
-
-        ''' DECORATORS FOR HISTO VERTICAL, HISTO HORIZONTAL, PIE & MAP'''
-    def decohistomap(func):
-        """
-        Decorator function used for histogram and map
-        """
-        @wraps(func)
-        def inner_hm(self, **kwargs):
-            if len(kwargs['which'])>1:
-                CoaInfo("Only one variable could be displayed, take the first one ...")
-            kwargs['which'] = kwargs.get('which')[0]
-            return func(self, **kwargs)
-        return inner_hm
-    ''' DECORATORS FOR HISTO VERTICAL, HISTO HORIZONTAL, PIE '''
-    def decohistopie(func):
-        @wraps(func)
-        def inner_decohistopie(self, **kwargs):
-            """
-            Decorator for Horizontal histogram & Pie Chart
-            It put in the kwargs:
-            kwargs['geopdwd']-> pandas for which asked (all dates)
-            kwargs['geopdwd_filtered']-> pandas for which asked last dates
-            """
-            input = kwargs.get('input')
-            which = kwargs.get('which')
-            locunique = input['where'].unique()
-
-            input_first = input.loc[input['where'].isin(locunique[:Max_Countries_Default-1])]
-            input_others = input.loc[input['where'].isin(locunique[Max_Countries_Default-1:])]
-
-            input_others[which] = input_others[which].sum()
-            input_others['where'] = 'SumOthers'
-            input_others['code'] = 'SumOthers'
-            input_others['colors'] = '#FFFFFF'
-            input_others = input_others.drop_duplicates(['where','code'])
-            input = pd.concat([input_first,input_others])
-            input = input.sort_values(by=which, ascending=False).reset_index(drop=True)
-            kwargs['input'] = input
-            return func(self,**kwargs)
-        return inner_decohistopie
-
-    @decoplot
-    def plot(self,**kwargs):
-        typeofplot = kwargs.get('typeofplot')
-        vis = kwargs.get('vis')
-        if typeofplot == 'yearly' and len(kwargs['input']['where'].unique())>1:
-            CoaWarning('Yearly plot can display only one country,\
-                    take the most import one')
-            first=kwargs['input'].where.unique()[0]
-            kwargs['input'] =  kwargs['input'].loc[kwargs['input'].where.isin([first])]
-
-        if typeofplot == 'versus':
-            if len(kwargs.get('which')) != 2:
-                raise CoaError("Can't make versus plot in this condition len("+str(kwargs.get('which'))+")!=2")
-
-        if vis == 'matplotlib':
-            if typeofplot == 'date':
-                fig = matplotlib_visu().matplotlib_date_plot(**kwargs)
-            elif typeofplot == 'versus':
-                fig = matplotlib_visu().matplotlib_versus_plot(**kwargs)
-            elif typeofplot == 'yearly':
-                fig = matplotlib_visu().matplotlib_yearly_plot(**kwargs)
-            else:
-                raise CoaError('For display: '+ vis +' unknown type of plot '+typeofplot)
-        elif vis =='seaborn':
-            if typeofplot == 'date':
-                fig = seaborn_visu().seaborn_date_plot(**kwargs)
-            elif  typeofplot == 'versus':
-                fig = seaborn_visu().seaborn_versus_plot(**kwargs)
-            else:
-                CoaError(typeofplot + ' not implemented in ' + vis)
-        elif vis == 'bokeh':
-            if typeofplot == 'date':
-                fig = bokeh_visu(InputOption().d_graphicsinput_args).bokeh_date_plot(**kwargs)
-            elif typeofplot == 'spiral':
-                fig = bokeh_visu(InputOption().d_graphicsinput_args).bokeh_spiral_plot(**kwargs)
-            elif typeofplot == 'versus':
-                if isinstance(which,list) and len(which) == 2:
-                    fig = bokeh_visu(InputOption().d_graphicsinput_args).bokeh_plot(**kwargs)
-                else:
-                    print('typeofplot is versus but dim(which)!=2, versus has not effect ...')
-                    fig = bokeh_visu(InputOption().d_graphicsinput_args).bokeh_date_plot(**kwargs)
-            elif typeofplot == 'menulocation':
-                if self.granularity == 'nation' and self.granularity != 'World':
-                    print('typeofplot is menulocation with a national DB granularity, use date plot instead ...')
-                    fig = bokeh_visu(InputOption().d_graphicsinput_args).plot(*kwargs)
-                else:
-                    if len(kwargs['which']) > 1:
-                        CoaWarning('typeofplot is menulocation but dim(which)>1, take first one '+kwargs['which'][0])
-                    fig = bokeh_visu(InputOption().d_graphicsinput_args).bokeh_menu_plot(**kwargs)
-            elif typeofplot == 'yearly':
-                if input.date.max()-input.date.min() <= dt.timedelta(days=365):
-                    print("Yearly will not be used since the time covered is less than 1 year")
-                    fig = matplotlib_visu().bokeh_date_plot(**kwargs)
-                else:
-                    fig = matplotlib_visu().bokeh_yearly_plot(**kwargs)
-        else:
-            print(" Not implemented yet ")
-        return fig
-
-    @decohistomap
-    @decohistopie
-    def hist(self,**kwargs):
-        '''
-        FILL IT
-        '''
-        typeofhist = kwargs.get('typeofhist')
-        vis = kwargs.get('vis')
-
-        if vis == 'matplotlib':
-            if typeofhist == 'bylocation':
-                fig = matplotlib_visu().matplotlib_horizontal_histo(**kwargs)
-            elif typeofhist == 'byvalue':
-                fig = matplotlib_visu().matplotlib_histo(**kwargs)
-            elif typeofhist == 'pie':
-                fig = matplotlib_visu().matplotlib_pie(**kwargs)
-            else:
-                raise CoaError(typeofhist + ' not implemented in ' + vis)
-        elif vis == 'bokeh':
-            if typeofhist == 'bylocation':
-                fig = bokeh_visu(InputOption().d_graphicsinput_args).bokeh_horizonhisto(**kwargs)
-            elif typeofhist == 'byvalue':
-                fig = bokeh_visu(InputOption().d_graphicsinput_args).bokeh_histo( **kwargs)
-            elif typeofhist == 'pie':
-                fig = bokeh_visu(InputOption().d_graphicsinput_args).bokeh_pie(**kwargs)
-        elif vis == 'seaborn':
-            if typeofhist == 'bylocation':
-                fig = seaborn_visu().seaborn_hist_horizontal(**kwargs)
-            elif typeofhist == 'pie':
-                fig = seaborn_visu().seaborn_pie(**kwargs)
-            elif typeofhist == 'byvalue':
-                fig = seaborn_visu().seaborn_hist_value( **kwargs)
-            else:
-                print(typeofhist + ' not implemented in ' + vis)
-        else:
-            print( "\n not yet implemented \n")
-        return fig
-
-    @decohistomap
-    def map(self,**kwargs):
-        '''
-        FILL IT
-        '''
-        vis = kwargs.get('vis')
-        mapoption = kwargs.get('mapoption')
-        input = kwargs.get('input')
-        if vis == 'matplotlib':
-            return matplotlib_visu().matplotlib_map(**kwargs)
-        elif vis == 'seaborn':
-            return seaborn_visu().seaborn_heatmap(**kwargs)
-        elif vis == 'bokeh':
-            if mapoption:
-                if 'spark' in mapoption or 'spiral' in mapoption:
-                    fig = bokeh_visu().pycoa_pimpmap(**kwargs)
-                elif 'text' or 'exploded' or 'dense' in mapoption:
-                    fig = bokeh_visu().bokeh_map(**kwargs)
-                else:
-                    CoaError("What kind of pimp map you want ?!")
-            else:
-                fig = bokeh_visu().bokeh_map(**kwargs)
-            return fig
-        elif vis == 'folium':
-            return matplotlib_visu().bokeh_mapfolium(**kwargs)
-        else:
-            raise CoaError('Waiting for a valid visualisation. So far: \'bokeh\', \'folium\' or \'matplotlib\' \
-            aka matplotlib .See help.')

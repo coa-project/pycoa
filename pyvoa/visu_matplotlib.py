@@ -7,7 +7,7 @@ Authors : Olivier Dadoun, Julien Browaeys, Tristan Beau
 Copyright ©pycoa_fr
 License: See joint LICENSE file
 
-Module : pyvoa.matplotlib_visu
+Module : pyvoa.visu_matplotlib
 
 About :
 -------
@@ -43,12 +43,12 @@ import datetime as dt
 import bisect
 from functools import wraps
 import matplotlib.dates as mdates
-from pyvoa.dbparser import MetaInfo
+from pyvoa.jsondb_parser import MetaInfo
 
 from IPython import get_ipython
 
 
-class matplotlib_visu:
+class visu_matplotlib:
     '''
         MATPLOTLIB chart drawing methods ...
     '''

@@ -7,7 +7,7 @@ Authors : Olivier Dadoun, Julien Browaeys, Tristan Beau
 Copyright ©pycoa_fr
 License: See joint LICENSE file
 
-Module : pyvoa.bokeh_visu
+Module : pyvoa.visu_bokeh
 
 About :
 -------
@@ -42,7 +42,7 @@ import datetime as dt
 import bisect
 from functools import wraps
 
-from pyvoa.dbparser import MetaInfo
+from pyvoa.jsondb_parser import MetaInfo
 from bokeh.models import (
 ColumnDataSource,
 TableColumn,
@@ -103,8 +103,9 @@ cumsum
 
 Width_Height_Default = [580, 400]
 Max_Countries_Default = 24
-import pyvoa.output
-class bokeh_visu:
+import pyvoa.visualizer
+import pyvoa.kwarg_options
+class visu_bokeh:
     def __init__(self,d_graphicsinput_args = None):
         self.pycoageopandas = False
         self.lcolors = Category20[20]
@@ -360,7 +361,7 @@ class bokeh_visu:
         mode = kwargs.get('mode',list(self.d_graphicsinput_args['mode'])[0])
 
         panels = []
-        cases_custom = bokeh_visu().rollerJS()
+        cases_custom = visu_bokeh().rollerJS()
         if self.get_listfigures():
             self.set_listfigures([])
         listfigs=[]
@@ -390,7 +391,7 @@ class bokeh_visu:
 
             bokeh_figure.legend.location = "top_left"
             listfigs.append(bokeh_figure)
-            bokeh_visu().bokeh_legend(bokeh_figure)
+            visu_bokeh().bokeh_legend(bokeh_figure)
         self.set_listfigures(listfigs)
         tabs = Tabs(tabs=panels)
         return tabs
@@ -429,7 +430,7 @@ class bokeh_visu:
 
         panels = []
         listfigs = []
-        cases_custom = bokeh_visu().rollerJS()
+        cases_custom = visu_bokeh().rollerJS()
 
         for axis_type in ['linear', 'log']:
             bokeh_figure = self.bokeh_figure( y_axis_type = axis_type, x_axis_type = 'datetime')
@@ -491,7 +492,7 @@ class bokeh_visu:
                 bokeh_figure.legend.visible=False
             bokeh_figure.xaxis.formatter = DatetimeTickFormatter(
                 days = "%d/%m/%y", months = "%d/%m/%y", years = "%b %Y")
-            bokeh_visu().bokeh_legend(bokeh_figure)
+            visu_bokeh().bokeh_legend(bokeh_figure)
             listfigs.append(bokeh_figure)
         self.set_listfigures(listfigs)
         tabs = Tabs(tabs = panels)
@@ -550,7 +551,7 @@ class bokeh_visu:
                         line_width = 3, line_color = 'blue')
         circle = bokeh_figure.circle('x', 'y', size=2, source=pyvoa)
 
-        cases_custom = bokeh_visu().rollerJS()
+        cases_custom = visu_bokeh().rollerJS()
         hover_tool = HoverTool(tooltips=[('Cases', '@cases{0,0.0}'), ('date', '@date{%F}')],
                                formatters={'Cases': 'printf', '@{cases}': cases_custom, '@date': 'datetime'},
                                renderers=[circle],
@@ -627,7 +628,7 @@ class bokeh_visu:
         filter_data2 = mypivot[[uniqloc[1]]].rename(columns={uniqloc[1]: 'cases'})
         pyvoa2 = ColumnDataSource(filter_data2)
 
-        cases_custom = bokeh_visu().rollerJS()
+        cases_custom = visu_bokeh().rollerJS()
         #hover_tool = HoverTool(tooltips=[(which, '@which{0,0.0}'), ('date', '@date{%F}')],
         #                       formatters={which: 'printf', '@{which}': cases_custom, '@date': 'datetime'},
         #                       mode = mode, point_policy="snap_to_data")  # ,PanTool())
@@ -709,7 +710,7 @@ class bokeh_visu:
 
         panels = []
         listfigs = []
-        cases_custom = bokeh_visu().rollerJS()
+        cases_custom = visu_bokeh().rollerJS()
         #drop bissextile fine tuning in needed in the future
         input = input.loc[~(input['date'].dt.month.eq(2) & input['date'].dt.day.eq(29))].reset_index(drop=True)
         input = input.copy()
@@ -770,7 +771,7 @@ class bokeh_visu:
             #label_dict = dict(zip(input.loc[input.allyears.eq(minyear)]['daymonth'],input.loc[input.allyears.eq(minyear)]['date'].apply(lambda x: str(x.day)+'/'+str(x.month))))
             bokeh_figure.xaxis.major_label_overrides = dict(zip(list(labelspd['dayofyear'].astype(int)),list(replacelabelspd)))
 
-            bokeh_visu().bokeh_legend(bokeh_figure)
+            visu_bokeh().bokeh_legend(bokeh_figure)
             listfigs.append(bokeh_figure)
 
         tooltips = [('where', '@rolloverdisplay'), ('date', '@date{%F}'), (r.name, '@$name{0,0.0}')]
@@ -994,7 +995,7 @@ class bokeh_visu:
                     text = 'horihistotext',
                     source = pyvoafiltered,text_font_size='10px',text_color='black')
 
-            cases_custom = bokeh_visu().rollerJS()
+            cases_custom = visu_bokeh().rollerJS()
             hover_tool = HoverTool(tooltips=[('where', '@where'), (which, '@right{0,0.0}'), ],
                                    formatters = {'where': 'printf', '@{' + 'right' + '}': cases_custom, '%':'printf'},
                                    mode = mode, point_policy="snap_to_data")
@@ -1128,7 +1129,7 @@ class bokeh_visu:
         input=kwargs.get('input')
         sourcemapoption=ColumnDataSource(input.drop(columns='geometry'))
         tile = kwargs.get('tile')
-        tile = bokeh_visu.convert_tile(tile, 'bokeh')
+        tile = visu_bokeh.convert_tile(tile, 'bokeh')
         wmt = WMTSTileSource(url = tile)
         bokeh_figure = self.bokeh_figure(x_axis_type = 'mercator', y_axis_type = 'mercator', match_aspect = True)
         bokeh_figure.add_tile(wmt, retina=True)
@@ -1139,11 +1140,11 @@ class bokeh_visu:
         min_col, max_col, min_col_non0 = 3*[0.]
         try:
             if dateslider:
-                min_col, max_col = bokeh_visu().min_max_range(np.nanmin(input['cases']),
+                min_col, max_col = visu_bokeh().min_max_range(np.nanmin(input['cases']),
                                                          np.nanmax(input['cases']))
                 min_col_non0 = (np.nanmin(input.loc[input['cases']>0.]['cases']))
             else:
-                min_col, max_col = bokeh_visu().min_max_range(np.nanmin(input['cases']),
+                min_col, max_col = visu_bokeh().min_max_range(np.nanmin(input['cases']),
                                                          np.nanmax(input['cases']))
                 min_col_non0 = (np.nanmin(input.loc[input['cases']>0.]['cases']))
         except ValueError:

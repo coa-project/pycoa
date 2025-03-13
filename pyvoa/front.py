@@ -50,13 +50,14 @@ from pyvoa.tools import (
     all_or_none_lists,
 )
 
-import pyvoa.covid19 as coco
-from pyvoa.dbparser import MetaInfo
+import pyvoa.geopd_builder as coco
+from pyvoa.jsondb_parser import MetaInfo
 from pyvoa.error import *
 import pyvoa.geo as coge
 
 import geopandas as gpd
-from pyvoa.output import InputOption, AllVisu
+from pyvoa.kwarg_options import InputOption
+from pyvoa.visualizer import AllVisu
 
 
 class __front__:
@@ -120,7 +121,7 @@ class __front__:
         return pd1
 
     def setwhom(self,base,**kwargs):
-        """Set the covid19 VirusStat used, given as a string.
+        """Set the geopd_builder VirusStat used, given as a string.
         Please see pycoa.listbase() for the available current list.
 
         By default, the listbase()[0] is the default base used in other
@@ -155,7 +156,7 @@ class __front__:
         def wrapper(self,**kwargs):
             '''
                 Wrapper input function .
-                Wrap and format the user input argument for covid19 class
+                Wrap and format the user input argument for geopd_builder class
                 if argument is missing fill with the default value
                 Transforms 'where', 'which', and 'option' into lists if they are not already.
                 order position of the items in 'option'
@@ -258,7 +259,7 @@ class __front__:
 
     @input_wrapper
     def get(self,**kwargs):
-        """Return covid19 data in specified format output (default, by list)
+        """Return geopd_builder data in specified format output (default, by list)
         for specified locations ('where' keyword).
         The used VirusStat is set by the setbase() function but can be
         changed on the fly ('whom' keyword)
@@ -419,7 +420,7 @@ class __front__:
         return self.lvisu
 
     def listwhom(self, detailed = False):
-        """Return the list of currently avalailable VirusStats for covid19
+        """Return the list of currently avalailable VirusStats for geopd_builder
          data in PyCoA.
          Only GOOD json description database is returned !
          If detailed=True, gives information location of each given VirusStat.

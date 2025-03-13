@@ -6,12 +6,12 @@ Authors : Olivier Dadoun, Julien Browaeys, Tristan Beau
 Copyright ©pycoa.fr
 License: See joint LICENSE file
 
-Module : pyvoa.covid19
+Module : pyvoa.geopd_builder
 
 About :
 -------
 
-Main class definitions for covid19 dataset access. Currently, we are only using the JHU CSSE data.
+Main class definitions for geopd_builder dataset access. Currently, we are only using the JHU CSSE data.
 The parser class gives a simplier access through an already filled dict of data
 
 """
@@ -33,7 +33,7 @@ from pyvoa.tools import (
 )
 import pyvoa.geo as coge
 
-import pyvoa.dbparser as parser
+import pyvoa.jsondb_parser as parser
 
 import geopandas as gpd
 from pyvoa.error import *
@@ -41,7 +41,7 @@ import pickle
 import os, time
 import re
 import pyvoa.geo as coge
-from pyvoa.output import InputOption
+from pyvoa.kwarg_options import InputOption
 class VirusStat(object):
    """
    VirusStat class
@@ -53,7 +53,7 @@ class VirusStat(object):
             - call the geo
             - call the display
         """
-        verb("Init of covid19.VirusStat()")
+        verb("Init of geopd_builder.VirusStat()")
         self.db = db_name
         self.currentmetadata = parser.MetaInfo().getcurrentmetadata(db_name)
         self.currentdata = parser.DataParser(db_name)
@@ -115,7 +115,7 @@ class VirusStat(object):
 
    def get_available_keywords(self):
        '''
-        return available from the dbparser
+        return available from the jsondb_parser
        '''
        return self.currentdata.get_available_keywords()
 
@@ -147,7 +147,7 @@ class VirusStat(object):
 
    def setvisu(self,db_name,wheregeometrydescription):
        ''' Set the Display '''
-       import pyvoa.output as output
+       import pyvoa.visualizer as output
        self.codisp = output.AllVisu(db_name, wheregeometrydescription)
 
    def getvisu(self):

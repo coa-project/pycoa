@@ -7,7 +7,7 @@ Authors : Olivier Dadoun, Julien Browaeys, Tristan Beau
 Copyright ©pycoa_fr
 License: See joint LICENSE file
 
-Module : pyvoa.seaborn_visu
+Module : pyvoa.visu_seaborn
 
 About :
 -------
@@ -43,9 +43,9 @@ import datetime as dt
 import bisect
 from functools import wraps
 
-from pyvoa.dbparser import MetaInfo
+from pyvoa.jsondb_parser import MetaInfo
 
-class seaborn_visu:
+class visu_seaborn:
     ######SEABORN#########
     ######################
     def __init__(self,):

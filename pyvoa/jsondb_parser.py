@@ -3,7 +3,7 @@
 Date :    april 2020 - june 2024
 Authors : Olivier Dadoun, Julien Browaeys, Tristan Beau
 License: See joint LICENSE file
-Module : pyvoa.dbparser
+Module : pyvoa.jsondb_parser
 Aboutself.granu_country
 -----
 This is the PyCoA rapport module it gives all available information concerning a database key words

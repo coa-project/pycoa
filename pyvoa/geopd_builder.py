@@ -42,9 +42,9 @@ import os, time
 import re
 import pyvoa.geo as coge
 from pyvoa.kwarg_options import InputOption
-class VirusStat(object):
+class GPDBuilder(object):
    """
-   VirusStat class
+   GPDBuilder class
    """
    def __init__(self, db_name):
         """
@@ -53,7 +53,7 @@ class VirusStat(object):
             - call the geo
             - call the display
         """
-        verb("Init of geopd_builder.VirusStat()")
+        verb("Init of geopd_builder.GPDBuilder()")
         self.db = db_name
         self.currentmetadata = parser.MetaInfo().getcurrentmetadata(db_name)
         self.currentdata = parser.DataParser(db_name)
@@ -122,7 +122,7 @@ class VirusStat(object):
    @staticmethod
    def factory(**kwargs):
        '''
-        Return an instance to VirusStat and to Display methods
+        Return an instance to GPDBuilder and to Display methods
         This is recommended to avoid mismatch in labeled figures
        '''
        db_name = kwargs.get('db_name')
@@ -135,7 +135,7 @@ class VirusStat(object):
        filepkl = path + db_name + '.pkl'
 
        if reload:
-           datab = VirusStat(db_name)
+           datab = GPDBuilder(db_name)
            with open(filepkl, 'wb') as f:
                pickle.dump(datab,f)
 
@@ -162,7 +162,7 @@ class VirusStat(object):
               os.makedirs(path)
          db_name=filepkl.replace(path,'').replace('.pkl','')
          CoaWarning("Data from "+db_name + " isn't allready stored")
-         datab = VirusStat(db_name)
+         datab = GPDBuilder(db_name)
          with open(filepkl, 'wb') as f:
              pickle.dump(datab,f)
       else:
@@ -186,11 +186,11 @@ class VirusStat(object):
    def get_fulldb(self):
       return self.currentdata.get_maingeopandas()
 
-   def get_available_VirusStat(self):
+   def get_available_GPDBuilder(self):
         '''
-        Return all the available Covid19 VirusStat
+        Return all the available Covid19 GPDBuilder
         '''
-        return self.VirusStat_name
+        return self.GPDBuilder_name
 
    def subregions_deployed(self,listloc,typeloc='subregion'):
         exploded = []
@@ -443,7 +443,7 @@ class VirusStat(object):
     pandy = pd.merge(pandy,uniquepandy,on='where',how='outer')
 
     for i in val2norm:
-        pandy.loc[:,i+' '+bypop]=pandy[i]/pandy[pop_field]*VirusStat.dictbypop()[value]
+        pandy.loc[:,i+' '+bypop]=pandy[i]/pandy[pop_field]*GPDBuilder.dictbypop()[value]
     return pandy
 
    def saveoutput(self,**kwargs):

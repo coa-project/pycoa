@@ -11,7 +11,7 @@ About :
 
 This is the PyCoA front end functions. It provides easy access and
 use of the whole PyCoA framework in a simplified way.
-The use can change the VirusStat, the type of data, the output format
+The use can change the GPDBuilder, the type of data, the output format
 with keywords (see help of functions below).
 
 Basic usage
@@ -23,7 +23,7 @@ Basic usage
 ** getting recovered data for some countries **
 
     cf.get(where=['Spain','Italy'],which='recovered')
-** listing available VirusStat and which data can be used **
+** listing available GPDBuilder and which data can be used **
     cf.listwhom()
     cf.setwhom('jhu',reload=True) # return available keywords (aka 'which' data), reload DB is True by default
     cf.listwhich()   # idem
@@ -85,10 +85,10 @@ class front:
         self.listchartkargsvalues = self.av.listchartkargsvalues
         self.listviskargskeys = self.av.listviskargskeys
 
-        self.dict_bypop = coco.VirusStat.dictbypop()
+        self.dict_bypop = coco.GPDBuilder.dictbypop()
 
         self.db = ''
-        self.virus = ''
+        self.gpdbuilder = ''
         self.vis = None
         self.allvisu = None
         self.charts = None
@@ -121,7 +121,7 @@ class front:
         return pd1
 
     def setwhom(self,base,**kwargs):
-        """Set the geopd_builder VirusStat used, given as a string.
+        """Set the geopd_builder GPDBuilder used, given as a string.
         Please see pycoa.listbase() for the available current list.
 
         By default, the listbase()[0] is the default base used in other
@@ -131,19 +131,19 @@ class front:
         if reload not in [0,1]:
             raise CoaError('reload must be a boolean ... ')
         if base not in self.listwhom():
-            raise CoaDbError(base + ' is not a supported VirusStat. '
+            raise CoaDbError(base + ' is not a supported GPDBuilder. '
                                     'See pycoa.listbase() for the full list.')
         # Check if the current base is already set to the requested base
         visu = self.getdisplay()
         if self.db == base:
-            info(f"The VirusStat '{base}' is already set as the current database")
+            info(f"The GPDBuilder '{base}' is already set as the current database")
             return
         else:
             if reload:
-                self.virus, self.allvisu = coco.VirusStat.factory(db_name=base,reload=reload,vis=visu)
+                self.gpdbuilder, self.allvisu = coco.GPDBuilder.factory(db_name=base,reload=reload,vis=visu)
             else:
-                self.virus = coco.VirusStat.readpkl('.cache/'+base+'.pkl')
-                pandy = self.virus.getwheregeometrydescription()
+                self.gpdbuilder = coco.GPDBuilder.readpkl('.cache/'+base+'.pkl')
+                pandy = self.gpdbuilder.getwheregeometrydescription()
                 self.allvisu = AllVisu(base, pandy)
                 coge.GeoManager('name')
         self.db = base
@@ -185,7 +185,7 @@ class front:
                     kwargs[k]=v[0]
 
             if kwargs['where'][0] == '':
-                kwargs['where'] = list(self.virus.get_fulldb()['where'].unique())
+                kwargs['where'] = list(self.gpdbuilder.get_fulldb()['where'].unique())
 
             if not all_or_none_lists(kwargs['where']):
                 raise CoaError('For coherence all the element in where must have the same type list or not list ...')
@@ -224,7 +224,7 @@ class front:
             if self.getvisukwargs()['vis']:
                 pass
             if kwargs['input'].empty:
-                    kwargs = self.virus.get_stats(**kwargs)
+                    kwargs = self.gpdbuilder.get_stats(**kwargs)
 
             found_bypop = None
             for w in kwargs['option']:
@@ -261,7 +261,7 @@ class front:
     def get(self,**kwargs):
         """Return geopd_builder data in specified format output (default, by list)
         for specified locations ('where' keyword).
-        The used VirusStat is set by the setbase() function but can be
+        The used GPDBuilder is set by the setbase() function but can be
         changed on the fly ('whom' keyword)
         Keyword arguments
         -----------------
@@ -269,8 +269,8 @@ class front:
         where  --   a single string of location, or list of (mandatory,
                     no default value)
         which  --   what sort of data to deliver ( 'death','confirmed',
-                    'recovered' for 'jhu' default VirusStat). See listwhich() function
-                    for full list according to the used VirusStat.
+                    'recovered' for 'jhu' default GPDBuilder). See listwhich() function
+                    for full list according to the used GPDBuilder.
 
         what   --   which data are computed, either in standard mode
                     ('standard', default value), or 'daily' (diff with previous day
@@ -278,7 +278,7 @@ class front:
                     listwhich() for fullist of available
                     Full list of what keyword with the lwhat() function.
 
-        whom   --   VirusStat specification (overload the setbase()
+        whom   --   GPDBuilder specification (overload the setbase()
                     function). See listwhom() for supported list
 
         when   --   dates are given under the format dd/mm/yyyy. In the when
@@ -301,7 +301,7 @@ class front:
 
                     By default : no option.
                     See loption().
-        bypop --    normalize by population (if available for the selected VirusStat).
+        bypop --    normalize by population (if available for the selected GPDBuilder).
                     * by default, 'no' normalization
                     * can normalize by '100', '1k', '100k' or '1M'
         """
@@ -324,7 +324,7 @@ class front:
             info('Memory usage of all columns: ' + mem + ' bytes')
 
         elif output == 'geopandas':
-            casted_data = pd.merge(pandy, self.virus.getwheregeometrydescription(), on='where')
+            casted_data = pd.merge(pandy, self.gpdbuilder.getwheregeometrydescription(), on='where')
             casted_data=gpd.GeoDataFrame(casted_data)
         elif output == 'dict':
             casted_data = pandy.to_dict('split')
@@ -420,10 +420,10 @@ class front:
         return self.lvisu
 
     def listwhom(self, detailed = False):
-        """Return the list of currently avalailable VirusStats for geopd_builder
+        """Return the list of currently avalailable GPDBuilders for geopd_builder
          data in PyCoA.
          Only GOOD json description database is returned !
-         If detailed=True, gives information location of each given VirusStat.
+         If detailed=True, gives information location of each given GPDBuilder.
         """
         allpd  = self.meta.getallmetadata()
         namedb = allpd.name.to_list()
@@ -456,15 +456,15 @@ class front:
         df = pd.DataFrame(db_list_dict)
         df = df.T.reset_index()
         df.index = df.index+1
-        df = df.rename(columns={'index':'VirusStat',0: "WW/iso3",1:'Granularité',2:'WW/Name'})
-        df = df.sort_values(by='VirusStat').reset_index(drop=True)
+        df = df.rename(columns={'index':'GPDBuilder',0: "WW/iso3",1:'Granularité',2:'WW/Name'})
+        df = df.sort_values(by='GPDBuilder').reset_index(drop=True)
         try:
             if int(detailed):
                 df = (df.style.set_table_styles([{'selector' : '','props' : [('border','3px solid green')]}]))
                 print("Pandas has been pimped, use '.data' to get a pandas dataframe")
                 return df
             else:
-                return list(df['VirusStat'])
+                return list(df['GPDBuilder'])
         except:
             raise CoaError('Waiting for a boolean !')
         '''
@@ -526,15 +526,15 @@ class front:
         return sorted(self.meta.getcurrentmetadatawhich(dic))
 
     def listwhere(self,clustered = False):
-        """Get the list of available regions/subregions managed by the current VirusStat
+        """Get the list of available regions/subregions managed by the current GPDBuilder
         """
         granularity = self.meta.getcurrentmetadata(self.db)['geoinfo']['granularity']
         code = self.meta.getcurrentmetadata(self.db)['geoinfo']['iso3']
         def clust():
             if granularity == 'country' and code not in ['WLD','EUR']:
-                return  self.virus.geo.to_standard(code)
+                return  self.gpdbuilder.geo.to_standard(code)
             else:
-                r = self.virus.geo.get_region_list()
+                r = self.gpdbuilder.geo.get_region_list()
                 if not isinstance(r, list):
                     r=sorted(r['name_region'].to_list())
                 r.append(code)
@@ -547,18 +547,18 @@ class front:
         if clustered:
             return clust()
         else:
-            if self.virus.db_world == True:
+            if self.gpdbuilder.db_world == True:
                 if granularity == 'country' and code not in ['WLD','EUR'] :
-                    r =  self.virus.to_standard(code)
+                    r =  self.gpdbuilder.to_standard(code)
                 else:
                     if code == 'WLD':
-                        r = self.virus.geo.get_GeoRegion().get_countries_from_region('World')
+                        r = self.gpdbuilder.geo.get_GeoRegion().get_countries_from_region('World')
                     else:
-                        r = self.virus.geo.get_GeoRegion().get_countries_from_region('Europe')
-                    r = [self.virus.geo.to_standard(c)[0] for c in r]
+                        r = self.gpdbuilder.geo.get_GeoRegion().get_countries_from_region('Europe')
+                    r = [self.gpdbuilder.geo.to_standard(c)[0] for c in r]
             else:
                 if granularity == 'subregion':
-                    pan = self.virus.geo.get_subregion_list()
+                    pan = self.gpdbuilder.geo.get_subregion_list()
                     r = list(pan.name_subregion.unique())
                 elif granularity == 'country':
                     r = clust()
@@ -588,22 +588,22 @@ class front:
         """
         if which:
             if which in self.listwhich(self.db):
-                print(self.virus.get_parserdb().get_keyword_definition(which))
-                print('Parsed from this url:',self.virus.get_parserdb().get_keyword_url(which))
+                print(self.gpdbuilder.get_parserdb().get_keyword_definition(which))
+                print('Parsed from this url:',self.gpdbuilder.get_parserdb().get_keyword_url(which))
             else:
                 raise CoaError('This value do not exist please check.'+'Available variable so far in this db ' + str(self.listwhich()))
         else:
-            df = self.virus.get_parserdb().get_dbdescription()
+            df = self.gpdbuilder.get_parserdb().get_dbdescription()
             return df
 
     def getrawdb(self):
         """
-            Return the main pandas i.e with all the which values loaded from the VirusStat selected
+            Return the main pandas i.e with all the which values loaded from the GPDBuilder selected
         """
-        col = list(self.virus.get_fulldb().columns)
-        mem='{:,}'.format(self.virus.get_fulldb()[col].memory_usage(deep=True).sum())
+        col = list(self.gpdbuilder.get_fulldb().columns)
+        mem='{:,}'.format(self.gpdbuilder.get_fulldb()[col].memory_usage(deep=True).sum())
         info('Memory usage of all columns: ' + mem + ' bytes')
-        df = self.virus.get_fulldb()
+        df = self.gpdbuilder.get_fulldb()
         return df
 
     def setkwargsvisu(self,**kwargs):
@@ -666,9 +666,9 @@ class front:
             dateslider = kwargs.get('dateslider', None)
             mapoption = kwargs.get('mapoption', None)
             if 'dense' in mapoption:
-                if not self.virus.gettypeofgeometry().is_dense_geometry():
-                    self.virus.gettypeofgeometry().set_dense_geometry()
-                    new_geo = self.virus.geo.get_data()
+                if not self.gpdbuilder.gettypeofgeometry().is_dense_geometry():
+                    self.gpdbuilder.gettypeofgeometry().set_dense_geometry()
+                    new_geo = self.gpdbuilder.geo.get_data()
                     granularity = self.meta.getcurrentmetadata(self.db)['geoinfo']['granularity']
                     new_geo = new_geo.rename(columns={'name_'+granularity:'where'})
                     new_geo['where'] = new_geo['where'].apply(lambda x: x.upper())
@@ -907,9 +907,9 @@ class front:
 __pyvoafront_instance__ = front()
 
 from pyvoa.__version__ import __version__,__author__,__email__
-front_instance.__version__ = __version__
-front_instance.__author__ = __author__
-front_instance.__email__ = __email__
+__pyvoafront_instance__.__version__ = __version__
+__pyvoafront_instance__.__author__ = __author__
+__pyvoafront_instance__.__email__ = __email__
 
 import sys
 module = sys.modules[__name__]

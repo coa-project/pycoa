@@ -47,16 +47,13 @@ from pyvoa.jsondb_parser import MetaInfo
 
 from IPython import get_ipython
 
+import sys
 
 class visu_matplotlib:
     '''
         MATPLOTLIB chart drawing methods ...
     '''
     def __init__(self,):
-        env = get_ipython().__class__.__name__
-        if env != 'ZMQInteractiveShell':
-            import matplotlib
-            matplotlib.use('Agg')
         pass
 
     def decomatplotlib(func):
@@ -87,6 +84,7 @@ class visu_matplotlib:
         ax.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m'))
         plt.legend(title="where", loc="upper left", fontsize=8, title_fontsize=10)
         plt.title(title)
+        plt.show()
         return plt
 
     @decomatplotlib
@@ -107,6 +105,7 @@ class visu_matplotlib:
             leg.append(col)
         plt.legend(leg)
         plt.title(title)
+        plt.show()
         return plt
 
     @decomatplotlib
@@ -135,6 +134,7 @@ class visu_matplotlib:
             ax = plt.plot(df.index,df,label=f'{i}')
         plt.legend(d)
         plt.title(title)
+        plt.show()
         return plt
 
     @decomatplotlib
@@ -154,6 +154,7 @@ class visu_matplotlib:
         title=title, ylabel='where', labeldistance=None)
         ax.legend(bbox_to_anchor=(0.75, 1.2), loc='upper left')
         ax.set_title(title)
+        plt.show()
         return plt
 
     @decomatplotlib
@@ -170,6 +171,7 @@ class visu_matplotlib:
         fig = kwargs.get('fig')
         bar = ax.barh(input['where'], input[which],color=cmap.colors)
         ax.set_title(title)
+        plt.show()
         return plt
 
     @decomatplotlib
@@ -184,6 +186,7 @@ class visu_matplotlib:
         bins=len(input['where'])+1
         input= pd.pivot_table(input,index='date', columns='where', values=which)
         ax = input.plot.hist(bins=bins, alpha=0.5,title = title)
+        plt.show()
         return plt
 
     @decomatplotlib
@@ -232,4 +235,5 @@ class visu_matplotlib:
 
         ax.set_axis_off()
         ax.set_title(title)
+        plt.show()
         return plt

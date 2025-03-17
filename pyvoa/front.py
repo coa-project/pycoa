@@ -658,7 +658,7 @@ class front:
             input = kwargs.get('input')
             where = kwargs.get('where')
             mapoption = kwargs.get('mapoption')
-            print("mapoption",mapoption)
+
             if 'output' in kwargs:
                 kwargs.pop('output')
             if 'bypop' in kwargs:
@@ -702,7 +702,6 @@ class front:
     @input_visuwrapper
     @decomap
     def map(self,**kwargs):
-
         self.setnamefunction(self.map)
         if self.getdisplay():
             z = {**self.getvisukwargs(), **kwargs}
@@ -894,9 +893,11 @@ class front:
             if self.getdisplay() == 'bokeh':
                 CoaError("Bokeh savefig not yet implemented")
             else:
+                self.outcome.show()
                 self.outcome.savefig(name)
         else:
             CoaError('savefig can\'t be used to store a panda DataFrame')
+
 
 # this trick allow you to do
 # import pyvoa.front as pv

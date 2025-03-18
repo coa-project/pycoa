@@ -117,6 +117,7 @@ class visu_seaborn:
         plt.xlabel('Date')
         #plt.ylabel(', '.join(which))
         plt.xticks(rotation=45)
+        plt.show()
         return plt
 
     @decoplotseaborn
@@ -134,6 +135,7 @@ class visu_seaborn:
         plt.title(title)
         plt.xlabel(which[0])
         plt.ylabel(which[1])
+        plt.show()
         return plt
 
     @decoplotseaborn
@@ -155,6 +157,7 @@ class visu_seaborn:
         plt.ylabel(which)
         plt.xticks(rotation=70, ha='center')  # Rotation à 70 degrés et alignement central
         plt.show()
+        return plt
 
     @decohistseaborn
     def seaborn_hist_value(self, **kwargs):
@@ -174,6 +177,7 @@ class visu_seaborn:
         plt.xlabel(which)
         plt.ylabel('Fréquence')
         plt.show()
+        return plt
 
     ######SEABORN HIST HORIZONTALE#########
     @decoplotseaborn
@@ -197,6 +201,7 @@ class visu_seaborn:
         plt.xlabel(which)
         plt.ylabel('')
         plt.xticks(rotation=45)
+        plt.show()
         return plt
 
     ######SEABORN BOXPLOT#########
@@ -243,4 +248,5 @@ class visu_seaborn:
 
         # Afficher le total en dehors du graphique
         plt.text(0, data_pivot.shape[0] + 1, f'Total: {total}', fontsize=12)
+        plt.show()
         return plt

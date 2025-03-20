@@ -228,7 +228,7 @@ class visu_seaborn:
         """
         Create a seaborn heatmap
         """
-        CoaWarning("BEWARE !!! THIS visulasation need to be checked !!!")
+        PyvoaWarning("BEWARE !!! THIS visulasation need to be checked !!!")
         input = kwargs.get('input')
         which = kwargs.get('which')
         plt = kwargs.get('plt')

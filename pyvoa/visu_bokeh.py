@@ -313,7 +313,7 @@ class visu_bokeh:
                         (input.date <= self.when_end)].sort_values(by='date')) for i in loc}
             input['resume']=input['where'].map(spark)
         else:
-            raise CoaError('bokeh_resume_data can use spiral or spark ... here what ?')
+            raise PyvoaError('bokeh_resume_data can use spiral or spark ... here what ?')
         input = input.loc[input.date==input.date.max()].reset_index(drop=True)
         def path_to_image_html(path):
             return '<img pyvoa="'+ path + '" width="60" >'
@@ -488,7 +488,7 @@ class visu_bokeh:
             bokeh_figure.legend.click_policy="hide"
             bokeh_figure.legend.label_text_font_size = '8pt'
             if len(which) > 1 and len(which)*len(input['where'].unique())>16:
-                CoaWarning('To much labels to be displayed ...')
+                PyvoaWarning('To much labels to be displayed ...')
                 bokeh_figure.legend.visible=False
             bokeh_figure.xaxis.formatter = DatetimeTickFormatter(
                 days = "%d/%m/%y", months = "%d/%m/%y", years = "%b %Y")
@@ -612,7 +612,7 @@ class visu_bokeh:
         uniqloc.sort()
         if 'where' in input.columns:
             if len(uniqloc) < 2:
-                raise CoaTypeError('What do you want me to do ? You have selected, only one country.'
+                raise PyvoaTypeError('What do you want me to do ? You have selected, only one country.'
                                    'There is no sens to use this method. See help.')
         input = input[['date', 'where', which]]
         input = input.sort_values(by='where', ascending = True).reset_index(drop=True)
@@ -701,10 +701,10 @@ class visu_bokeh:
         mode = kwargs.get('mode',self.d_graphicsinput_args['mode'][0])
 
         if len(input['where'].unique()) > 1 :
-            CoaWarning('Can only display yearly plot for ONE location. I took the first one:'+ input['where'][0])
+            PyvoaWarning('Can only display yearly plot for ONE location. I took the first one:'+ input['where'][0])
         if isinstance(which[0],list):
             which = which[0][0]
-            CoaWarning('Can only display yearly plot for ONE which value. I took the first one:'+ which)
+            PyvoaWarning('Can only display yearly plot for ONE which value. I took the first one:'+ which)
 
         input = input.loc[input['where'] == input['where'][0]].copy()
 
@@ -721,7 +721,7 @@ class visu_bokeh:
         if isinstance(input['rolloverdisplay'].iloc[0],list):
             input['rolloverdisplay'] = input['where']
         #if len(which)>1:
-        #    CoaError('Only one variable could be displayed')
+        #    PyvoaError('Only one variable could be displayed')
         #else:
         #    which=which[0]
         for axis_type in  self.d_graphicsinput_args['ax_type']:
@@ -1036,7 +1036,7 @@ class visu_bokeh:
             try:
                 locale.setlocale(locale.LC_ALL, 'en_US.utf8')
             except:
-                raise CoaError("Locale setting problem. Please contact support@pycoa_fr")
+                raise PyvoaError("Locale setting problem. Please contact support@pycoa_fr")
 
         df['textdisplayed2'] =  ['      '+str(round(100*i,1))+'%' for i in df['percentage']]
         df.loc[df['diff'] <= np.pi/20,'textdisplayed']=''

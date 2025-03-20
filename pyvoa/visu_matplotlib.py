@@ -218,12 +218,12 @@ class visu_matplotlib:
             cx.add_basemap(ax, crs=input.crs.to_string(), source=cx.providers.Esri.WorldImagery)
         elif tile == 'stamen':
             cx.add_basemap(ax, crs=input.crs.to_string(), source=cx.providers.Esri.WorldImagery)
-            CoaWarning("Couldn't find stamen for matplolib use esri ....")
+            PyvoaWarning("Couldn't find stamen for matplolib use esri ....")
             input = input.to_crs(epsg=4326)
         elif tile == 'positron':
             cx.add_basemap(ax, crs=input.crs.to_string(), source=cx.providers.CartoDB.PositronNoLabels)
         else:
-            CoaError("Don't know what kind of tile is it ...")
+            PyvoaError("Don't know what kind of tile is it ...")
 
         if 'text' in mapoption:
             centroids = input['geometry'].centroid

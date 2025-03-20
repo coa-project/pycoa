@@ -106,7 +106,7 @@ class MetaInfo:
       elif os.path.isdir(currentpath+'/../json'):
           jsp = currentpath+'/../json/'
       else:
-          raise CoaError('Where the json folder (description ofth database) is supposed to be ')
+          raise PyvoaError('Where the json folder (description ofth database) is supposed to be ')
       pathmetadb = jsp
       onlyfiles = [f for f in listdir(pathmetadb) if isfile(join(pathmetadb, f)) and f.endswith('.json')]
       jsongeoinfo = {}
@@ -136,12 +136,12 @@ class MetaInfo:
               try:
                   return line.parsingjson.values[0]
               except:
-                  raise CoaError('Database json description incompatible, please check')
+                  raise PyvoaError('Database json description incompatible, please check')
           else:
             error =  " Database json parsing error:\n" + line.parsingjson.values[0]
-            raise CoaError(error)
+            raise PyvoaError(error)
       else:
-          raise CoaError("Does a Database has been selected ? 🤔")
+          raise PyvoaError("Does a Database has been selected ? 🤔")
 
   def getcurrentmetadatawhich(self,dico):
       '''
@@ -215,12 +215,12 @@ class DataParser:
                 elif granularity == 'subregion':
                     self.geo_all = self.geo.get_subregion_list()
                 else:
-                    CoaError('Granularity problem: neither country, region or subregion')
+                    PyvoaError('Granularity problem: neither country, region or subregion')
             # specific reading of data according to the db
             self.mainpandas = self.get_parsing()
             self.get_echoinfo()
         except:
-            raise CoaDbError("An error occured while parsing data of "+self.db+". This may be due to a data format modification. "
+            raise PyvoaDbError("An error occured while parsing data of "+self.db+". This may be due to a data format modification. "
                 "You may contact support@pycoa.fr. Thanks.")
 
   def get_echoinfo(self):
@@ -306,7 +306,7 @@ class DataParser:
                 keep_default_na = False, na_values = '' , header=0, dtype = cast, decimal = decimal,
                  low_memory = False, nrows = debug, comment='#')
           except:
-              raise CoaError('Something went wrong during the parsing')
+              raise PyvoaError('Something went wrong during the parsing')
 
           coltocumul = pdata.loc[pdata.cumulative]['alias'].to_list()
           if coltocumul:
@@ -331,7 +331,7 @@ class DataParser:
                       pandas_temp = pandas_temp.loc[pandas_temp[key] == val]
                       pandas_temp = pandas_temp.drop(columns=key)
                   else:
-                      raise CoaError("This is weird " + key + " selection went wrong ! ")
+                      raise PyvoaError("This is weird " + key + " selection went wrong ! ")
           if replace_field:
              for k,v in replace_field.items():
                  if v =='np.nan':
@@ -345,7 +345,7 @@ class DataParser:
               if "namedata" in list(datasets.keys()):
                   value_name = datasets['namedata']
               else:
-                  raise CoaError("Seems to have date in columns format in yours csv file, so namedata has to be defined in your json file")
+                  raise PyvoaError("Seems to have date in columns format in yours csv file, so namedata has to be defined in your json file")
               pandas_temp = pandas_temp.melt(id_vars='where',var_name='date',value_name=value_name)
 
 
@@ -414,7 +414,7 @@ class DataParser:
           codenamedico = geopd.set_index('code_region')['name_region'].to_dict()
           geopd = geopd.rename(columns={"code_region": "code"})
       else:
-          raise CoaTypeError('Not a region nors ubregion ... sorry but what is it ?')
+          raise PyvoaTypeError('Not a region nors ubregion ... sorry but what is it ?')
 
       if locationmode == "code":
           pandas_db = pandas_db.rename(columns={"where": "code"})
@@ -425,7 +425,7 @@ class DataParser:
           reverse={v:k for k,v in codenamedico.items()}
           pandas_db['code'] = pandas_db['where'].map(reverse)
       else:
-          CoaError("what locationmode in your json file is supposed to be ?")
+          PyvoaError("what locationmode in your json file is supposed to be ?")
       self.slocation = list(pandas_db['where'].unique())
       self.dates = list(pandas_db['date'].unique())
       pandas_db = pandas_db.merge(geopd[['code','geometry']], how = 'inner', on='code')
@@ -472,13 +472,13 @@ class DataParser:
       if which and which in self.get_available_keywords():
           return self.keyword_definition[which]
       else:
-          raise CoaError("Missing which or which not in ",self.get_available_keywords())
+          raise PyvoaError("Missing which or which not in ",self.get_available_keywords())
 
   def get_keyword_url(self,which):
       if which and which in self.get_available_keywords():
           return self.keyword_url[which]
       else:
-          raise CoaError("Missing which or which not in ",self.get_available_keywords())
+          raise PyvoaError("Missing which or which not in ",self.get_available_keywords())
 
   def get_dbdescription(self):
       '''

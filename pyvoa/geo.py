@@ -48,7 +48,7 @@ from pyvoa.error import *
 class GeoManager():
     """GeoManager class definition. No inheritance from any other class.
 
-    It should raise only CoaError and derived exceptions in case
+    It should raise only PyvoaError and derived exceptions in case
     of errors (see pycoa.error)
     """
 
@@ -110,10 +110,10 @@ class GeoManager():
         The standard should meet the get_list_standard() requirement
         """
         if not isinstance(standard,str):
-            raise CoaTypeError('GeoManager error, the standard argument'
+            raise PyvoaTypeError('GeoManager error, the standard argument'
                 ' must be a string')
         if standard not in self.get_list_standard():
-            raise CoaKeyError('GeoManager.set_standard error, "'+\
+            raise PyvoaKeyError('GeoManager.set_standard error, "'+\
                                     standard+' not managed. Please see '\
                                     'get_list_standard() function')
         self._standard=standard
@@ -143,27 +143,27 @@ class GeoManager():
 
         output=kwargs.get('output',self.get_list_output()[0])
         if output not in self.get_list_output():
-            raise CoaKeyError('Incorrect output type. See get_list_output()'
+            raise PyvoaKeyError('Incorrect output type. See get_list_output()'
                 ' or help.')
 
         db=kwargs.get('db',self.get_list_db()[0])
         if db not in self.get_list_db():
-            raise CoaDbError('Unknown database "'+db+'" for translation to '
+            raise PyvoaDbError('Unknown database "'+db+'" for translation to '
                 'standardized location names. See get_list_db() or help.')
 
         interpret_region=kwargs.get('interpret_region',False)
         if not isinstance(interpret_region,bool):
-            raise CoaTypeError('The interpret_region argument is a boolean, '
+            raise PyvoaTypeError('The interpret_region argument is a boolean, '
                 'not a '+str(type(interpret_region)))
 
         if interpret_region==True and output!='list':
-            raise CoaKeyError('The interpret_region True argument is incompatible '
+            raise PyvoaKeyError('The interpret_region True argument is incompatible '
                 'with non list output option.')
 
         if isinstance(w,str):
             w=[w]
         elif not isinstance(w,list):
-            raise CoaTypeError('Waiting for str, list of str or pandas'
+            raise PyvoaTypeError('Waiting for str, list of str or pandas'
                 'as input of get_standard function member of GeoManager')
 
         w=[v.title() for v in w] # capitalize first letter of each name
@@ -180,7 +180,7 @@ class GeoManager():
             if type(c)==int:
                 c=str(c)
             elif type(c)!=str:
-                raise CoaTypeError('Locations should be given as '
+                raise PyvoaTypeError('Locations should be given as '
                     'strings or integers only')
             if (c in self._gr.get_region_list()) and interpret_region == True:
                 w=self._gr.get_countries_from_region(c)+w
@@ -203,11 +203,11 @@ class GeoManager():
                                 ', using first one.\n')
                             n0=nf[0]
                         except LookupError:
-                            raise CoaLookupError('No country match the key "'+c+'". Error.')
+                            raise PyvoaLookupError('No country match the key "'+c+'". Error.')
                         except Exception as e1:
-                            raise CoaNotManagedError('Not managed error '+type(e1))
+                            raise PyvoaNotManagedError('Not managed error '+type(e1))
                     except Exception as e2:
-                        raise CoaNotManagedError('Not managed error'+type(e1))
+                        raise PyvoaNotManagedError('Not managed error'+type(e1))
 
                     if n0 != 'owid_*':
                         if self._standard=='iso2':
@@ -219,7 +219,7 @@ class GeoManager():
                         elif self._standard=='num':
                             n1=n0.numeric
                         else:
-                            raise CoaKeyError('Current standard is '+self._standard+\
+                            raise PyvoaKeyError('Current standard is '+self._standard+\
                                 ' which is not managed. Error.')
 
                 n.append(n1)
@@ -321,7 +321,7 @@ class GeoManager():
 class GeoInfo():
     """GeoInfo class definition. No inheritance from any other class.
 
-    It should raise only CoaError and derived exceptions in case
+    It should raise only PyvoaError and derived exceptions in case
     of errors (see pycoa.error)
     """
 
@@ -377,7 +377,7 @@ class GeoInfo():
         if field==None:
             return self._list_field
         elif field not in self.get_list_field():
-            raise CoaKeyError('The field "'+str(field)+'" is not '
+            raise PyvoaKeyError('The field "'+str(field)+'" is not '
                 'a supported field of GeoInfo(). Please see help or '
                 'the get_list_field() output.')
         return field+' : '+self._list_field[field]
@@ -407,34 +407,34 @@ class GeoInfo():
 
         p=kwargs.get('input',None) # the panda
         if not isinstance(p,pd.DataFrame):
-            raise CoaTypeError('You should provide a valid input pandas'
+            raise PyvoaTypeError('You should provide a valid input pandas'
                 ' DataFrame as input. See help.')
         p=p.copy()
 
         overload=kwargs.get('overload',False)
         if not isinstance(overload,bool):
-            raise CoaTypeError('The overload option should be a boolean.')
+            raise PyvoaTypeError('The overload option should be a boolean.')
 
         fl=kwargs.get('field',None) # field list
         if fl == None:
-            raise CoaKeyError('No field given. See help.')
+            raise PyvoaKeyError('No field given. See help.')
         if not isinstance(fl,list):
             fl=[fl]
         if not all(f in self.get_list_field() for f in fl):
-            raise CoaKeyError('All fields are not valid or supported '
+            raise PyvoaKeyError('All fields are not valid or supported '
                 'ones. Please see help of get_list_field()')
 
         if not overload and not all(f not in p.columns.tolist() for f in fl):
-            raise CoaKeyError('Some fields already exist in you panda '
+            raise PyvoaKeyError('Some fields already exist in you panda '
                 'dataframe columns. You may set overload to True.')
 
         geofield=kwargs.get('geofield','where')
 
         if not isinstance(geofield,str):
-            raise CoaTypeError('The geofield should be given as a '
+            raise PyvoaTypeError('The geofield should be given as a '
                 'string.')
         if geofield not in p.columns.tolist():
-            raise CoaKeyError('The geofield "'+geofield+'" given is '
+            raise PyvoaKeyError('The geofield "'+geofield+'" given is '
                 'not a valid column name of the input pandas dataframe.')
 
         self._gm.set_standard('iso2')
@@ -477,7 +477,7 @@ class GeoInfo():
 
                     # test that field order hasn't changed in the db
                     if not all (col.startswith(field_descr[i][1]) for i,col in enumerate(self._data_population.columns) ):
-                        raise CoaDbError('The worldometers database changed its field names. '
+                        raise PyvoaDbError('The worldometers database changed its field names. '
                             'The GeoInfo should be updated. Please contact developers.')
 
                     # change field name
@@ -564,7 +564,7 @@ class GeoRegion():
     """GeoRegion class definition. Does not inheritate from any other
     class.
 
-    It should raise only CoaError and derived exceptions in case
+    It should raise only PyvoaError and derived exceptions in case
     of errors (see pycoa.error)
     """
 
@@ -638,7 +638,7 @@ class GeoRegion():
 
         # --- filling cedeao information
         p_cedeao=pd.read_html(get_local_from_url('https://en.wikipedia.org/wiki/Economic_Community_of_West_African_States'))
-        self._cedeao=["Cabo Verde" if x=="Cape Verde" else "CIV" if x=="Ivory Coast" else x for x in pd.concat([p_cedeao[1][0:-1],p_cedeao[2][0:-1]]).Country.to_list()]
+        self._cedeao=["Cabo Verde" if x=="Cape Verde" else "CIV" if x=="Ivory Pyvoast" else x for x in pd.concat([p_cedeao[1][0:-1],p_cedeao[2][0:-1]]).Country.to_list()]
 
         # --- filling sadc information
         p_sadc=pd.read_html(get_local_from_url('https://en.wikipedia.org/wiki/Southern_African_Development_Community'))
@@ -658,7 +658,7 @@ class GeoRegion():
 
         # --- filling censad information
         p_censad=pd.read_html(get_local_from_url('https://en.wikipedia.org/wiki/Community_of_Sahel%E2%80%93Saharan_States'))
-        self._censad=["Cabo Verde" if x == "Cape Verde" else "CIV" if x == "Ivory Coast" else x.split('[')[0] for x in p_censad[3][p_censad[3].columns[0]].to_list()[0:-1]]
+        self._censad=["Cabo Verde" if x == "Cape Verde" else "CIV" if x == "Ivory Pyvoast" else x.split('[')[0] for x in p_censad[3][p_censad[3].columns[0]].to_list()[0:-1]]
 
         # --- filing comesa information
         p_comesa=pd.read_html(get_local_from_url('https://www.worlddata.info/trade-agreements/comesa.php'))
@@ -694,7 +694,7 @@ class GeoRegion():
         """ it returns either False or the correctly named region name
         """
         if type(region) != str:
-            raise CoaKeyError("The given region is not a str type.")
+            raise PyvoaKeyError("The given region is not a str type.")
 
         region=region.title()  # if not properly capitalized
 
@@ -710,7 +710,7 @@ class GeoRegion():
         """
         r = self.is_region(region)
         if not r:
-            raise CoaKeyError('The given region "'+str(region)+'" is unknown.')
+            raise PyvoaKeyError('The given region "'+str(region)+'" is unknown.')
         region=r
 
         clist=[]
@@ -846,7 +846,7 @@ class GeoCountry():
             return None
 
         if not country in self.get_list_countries():
-            raise CoaKeyError("Country "+str(country)+" not supported. Please see get_list_countries() and help. ")
+            raise PyvoaKeyError("Country "+str(country)+" not supported. Please see get_list_countries() and help. ")
 
         self._country_data_region=None
         self._country_data_subregion=None
@@ -1270,10 +1270,10 @@ class GeoCountry():
             return
 
         if self.is_main_geometry():
-            raise CoaError("You already set the main geometry. Cannot set the dense geometry now.")
+            raise PyvoaError("You already set the main geometry. Cannot set the dense geometry now.")
 
         if self.is_exploded_geometry():
-            raise CoaError("You already set the exploded geometry. Cannot set the dense geometry now.")
+            raise PyvoaError("You already set the exploded geometry. Cannot set the dense geometry now.")
 
         if self.get_country() == 'FRA':
             #.drop(['id_geofla','code_reg','nom_reg','x_chf_lieu','y_chf_lieu','x_centroid','y_centroid','Code département','Nom du département','Population municipale'],axis=1,inplace=True) # removing some column without interest
@@ -1311,7 +1311,7 @@ class GeoCountry():
                 tmp.append(g)
             self._country_data['geometry']=tmp
         else:
-            raise CoaError("The current country does not have dense geometry support.")
+            raise PyvoaError("The current country does not have dense geometry support.")
 
         self._country_data_region = None
         self._country_data_subregion = None
@@ -1328,10 +1328,10 @@ class GeoCountry():
         """
 
         if self.is_main_geometry():
-            raise CoaError("You already set the main geometry. Cannot set the exploded geometry now.")
+            raise PyvoaError("You already set the main geometry. Cannot set the exploded geometry now.")
 
         if self.is_dense_geometry():
-            raise CoaError("You already set the dense geometry. Cannot set the exploded geometry now.")
+            raise PyvoaError("You already set the dense geometry. Cannot set the exploded geometry now.")
 
         if self.is_exploded_geometry():
             return
@@ -1366,7 +1366,7 @@ class GeoCountry():
             return
 
         if self.is_dense_geometry() or self.is_exploded_geometry():
-            raise CoaError("You already set the dense or exploded geometry. Cannot set the main geometry now.")
+            raise PyvoaError("You already set the dense or exploded geometry. Cannot set the main geometry now.")
 
         if self.get_country()=='FRA':
             self._country_data = self._country_data[~self._country_data['code_subregion'].isin(self._list_translation.keys())]
@@ -1375,7 +1375,7 @@ class GeoCountry():
         elif self.get_country()=='USA':
             self._country_data = self._country_data[~self._country_data['code_subregion'].isin(self._list_translation.keys())]
         else:
-            raise CoaError("The current country does not have dense geometry support.")
+            raise PyvoaError("The current country does not have dense geometry support.")
 
         self._country_data_region = None
         self._country_data_subregion = None
@@ -1423,12 +1423,12 @@ class GeoCountry():
             return False
 
     def test_is_init(self):
-        """Test if the country is initialized. If not, raise a CoaDbError.
+        """Test if the country is initialized. If not, raise a PyvoaDbError.
         """
         if self.is_init():
             return True
         else:
-            raise CoaDbError("The country is not set. Use a constructor with non empty country string.")
+            raise PyvoaDbError("The country is not set. Use a constructor with non empty country string.")
 
     def get_region_list(self):
         """ Return the list of available regions with code, name and geometry
@@ -1475,23 +1475,23 @@ class GeoCountry():
         name=kwargs.get("name",None)
         out=kwargs.get("output",'code')
         if not (code == None) ^ (name == None):
-            raise CoaKeyError("Should give either code or name of region, not both.")
+            raise PyvoaKeyError("Should give either code or name of region, not both.")
         if not out in ['code','name']:
-            raise CoaKeyError("Should set output either as 'code' or 'name' for subregions.")
+            raise PyvoaKeyError("Should set output either as 'code' or 'name' for subregions.")
 
         if name != None:
             if not isinstance(name,str):
-                raise CoaTypeError("Name should be given as string.")
+                raise PyvoaTypeError("Name should be given as string.")
             name = name.title()
             if not name in self.get_region_list()['name_region'].str.title().to_list():
-                raise CoaWhereError ("The region "+name+" does not exist for country "+self.get_country()+". See get_region_list().")
+                raise PyvoaWhereError ("The region "+name+" does not exist for country "+self.get_country()+". See get_region_list().")
             cut=(self.get_data(True)['name_region'].str.title()==name)
 
         if code != None:
             if not isinstance(code,str):
-                raise CoaTypeError("Name should be given as string.")
+                raise PyvoaTypeError("Name should be given as string.")
             if not code in self.get_region_list()['code_region'].to_list():
-                raise CoaWhereError("The region "+code+" does not exist for country "+self.get_country()+". See get_region_list().")
+                raise PyvoaWhereError("The region "+code+" does not exist for country "+self.get_country()+". See get_region_list().")
             cut=(self.get_data(True)['code_region']==code)
 
         return self.get_data(True)[cut][out+'_subregion'].iloc[0]#to_list()
@@ -1501,7 +1501,7 @@ class GeoCountry():
         The output argument ('code' as default) is given to the get_subregions_from_region function.
         """
         if not isinstance(l,list):
-            raise CoaTypeError("Should provide list as argument")
+            raise PyvoaTypeError("Should provide list as argument")
         s=[]
         for r in l:
             s=s+self.get_subregions_from_region(name=r,output=output)
@@ -1513,10 +1513,10 @@ class GeoCountry():
         """
 
         if not output in ['code','name']:
-            raise CoaKeyError('The output option should be "code" or "name" only')
+            raise PyvoaKeyError('The output option should be "code" or "name" only')
 
         if not code in self.get_subregion_list()['code_subregion'].to_list():
-            raise CoaWhereError("The subregion "+code+" does not exist for country "+self.get_country()+". See get_subregion_list().")
+            raise PyvoaWhereError("The subregion "+code+" does not exist for country "+self.get_country()+". See get_subregion_list().")
 
         l=[]
         for k,v in self.get_data(True).iterrows():
@@ -1532,7 +1532,7 @@ class GeoCountry():
         The output argument ('code' as default) is given to the get_regions_from_subregion function.
         """
         if not isinstance(l,list):
-            raise CoaTypeError("Should provide list as argument")
+            raise PyvoaTypeError("Should provide list as argument")
         s=[]
         for sr in l:
             s=s+self.get_regions_from_subregion(sr,output=output)
@@ -1549,9 +1549,9 @@ class GeoCountry():
         out=kwargs.get("output",'code')
 
         if not (code == None) ^ (name == None):
-            raise CoaKeyError("Should give either code or name of region, not both.")
+            raise PyvoaKeyError("Should give either code or name of region, not both.")
         if not out in ['code','name']:
-            raise CoaKeyError("Should set output either as 'code' or 'name' for subregions.")
+            raise PyvoaKeyError("Should set output either as 'code' or 'name' for subregions.")
 
         dict_input={k:v for k,v in kwargs.items() if k in ['code','name']}
         r_out=self.get_regions_from_list_of_subregion_codes(self.get_subregions_from_region(**dict_input),output=out)
@@ -1698,24 +1698,24 @@ class GeoCountry():
         # Testing input
         data=kwargs.get('input',None) # the panda
         if not isinstance(data,pd.DataFrame):
-            raise CoaTypeError('You should provide a valid input pandas'
+            raise PyvoaTypeError('You should provide a valid input pandas'
                 ' DataFrame as input. See help.')
         data=data.copy()
 
         # Testing input_key
         input_key=kwargs.get('input_key','where')
         if not isinstance(input_key,str):
-            raise CoaTypeError('The input_key should be given as a string.')
+            raise PyvoaTypeError('The input_key should be given as a string.')
         if input_key not in data.columns.tolist():
-            raise CoaKeyError('The input_key "'+input_key+'" given is '
+            raise PyvoaKeyError('The input_key "'+input_key+'" given is '
                 'not a valid column name of the input pandas dataframe.')
 
         # Testing geofield
         geofield=kwargs.get('geofield','code_subregion')
         if not isinstance(geofield,str):
-            raise CoaTypeError('The geofield should be given as a string.')
+            raise PyvoaTypeError('The geofield should be given as a string.')
         if geofield not in self._country_data.columns.tolist():
-            raise CoaKeyError('The geofield "'+geofield+'" given is '
+            raise PyvoaKeyError('The geofield "'+geofield+'" given is '
                 'not a valid column name of the available data. '
                 'See get_list_properties() for valid fields.')
 
@@ -1727,28 +1727,28 @@ class GeoCountry():
                 region_merging=False
 
         if not isinstance(region_merging,bool):
-            raise CoaKeyError('The region_mergin key should be boolean. See help.')
+            raise PyvoaKeyError('The region_mergin key should be boolean. See help.')
 
         # Testing fields
         prop=kwargs.get('field',None) # field list
         if prop == None:
-            raise CoaKeyError('No field given. See help.')
+            raise PyvoaKeyError('No field given. See help.')
         if not isinstance(prop,list):
             prop=[prop] # make the prop input a list if needed
 
         if not all(isinstance(p, str) for p in prop):
-            raise CoaTypeError("Each property should be a string whereas "+str(prop)+" is not a list of string.")
+            raise PyvoaTypeError("Each property should be a string whereas "+str(prop)+" is not a list of string.")
 
         if not all(p in self.get_list_properties() for p in prop):
-            raise CoaKeyError("The property "+prop+" is not available for country "+self.get_country()+".")
+            raise PyvoaKeyError("The property "+prop+" is not available for country "+self.get_country()+".")
 
         # Testing overload
         overload=kwargs.get('overload',False)
         if not isinstance(overload,bool):
-            raise CoaTypeError('The overload option should be a boolean.')
+            raise PyvoaTypeError('The overload option should be a boolean.')
 
         if not overload and not all(p not in data.columns.tolist() for p in prop):
-            raise CoaKeyError('Some fields already exist in you panda '
+            raise PyvoaKeyError('Some fields already exist in you panda '
                 'dataframe columns. You may set overload to True.')
 
         # Is the oject properly initialized ?

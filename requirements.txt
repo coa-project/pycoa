@@ -10,3 +10,4 @@ lxml
 matplotlib
 contextily
 gdal
+selenium

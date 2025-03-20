@@ -891,9 +891,11 @@ class front:
     def savefig(self,name):
         if  self.getnamefunction() != 'get':
             if self.getdisplay() == 'bokeh':
-                PyvoaError("Bokeh savefig not yet implemented")
+                #PyvoaError("Bokeh savefig not yet implemented")
+                from bokeh.io import export_png
+                export_png(self.outcome, filename=name)
             else:
-                self.outcome.show()
+                #self.outcome.show()
                 self.outcome.savefig(name)
         else:
             PyvoaError('savefig can\'t be used to store a panda DataFrame')

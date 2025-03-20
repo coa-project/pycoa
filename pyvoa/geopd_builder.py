@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 """
-Project : PyCoA
-Date :    april 2020 - june 2024
+Project : PyvoA
+Date :    april 2020 - march 2025
 Authors : Olivier Dadoun, Julien Browaeys, Tristan Beau
-Copyright ©pycoa.fr
+Copyright ©pyvoa_fr
 License: See joint LICENSE file
+https://pyvoa.org/
 
 Module : pyvoa.geopd_builder
 

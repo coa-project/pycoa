@@ -11,7 +11,7 @@ About :
 -------
 
 Main class definitions for error management within the PYVOA.framework.
-All Coa exceptions should derive from the main CoaError class.
+All Pyvoa exceptions should derive from the main PyvoaError class.
 """
 import os
 import sys
@@ -57,43 +57,43 @@ def blinking_centered_text(typemsg,message,blinking=0,text_color="37", bg_color=
         print(f'{ansi_start}{typemsg}{ansi_reset}\n')
         print(f'{ansi_start}{message}{ansi_reset}\n')
 
-class CoaInfo(Exception):
+class PyvoaInfo(Exception):
     """Base class for exceptions in PYVOA."""
 
     def __init__(self, message):
         blinking_centered_text('PYVOA Info !',message, blinking=0,text_color='black', bg_color='blue')
         Exception(message)
 
-class CoaDBInfo(Exception):
+class PyvoaDBInfo(Exception):
     """Base class for exceptions in PYVOA."""
 
     def __init__(self, message):
         blinking_centered_text('PYVOA Info !',message, blinking=0,text_color='white', bg_color='blue')
         Exception(message)
 
-class CoaWarning(Exception):
+class PyvoaWarning(Exception):
     """Base class for exceptions in PYVOA."""
 
     def __init__(self, message):
         blinking_centered_text('PYVOA Warning !',message, blinking=0,text_color='black', bg_color='orange')
         Exception(message)
 
-class CoaError(Exception):
+class PyvoaError(Exception):
     """Base class for exceptions in PYVOA."""
     def __init__(self, message):
         blinking_centered_text('PYVOA Error !',message, blinking=1,text_color='white', bg_color='red')
         sys.exit(0)
         #Exception(message)
 
-class CoaNoData(CoaError, IndexError):
+class PyvoaNoData(PyvoaError, IndexError):
     """Exception raised when there is no data to plot or to manage (invalid cut)"""
 
     def __init__(self, message):
         blinking_centered_text('PYVOA Error !',message, blinking=1,text_color='white', bg_color='red')
         IndexError(message)
-        CoaError(message)
+        PyvoaError(message)
 
-class CoaWhereError(CoaError, IndexError):
+class PyvoaWhereError(PyvoaError, IndexError):
     """Exception raised for location errors.
 
     Attributes:
@@ -103,10 +103,10 @@ class CoaWhereError(CoaError, IndexError):
     def __init__(self, message):
         blinking_centered_text('PYVOA Error !',message, blinking=1,text_color='white', bg_color='red')
         IndexError(message)
-        CoaError(message)
+        PyvoaError(message)
 
 
-class CoaTypeError(CoaError, TypeError):
+class PyvoaTypeError(PyvoaError, TypeError):
     """Exception raised for type mismatch errors.
 
     Attributes:
@@ -116,10 +116,10 @@ class CoaTypeError(CoaError, TypeError):
     def __init__(self, message):
         blinking_centered_text('PYVOA Error !',message, blinking=1,text_color='white', bg_color='red')
         TypeError(message)
-        CoaError(message)
+        PyvoaError(message)
 
 
-class CoaLookupError(CoaError, LookupError):
+class PyvoaLookupError(PyvoaError, LookupError):
     """Exception raised for type lookup errors.
 
     Attributes:
@@ -129,10 +129,10 @@ class CoaLookupError(CoaError, LookupError):
     def __init__(self, message):
         blinking_centered_text('PYVOA Error !',message, blinking=1,text_color='white', bg_color='red')
         LookupError(message)
-        CoaError(message)
+        PyvoaError(message)
 
 
-class CoaNotManagedError(CoaError):
+class PyvoaNotManagedError(PyvoaError):
     """Exception raised when the error is unknown and not managed.
 
     Attributes:
@@ -141,10 +141,10 @@ class CoaNotManagedError(CoaError):
 
     def __init__(self, message):
         blinking_centered_text('PYVOA Error !',message, blinking=1,text_color='white', bg_color='red')
-        CoaError(message)
+        PyvoaError(message)
 
 
-class CoaDbError(CoaError):
+class PyvoaDbError(PyvoaError):
     """Exception raised for database errors.
 
     Attributes:
@@ -153,10 +153,10 @@ class CoaDbError(CoaError):
 
     def __init__(self, message):
         blinking_centered_text('PYVOA Error !',message, blinking=1,text_color='white', bg_color='red')
-        CoaError(message)
+        PyvoaError(message)
 
 
-class CoaConnectionError(CoaError, ConnectionError):
+class PyvoaConnectionError(PyvoaError, ConnectionError):
     """Exception raised for connection errors.
 
     Attributes:
@@ -166,4 +166,4 @@ class CoaConnectionError(CoaError, ConnectionError):
     def __init__(self, message):
         blinking_centered_text('PYVOA Error !',message, blinking=1,text_color='white', bg_color='red')
         ConnectionError(message)
-        CoaError(message)
+        PyvoaError(message)

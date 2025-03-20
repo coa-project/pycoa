@@ -34,7 +34,7 @@ from urllib.parse import urlparse
 import unidecode
 import datetime as dt
 import numpy as np
-from pyvoa.error import CoaError, CoaConnectionError, CoaNotManagedError
+from pyvoa.error import PyvoaError, PyvoaConnectionError, PyvoaNotManagedError
 
 
 # testing if pyvoa.ata is available

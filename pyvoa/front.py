@@ -72,7 +72,7 @@ class front:
         for lib, available in available_libs.items():
             if not available:
                 self.lvisu.remove(lib)
-        CoaInfo("Available graphicals librairies : " + str(self.lvisu))
+        PyvoaInfo("Available graphicals librairies : " + str(self.lvisu))
 
         self.lwhat = list(self.av.d_batchinput_args['what'])
         self.lhist = list(self.av.d_graphicsinput_args['typeofhist'])
@@ -129,9 +129,9 @@ class front:
         """
         reload = kwargs.get('reload', True)
         if reload not in [0,1]:
-            raise CoaError('reload must be a boolean ... ')
+            raise PyvoaError('reload must be a boolean ... ')
         if base not in self.listwhom():
-            raise CoaDbError(base + ' is not a supported GPDBuilder. '
+            raise PyvoaDbError(base + ' is not a supported GPDBuilder. '
                                     'See pycoa.listbase() for the full list.')
         # Check if the current base is already set to the requested base
         visu = self.getdisplay()
@@ -162,7 +162,7 @@ class front:
                 order position of the items in 'option'
             '''
             if self.db == '':
-                raise CoaError('Something went wrong ... does a db has been loaded ? (setwhom)')
+                raise PyvoaError('Something went wrong ... does a db has been loaded ? (setwhom)')
             mustbealist = ['where','which','option']
             kwargs_keystesting(kwargs,self.lchartkargskeys + self.listviskargskeys,' kwargs keys not recognized ...')
             default = { k:[v[0]] if isinstance(v,list) else v for k,v in self.av.d_batchinput_args.items()}
@@ -188,38 +188,38 @@ class front:
                 kwargs['where'] = list(self.gpdbuilder.get_fulldb()['where'].unique())
 
             if not all_or_none_lists(kwargs['where']):
-                raise CoaError('For coherence all the element in where must have the same type list or not list ...')
+                raise PyvoaError('For coherence all the element in where must have the same type list or not list ...')
 
             if 'sumall' in kwargs['option']:
                 kwargs['option'].remove('sumall')
                 kwargs['option'].append('sumall')
 
             if 'sumall' in kwargs['option'] and len(kwargs['which'])>1:
-                raise CoaError('sumall option incompatible with multile values ... remove one please')
+                raise PyvoaError('sumall option incompatible with multile values ... remove one please')
 
             if  func.__name__ == 'get':
                 if dicovisu['typeofplot']:
-                    raise CoaError("'typeofplot' not compatible with get ...")
+                    raise PyvoaError("'typeofplot' not compatible with get ...")
                 if  dicovisu['typeofhist']:
-                    raise CoaError("'typeofhist' not compatible with get ...")
+                    raise PyvoaError("'typeofhist' not compatible with get ...")
             elif func.__name__ == 'plot':
                 if dicovisu['mapoption'] or dicovisu['tile']:
-                    CoaError('Please have a look on your arguement not compatible with plot')
+                    PyvoaError('Please have a look on your arguement not compatible with plot')
                 if dicovisu['typeofhist']:
-                    raise CoaError("'typeofhist' option not compatible with plot ...")
+                    raise PyvoaError("'typeofhist' option not compatible with plot ...")
             elif func.__name__ == 'hist':
                 if dicovisu['typeofplot']:
-                    raise CoaError("'typeofplot' option not compatible with " + func.__name__ )
+                    raise PyvoaError("'typeofplot' option not compatible with " + func.__name__ )
                 if dicovisu['mapoption'] or dicovisu['tile']:
-                    CoaError('Please have a look on your arguement not compatible with hist')
+                    PyvoaError('Please have a look on your arguement not compatible with hist')
             elif func.__name__ == 'map' :
                 if dicovisu['typeofplot']:
-                    raise CoaError("'typeofplot' option not compatible with " + func.__name__ )
+                    raise PyvoaError("'typeofplot' option not compatible with " + func.__name__ )
 
             elif func.__name__ in ['save']:
                 pass
             else:
-                raise CoaError(" What does " + func.__name__ + ' is supposed to be ... ?')
+                raise PyvoaError(" What does " + func.__name__ + ' is supposed to be ... ?')
 
             if self.getvisukwargs()['vis']:
                 pass
@@ -245,7 +245,7 @@ class front:
                 z = {**self.getvisukwargs(), **kwargs}
             if func.__name__ in ['hist','map']:
                 if isinstance(z['which'],list) and len(z['which'])>1:
-                    raise CoaError("Histo and map available only for ONE variable ...")
+                    raise PyvoaError("Histo and map available only for ONE variable ...")
                 #else:
                 #    z['which'] = z['which'][0]
                 z['input'] = z['input'].loc[z['input'].date==z['input'].date.max()].reset_index(drop=True)
@@ -337,7 +337,7 @@ class front:
             if output == 'array':
                 casted_data = np.array(pandy)
         else:
-            raise CoaError('Unknown output.')
+            raise PyvoaError('Unknown output.')
         self.outcome = casted_data
         return casted_data
 
@@ -357,19 +357,19 @@ class front:
             title = kwargs.get('title',None)
             self.allvisu.setkwargsfront(kwargs)
             if vis not in self.lvisu:
-                raise CoaError("Sorry but " + visu + " visualisation isn't implemented ")
+                raise PyvoaError("Sorry but " + visu + " visualisation isn't implemented ")
             else:
                 self.setdisplay(vis)
                 print(f"The visualization has been set correctly to: {vis}")
                 try:
                     f = self.getnamefunction()
                     if f == 'Charts Function Not Registered':
-                        raise CoaError("Sorry but " + f + ". Did you draw it ? ")
+                        raise PyvoaError("Sorry but " + f + ". Did you draw it ? ")
                     return f(**self.getkwargs())
                 except:
                     pass
         else:
-            CoaWarning("No Graphics loaded ! Only geopandas can be asked")
+            PyvoaWarning("No Graphics loaded ! Only geopandas can be asked")
         self.vis = vis
 
     def setnamefunction(self,name):
@@ -390,7 +390,7 @@ class front:
         Visualization seter
        '''
        if vis not in self.lvisu:
-            raise CoaError("Visualisation "+ visu + " not implemented setting problem. Please contact support@pycoa.fr")
+            raise PyvoaError("Visualisation "+ visu + " not implemented setting problem. Please contact support@pycoa.fr")
        else:
             self.vis = vis
 
@@ -466,7 +466,7 @@ class front:
             else:
                 return list(df['GPDBuilder'])
         except:
-            raise CoaError('Waiting for a boolean !')
+            raise PyvoaError('Waiting for a boolean !')
         '''
 
     def listwhat(self,):
@@ -522,7 +522,7 @@ class front:
         elif self.db:
             dic = self.meta.getcurrentmetadata(self.db)
         else:
-            raise CoaError('listwhich for which database ? I am lost ... are you ?')
+            raise PyvoaError('listwhich for which database ? I am lost ... are you ?')
         return sorted(self.meta.getcurrentmetadatawhich(dic))
 
     def listwhere(self,clustered = False):
@@ -564,7 +564,7 @@ class front:
                     r = clust()
                     r.append(code)
                 else:
-                    raise CoaError('What is the granularity of your DB ?')
+                    raise PyvoaError('What is the granularity of your DB ?')
             return r
 
     def listbypop(self):
@@ -591,7 +591,7 @@ class front:
                 print(self.gpdbuilder.get_parserdb().get_keyword_definition(which))
                 print('Parsed from this url:',self.gpdbuilder.get_parserdb().get_keyword_url(which))
             else:
-                raise CoaError('This value do not exist please check.'+'Available variable so far in this db ' + str(self.listwhich()))
+                raise PyvoaError('This value do not exist please check.'+'Available variable so far in this db ' + str(self.listwhich()))
         else:
             df = self.gpdbuilder.get_parserdb().get_dbdescription()
             return df
@@ -631,11 +631,11 @@ class front:
             kwargs[k] = v
 
         if vis not in self.lvisu:
-            raise CoaError("Sorry but " + vis + " visualisation isn't implemented ")
+            raise PyvoaError("Sorry but " + vis + " visualisation isn't implemented ")
         else:
             self.setdisplay(vis)
             kwargs['vis'] = vis
-            CoaInfo(f"The visualization has been set correctly to: {vis}")
+            PyvoaInfo(f"The visualization has been set correctly to: {vis}")
         self.setkwargsvisu(**kwargs)
 
     def decomap(func):
@@ -694,7 +694,7 @@ class front:
                 elif 'text' or 'exploded' or 'dense' in mapoption:
                     return self.allvisu.pycoa_map(**kwargs)
                 else:
-                    CoaError("What kind of pimp map you want ?!")
+                    PyvoaError("What kind of pimp map you want ?!")
             else:
                 return self.allvisu.pycoa_map(**kwargs)
 
@@ -708,7 +708,7 @@ class front:
             self.outcome = self.allvisu.map(**z)
             return self.outcome
         else:
-            CoaError(" No visualization has been set up !")
+            PyvoaError(" No visualization has been set up !")
 
     def decohist(func):
         @wraps(func)
@@ -752,7 +752,7 @@ class front:
                 self.outcome = self.allvisu.hist(**kwargs)
                 return func(self,self.outcome)
             else:
-                raise CoaError(" No visualization has been set up !")
+                raise PyvoaError(" No visualization has been set up !")
         return inner
 
     @input_wrapper
@@ -826,7 +826,7 @@ class front:
             kwargs.pop('output')
 
             if typeofplot == 'versus' and len(which)>2:
-                CoaError(" versu can be used with 2 variables and only 2 !")
+                PyvoaError(" versu can be used with 2 variables and only 2 !")
             if kwargs.get('bypop'):
                 kwargs.pop('bypop')
 
@@ -836,7 +836,7 @@ class front:
 
                 return func(self,self.outcome)
             else:
-                CoaError(" No visualization has been set up !")
+                PyvoaError(" No visualization has been set up !")
         return inner
 
     @input_wrapper
@@ -874,7 +874,7 @@ class front:
         saveformat = kwargs.get('saveformat', 'excel')
         savename = kwargs.get('savename', '')
         if pandy.empty:
-            raise CoaError('Pandas to save is mandatory there is not default !')
+            raise PyvoaError('Pandas to save is mandatory there is not default !')
         else:
             _db.saveoutput(pandas=pandy,saveformat=saveformat,savename=savename)
     def merger(self,**kwargs):
@@ -891,12 +891,12 @@ class front:
     def savefig(self,name):
         if  self.getnamefunction() != 'get':
             if self.getdisplay() == 'bokeh':
-                CoaError("Bokeh savefig not yet implemented")
+                PyvoaError("Bokeh savefig not yet implemented")
             else:
                 self.outcome.show()
                 self.outcome.savefig(name)
         else:
-            CoaError('savefig can\'t be used to store a panda DataFrame')
+            PyvoaError('savefig can\'t be used to store a panda DataFrame')
 
 
 # this trick allow you to do

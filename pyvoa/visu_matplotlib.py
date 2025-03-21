@@ -46,10 +46,6 @@ from functools import wraps
 import matplotlib.dates as mdates
 from pyvoa.jsondb_parser import MetaInfo
 
-from IPython import get_ipython
-
-import sys
-
 class visu_matplotlib:
     '''
         MATPLOTLIB chart drawing methods ...
@@ -208,6 +204,7 @@ class visu_matplotlib:
         mapoption = kwargs.get('mapoption')
         title = kwargs.get('title')
         tile = kwargs.get('tile')
+
         input.plot(column = which, ax=ax,legend=True,
                                 legend_kwds={'label': which,
                                 'orientation': "horizontal","pad": 0.001})

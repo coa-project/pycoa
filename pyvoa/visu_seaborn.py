@@ -45,7 +45,9 @@ import bisect
 from functools import wraps
 
 from pyvoa.jsondb_parser import MetaInfo
-
+from IPython.terminal.embed import InteractiveShellEmbed
+shell = InteractiveShellEmbed()
+shell.enable_gui('tk')
 class visu_seaborn:
     ######SEABORN#########
     ######################

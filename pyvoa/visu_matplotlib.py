@@ -27,39 +27,32 @@ import pandas as pd
 import geopandas as gpd
 import numpy as np
 
-from collections import defaultdict
-import itertools
 import json
 import io
-from io import BytesIO
-import base64
 import copy
-import locale
-import inspect
-import importlib
-
-import shapely.geometry as sg
 
 import datetime as dt
-import bisect
-from functools import wraps
 import matplotlib.dates as mdates
 from pyvoa.jsondb_parser import MetaInfo
-
+import matplotlib.pyplot as plt
+from IPython.terminal.embed import InteractiveShellEmbed
+shell = InteractiveShellEmbed()
+shell.enable_gui('tk')
 class visu_matplotlib:
     '''
         MATPLOTLIB chart drawing methods ...
     '''
     def __init__(self,):
+        import matplotlib
         pass
 
     def decomatplotlib(func):
         def wrapper(self,**kwargs):
-            import matplotlib.pyplot as plt
-            kwargs['plt'] = plt
+
             fig, ax = plt.subplots(1, 1,figsize=(12, 8))
             kwargs['fig'] = fig
             kwargs['ax'] = ax
+            kwargs['plt'] = plt
             return func(self,**kwargs)
         return wrapper
 

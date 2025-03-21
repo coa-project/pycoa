@@ -109,7 +109,7 @@ class MetaInfo:
       elif os.path.isdir(currentpath+'/../json'):
           jsp = currentpath+'/../json/'
       else:
-          raise PyvoaError('Where the json folder (description ofth database) is supposed to be ')
+          raise PyvoaError('Where the json database description folder is supposed to be ?')
       pathmetadb = jsp
       onlyfiles = [f for f in listdir(pathmetadb) if isfile(join(pathmetadb, f)) and f.endswith('.json')]
       jsongeoinfo = {}

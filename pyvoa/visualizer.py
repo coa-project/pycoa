@@ -226,9 +226,9 @@ class AllVisu:
         mapoption = kwargs.get('mapoption')
         input = kwargs.get('input')
         if vis == 'matplotlib':
-            return visu_matplotlib().matplotlib_map(**kwargs)
+            fig = visu_matplotlib().matplotlib_map(**kwargs)
         elif vis == 'seaborn':
-            return visu_seaborn().seaborn_heatmap(**kwargs)
+            fig = visu_seaborn().seaborn_heatmap(**kwargs)
         elif vis == 'bokeh':
             if mapoption:
                 if 'spark' in mapoption or 'spiral' in mapoption:
@@ -239,9 +239,9 @@ class AllVisu:
                     PyvoaError("What kind of pimp map you want ?!")
             else:
                 fig = visu_bokeh().bokeh_map(**kwargs)
-            return fig
         elif vis == 'folium':
-            return visu_matplotlib().bokeh_mapfolium(**kwargs)
+            fig = visu_matplotlib().bokeh_mapfolium(**kwargs)
         else:
             raise PyvoaError('Waiting for a valid visualisation. So far: \'bokeh\', \'folium\' or \'matplotlib\' \
             aka matplotlib .See help.')
+        return fig    

@@ -114,9 +114,7 @@ class MetaInfo:
       #      jsp = currentpath+'/../json/'
       #else:
       #      raise PyvoaError('Where the json database description folder is supposed to be ?')
-      print("COUCOU")
       pathmetadb = str(pkg_resources.files(pyvoa).joinpath("data"))
-      print(pathmetadb)
       onlyfiles = [f for f in listdir(pathmetadb) if isfile(join(pathmetadb, f)) and f.endswith('.json')]
       jsongeoinfo = {}
       col = ['name','validejson','parsingjson']

@@ -1,0 +1,39 @@
+{
+  "header": "MonkeyPox",
+    "geoinfo": {
+    "granularity": "country",
+    "iso3": "WLD",
+    "locationmode":"code"
+  },
+  "replace":{
+	  "GUF":"FRA",
+	  "PYF":"FRA"
+  },
+  "datasets": [
+  	{	
+	 "urldata": "https://raw.githubusercontent.com/owid/monkeypox/main/owid-monkeypox-data.csv",
+	 "drop":
+            {
+            "iso_code": "OWID_"
+            },
+	 "separator":",",
+  	 "columns": [
+    		     {
+		      "name":"where",
+    		      "alias":"iso_code"	
+		     },
+		     {
+			"name":"date"
+             	     },
+		    {			
+                    "name": "total_deaths",
+		    "description":"Total deaths attributed to monkeypox"
+		    },
+		    {
+                	"name":"total_cases",
+			"description":"Total confirmed cases of monkeypox"
+                   }		  
+	      ]
+	}      
+	]
+}

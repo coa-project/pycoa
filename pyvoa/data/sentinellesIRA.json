@@ -1,0 +1,33 @@
+{
+  "header": "Sentinnelles Infection Respiratoire Aiguë (IRA)",
+  "geoinfo": {
+    "granularity": "region",
+    "iso3": "FRA",
+    "locationmode":"code"
+  },
+  "datasets": [
+  	{	
+	 "urldata": "https://www.sentiweb.fr/datasets/all/inc-25-RDD.csv",
+	 "urlmaster": "https://www.sentiweb.fr/france/fr/?page=table&maladie=25",
+	 "cast":{
+                                "week":"str"
+                },
+	 "separator":",",
+  	 "columns": [
+    		{
+                         "name":"date",
+			 "alias":"week"
+                },
+		{
+      			"name": "where",
+      			"alias": "geo_insee"
+    		},
+    		{
+      			"name": "inc",
+      			"alias": "inc",
+      			"description": "taux d'incidence hebdomadaire"
+    		}
+  		]
+	}
+     ]		
+}

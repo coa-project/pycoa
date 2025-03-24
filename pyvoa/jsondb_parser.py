@@ -36,6 +36,9 @@ from pyvoa.tools import (
 import pyvoa.geo as coge
 import sys
 import pycountry
+import importlib.resources as pkg_resources
+from pathlib import Path
+import pyvoa
 
 class MetaInfo:
   def __init__(self):
@@ -103,14 +106,17 @@ class MetaInfo:
       the error if the file do not exist or not valide
       return only valid json
       '''
-      currentpath=os.getcwd()
-      if os.path.isdir(currentpath+'/json'):
-          jsp = currentpath+'/json/'
-      elif os.path.isdir(currentpath+'/../json'):
-          jsp = currentpath+'/../json/'
-      else:
-          raise PyvoaError('Where the json database description folder is supposed to be ?')
-      pathmetadb = jsp
+      #pkg_resources.files(pyvoa).joinpath("data", filename)
+      #currentpath=os.getcwd()
+      #if os.path.isdir(currentpath+'/json'):
+      #  jsp = currentpath+'/json/'
+      #elif os.path.isdir(currentpath+'/../json'):
+      #      jsp = currentpath+'/../json/'
+      #else:
+      #      raise PyvoaError('Where the json database description folder is supposed to be ?')
+      print("COUCOU")
+      pathmetadb = str(pkg_resources.files(pyvoa).joinpath("data"))
+      print(pathmetadb)
       onlyfiles = [f for f in listdir(pathmetadb) if isfile(join(pathmetadb, f)) and f.endswith('.json')]
       jsongeoinfo = {}
       col = ['name','validejson','parsingjson']
@@ -118,7 +124,8 @@ class MetaInfo:
       valide = ''
       for i in onlyfiles:
          name = i.replace('.json','')
-         metadata = MetaInfo.parsejson(pathmetadb+i)
+         print(pathmetadb,i)
+         metadata = MetaInfo.parsejson(pathmetadb+"/"+i)
          try:
              meta = metadata[1]
              valide = 'GOOD'

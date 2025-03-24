@@ -27,12 +27,21 @@ from pyvoa.tools import (
 import geopandas as gpd
 import pandas as pd
 from pyvoa.jsondb_parser import MetaInfo
+from pyvoa.kwarg_options import InputOption
 from pyvoa.visu_matplotlib import visu_matplotlib
 from pyvoa.visu_seaborn import visu_seaborn
-from pyvoa.visu_bokeh import visu_bokeh
-from pyvoa.kwarg_options import InputOption
 
 Max_Countries_Default  = 12
+try:
+    import bokeh
+    BOKEH_AVAILABLE = True
+except ImportError:
+    BOKEH_AVAILABLE = False
+
+if BOKEH_AVAILABLE:
+    from pyvoa.visu_bokeh import visu_bokeh
+
+
 class AllVisu:
     """
         All visualisation should be implemented here !
@@ -150,7 +159,8 @@ class AllVisu:
                 fig = visu_seaborn().seaborn_versus_plot(**kwargs)
             else:
                 PyvoaError(typeofplot + ' not implemented in ' + vis)
-        elif vis == 'bokeh':
+        elif vis == 'bokeh' and BOKEH_AVAILABLE:
+            import visu_bokeh
             if typeofplot == 'date':
                 fig = visu_bokeh(InputOption().d_graphicsinput_args).bokeh_date_plot(**kwargs)
             elif typeofplot == 'spiral':
@@ -197,7 +207,7 @@ class AllVisu:
                 fig = visu_matplotlib().matplotlib_pie(**kwargs)
             else:
                 raise PyvoaError(typeofhist + ' not implemented in ' + vis)
-        elif vis == 'bokeh':
+        elif vis == 'bokeh' and BOKEH_AVAILABLE:
             if typeofhist == 'bylocation':
                 fig = visu_bokeh(InputOption().d_graphicsinput_args).bokeh_horizonhisto(**kwargs)
             elif typeofhist == 'byvalue':
@@ -229,7 +239,7 @@ class AllVisu:
             fig = visu_matplotlib().matplotlib_map(**kwargs)
         elif vis == 'seaborn':
             fig = visu_seaborn().seaborn_heatmap(**kwargs)
-        elif vis == 'bokeh':
+        elif vis == 'bokeh' and BOKEH_AVAILABLE:
             if mapoption:
                 if 'spark' in mapoption or 'spiral' in mapoption:
                     fig = visu_bokeh().pycoa_pimpmap(**kwargs)
@@ -244,4 +254,4 @@ class AllVisu:
         else:
             raise PyvoaError('Waiting for a valid visualisation. So far: \'bokeh\', \'folium\' or \'matplotlib\' \
             aka matplotlib .See help.')
-        return fig    
+        return fig
